@@ -15,7 +15,22 @@ namespace SuperTransp.Controllers
 
 		public IActionResult Index()
 		{
-			return View();
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+				{
+					ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+					ViewBag.SecurityGroupId = (int)HttpContext.Session.GetInt32("SecurityGroupId");
+
+					return View();
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
 		}
 
 		public IActionResult Privacy()
@@ -24,9 +39,10 @@ namespace SuperTransp.Controllers
 		}
 
 		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-		public IActionResult Error()
+		public IActionResult Error(string errorMessage)
 		{
-			return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+			ViewBag.ErrorMessage = errorMessage;
+			return View();
 		}
 	}
 }

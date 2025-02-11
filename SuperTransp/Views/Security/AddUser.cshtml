@@ -1,0 +1,176 @@
+﻿@model SuperTransp.Models.SecurityUserModel
+@{
+	Layout = "";
+}
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Agregar Usuario</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+	<link rel="stylesheet" href="~/assets/css/main.css" />
+	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
+</head>
+<body class="is-preload">
+	@using (Html.BeginForm("AddUser", "Security", FormMethod.Post))
+	{
+		<!-- Wrapper -->
+		<div id="wrapper">
+
+			<!-- Header -->
+			<header id="header">
+				<div class="inner">
+
+					<!-- Logo -->
+					<a href="index.html" class="logo">
+						<span class="symbol"><img src="~/images/logo_login.jpg" alt="" /></span><span class="title">SuperTransp</span>
+						<br />
+						<span class="title">@ViewBag.LocationName</span>
+					</a>
+				</div>
+				<!-- Nav -->
+				<nav>
+					<ul>
+						<li><a href="#menu">Menu</a></li>
+					</ul>
+				</nav>
+			</header>
+
+			<!-- Menu -->
+			<nav id="menu">
+				<h2>Menu</h2>
+				<ul>
+					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
+					<li>@Html.ActionLink("Modificar usuario", "UserList", "Security")</li>
+					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
+				</ul>
+			</nav>
+
+			<!-- Main -->
+			<div id="main">
+				<div class="inner">
+					<!-- Form -->
+					<section>
+						<h1 style="color:#4cbece">Agregar usuario</h1>
+						<br />
+						<div class="row gtr-uniform">
+							<div class="col-12">
+								<strong>Cédula:</strong>
+								@Html.TextBoxFor(x => x.SecurityUserDocumentIdNumber, new { placeholder = "Cédula", tabindex = "0", maxlength = "11", onkeypress = "return isNumberKey(event)" })
+								<span asp-validation-for="SecurityUserDocumentIdNumber" class="text-danger"></span>
+							</div>
+							<div class="col-12">
+								<strong>Nombre Completo:</strong>
+								@Html.TextBoxFor(x => x.FullName, new { placeholder = "Nombre Completo",  maxlength = "50" })
+								<span asp-validation-for="FullName" class="text-danger"></span>
+							</div>
+							<div class="col-12">
+								<strong>Nombre de Usuario:</strong>
+								@Html.TextBoxFor(x => x.Login, new { placeholder = "Nombre de Usuario", maxlength = "50" })
+								<span asp-validation-for="Login" class="text-danger"></span>
+							</div>
+							<div class="col-6 col-12-xsmall">
+								<strong>Clave:</strong>
+								@Html.PasswordFor(x => x.Password, new { placeholder = "Clave", maxlength = "50" })
+								<span asp-validation-for="Password" class="text-danger"></span>
+							</div>
+							<div class="col-6 col-12-xsmall">
+								<strong>Grupo:</strong>
+								@Html.DropDownListFor(t => t.SecurityGroupId, (SelectList)ViewBag.Groups, "-- Seleccione el grupo --")
+							</div>
+							<div class="col-6 col-12-xsmall">
+								<strong>Estatus:</strong>
+								@Html.DropDownListFor(t => t.SecurityStatusId, (SelectList)ViewBag.Status, "-- Seleccione el estatus --")
+							</div>
+
+							<div class="col-6 col-12-xsmall">
+								<strong>Estatus:</strong>
+								@Html.DropDownListFor(t => t.StateId, (SelectList)ViewBag.States, "-- Seleccione el estado --")
+							</div>
+
+							<div class="col-12">
+								<ul class="actions">
+									<li><input type="submit" value="Actualizar" class="primary" id="saveRequest"/></li>
+								</ul>
+							</div>
+						</div>
+					</section>
+				</div>
+			</div>
+		</div>
+	}
+	<!-- Scripts -->
+	<script src="~/assets/js/jquery.min.js"></script>
+	<script src="~/assets/js/browser.min.js"></script>
+	<script src="~/assets/js/breakpoints.min.js"></script>
+	<script src="~/assets/js/util.js"></script>
+	<script src="~/assets/js/main.js"></script>
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+
+	<script type="text/javascript">
+
+		function isNumberKey(evt) {
+			var charCode = (evt.which) ? evt.which : event.keyCode;
+			if (charCode == 44) {
+				return true;
+			}
+			if (charCode != 46 && charCode > 31
+				&& (charCode < 48 || charCode > 57))
+				return false;
+
+			return true;
+		}
+
+		$("body").on("click", "#saveRequest", function () {   
+			if(isOkToSave()){
+				return true;
+			}					
+		});
+		function isOkToSave() {
+			if ($("#Password").val() == "") {
+				alert("Debe colocar el password");
+				return false;
+			}
+		}
+
+		function showMsg(hasCurrentJob) {
+			if (hasCurrentJob != "OK") {
+				alert(hasCurrentJob);
+				return false;
+			} else {
+
+				$("form").unbind('submit').submit();
+			}
+		}
+
+		$(document).ready(function () {
+
+			$("form").submit(function (e) {
+				e.preventDefault();
+
+				if ($(this).valid()) {
+					var paramValue1 = $('#SecurityUserDocumentIdNumber').val();
+					var paramValue2 = $('#Login').val();
+
+					$.ajax({
+						url: '/Security/CheckUserExist/',
+						data: {
+							paramValue1: paramValue1,
+							paramValue2: paramValue2
+						},
+						success: function (data) {
+							showMsg(data);
+						},
+						cache: false
+					});
+				}
+
+			});
+		});
+	</script>
+</body>
+</html>
+
+

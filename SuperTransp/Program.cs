@@ -19,7 +19,7 @@ builder.Services.AddSession(options =>
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddTransient<ISecurity, Security>();
-//builder.Services.AddTransient<ILocation, Locations>();
+builder.Services.AddTransient<IGeography, Geography>();
 //builder.Services.AddTransient<IRequest, Requests>();
 //builder.Services.AddTransient<IRequestArea, RequestAreas>();
 //builder.Services.AddTransient<IFloor, Floors>();
@@ -50,6 +50,6 @@ app.UseSession();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Login}/{action=Login}/{id?}");
+    pattern: "{controller=Security}/{action=Login}/{id?}");
 
 app.Run();

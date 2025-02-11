@@ -1,8 +1,101 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+	Layout = "";
 }
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>SuperTransp - Home</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+	<link rel="stylesheet" href="~/assets/css/main.css" />
+	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
+</head>
+<body class="is-preload">
+	<!-- Wrapper -->
+	<div id="wrapper">
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+		<!-- Header -->
+		<header id="header">
+			<div class="inner">
+				<!-- Logo -->
+				<a href="#" class="logo">
+					<span class="symbol"><img src="~/images/logo_login.jpg" alt="" /></span>
+					<span class="title">SuperTransp</span>
+					<br />
+					<span class="title">FONTUR</span>
+				</a>
+			</div>
+			<!-- Nav -->
+			<nav>
+				<ul>
+					<li><a href="#menu">Menu</a></li>
+				</ul>
+			</nav>
+		</header>
+
+		<!-- Menu -->
+		<nav id="menu">
+			<h2>Menu</h2>
+			<ul>
+				<li>@Html.ActionLink("Salir", "Login", "Security")</li>
+			</ul>
+		</nav>
+
+		<!-- Main -->
+		<div id="main">
+			<div class="inner">
+				<header>
+					<h1>Hola @ViewBag.EmployeeName bienvenid@@ al sistema supervisión de unidades de transporte público (SuperTransp), selecciona que deseas hacer</h1>
+				</header>
+				<section class="tiles">
+					@{
+						<article class="style3">
+							<span class="image">
+								<img src="~/images/image7.jpg" alt="" />
+							</span>
+							@Html.ActionLink("Organizaciones de Transporte", "", "")
+						</article>
+						<article class="style4">
+							<span class="image">
+								<img src="~/images/image8.jpg" alt="" />
+							</span>
+							@Html.ActionLink("Unidades de Transporte", "", "")
+						</article>
+						<article class="style1">
+							<span class="image">
+								<img src="~/images/image3.jpg" alt="" />
+							</span>
+							@Html.ActionLink("Supervisiones", "", "")
+						</article>
+						<article class="style2">
+							<span class="image">
+								<img src="~/images/image4.jpg" alt="" />
+							</span>
+							@Html.ActionLink("Consultas", "", "")
+						</article>
+						<article class="style6">
+							<span class="image">
+								<img src="~/images/image6.jpg" alt="" />
+							</span>
+							@Html.ActionLink("Consultas generales", "", "")
+						</article>
+						<article class="style5">
+							<span class="image">
+								<img src="~/images/image5.jpg" alt="" />
+							</span>
+							@Html.ActionLink("Ajustes", "Index", "Settings")
+						</article>						
+					}}
+				</section>
+			</div>
+		</div>
+	</div>
+
+	<!-- Scripts -->
+	<script src="~/assets/js/jquery.min.js"></script>
+	<script src="~/assets/js/browser.min.js"></script>
+	<script src="~/assets/js/breakpoints.min.js"></script>
+	<script src="~/assets/js/util.js"></script>
+	<script src="~/assets/js/main.js"></script>
+</body>
+</html>

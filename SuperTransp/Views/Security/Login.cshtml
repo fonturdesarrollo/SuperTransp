@@ -1,0 +1,119 @@
+﻿@model SecurityUserModel
+@{
+  Layout = "";    
+}
+<!DOCTYPE HTML>
+
+<html>
+	<head>
+		<title>Sistema Supervisión de Unidades de Transporte (SuperTransp) - Entrada al Sistema</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="~/login_assets/css/mainX.css" />
+		<noscript><link rel="stylesheet" href="~/login_assets/css/noscript.css" /></noscript>
+	</head>
+	<body class="is-preload">
+
+@using(Html.BeginForm("Login", "Security", FormMethod.Post))
+{
+	<div id="wrapper">
+
+		<!-- Nav -->
+			<nav id="nav">
+				<a href="#" class="icon solid fa-home"><span>Login</span></a>
+				<a href="#" class="icon solid fa-folder"><span>Novedades</span></a>
+				<a href="#" class="icon solid fa-envelope"><span>Soporte</span></a>
+			</nav>
+
+		<!-- Main -->
+			<div id="main">
+				<!-- Me -->
+					<article id="home" class="panel intro">
+						<header>
+							<h2>
+								<span class="symbol"><img src="~/images/logo_login.jpg" alt="" /></span>
+								<label style="text-align:center">Sistema para la Supervisión de Unidades de Transporte (SuperTransp)</label>
+							</h2>
+								@if (ViewBag.InvalidUser == "true")
+								{
+									<div>
+										<h5 style="color: #be3113; text-align:center;">Usuario o clave inválida</h5>
+									</div>
+								}
+							<div class="form-group row">
+								<div class="col-12">
+									@Html.TextBoxFor(x => x.Login, new { @class = "form-control", maxlength = "20", placeholder = "Usuario", onclick = "$(this).select();" })
+									<span asp-validation-for="Login" class="text-danger"></span>
+								</div>
+							</div>
+							<p>
+							<div class="form-group row">
+								<div class="col-12">
+									@Html.PasswordFor(x => x.Password, new { @class = "form-control", maxlength = "30", placeholder = "Clave", onclick = "$(this).select();" })
+									<span asp-validation-for="Password" class="text-danger"></span>
+								</div>
+							</div>
+							<p>
+							<div class="col-12">
+								<div style="text-align:center"><input type="submit" value="Entrar" id="saveRequest" /></div>
+							</div>
+						</header>
+
+						<a href="#" class="jumplink pic">
+							<img src="~/images/splash2.jpg	" alt="" />
+						</a>
+					</article>
+			</div>
+
+		<!-- Footer -->
+			<div id="footer">
+				<ul class="copyright">
+					<li>&copy; Gerencia de Tecnología @DateTime.Now.Year.</li>
+					<li>Sitio: <a href="http://www.fontur.gob.ve/" target="_blank">FONTUR</a></li>
+				</ul>
+			</div>
+	</div>	
+}
+
+	<!-- Wrapper-->
+	<!-- Scripts -->
+	<script src="~/login_assets/js/jquery.min.js"></script>
+	<script src="~/login_assets/js/browser.min.js"></script>
+	<script src="~/login_assets/js/breakpoints.min.js"></script>
+	<script src="~/login_assets/js/util.js"></script>
+	<script src="~/login_assets/js/main.js"></script>
+	@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+	<script type="text/javascript">
+
+		$("body").on("click", "#saveRequest", function () {
+			if (isOkToSave()) {
+				return true;
+			}
+		});
+
+		function isOkToSave() {
+			if ($("#Password").val() == "") {
+				alert("Debe colocar el password");
+				return false;
+			}
+		}
+
+		function showMsg(hasCurrentJob) {
+			if (hasCurrentJob != "OK") {
+				alert(hasCurrentJob);
+				return false;
+			} else {
+
+				$("form").unbind('submit').submit();
+			}
+		}
+
+		$(document).ready(function () {
+
+
+		});//end document ready
+
+	</script>
+</body>
+</html>
