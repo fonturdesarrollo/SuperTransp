@@ -2,6 +2,7 @@
 using Microsoft.Data.SqlClient;
 using static SuperTransp.Core.Interfaces;
 using System.Text.RegularExpressions;
+using System.Reflection;
 
 namespace SuperTransp.Core
 {
@@ -12,6 +13,7 @@ namespace SuperTransp.Core
         {
             this._configuration = configuration;
         }
+
 		private SqlConnection GetOpenConnection()
 		{
 			SqlConnection sqlConnection = new(_configuration.GetConnectionString("connectionString"));
@@ -144,7 +146,7 @@ namespace SuperTransp.Core
 			}
 		}
 
-		public int AddOrEdit(SecurityUserModel model)
+		public int AddOrEditUser(SecurityUserModel model)
 		{
 			int result = 0;
 			try
@@ -176,6 +178,7 @@ namespace SuperTransp.Core
 				throw;
 			}
 		}
+
 		public SecurityUserModel GetUserById(int securityUserId)
 		{
 			try
@@ -319,6 +322,213 @@ namespace SuperTransp.Core
 			catch (Exception)
 			{
 
+				throw;
+			}
+		}
+
+		public int AddOrEditGroup(SecurityGroupModel model)
+		{
+			int result = 0;
+			try
+			{
+				using (SqlConnection sqlConnection = GetOpenConnection())
+				{
+					if (model != null)
+					{
+						SqlCommand cmd = new("Security_GroupAddOrEdit", sqlConnection);
+						cmd.CommandType = System.Data.CommandType.StoredProcedure;
+
+						cmd.Parameters.AddWithValue("SecurityGroupId", model.SecurityGroupId);
+						cmd.Parameters.AddWithValue("SecurityGroupName", model.SecurityGroupName);
+						cmd.Parameters.AddWithValue("SecurityGroupDescription", model.SecurityGroupDescription);
+
+						result = Convert.ToInt32(cmd.ExecuteScalar());
+					}
+				}
+
+				return result;
+			}
+			catch (Exception)
+			{
+				throw;
+			}
+		}
+
+		public int AddOrEditModule(SecurityModuleModel model)
+		{
+			int result = 0;
+			try
+			{
+				using (SqlConnection sqlConnection = GetOpenConnection())
+				{
+					if (model != null)
+					{
+						SqlCommand cmd = new("Security_ModuleAddOrEdit", sqlConnection);
+						cmd.CommandType = System.Data.CommandType.StoredProcedure;
+
+						cmd.Parameters.AddWithValue("SecurityModuleId", model.SecurityModuleId);
+						cmd.Parameters.AddWithValue("SecurityModuleName", model.SecurityModuleName);
+
+						result = Convert.ToInt32(cmd.ExecuteScalar());
+					}
+				}
+
+				return result;
+			}
+			catch (Exception)
+			{
+				throw;
+			}
+		}
+
+		public List<SecurityModuleModel> GetModuleById(int securityModuleId)
+		{
+			using (SqlConnection sqlConnection = GetOpenConnection())
+			{
+				List<SecurityModuleModel> module = new();
+				SqlCommand cmd = new($"SELECT * FROM SecurityModule Where SecurityModuleId = {securityModuleId}", sqlConnection);
+				SqlDataReader dr = cmd.ExecuteReader();
+
+				while (dr.Read())
+				{
+					module.Add(new SecurityModuleModel
+					{
+						SecurityModuleId = (int)dr["SecurityModuleId"],
+						SecurityModuleName = (string)dr["SecurityModuleName"],
+					});
+				}
+
+				dr.Close();
+				sqlConnection.Close();
+
+				return module.ToList();
+			}
+		}
+
+		public List<SecurityModuleModel> GetAllModules()
+		{
+			using (SqlConnection sqlConnection = GetOpenConnection())
+			{
+				List<SecurityModuleModel> modules = new();
+				SqlCommand cmd = new($"SELECT * FROM SecurityModule", sqlConnection);
+				SqlDataReader dr = cmd.ExecuteReader();
+
+				while (dr.Read())
+				{
+					modules.Add(new SecurityModuleModel
+					{
+						SecurityModuleId = (int)dr["SecurityModuleId"],
+						SecurityModuleName = (string)dr["SecurityModuleName"]
+					});
+				}
+
+				dr.Close();
+				sqlConnection.Close();
+
+				return modules.ToList();
+			}
+		}
+
+		public List<SecurityAccessTypeModel> GetAllAccessTypes()
+		{
+			using (SqlConnection sqlConnection = GetOpenConnection())
+			{
+				List<SecurityAccessTypeModel> accessTypes = new();
+				SqlCommand cmd = new($"SELECT * FROM SecurityAccessType", sqlConnection);
+				SqlDataReader dr = cmd.ExecuteReader();
+
+				while (dr.Read())
+				{
+					accessTypes.Add(new SecurityAccessTypeModel
+					{
+						SecurityAccessTypeId = (int)dr["SecurityAccessTypeId"],
+						SecurityAccessTypeName = (string)dr["SecurityAccessTypeName"]
+					});
+				}
+
+				dr.Close();
+				sqlConnection.Close();
+
+				return accessTypes.ToList();
+			}
+		}
+
+		public List<SecurityGroupModuleModel> GetAllSecurityGroupModuleDetail()
+		{
+			using (SqlConnection sqlConnection = GetOpenConnection())
+			{
+				List<SecurityGroupModuleModel> groupMoulesDetail = new();
+				SqlCommand cmd = new($"SELECT * FROM Security_SecurityGroupModuleDetail", sqlConnection);
+				SqlDataReader dr = cmd.ExecuteReader();
+
+				while (dr.Read())
+				{
+					groupMoulesDetail.Add(new SecurityGroupModuleModel
+					{
+						SecurityGroupModuleId = (int)dr["SecurityGroupModuleId"],
+						SecurityGroupId = (int)dr["SecurityGroupId"],
+						SecurityGroupName = (string)dr["SecurityGroupName"],
+						SecurityModuleId = (int)dr["SecurityModuleId"],
+						SecurityModuleName = (string)dr["SecurityModuleName"],
+						SecurityAccessTypeId= (int)dr["SecurityAccessTypeId"],
+						SecurityAccessTypeName = (string)dr["SecurityAccessTypeName"]
+					});
+				}
+
+				dr.Close();
+				sqlConnection.Close();
+
+				return groupMoulesDetail.ToList();
+			}
+		}
+
+		public int AddOrEditGroupModules(SecurityGroupModuleModel model)
+		{
+			int result = 0;
+			try
+			{
+				using (SqlConnection sqlConnection = GetOpenConnection())
+				{
+					if (model != null)
+					{
+						SqlCommand cmd = new("Security_GroupModuleAddOrEdit", sqlConnection);
+						cmd.CommandType = System.Data.CommandType.StoredProcedure;
+
+						cmd.Parameters.AddWithValue("@SecurityGroupModuleId", model.SecurityGroupModuleId);
+						cmd.Parameters.AddWithValue("SecurityGroupId", model.SecurityGroupId);
+						cmd.Parameters.AddWithValue("SecurityModuleId", model.SecurityModuleId);
+						cmd.Parameters.AddWithValue("SecurityAccessTypeId", model.SecurityAccessTypeId);
+
+						result = Convert.ToInt32(cmd.ExecuteScalar());
+					}
+				}
+
+				return result;
+			}
+			catch (Exception)
+			{
+				throw;
+			}
+		}
+
+		public int DeleteGroupModules(int securityGroupModuleId)
+		{
+			int result = 0;
+			try
+			{
+				using (SqlConnection sqlConnection = GetOpenConnection())
+				{
+					if (securityGroupModuleId != 0)
+					{
+						SqlCommand cmd = new($"DELETE FROM SecurityGroupModule WHERE SecurityGroupModuleId = {securityGroupModuleId}", sqlConnection);
+						SqlDataReader dr = cmd.ExecuteReader();
+					}
+				}
+
+				return result;
+			}
+			catch (Exception)
+			{
 				throw;
 			}
 		}

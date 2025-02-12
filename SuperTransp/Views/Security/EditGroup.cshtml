@@ -1,18 +1,18 @@
-﻿@model SecurityUserModel
+﻿@model List<SuperTransp.Models.SecurityGroupModel>
 @{
 	Layout = "";
 }
 <!DOCTYPE HTML>
 <html>
 <head>
-	<title>Ajustes</title>
+	<title>Modificar Grupo</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 	<link rel="stylesheet" href="~/assets/css/main.css" />
 	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
 </head>
 <body class="is-preload">
-	@using (Html.BeginForm("AccesLogin", "Login", FormMethod.Post))
+	@using (Html.BeginForm("EditGroup", "Security", FormMethod.Post))
 	{
 		<!-- Wrapper -->
 		<div id="wrapper">
@@ -20,12 +20,14 @@
 			<!-- Header -->
 			<header id="header">
 				<div class="inner">
+
 					<!-- Logo -->
 					<a href="index.html" class="logo">
 						<span class="symbol"><img src="~/images/logo_login.jpg" alt="" /></span><span class="title">SuperTransp</span>
+						<br />
+						<span class="title">@ViewBag.LocationName</span>
 					</a>
 				</div>
-
 				<!-- Nav -->
 				<nav>
 					<ul>
@@ -39,47 +41,37 @@
 				<h2>Menu</h2>
 				<ul>
 					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
+					<li>@Html.ActionLink("Modificar grupo", "GroupList", "Security")</li>
 					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 				</ul>
 			</nav>
 
+			<!-- Main -->
 			<div id="main">
 				<div class="inner">
 					<!-- Form -->
-					<br />
 					<section>
-						<h2>Ajustes Generales</h2>
-						<div class="row">
-							<div class="col-6 col-12-medium">
-								<h3>Organizaciones de Transporte</h3>
-								<ul>
-									<li>@Html.ActionLink("Agregar tipo de Organización", "Add", "Clinic")</li>
-									<li>@Html.ActionLink("Modificar tipo de Organización", "SelectClinic", "Setting")</li>
+						<h1 style="color:#4cbece">Modificar grupo</h1>
+						<br />
+						<div class="row gtr-uniform">
+							<div class="col-12">
+								<strong>Nombre:</strong>
+								@Html.TextBoxFor(x => x.FirstOrDefault().SecurityGroupName, new { placeholder = "Nombre", tabindex = "0", maxlength = "20" })
+								@Html.HiddenFor(x => x.FirstOrDefault().SecurityGroupId)
+								<span asp-validation-for="FirstOrDefault().SecurityGroupName" class="text-danger"></span>
+							</div>
+							<div class="col-12">
+								<strong>Descripción:</strong>
+								@Html.TextBoxFor(x => x.FirstOrDefault().SecurityGroupDescription, new { placeholder = "Descripción", maxlength = "50" })
+								<span asp-validation-for="FirstOrDefault().SecurityGroupDescription" class="text-danger"></span>
+							</div>
+							<div class="col-12">
+								<ul class="actions">
+									<li><input type="submit" value="Actualizar" class="primary" /></li>
 								</ul>
 							</div>
-							<div class="col-6 col-12-medium">
-								<h3>Seguridad</h3>
-								<ul>
-									<li>Cambiar Password</li>
-									<li>@Html.ActionLink("Agregar Usuario", "AddUser", "Security")</li>
-									<li>@Html.ActionLink("Modificar Usuario", "UserList", "Security")</li>
-									<li>@Html.ActionLink("Agregar Grupo", "AddGroup", "Security")</li>
-									<li>@Html.ActionLink("Modificar Grupo", "GroupList", "Security")</li>
-									<li>@Html.ActionLink("Agregar Modulo", "AddModule", "Security")</li>
-									<li>@Html.ActionLink("Modificar Modulo", "ModuleList", "Security")</li>
-									<li>@Html.ActionLink("Agregar Modulo a grupo", "AddModulesToGroups", "Security")</li>
-
-								</ul>
-							</div>
-@* 							<div class="col-6 col-12-medium">
-								<h3>Tasa del día</h3>
-								<ul>
-									<li>@Html.ActionLink("Agregar tasa del día", "Add", "ExchangeRate")</li>
-								</ul>
-							</div> *@
 						</div>
 					</section>
-
 				</div>
 			</div>
 		</div>
@@ -93,5 +85,16 @@
 	@{
 		await Html.RenderPartialAsync("_ValidationScriptsPartial");
 	}
+
+	<script type="text/javascript">
+
+		$(document).ready(function () {
+
+			$("form").submit(function (e) {
+				e.preventDefault();
+		});
+	</script>
 </body>
 </html>
+
+

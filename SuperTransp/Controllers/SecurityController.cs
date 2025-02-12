@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.IdentityModel.Tokens;
 using SuperTransp.Models;
+using System.Net.NetworkInformation;
 using static SuperTransp.Core.Interfaces;
 
 namespace SuperTransp.Controllers
@@ -125,7 +126,7 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
 				{
-					int securityUserId = _security.AddOrEdit(model);
+					int securityUserId = _security.AddOrEditUser(model);
 
 					if (securityUserId > 0)
 					{
@@ -182,7 +183,7 @@ namespace SuperTransp.Controllers
 					ViewBag.Status = new SelectList(_security.GetAllUsersStatus(), "SecurityStatusId", "SecurityStatusName");
 				}
 
-				return View("EditUser" , model);
+				return View(model);
 			}
 
 			return RedirectToAction("Login", "Security");
@@ -197,7 +198,7 @@ namespace SuperTransp.Controllers
 				{
 					var currentPassword = _security.GetUserById(model.SecurityUserId);
 					model.Password = currentPassword.Password;
-					_security.AddOrEdit(model);
+					_security.AddOrEditUser(model);
 
 					return RedirectToAction("EditUser", new { securityUserId = model.SecurityUserId });
 
@@ -281,6 +282,274 @@ namespace SuperTransp.Controllers
 			}
 
 			return Json("ERROR");
+		}
+
+		public IActionResult AddGroup()
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+				{
+					var model = new SecurityGroupModel
+					{
+
+					};
+
+					return View(model);
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
+
+		[HttpPost]
+		public IActionResult AddGroup(SecurityGroupModel model)
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
+				{
+					int securityGroupId = _security.AddOrEditGroup(model);
+
+					if (securityGroupId > 0)
+					{
+						return RedirectToAction("EditGroup", new { securityGroupId = securityGroupId });
+					}
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
+
+		public IActionResult EditGroup(int securityGroupId)
+		{
+			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+			{
+				var model = _security.GetGroupById(securityGroupId);
+
+				return View(model);
+			}
+
+			return RedirectToAction("Login", "Security");
+		}
+
+		[HttpPost]
+		public IActionResult EditGroup(SecurityGroupModel model)
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
+				{
+					_security.AddOrEditGroup(model);
+
+					return RedirectToAction("EditGroup", new { securityGroupId = model.SecurityGroupId });
+
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
+
+		public IActionResult GroupList()
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+				{
+					List<SecurityGroupModel> model = _security.GetAllGroups();
+
+					return View(model);
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
+
+		public IActionResult AddModule()
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+				{
+					var model = new SecurityModuleModel();
+					{
+
+					};
+
+					return View(model);
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
+
+		[HttpPost]
+		public IActionResult AddModule(SecurityModuleModel model)
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
+				{
+					int securityModuleId = _security.AddOrEditModule(model);
+
+					if (securityModuleId > 0)
+					{
+						return RedirectToAction("EditModule", new { securityModuleId = securityModuleId });
+					}
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
+
+		public IActionResult EditModule(int securityModuleId)
+		{
+			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+			{
+				var model = _security.GetModuleById(securityModuleId);
+
+				return View(model);
+			}
+
+			return RedirectToAction("Login", "Security");
+		}
+
+		[HttpPost]
+		public IActionResult EditModule(SecurityModuleModel model)
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
+				{
+					_security.AddOrEditModule(model);
+
+					return RedirectToAction("EditModule", new { securityModuleId = model.SecurityModuleId });
+
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
+
+		public IActionResult ModuleList()
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+				{
+					List<SecurityModuleModel> model = _security.GetAllModules();
+
+					return View(model);
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
+
+		public IActionResult AddModulesToGroups(int securityGroupModuleId)
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+				{
+
+					SecurityGroupModuleModel model = new()
+					{
+
+					};
+
+					ViewBag.Groups = new SelectList(_security.GetAllGroups(), "SecurityGroupId", "SecurityGroupName");
+					ViewBag.Modules = new SelectList(_security.GetAllModules(), "SecurityModuleId", "SecurityModuleName");
+					ViewBag.AccessTypes = new SelectList(_security.GetAllAccessTypes(), "SecurityAccessTypeId", "SecurityAccessTypeName");
+
+					ViewBag.SecurityGroupModuleDetail = _security.GetAllSecurityGroupModuleDetail();
+
+					return View(model);
+				}
+			}
+
+			catch (Exception)
+			{
+
+				throw;
+			}
+
+			return View();
+		}
+
+		[HttpPost]
+		public IActionResult AddModulesToGroups(SecurityGroupModuleModel model)
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
+				{
+					int securityGroupModuleId = _security.AddOrEditGroupModules(model);
+
+					return RedirectToAction("AddModulesToGroups", new { securityGroupModuleId = securityGroupModuleId });
+
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
+
+		public IActionResult DeleteModuleToGroup(int securityGroupModuleId)
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
+				{
+					int securityGroupModule = _security.DeleteGroupModules(securityGroupModuleId);
+
+					return RedirectToAction("AddModulesToGroups", new { securityGroupModuleId = securityGroupModuleId });
+
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
 		}
 	}
 }

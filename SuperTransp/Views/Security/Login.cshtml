@@ -86,8 +86,10 @@
 
 	<script type="text/javascript">
 
-		$("body").on("click", "#saveRequest", function () {
-			if (isOkToSave()) {
+		$("body").on("click", "#saveRequest", function (e) {
+			if (!isOkToSave()) {
+				e.preventDefault();
+			} else {
 				return true;
 			}
 		});
@@ -97,6 +99,7 @@
 				alert("Debe colocar el password");
 				return false;
 			}
+			return true;
 		}
 
 		function showMsg(hasCurrentJob) {

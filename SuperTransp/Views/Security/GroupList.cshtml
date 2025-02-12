@@ -1,4 +1,4 @@
-﻿@model List<SuperTransp.Models.SecurityUserModel>
+﻿@model List<SuperTransp.Models.SecurityGroupModel>
 @{
 	Layout = "";
 }
@@ -6,7 +6,7 @@
 <html>
 
 <head>
-	<title>Lista de Usuarios</title>
+	<title>Lista de Grupos</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 	<link rel="stylesheet" href="~/assets/css/main.css" />
@@ -53,28 +53,24 @@
 			<div class="inner">
 				<!-- Form -->
 				<section>
-					<h4 style="color:#4cbece">Usuarios</h4>
+					<h4 style="color:#4cbece">Grupos</h4>
 					<br />
 					<table id="inventory" class="table table-striped table-bordered dt-responsive nowrap" style="width:100%">
 						<thead>
 							<tr>
-								<th>Cédula</th>
 								<th>Nombre</th>
-								<th>Estado</th>
-								<th>Grupo</th>
+								<th>Descripción</th>
 								<th>Seleccionar</th>
 							</tr>
 						</thead>
 						<tbody>
-							@foreach (var user in Model)
+							@foreach (var group in Model)
 							{
 								<tr>
-									<td>@user.SecurityUserDocumentIdNumber</td>
-									<td>@user.FullName</td>
-									<td>@user.StateName</td>
-									<td>@user.SecurityGroupName</td>
-									<td id="@user.SecurityUserId">
-										@Html.ActionLink("Modificar", "EditUser", "Security", new { SecurityUserId = user.SecurityUserId }, new { @id = "btnEdit" })
+									<td>@group.SecurityGroupName</td>
+									<td>@group.SecurityGroupDescription</td>
+									<td id="@group.SecurityGroupId">
+										@Html.ActionLink("Modificar", "EditGroup", "Security", new { SecurityGroupId = group.SecurityGroupId }, new { @id = "btnEdit" })
 									</td>
 								</tr>
 							}

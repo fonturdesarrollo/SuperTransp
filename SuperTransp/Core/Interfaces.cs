@@ -14,9 +14,17 @@ namespace SuperTransp.Core
             public bool GroupModuleHasAccess(int securityGroupId, int securityModuleId);
 			public List<SecurityGroupModel> GetAllGroups();
 			public List<SecurityGroupModel> GetGroupById(int groupId);
+            public List<SecurityModuleModel> GetModuleById(int securityModuleId);
+            public List<SecurityModuleModel> GetAllModules();
 			public List<SecurityStatusUserModel> GetAllUsersStatus();
-            public int AddOrEdit(SecurityUserModel model);
+			public List<SecurityAccessTypeModel> GetAllAccessTypes();
+            public List<SecurityGroupModuleModel> GetAllSecurityGroupModuleDetail();
+			public int AddOrEditUser(SecurityUserModel model);
 			public int RegisteredUser(string paramValue, string verifyBy);
+			public int AddOrEditGroup(SecurityGroupModel model);
+            public int AddOrEditModule(SecurityModuleModel model);
+            public int AddOrEditGroupModules(SecurityGroupModuleModel model);
+            public int DeleteGroupModules(int securityGroupModuleId);
 		}
         public interface IGeography
         {
