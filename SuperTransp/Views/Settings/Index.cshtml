@@ -23,6 +23,8 @@
 					<!-- Logo -->
 					<a href="index.html" class="logo">
 						<span class="symbol"><img src="~/images/logo_login.jpg" alt="" /></span><span class="title">SuperTransp</span>
+						<br />
+						<span class="title">@ViewBag.EmployeeName</span>
 					</a>
 				</div>
 
@@ -61,13 +63,38 @@
 								<h3>Seguridad</h3>
 								<ul>
 									<li>Cambiar Password</li>
-									<li>@Html.ActionLink("Agregar Usuario", "AddUser", "Security")</li>
-									<li>@Html.ActionLink("Modificar Usuario", "UserList", "Security")</li>
-									<li>@Html.ActionLink("Agregar Grupo", "AddGroup", "Security")</li>
-									<li>@Html.ActionLink("Modificar Grupo", "GroupList", "Security")</li>
-									<li>@Html.ActionLink("Agregar Modulo", "AddModule", "Security")</li>
-									<li>@Html.ActionLink("Modificar Modulo", "ModuleList", "Security")</li>
-									<li>@Html.ActionLink("Agregar Modulo a grupo", "AddModulesToGroups", "Security")</li>
+									@{
+										var modulesInGroup = (IEnumerable<SecurityModuleModel>)ViewBag.ModulesInGroup;
+
+										if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 8))
+										{
+											<li>@Html.ActionLink("Agregar Usuario", "AddUser", "Security")</li>
+										}
+										if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 9))
+										{
+											<li>@Html.ActionLink("Modificar Usuario", "UserList", "Security")</li>
+										}
+										if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 10))
+										{
+											<li>@Html.ActionLink("Agregar Grupo", "AddGroup", "Security")</li>
+										}
+										if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 11))
+										{
+											<li>@Html.ActionLink("Modificar Grupo", "GroupList", "Security")</li>
+										}
+										if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 12))
+										{
+											<li>@Html.ActionLink("Agregar Modulo", "AddModule", "Security")</li>
+										}
+										if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 13))
+										{
+											<li>@Html.ActionLink("Modificar Modulo", "ModuleList", "Security")</li>
+										}
+										if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 14))
+										{
+											<li>@Html.ActionLink("Agregar Modulo a grupo", "AddModulesToGroups", "Security")</li>
+										}										
+									}
 
 								</ul>
 							</div>

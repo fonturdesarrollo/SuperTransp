@@ -1,16 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
 using SuperTransp.Models;
 using System.Diagnostics;
+using static SuperTransp.Core.Interfaces;
 
 namespace SuperTransp.Controllers
 {
 	public class HomeController : Controller
 	{
 		private readonly ILogger<HomeController> _logger;
+		private readonly ISecurity _security;
 
-		public HomeController(ILogger<HomeController> logger)
+		public HomeController(ILogger<HomeController> logger, ISecurity security)
 		{
 			_logger = logger;
+			_security = security;
 		}
 
 		public IActionResult Index()
@@ -21,6 +24,15 @@ namespace SuperTransp.Controllers
 				{
 					ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
 					ViewBag.SecurityGroupId = (int)HttpContext.Session.GetInt32("SecurityGroupId");
+
+					if (ViewBag.SecurityGroupId != 1)
+					{
+						ViewBag.ModulesInGroup = _security.GetModulesByGroupId(ViewBag.SecurityGroupId);
+					}
+					else
+					{
+						ViewBag.ModulesInGroup = _security.GetAllModules();
+					}
 
 					return View();
 				}

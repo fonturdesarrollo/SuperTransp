@@ -28,6 +28,8 @@
 				<!-- Logo -->
 				<a href="index.html" class="logo">
 					<span class="symbol"><img src="~/images/logo_login.jpg" alt="" /></span><span class="title">SuperTransp</span>
+					<br />
+					<span class="title">@ViewBag.EmployeeName</span>
 				</a>
 			</div>
 			<!-- Nav -->
@@ -43,6 +45,7 @@
 			<h2>Menu</h2>
 			<ul>
 				<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
+				<li>@Html.ActionLink("Ajustes", "Index", "Settings")</li>
 				<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 			</ul>
 		</nav>
@@ -57,6 +60,7 @@
 						<thead>
 							<tr>
 								<th>Nombre</th>
+								<th>Descripción</th>
 								<th>Seleccionar</th>
 							</tr>
 						</thead>
@@ -65,6 +69,7 @@
 							{
 								<tr>
 									<td>@module.SecurityModuleName</td>
+									<td>@module.SecurityModuleDescription</td>
 									<td id="@module.SecurityModuleId">
 										@Html.ActionLink("Modificar", "EditModule", "Security", new { SecurityModuleId = module.SecurityModuleId }, new { @id = "btnEdit" })
 									</td>

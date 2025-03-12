@@ -1,18 +1,18 @@
-﻿@model List<SuperTransp.Models.SecurityModuleModel>
+﻿@model PublicTransportGroupModel
 @{
 	Layout = "";
 }
 <!DOCTYPE HTML>
 <html>
 <head>
-	<title>Modificar Module</title>
+	<title>Ajustes</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 	<link rel="stylesheet" href="~/assets/css/main.css" />
 	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
 </head>
 <body class="is-preload">
-	@using (Html.BeginForm("EditModule", "Security", FormMethod.Post))
+	@using (Html.BeginForm("AccesLogin", "Login", FormMethod.Post))
 	{
 		<!-- Wrapper -->
 		<div id="wrapper">
@@ -20,7 +20,6 @@
 			<!-- Header -->
 			<header id="header">
 				<div class="inner">
-
 					<!-- Logo -->
 					<a href="index.html" class="logo">
 						<span class="symbol"><img src="~/images/logo_login.jpg" alt="" /></span><span class="title">SuperTransp</span>
@@ -28,6 +27,7 @@
 						<span class="title">@ViewBag.EmployeeName</span>
 					</a>
 				</div>
+
 				<!-- Nav -->
 				<nav>
 					<ul>
@@ -41,38 +41,26 @@
 				<h2>Menu</h2>
 				<ul>
 					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
-					<li>@Html.ActionLink("Modificar modulo", "ModuleList", "Security")</li>
-					<li>@Html.ActionLink("Ajustes", "Index", "Settings")</li>
 					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 				</ul>
 			</nav>
 
-			<!-- Main -->
 			<div id="main">
 				<div class="inner">
 					<!-- Form -->
+					<br />
 					<section>
-						<h1 style="color:#4cbece">Modificar modulo</h1>
-						<br />
-						<div class="row gtr-uniform">
-							<div class="col-12">
-								<strong>Nombre:</strong>
-								@Html.TextBoxFor(x => x.FirstOrDefault().SecurityModuleName, new { placeholder = "Nombre", tabindex = "0", maxlength = "20" })
-								@Html.HiddenFor(x => x.FirstOrDefault().SecurityModuleId)
-								<span asp-validation-for="FirstOrDefault().SecurityModuleName" class="text-danger"></span>
-							</div>
-							<div class="col-12">
-								<strong>Descripción:</strong>
-								@Html.TextBoxFor(x => x.FirstOrDefault().SecurityModuleDescription, new { placeholder = "Descripción", tabindex = "0", maxlength = "100" })
-								<span asp-validation-for="FirstOrDefault().SecurityModuleDescription" class="text-danger"></span>
-							</div>
-							<div class="col-12">
-								<ul class="actions">
-									<li><input type="submit" value="Actualizar" class="primary" /></li>
+						<h2>Líneas de Transporte Público</h2>
+						<div class="row">
+							<div class="col-6 col-12-medium">
+								<ul>
+									<li>@Html.ActionLink("Agregar Línea de Transporte", "Add", "PublicTransportGroup")</li>
+									<li>@Html.ActionLink("Modificar Línea de Transporte", "Edit", "PublicTransportGroup")</li>
 								</ul>
 							</div>
 						</div>
 					</section>
+
 				</div>
 			</div>
 		</div>
@@ -86,16 +74,5 @@
 	@{
 		await Html.RenderPartialAsync("_ValidationScriptsPartial");
 	}
-
-	<script type="text/javascript">
-
-		$(document).ready(function () {
-
-			$("form").submit(function (e) {
-				e.preventDefault();
-		});
-	</script>
 </body>
 </html>
-
-

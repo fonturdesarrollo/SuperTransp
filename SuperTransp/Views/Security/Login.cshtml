@@ -31,8 +31,9 @@
 					<article id="home" class="panel intro">
 						<header>
 							<h2>
-								<span class="symbol"><img src="~/images/logo_login.jpg" alt="" /></span>
-								<label style="text-align:center">Sistema para la Supervisión de Unidades de Transporte (SuperTransp)</label>
+								<span class="symbol"><img src="~/images/cintillo.jpg" alt="" /></span>
+
+							<label style="text-align:center">Sistema para la Supervisión de Unidades de Transporte (SuperTransp)</label>
 							</h2>
 								@if (ViewBag.InvalidUser == "true")
 								{
@@ -49,6 +50,7 @@
 							<p>
 							<div class="form-group row">
 								<div class="col-12">
+									@Html.CheckBox("nombreCheckBox", new { @class = "form-check-input", @checked = "checked" })
 									@Html.PasswordFor(x => x.Password, new { @class = "form-control", maxlength = "30", placeholder = "Clave", onclick = "$(this).select();" })
 									<span asp-validation-for="Password" class="text-danger"></span>
 								</div>

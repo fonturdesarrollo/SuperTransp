@@ -27,6 +27,7 @@ namespace SuperTransp.Models
 		public string? StateName { get; set; }
 		public int SecurityAccessTypeId { get; set; }
 		public string? SecurityAccessTypeName { get; set; }
+		public string? SecurityModuleDescription { get; set; }
 	}
 
 	public class SecurityGroupModel
@@ -43,6 +44,8 @@ namespace SuperTransp.Models
 		public int SecurityModuleId { get; set; }
 		[Required(ErrorMessage = "El nombre del modulo es requerido")]
 		public string? SecurityModuleName { get; set; }
+		[Required(ErrorMessage = "La descripción del modulo es requerida")]
+		public string? SecurityModuleDescription { get; set; }
 	}
 
 	public class SecurityStatusUserModel

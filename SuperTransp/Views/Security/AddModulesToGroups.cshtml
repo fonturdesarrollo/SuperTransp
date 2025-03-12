@@ -45,6 +45,8 @@
 					<!-- Logo -->
 					<a href="#" class="logo">
 						<span class="symbol"><img src="~/images/logo_login.jpg" alt="" /></span><span class="title">SuperTransp</span>
+						<br />
+						<span class="title">@ViewBag.EmployeeName</span>
 					</a>
 				</div>
 				<!-- Nav -->
@@ -60,7 +62,7 @@
 				<h2>Menu</h2>
 				<ul>
 					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
-					<li>@Html.ActionLink("Salir", "Login", "Login")</li>
+					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 				</ul>
 			</nav>
 

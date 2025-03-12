@@ -45,6 +45,7 @@
 			<h2>Menu</h2>
 			<ul>
 				<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
+				<li>@Html.ActionLink("Ajustes", "Index", "Settings")</li>
 				<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 			</ul>
 		</nav>
@@ -62,6 +63,7 @@
 								<th>Nombre</th>
 								<th>Estado</th>
 								<th>Grupo</th>
+								<th>Estatus</th>
 								<th>Seleccionar</th>
 							</tr>
 						</thead>
@@ -73,6 +75,7 @@
 									<td>@user.FullName</td>
 									<td>@user.StateName</td>
 									<td>@user.SecurityGroupName</td>
+									<td>@user.SecurityStatusName</td>
 									<td id="@user.SecurityUserId">
 										@Html.ActionLink("Modificar", "EditUser", "Security", new { SecurityUserId = user.SecurityUserId }, new { @id = "btnEdit" })
 									</td>

@@ -49,43 +49,60 @@
 				</header>
 				<section class="tiles">
 					@{
-						<article class="style3">
-							<span class="image">
-								<img src="~/images/image7.jpg" alt="" />
-							</span>
-							@Html.ActionLink("Organizaciones de Transporte", "", "")
-						</article>
-						<article class="style4">
-							<span class="image">
-								<img src="~/images/image8.jpg" alt="" />
-							</span>
-							@Html.ActionLink("Unidades de Transporte", "", "")
-						</article>
-						<article class="style1">
-							<span class="image">
-								<img src="~/images/image3.jpg" alt="" />
-							</span>
-							@Html.ActionLink("Supervisiones", "", "")
-						</article>
-						<article class="style2">
-							<span class="image">
-								<img src="~/images/image4.jpg" alt="" />
-							</span>
-							@Html.ActionLink("Consultas", "", "")
-						</article>
-						<article class="style6">
-							<span class="image">
-								<img src="~/images/image6.jpg" alt="" />
-							</span>
-							@Html.ActionLink("Consultas generales", "", "")
-						</article>
-						<article class="style5">
-							<span class="image">
-								<img src="~/images/image5.jpg" alt="" />
-							</span>
-							@Html.ActionLink("Ajustes", "Index", "Settings")
-						</article>						
-					}}
+						foreach (var item in ViewBag.ModulesInGroup)
+						{
+							if (ViewBag.SecurityGroupId == 1 || item.SecurityModuleId == 1)
+							{
+								<article class="style3">
+									<span class="image">
+										<img src="~/images/image7.jpg" alt="" />
+									</span>
+									@Html.ActionLink("Organizaciones de Transporte", "Index", "PublicTransportGroup")
+								</article>
+							}
+							if (ViewBag.SecurityGroupId == 1 || item.SecurityModuleId == 2)
+							{
+								<article class="style4">
+									<span class="image">
+										<img src="~/images/image8.jpg" alt="" />
+									</span>
+									@Html.ActionLink("Unidades de Transporte y Transportistas", "", "")
+								</article>
+							}
+							if (ViewBag.SecurityGroupId == 1 || item.SecurityModuleId == 3)
+							{
+								<article class="style1">
+									<span class="image">
+										<img src="~/images/image3.jpg" alt="" />
+									</span>
+									@Html.ActionLink("Supervisiones", "", "")
+								</article>
+							}
+							if (ViewBag.SecurityGroupId == 1 || item.SecurityModuleId == 4)
+							{
+								<article class="style2">
+									<span class="image">
+										<img src="~/images/image4.jpg" alt="" />
+									</span>
+									@Html.ActionLink("Consultas", "", "")
+								</article>
+							}
+							if (ViewBag.SecurityGroupId == 1 || item.SecurityModuleId == 5)
+							{
+								<article class="style5">
+									<span class="image">
+										<img src="~/images/image5.jpg" alt="" />
+									</span>
+									@Html.ActionLink("Ajustes", "Index", "Settings")
+								</article>
+							}
+
+							if (ViewBag.SecurityGroupId == 1)
+							{
+								break;
+							}
+						}
+					}
 				</section>
 			</div>
 		</div>

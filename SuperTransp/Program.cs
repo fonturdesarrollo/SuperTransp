@@ -20,15 +20,12 @@ builder.Services.AddSession(options =>
 builder.Services.AddControllersWithViews();
 builder.Services.AddTransient<ISecurity, Security>();
 builder.Services.AddTransient<IGeography, Geography>();
-//builder.Services.AddTransient<IRequest, Requests>();
-//builder.Services.AddTransient<IRequestArea, RequestAreas>();
-//builder.Services.AddTransient<IFloor, Floors>();
-//builder.Services.AddTransient<IStatus, Status>();
-//builder.Services.AddTransient<IManagement, Managements>();
-//builder.Services.AddTransient<IReport, Reports>();
+builder.Services.AddTransient<IPublicTransportGroup, PublicTransportGroup>();
+builder.Services.AddTransient<IDesignation, Designation>();
+builder.Services.AddTransient<IMode, Mode>();
+builder.Services.AddTransient<IUnion, Union>();
 
 var app = builder.Build();
-
 
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {

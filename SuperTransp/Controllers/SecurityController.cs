@@ -1,4 +1,5 @@
 ﻿using Azure.Core;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.IdentityModel.Tokens;
@@ -8,7 +9,7 @@ using static SuperTransp.Core.Interfaces;
 
 namespace SuperTransp.Controllers
 {
-	public class SecurityController : Controller
+	public class SecurityController : BaseController
 	{
 		private readonly ISecurity _security;
 		private readonly IGeography _geography;
@@ -79,30 +80,43 @@ namespace SuperTransp.Controllers
 
 					if (securityGroupId.HasValue)
 					{
-						if (_security.GroupModuleHasAccess((int)securityGroupId, 5))
+						if(securityGroupId != 1)
 						{
-							ViewBag.States = new SelectList(_geography.GetAllStates(), "StateId", "StateName");
-						}
-						else
-						{
-							if(stateId.HasValue)
+							if (_security.GroupHasAccessToModule((int)securityGroupId, 6))
 							{
-								ViewBag.States = new SelectList(_geography.GetStateById((int)stateId), "StateId", "StateName");
-							}							
-						}
+								ViewBag.States = new SelectList(_geography.GetAllStates(), "StateId", "StateName");
+							}
+							else
+							{
+								if (stateId.HasValue)
+								{
+									ViewBag.States = new SelectList(_geography.GetStateById((int)stateId), "StateId", "StateName");
+								}
+							}
 
-						if (_security.GroupModuleHasAccess((int)securityGroupId, 6))
-						{
-							ViewBag.Groups = new SelectList(_security.GetAllGroups(), "SecurityGroupId", "SecurityGroupName");
-						}
-						else
-						{
-							//Coordinadores group
-							if(securityGroupId == 2)
+							if (_security.GroupHasAccessToModule((int)securityGroupId, 7))
 							{
-								ViewBag.Groups = new SelectList(_security.GetGroupById((int)supervisorsGroupId), "SecurityGroupId", "SecurityGroupName");
+								ViewBag.Groups = new SelectList(_security.GetAllGroups(), "SecurityGroupId", "SecurityGroupName");
+							}
+							else
+							{
+								//Coordinadores group
+								if (securityGroupId == 2)
+								{
+									ViewBag.Groups = new SelectList(_security.GetGroupById((int)supervisorsGroupId), "SecurityGroupId", "SecurityGroupName");
+								}
+								else
+								{
+									ViewBag.Groups = new SelectList(_security.GetAllGroups(), "SecurityGroupId", "SecurityGroupName");
+								}
 							}
 						}
+						else
+						{
+							ViewBag.States = new SelectList(_geography.GetAllStates(), "StateId", "StateName");
+							ViewBag.Groups = new SelectList(_security.GetAllGroups(), "SecurityGroupId", "SecurityGroupName");
+						}
+
 
 						ViewBag.Status = new SelectList(_security.GetAllUsersStatus(), "SecurityStatusId", "SecurityStatusName");
 					}
@@ -148,37 +162,49 @@ namespace SuperTransp.Controllers
 			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 			{
 				var model = _security.GetUserById(securityUserId);
-
-				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+				int ? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 				int? stateId = HttpContext.Session.GetInt32("StateId");
 				int supervisorsGroupId = 3;
 
 				if (securityGroupId.HasValue)
 				{
-					if (_security.GroupModuleHasAccess((int)securityGroupId, 5))
+					if(securityGroupId != 1)
+					{
+						if (_security.GroupHasAccessToModule((int)securityGroupId, 6))
+						{
+							ViewBag.States = new SelectList(_geography.GetAllStates(), "StateId", "StateName");
+						}
+						else
+						{
+							if (stateId.HasValue)
+							{
+								ViewBag.States = new SelectList(_geography.GetStateById((int)stateId), "StateId", "StateName");
+							}
+						}
+
+						if (_security.GroupHasAccessToModule((int)securityGroupId, 7))
+						{
+							ViewBag.Groups = new SelectList(_security.GetAllGroups(), "SecurityGroupId", "SecurityGroupName");
+						}
+						else
+						{
+							//Coordinadores group
+							if (securityGroupId == 2)
+							{
+								ViewBag.Groups = new SelectList(_security.GetGroupById((int)supervisorsGroupId), "SecurityGroupId", "SecurityGroupName");
+							}
+							else
+							{
+								ViewBag.Groups = new SelectList(_security.GetGroupById((int)securityGroupId), "SecurityGroupId", "SecurityGroupName");
+							}
+						}
+					}
+					else
 					{
 						ViewBag.States = new SelectList(_geography.GetAllStates(), "StateId", "StateName");
-					}
-					else
-					{
-						if (stateId.HasValue)
-						{
-							ViewBag.States = new SelectList(_geography.GetStateById((int)stateId), "StateId", "StateName");
-						}
-					}
-
-					if (_security.GroupModuleHasAccess((int)securityGroupId, 6))
-					{
 						ViewBag.Groups = new SelectList(_security.GetAllGroups(), "SecurityGroupId", "SecurityGroupName");
 					}
-					else
-					{
-						//Coordinadores group
-						if (securityGroupId == 2)
-						{
-							ViewBag.Groups = new SelectList(_security.GetGroupById((int)supervisorsGroupId), "SecurityGroupId", "SecurityGroupName");
-						}
-					}
+
 
 					ViewBag.Status = new SelectList(_security.GetAllUsersStatus(), "SecurityStatusId", "SecurityStatusName");
 				}
@@ -220,14 +246,20 @@ namespace SuperTransp.Controllers
 				{
 					List<SecurityUserModel> model = _security.GetAllUsers();
 
-					//Coordinadores group
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+					int? stateId = HttpContext.Session.GetInt32("StateId");
 
-					if (securityGroupId == 2)
-					{
-						model = model.Where(x=> x.SecurityGroupId != 1 && x.SecurityGroupId != 2 && x.SecurityGroupId != 4).ToList();
+					if (securityGroupId != 1)
+					{ 						
+						if(securityGroupId == 2) //Coordinadores
+						{
+							model = model.Where(x => x.SecurityGroupId != 1 && x.SecurityGroupId != 4 && x.StateId == stateId).ToList();
+						}
+						else if(securityGroupId == 4) // Gerentes
+						{
+							model = model.Where(x => x.SecurityGroupId != 1 && x.StateId == stateId).ToList();
+						}
 					}
-					/**************************************************************/
 
 					return View(model);
 				}

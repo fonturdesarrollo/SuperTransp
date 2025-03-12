@@ -25,7 +25,7 @@
 					<a href="index.html" class="logo">
 						<span class="symbol"><img src="~/images/logo_login.jpg" alt="" /></span><span class="title">SuperTransp</span>
 						<br />
-						<span class="title">@ViewBag.LocationName</span>
+						<span class="title">@ViewBag.EmployeeName</span>
 					</a>
 				</div>
 				<!-- Nav -->
@@ -42,6 +42,7 @@
 				<ul>
 					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
 					<li>@Html.ActionLink("Modificar grupo", "GroupList", "Security")</li>
+					<li>@Html.ActionLink("Ajustes", "Index", "Settings")</li>
 					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 				</ul>
 			</nav>

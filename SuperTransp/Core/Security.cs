@@ -3,6 +3,7 @@ using Microsoft.Data.SqlClient;
 using static SuperTransp.Core.Interfaces;
 using System.Text.RegularExpressions;
 using System.Reflection;
+using System.Data;
 
 namespace SuperTransp.Core
 {
@@ -14,10 +15,9 @@ namespace SuperTransp.Core
             this._configuration = configuration;
         }
 
-		private SqlConnection GetOpenConnection()
+		private SqlConnection GetConnection()
 		{
 			SqlConnection sqlConnection = new(_configuration.GetConnectionString("connectionString"));
-			sqlConnection.Open();
 			return sqlConnection;
 		}
 
@@ -25,73 +25,94 @@ namespace SuperTransp.Core
 		{
 			try
 			{
-				using (SqlConnection sqlConnection = GetOpenConnection())
+				using (SqlConnection sqlConnection = GetConnection())
 				{
-					SecurityUserModel user = new();
-					SqlCommand cmd = new($"SELECT * FROM SecurityUser Where Login = '{login}' AND Password = '{password}'", sqlConnection);
-					SqlDataReader dr = cmd.ExecuteReader();
-
-					while (dr.Read())
+					if (sqlConnection.State == ConnectionState.Closed)
 					{
-						user.SecurityUserId = (int)dr["SecurityUserId"];
-						user.FullName = (string)dr["FullName"];
-						user.Login = (string)dr["Login"];
-						user.Password = (string)dr["Password"];
-						user.SecurityGroupId = (int)dr["SecurityGroupId"];
-						user.StateId = (int)dr["StateId"];
+						sqlConnection.Open();
 					}
 
-					dr.Close();
-					sqlConnection.Close();
+					SecurityUserModel user = new();
+					SqlCommand cmd = new("SELECT * FROM SecurityUser WHERE Login = @Login AND Password = @Password AND SecurityStatusId = 1", sqlConnection);
+					cmd.Parameters.AddWithValue("@Login", login);
+					cmd.Parameters.AddWithValue("@Password", password);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							user.SecurityUserId = (int)dr["SecurityUserId"];
+							user.FullName = (string)dr["FullName"];
+							user.Login = (string)dr["Login"];
+							user.Password = (string)dr["Password"];
+							user.SecurityGroupId = (int)dr["SecurityGroupId"];
+							user.StateId = (int)dr["StateId"];
+						}
+					}
 
 					return user;
 				}
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
-				throw;
+				throw new Exception("Error al obtener el usuario válido", ex);
 			}
 		}
 
-		public bool GroupModuleHasAccess(int securityGroupId, int securityModuleId)
+		public bool GroupHasAccessToModule(int securityGroupId, int securityModuleId)
 		{
-			using (SqlConnection sqlConnection = GetOpenConnection())
+			try
 			{
-				SqlCommand cmd = new($"SELECT * FROM View_SecurityGetUserGroupModuleAccess Where SecurityGroupId = {securityGroupId} AND SecurityModuleId = {securityModuleId}", sqlConnection);
-				SqlDataReader dr = cmd.ExecuteReader();
-
-				while (dr.Read())
+				using (SqlConnection sqlConnection = GetConnection())
 				{
-					return true;
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					using (SqlCommand cmd = new SqlCommand("SELECT * FROM Security_GetUserGroupModuleAccess WHERE SecurityGroupId = @SecurityGroupId AND SecurityModuleId = @SecurityModuleId", sqlConnection))
+					{
+						cmd.Parameters.Add("@SecurityGroupId", SqlDbType.Int).Value = securityGroupId;
+						cmd.Parameters.Add("@SecurityModuleId", SqlDbType.Int).Value = securityModuleId;
+
+						using (SqlDataReader dr = cmd.ExecuteReader())
+						{
+							return dr.HasRows;
+						}
+					}
 				}
-
-				dr.Close();
-				sqlConnection.Close();
-
-				return false;
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Error al verificar el acceso del módulo del grupo", ex);
 			}
 		}
+
 
 		public List<SecurityGroupModel> GetAllGroups()
 		{
-			using (SqlConnection sqlConnection = GetOpenConnection())
+			using (SqlConnection sqlConnection = GetConnection())
 			{
-				List<SecurityGroupModel> groups = new();
-				SqlCommand cmd = new($"SELECT * FROM SecurityGroup Where SecurityGroupId <> 1", sqlConnection);
-				SqlDataReader dr = cmd.ExecuteReader();
-
-				while (dr.Read())
+				if (sqlConnection.State == ConnectionState.Closed)
 				{
-					groups.Add(new SecurityGroupModel
-					{
-						SecurityGroupId = (int)dr["SecurityGroupId"],
-						SecurityGroupName = (string)dr["SecurityGroupName"],
-						SecurityGroupDescription = (string)dr["SecurityGroupDescription"]
-					});
+					sqlConnection.Open();
 				}
 
-				dr.Close();
-				sqlConnection.Close();
+				List<SecurityGroupModel> groups = new();
+				SqlCommand cmd = new("SELECT * FROM SecurityGroup WHERE SecurityGroupId <> 1", sqlConnection);
+
+				using (SqlDataReader dr = cmd.ExecuteReader())
+				{
+					while (dr.Read())
+					{
+						groups.Add(new SecurityGroupModel
+						{
+							SecurityGroupId = (int)dr["SecurityGroupId"],
+							SecurityGroupName = (string)dr["SecurityGroupName"],
+							SecurityGroupDescription = (string)dr["SecurityGroupDescription"]
+						});
+					}
+				}
 
 				return groups.ToList();
 			}
@@ -99,24 +120,29 @@ namespace SuperTransp.Core
 
 		public List<SecurityGroupModel> GetGroupById(int groupId)
 		{
-			using (SqlConnection sqlConnection = GetOpenConnection())
+			using (SqlConnection sqlConnection = GetConnection())
 			{
-				List<SecurityGroupModel> group = new();
-				SqlCommand cmd = new($"SELECT * FROM SecurityGroup Where SecurityGroupId = {groupId}", sqlConnection);
-				SqlDataReader dr = cmd.ExecuteReader();
-
-				while (dr.Read())
+				if (sqlConnection.State == ConnectionState.Closed)
 				{
-					group.Add(new SecurityGroupModel
-					{
-						SecurityGroupId = (int)dr["SecurityGroupId"],
-						SecurityGroupName = (string)dr["SecurityGroupName"],
-						SecurityGroupDescription = (string)dr["SecurityGroupDescription"]
-					});
+					sqlConnection.Open();
 				}
 
-				dr.Close();
-				sqlConnection.Close();
+				List<SecurityGroupModel> group = new();
+				SqlCommand cmd = new("SELECT * FROM SecurityGroup WHERE SecurityGroupId = @GroupId", sqlConnection);
+				cmd.Parameters.AddWithValue("@GroupId", groupId);
+
+				using (SqlDataReader dr = cmd.ExecuteReader())
+				{
+					while (dr.Read())
+					{
+						group.Add(new SecurityGroupModel
+						{
+							SecurityGroupId = (int)dr["SecurityGroupId"],
+							SecurityGroupName = (string)dr["SecurityGroupName"],
+							SecurityGroupDescription = (string)dr["SecurityGroupDescription"]
+						});
+					}
+				}
 
 				return group.ToList();
 			}
@@ -124,23 +150,27 @@ namespace SuperTransp.Core
 
 		public List<SecurityStatusUserModel> GetAllUsersStatus()
 		{
-			using (SqlConnection sqlConnection = GetOpenConnection())
+			using (SqlConnection sqlConnection = GetConnection())
 			{
-				List<SecurityStatusUserModel> status = new();
-				SqlCommand cmd = new($"SELECT * FROM SecurityStatus", sqlConnection);
-				SqlDataReader dr = cmd.ExecuteReader();
-
-				while (dr.Read())
+				if (sqlConnection.State == ConnectionState.Closed)
 				{
-					status.Add(new SecurityStatusUserModel
-					{
-						SecurityStatusId = (int)dr["SecurityStatusId"],
-						SecurityStatusName = (string)dr["SecurityStatusName"],
-					});
+					sqlConnection.Open();
 				}
 
-				dr.Close();
-				sqlConnection.Close();
+				List<SecurityStatusUserModel> status = new();
+				SqlCommand cmd = new("SELECT * FROM SecurityStatus", sqlConnection);
+
+				using (SqlDataReader dr = cmd.ExecuteReader())
+				{
+					while (dr.Read())
+					{
+						status.Add(new SecurityStatusUserModel
+						{
+							SecurityStatusId = (int)dr["SecurityStatusId"],
+							SecurityStatusName = (string)dr["SecurityStatusName"],
+						});
+					}
+				}
 
 				return status.ToList();
 			}
@@ -151,21 +181,28 @@ namespace SuperTransp.Core
 			int result = 0;
 			try
 			{
-				using (SqlConnection sqlConnection = GetOpenConnection())
+				using (SqlConnection sqlConnection = GetConnection())
 				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
 					if (model != null)
 					{
-						SqlCommand cmd = new("Security_UserAddOrEdit", sqlConnection);
-						cmd.CommandType = System.Data.CommandType.StoredProcedure;
+						SqlCommand cmd = new("Security_UserAddOrEdit", sqlConnection)
+						{
+							CommandType = System.Data.CommandType.StoredProcedure
+						};
 
-						cmd.Parameters.AddWithValue("SecurityUserId", model.SecurityUserId);
-						cmd.Parameters.AddWithValue("SecurityUserDocumentIdNumber", model.SecurityUserDocumentIdNumber);
-						cmd.Parameters.AddWithValue("Login", model.Login);
-						cmd.Parameters.AddWithValue("Password", model.Password);
-						cmd.Parameters.AddWithValue("FullName", model.FullName.ToUpper());
-						cmd.Parameters.AddWithValue("SecurityGroupId", model.SecurityGroupId);
-						cmd.Parameters.AddWithValue("SecurityStatusId", model.SecurityStatusId);
-						cmd.Parameters.AddWithValue("StateId", model.StateId);
+						cmd.Parameters.AddWithValue("@SecurityUserId", model.SecurityUserId);
+						cmd.Parameters.AddWithValue("@SecurityUserDocumentIdNumber", model.SecurityUserDocumentIdNumber);
+						cmd.Parameters.AddWithValue("@Login", model.Login);
+						cmd.Parameters.AddWithValue("@Password", model.Password);
+						cmd.Parameters.AddWithValue("@FullName", model.FullName.ToUpper());
+						cmd.Parameters.AddWithValue("@SecurityGroupId", model.SecurityGroupId);
+						cmd.Parameters.AddWithValue("@SecurityStatusId", model.SecurityStatusId);
+						cmd.Parameters.AddWithValue("@StateId", model.StateId);
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
 					}
@@ -173,9 +210,9 @@ namespace SuperTransp.Core
 
 				return result;
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
-				throw;
+				throw new Exception("Error al añadir o editar el usuario", ex);
 			}
 		}
 
@@ -183,62 +220,68 @@ namespace SuperTransp.Core
 		{
 			try
 			{
-				using (SqlConnection sqlConnection = GetOpenConnection())
+				using (SqlConnection sqlConnection = GetConnection())
 				{
-					SecurityUserModel user = new();
-					SqlCommand cmd = new($"SELECT * FROM SecurityUser Where SecurityUserId = {securityUserId}", sqlConnection);
-					SqlDataReader dr = cmd.ExecuteReader();
-
-					while (dr.Read())
+					if (sqlConnection.State == ConnectionState.Closed)
 					{
-						user.SecurityUserId = (int)dr["SecurityUserId"];
-						user.SecurityUserDocumentIdNumber = (int)dr["SecurityUserDocumentIdNumber"];
-						user.FullName = (string)dr["FullName"];
-						user.Login = (string)dr["Login"];
-						user.Password = (string)dr["Password"];
-						user.SecurityGroupId = (int)dr["SecurityGroupId"];
-						user.StateId = (int)dr["StateId"];
-						user.SecurityStatusId = (int)dr["SecurityStatusId"];
+						sqlConnection.Open();
 					}
 
-					dr.Close();
-					sqlConnection.Close();
+					SecurityUserModel user = new();
+					SqlCommand cmd = new("SELECT * FROM SecurityUser WHERE SecurityUserId = @SecurityUserId", sqlConnection);
+					cmd.Parameters.AddWithValue("@SecurityUserId", securityUserId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							user.SecurityUserId = (int)dr["SecurityUserId"];
+							user.SecurityUserDocumentIdNumber = (int)dr["SecurityUserDocumentIdNumber"];
+							user.FullName = (string)dr["FullName"];
+							user.Login = (string)dr["Login"];
+							user.Password = (string)dr["Password"];
+							user.SecurityGroupId = (int)dr["SecurityGroupId"];
+							user.StateId = (int)dr["StateId"];
+							user.SecurityStatusId = (int)dr["SecurityStatusId"];
+						}
+					}
 
 					return user;
 				}
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
-				throw;
+				throw new Exception("Error al obtener el usuario por ID", ex);
 			}
 		}
 
 		public int RegisteredUser(string paramValue, string verifyBy)
 		{
 			SecurityUserModel user = new();
-			string queryParam = string.Empty;
-			using (SqlConnection sqlConnection = GetOpenConnection())
+			using (SqlConnection sqlConnection = GetConnection())
 			{
-				switch (verifyBy)
+				if (sqlConnection.State == ConnectionState.Closed)
 				{
-					case "SecurityUserDocumentIdNumber":
-						queryParam = $"SELECT * FROM SecurityUser WHERE SecurityUserDocumentIdNumber = {paramValue}";
-						break;
-	                case "Login":
-						queryParam = $"SELECT * FROM SecurityUser WHERE Login = '{paramValue}'";
-						break ;
+					sqlConnection.Open();
 				}
 
-				SqlCommand cmd = new($"{queryParam}", sqlConnection);
-				SqlDataReader dr = cmd.ExecuteReader();
-
-				while (dr.Read())
+				string queryParam = verifyBy switch
 				{
-					user.SecurityUserId = (int)dr["SecurityUserId"];
-				}
+					"SecurityUserDocumentIdNumber" => "SELECT * FROM SecurityUser WHERE SecurityUserDocumentIdNumber = @ParamValue",
+					"Login" => "SELECT * FROM SecurityUser WHERE Login = @ParamValue",
+					_ => throw new ArgumentException("Invalid verification parameter")
+				};
 
-				dr.Close();
-				sqlConnection.Close();
+				SqlCommand cmd = new(queryParam, sqlConnection);
+				cmd.Parameters.AddWithValue("@ParamValue", paramValue);
+
+				using (SqlDataReader dr = cmd.ExecuteReader())
+				{
+					while (dr.Read())
+					{
+						user.SecurityUserId = (int)dr["SecurityUserId"];
+					}
+				}
 
 				return user.SecurityUserId;
 			}
@@ -248,40 +291,43 @@ namespace SuperTransp.Core
 		{
 			try
 			{
-				using (SqlConnection sqlConnection = GetOpenConnection())
+				using (SqlConnection sqlConnection = GetConnection())
 				{
-					List<SecurityUserModel> users = new();
-					SqlCommand cmd = new($"SELECT * FROM Security_GetAllUsers", sqlConnection);
-					SqlDataReader dr = cmd.ExecuteReader();
-
-					while (dr.Read())
+					if (sqlConnection.State == ConnectionState.Closed)
 					{
-						users.Add(new SecurityUserModel
-						{
-							SecurityUserDocumentIdNumber = (int)dr["SecurityUserDocumentIdNumber"],
-							Login = (string)dr["Login"],
-							Password = (string)dr["Password"],
-							FullName = (string)dr["FullName"],
-							StateName = (string)dr["StateName"],
-							SecurityGroupName = (string)dr["SecurityGroupName"],
-							SecurityStatusName = (string)dr["SecurityStatusName"],
-							SecurityStatusId = (int)dr["SecurityStatusId"],
-							SecurityUserId = (int)dr["SecurityUserId"],
-							SecurityGroupId = (int)dr["SecurityGroupId"],
-							StateId = (int)dr["StateId"],
-						});
+						sqlConnection.Open();
 					}
 
-					dr.Close();
-					sqlConnection.Close();
+					List<SecurityUserModel> users = new();
+					SqlCommand cmd = new("SELECT * FROM Security_GetAllUsers", sqlConnection);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							users.Add(new SecurityUserModel
+							{
+								SecurityUserDocumentIdNumber = (int)dr["SecurityUserDocumentIdNumber"],
+								Login = (string)dr["Login"],
+								Password = (string)dr["Password"],
+								FullName = (string)dr["FullName"],
+								StateName = (string)dr["StateName"],
+								SecurityGroupName = (string)dr["SecurityGroupName"],
+								SecurityStatusName = (string)dr["SecurityStatusName"],
+								SecurityStatusId = (int)dr["SecurityStatusId"],
+								SecurityUserId = (int)dr["SecurityUserId"],
+								SecurityGroupId = (int)dr["SecurityGroupId"],
+								StateId = (int)dr["StateId"],
+							});
+						}
+					}
 
 					return users.ToList();
 				}
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
-
-				throw;
+				throw new Exception("Error al obtener todos los usuarios", ex);
 			}
 		}
 
@@ -289,40 +335,44 @@ namespace SuperTransp.Core
 		{
 			try
 			{
-				using (SqlConnection sqlConnection = GetOpenConnection())
+				using (SqlConnection sqlConnection = GetConnection())
 				{
-					List<SecurityUserModel> users = new();
-					SqlCommand cmd = new($"SELECT * FROM Security_GetAllUsers WHERE StateId = {stateId}", sqlConnection);
-					SqlDataReader dr = cmd.ExecuteReader();
-
-					while (dr.Read())
+					if (sqlConnection.State == ConnectionState.Closed)
 					{
-						users.Add(new SecurityUserModel
-						{
-							SecurityUserDocumentIdNumber = (int)dr["SecurityUserDocumentIdNumber"],
-							Login = (string)dr["Login"],
-							Password = (string)dr["Password"],
-							FullName = (string)dr["FullName"],
-							StateName = (string)dr["StateName"],
-							SecurityGroupName = (string)dr["SecurityGroupName"],
-							SecurityStatusName = (string)dr["SecurityStatusName"],
-							SecurityStatusId = (int)dr["SecurityStatusId"],
-							SecurityUserId = (int)dr["SecurityUserId"],
-							SecurityGroupId = (int)dr["SecurityGroupId"],
-							StateId = (int)dr["StateId"],
-						});
+						sqlConnection.Open();
 					}
 
-					dr.Close();
-					sqlConnection.Close();
+					List<SecurityUserModel> users = new();
+					SqlCommand cmd = new("SELECT * FROM Security_GetAllUsers WHERE StateId = @StateId", sqlConnection);
+					cmd.Parameters.AddWithValue("@StateId", stateId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							users.Add(new SecurityUserModel
+							{
+								SecurityUserDocumentIdNumber = (int)dr["SecurityUserDocumentIdNumber"],
+								Login = (string)dr["Login"],
+								Password = (string)dr["Password"],
+								FullName = (string)dr["FullName"],
+								StateName = (string)dr["StateName"],
+								SecurityGroupName = (string)dr["SecurityGroupName"],
+								SecurityStatusName = (string)dr["SecurityStatusName"],
+								SecurityStatusId = (int)dr["SecurityStatusId"],
+								SecurityUserId = (int)dr["SecurityUserId"],
+								SecurityGroupId = (int)dr["SecurityGroupId"],
+								StateId = (int)dr["StateId"],
+							});
+						}
+					}
 
 					return users.ToList();
 				}
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
-
-				throw;
+				throw new Exception("Error al obtener todos los usuarios por estado ID", ex);
 			}
 		}
 
@@ -331,26 +381,32 @@ namespace SuperTransp.Core
 			int result = 0;
 			try
 			{
-				using (SqlConnection sqlConnection = GetOpenConnection())
+				using (SqlConnection sqlConnection = GetConnection())
 				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
 					if (model != null)
 					{
-						SqlCommand cmd = new("Security_GroupAddOrEdit", sqlConnection);
-						cmd.CommandType = System.Data.CommandType.StoredProcedure;
+						SqlCommand cmd = new("Security_GroupAddOrEdit", sqlConnection)
+						{
+							CommandType = System.Data.CommandType.StoredProcedure
+						};
 
-						cmd.Parameters.AddWithValue("SecurityGroupId", model.SecurityGroupId);
-						cmd.Parameters.AddWithValue("SecurityGroupName", model.SecurityGroupName);
-						cmd.Parameters.AddWithValue("SecurityGroupDescription", model.SecurityGroupDescription);
+						cmd.Parameters.AddWithValue("@SecurityGroupId", model.SecurityGroupId);
+						cmd.Parameters.AddWithValue("@SecurityGroupName", model.SecurityGroupName);
+						cmd.Parameters.AddWithValue("@SecurityGroupDescription", model.SecurityGroupDescription);
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
 					}
 				}
-
 				return result;
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
-				throw;
+				throw new Exception("Error al añadir o editar el grupo de seguridad", ex);
 			}
 		}
 
@@ -359,15 +415,23 @@ namespace SuperTransp.Core
 			int result = 0;
 			try
 			{
-				using (SqlConnection sqlConnection = GetOpenConnection())
+				using (SqlConnection sqlConnection = GetConnection())
 				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
 					if (model != null)
 					{
-						SqlCommand cmd = new("Security_ModuleAddOrEdit", sqlConnection);
-						cmd.CommandType = System.Data.CommandType.StoredProcedure;
+						SqlCommand cmd = new("Security_ModuleAddOrEdit", sqlConnection)
+						{
+							CommandType = System.Data.CommandType.StoredProcedure
+						};
 
-						cmd.Parameters.AddWithValue("SecurityModuleId", model.SecurityModuleId);
-						cmd.Parameters.AddWithValue("SecurityModuleName", model.SecurityModuleName);
+						cmd.Parameters.AddWithValue("@SecurityModuleId", model.SecurityModuleId);
+						cmd.Parameters.AddWithValue("@SecurityModuleName", model.SecurityModuleName);
+						cmd.Parameters.AddWithValue("@SecurityModuleDescription", model.SecurityModuleDescription);
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
 					}
@@ -375,31 +439,37 @@ namespace SuperTransp.Core
 
 				return result;
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
-				throw;
+				throw new Exception("Error al añadir o editar el módulo de seguridad", ex);
 			}
 		}
 
 		public List<SecurityModuleModel> GetModuleById(int securityModuleId)
 		{
-			using (SqlConnection sqlConnection = GetOpenConnection())
+			using (SqlConnection sqlConnection = GetConnection())
 			{
-				List<SecurityModuleModel> module = new();
-				SqlCommand cmd = new($"SELECT * FROM SecurityModule Where SecurityModuleId = {securityModuleId}", sqlConnection);
-				SqlDataReader dr = cmd.ExecuteReader();
-
-				while (dr.Read())
+				if (sqlConnection.State == ConnectionState.Closed)
 				{
-					module.Add(new SecurityModuleModel
-					{
-						SecurityModuleId = (int)dr["SecurityModuleId"],
-						SecurityModuleName = (string)dr["SecurityModuleName"],
-					});
+					sqlConnection.Open();
 				}
 
-				dr.Close();
-				sqlConnection.Close();
+				List<SecurityModuleModel> module = new();
+				SqlCommand cmd = new("SELECT * FROM SecurityModule WHERE SecurityModuleId = @SecurityModuleId", sqlConnection);
+				cmd.Parameters.AddWithValue("@SecurityModuleId", securityModuleId);
+
+				using (SqlDataReader dr = cmd.ExecuteReader())
+				{
+					while (dr.Read())
+					{
+						module.Add(new SecurityModuleModel
+						{
+							SecurityModuleId = (int)dr["SecurityModuleId"],
+							SecurityModuleName = (string)dr["SecurityModuleName"],
+							SecurityModuleDescription = (string)dr["SecurityModuleDescription"],
+						});
+					}
+				}
 
 				return module.ToList();
 			}
@@ -407,23 +477,56 @@ namespace SuperTransp.Core
 
 		public List<SecurityModuleModel> GetAllModules()
 		{
-			using (SqlConnection sqlConnection = GetOpenConnection())
+			using (SqlConnection sqlConnection = GetConnection())
 			{
-				List<SecurityModuleModel> modules = new();
-				SqlCommand cmd = new($"SELECT * FROM SecurityModule", sqlConnection);
-				SqlDataReader dr = cmd.ExecuteReader();
-
-				while (dr.Read())
+				if (sqlConnection.State == ConnectionState.Closed)
 				{
-					modules.Add(new SecurityModuleModel
-					{
-						SecurityModuleId = (int)dr["SecurityModuleId"],
-						SecurityModuleName = (string)dr["SecurityModuleName"]
-					});
+					sqlConnection.Open();
 				}
 
-				dr.Close();
-				sqlConnection.Close();
+				List<SecurityModuleModel> modules = new();
+				SqlCommand cmd = new("SELECT * FROM SecurityModule", sqlConnection);
+
+				using (SqlDataReader dr = cmd.ExecuteReader())
+				{
+					while (dr.Read())
+					{
+						modules.Add(new SecurityModuleModel
+						{
+							SecurityModuleId = (int)dr["SecurityModuleId"],
+							SecurityModuleName = (string)dr["SecurityModuleName"],
+							SecurityModuleDescription = (string?)dr["SecurityModuleDescription"]
+						});
+					}
+				}
+
+				return modules.ToList();
+			}
+		}
+
+		public List<SecurityModuleModel> GetModulesByGroupId(int groupId)
+		{
+			using (SqlConnection sqlConnection = GetConnection())
+			{
+				if (sqlConnection.State == ConnectionState.Closed)
+				{
+					sqlConnection.Open();
+				}
+
+				List<SecurityModuleModel> modules = new();
+				SqlCommand cmd = new("SELECT * FROM SecurityGroupModule WHERE SecurityGroupId = @SecurityGroupId ORDER BY SecurityGroupModule.SecurityModuleId", sqlConnection);
+				cmd.Parameters.AddWithValue("@SecurityGroupId", groupId);
+
+				using (SqlDataReader dr = cmd.ExecuteReader())
+				{
+					while (dr.Read())
+					{
+						modules.Add(new SecurityModuleModel
+						{
+							SecurityModuleId = (int)dr["SecurityModuleId"]
+						});
+					}
+				}
 
 				return modules.ToList();
 			}
@@ -431,23 +534,27 @@ namespace SuperTransp.Core
 
 		public List<SecurityAccessTypeModel> GetAllAccessTypes()
 		{
-			using (SqlConnection sqlConnection = GetOpenConnection())
+			using (SqlConnection sqlConnection = GetConnection())
 			{
-				List<SecurityAccessTypeModel> accessTypes = new();
-				SqlCommand cmd = new($"SELECT * FROM SecurityAccessType", sqlConnection);
-				SqlDataReader dr = cmd.ExecuteReader();
-
-				while (dr.Read())
+				if (sqlConnection.State == ConnectionState.Closed)
 				{
-					accessTypes.Add(new SecurityAccessTypeModel
-					{
-						SecurityAccessTypeId = (int)dr["SecurityAccessTypeId"],
-						SecurityAccessTypeName = (string)dr["SecurityAccessTypeName"]
-					});
+					sqlConnection.Open();
 				}
 
-				dr.Close();
-				sqlConnection.Close();
+				List<SecurityAccessTypeModel> accessTypes = new();
+				SqlCommand cmd = new("SELECT * FROM SecurityAccessType", sqlConnection);
+
+				using (SqlDataReader dr = cmd.ExecuteReader())
+				{
+					while (dr.Read())
+					{
+						accessTypes.Add(new SecurityAccessTypeModel
+						{
+							SecurityAccessTypeId = (int)dr["SecurityAccessTypeId"],
+							SecurityAccessTypeName = (string)dr["SecurityAccessTypeName"]
+						});
+					}
+				}
 
 				return accessTypes.ToList();
 			}
@@ -455,30 +562,34 @@ namespace SuperTransp.Core
 
 		public List<SecurityGroupModuleModel> GetAllSecurityGroupModuleDetail()
 		{
-			using (SqlConnection sqlConnection = GetOpenConnection())
+			using (SqlConnection sqlConnection = GetConnection())
 			{
-				List<SecurityGroupModuleModel> groupMoulesDetail = new();
-				SqlCommand cmd = new($"SELECT * FROM Security_SecurityGroupModuleDetail", sqlConnection);
-				SqlDataReader dr = cmd.ExecuteReader();
-
-				while (dr.Read())
+				if (sqlConnection.State == ConnectionState.Closed)
 				{
-					groupMoulesDetail.Add(new SecurityGroupModuleModel
-					{
-						SecurityGroupModuleId = (int)dr["SecurityGroupModuleId"],
-						SecurityGroupId = (int)dr["SecurityGroupId"],
-						SecurityGroupName = (string)dr["SecurityGroupName"],
-						SecurityModuleId = (int)dr["SecurityModuleId"],
-						SecurityModuleName = (string)dr["SecurityModuleName"],
-						SecurityAccessTypeId= (int)dr["SecurityAccessTypeId"],
-						SecurityAccessTypeName = (string)dr["SecurityAccessTypeName"]
-					});
+					sqlConnection.Open();
 				}
 
-				dr.Close();
-				sqlConnection.Close();
+				List<SecurityGroupModuleModel> groupModulesDetail = new();
+				SqlCommand cmd = new("SELECT * FROM Security_SecurityGroupModuleDetail", sqlConnection);
 
-				return groupMoulesDetail.ToList();
+				using (SqlDataReader dr = cmd.ExecuteReader())
+				{
+					while (dr.Read())
+					{
+						groupModulesDetail.Add(new SecurityGroupModuleModel
+						{
+							SecurityGroupModuleId = (int)dr["SecurityGroupModuleId"],
+							SecurityGroupId = (int)dr["SecurityGroupId"],
+							SecurityGroupName = (string)dr["SecurityGroupName"],
+							SecurityModuleId = (int)dr["SecurityModuleId"],
+							SecurityModuleName = (string)dr["SecurityModuleName"],
+							SecurityAccessTypeId = (int)dr["SecurityAccessTypeId"],
+							SecurityAccessTypeName = (string)dr["SecurityAccessTypeName"]
+						});
+					}
+				}
+
+				return groupModulesDetail.ToList();
 			}
 		}
 
@@ -487,17 +598,24 @@ namespace SuperTransp.Core
 			int result = 0;
 			try
 			{
-				using (SqlConnection sqlConnection = GetOpenConnection())
+				using (SqlConnection sqlConnection = GetConnection())
 				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
 					if (model != null)
 					{
-						SqlCommand cmd = new("Security_GroupModuleAddOrEdit", sqlConnection);
-						cmd.CommandType = System.Data.CommandType.StoredProcedure;
+						SqlCommand cmd = new("Security_GroupModuleAddOrEdit", sqlConnection)
+						{
+							CommandType = System.Data.CommandType.StoredProcedure
+						};
 
 						cmd.Parameters.AddWithValue("@SecurityGroupModuleId", model.SecurityGroupModuleId);
-						cmd.Parameters.AddWithValue("SecurityGroupId", model.SecurityGroupId);
-						cmd.Parameters.AddWithValue("SecurityModuleId", model.SecurityModuleId);
-						cmd.Parameters.AddWithValue("SecurityAccessTypeId", model.SecurityAccessTypeId);
+						cmd.Parameters.AddWithValue("@SecurityGroupId", model.SecurityGroupId);
+						cmd.Parameters.AddWithValue("@SecurityModuleId", model.SecurityModuleId);
+						cmd.Parameters.AddWithValue("@SecurityAccessTypeId", model.SecurityAccessTypeId);
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
 					}
@@ -505,31 +623,37 @@ namespace SuperTransp.Core
 
 				return result;
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
-				throw;
+				throw new Exception("Error al añadir o editar los módulos de grupo de seguridad", ex);
 			}
 		}
-
 		public int DeleteGroupModules(int securityGroupModuleId)
 		{
 			int result = 0;
 			try
 			{
-				using (SqlConnection sqlConnection = GetOpenConnection())
+				using (SqlConnection sqlConnection = GetConnection())
 				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
 					if (securityGroupModuleId != 0)
 					{
-						SqlCommand cmd = new($"DELETE FROM SecurityGroupModule WHERE SecurityGroupModuleId = {securityGroupModuleId}", sqlConnection);
-						SqlDataReader dr = cmd.ExecuteReader();
+						SqlCommand cmd = new("DELETE FROM SecurityGroupModule WHERE SecurityGroupModuleId = @SecurityGroupModuleId", sqlConnection);
+						cmd.Parameters.AddWithValue("@SecurityGroupModuleId", securityGroupModuleId);
+
+						result = cmd.ExecuteNonQuery();
 					}
 				}
 
 				return result;
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
-				throw;
+				throw new Exception("Error al eliminar los módulos de grupo de seguridad", ex);
 			}
 		}
 	}

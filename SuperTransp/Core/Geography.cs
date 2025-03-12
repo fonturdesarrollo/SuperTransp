@@ -2,6 +2,7 @@
 using SuperTransp.Models;
 using Microsoft.Data.SqlClient;
 using static SuperTransp.Core.Interfaces;
+using System.Data;
 
 namespace SuperTransp.Core
 {
@@ -12,72 +13,160 @@ namespace SuperTransp.Core
 		{
 			this._configuration = configuration;
 		}
-		private SqlConnection GetOpenConnection()
+		private SqlConnection GetConnection()
 		{
 			SqlConnection sqlConnection = new(_configuration.GetConnectionString("connectionString"));
-			sqlConnection.Open();
 			return sqlConnection;
 		}
 
 		public List<GeographyModel> GetAllStates()
 		{
+			List<GeographyModel> states = new();
+
 			try
 			{
-				using (SqlConnection sqlConnection = GetOpenConnection())
+				using (SqlConnection sqlConnection = GetConnection())
 				{
-					List<GeographyModel> states = new();
-					SqlCommand cmd = new($"SELECT * FROM State ORDER BY StateId", sqlConnection);
-					SqlDataReader dr = cmd.ExecuteReader();
-
-					while (dr.Read())
+					using (SqlCommand cmd = new SqlCommand("SELECT * FROM State ORDER BY StateName", sqlConnection))
 					{
-						states.Add(new GeographyModel
+						if (sqlConnection.State == ConnectionState.Closed)
 						{
-							StateId = (int)dr["StateId"],
-							StateName = (string)dr["StateName"]
-						});
+							sqlConnection.Open();
+						}
+
+						using (SqlDataReader dr = cmd.ExecuteReader())
+						{
+							while (dr.Read())
+							{
+								states.Add(new GeographyModel
+								{
+									StateId = dr.GetInt32(dr.GetOrdinal("StateId")),
+									StateName = dr.GetString(dr.GetOrdinal("StateName"))
+								});
+							}
+						}
 					}
-
-					dr.Close();
-					sqlConnection.Close();
-
-					return states.ToList();
-				};
+				}
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
-				throw;
+				throw new Exception("Error al obtener los estados", ex);
 			}
+
+			return states;
 		}
+
 		public List<GeographyModel> GetStateById(int stateId)
 		{
+			List<GeographyModel> state = new();
+
 			try
 			{
-				using (SqlConnection sqlConnection = GetOpenConnection())
+				using (SqlConnection sqlConnection = GetConnection())
 				{
-					List<GeographyModel> state = new();
-					SqlCommand cmd = new($"SELECT * FROM State Where StateId = {stateId}", sqlConnection);
-					SqlDataReader dr = cmd.ExecuteReader();
-
-					while (dr.Read())
+					if (sqlConnection.State == ConnectionState.Closed)
 					{
-						state.Add(new GeographyModel
-						{
-							StateId = (int)dr["StateId"],
-							StateName = (string)dr["StateName"]
-						});
+						sqlConnection.Open();
 					}
 
-					dr.Close();
-					sqlConnection.Close();
-
-					return state.ToList();
-				};
+					using (SqlCommand cmd = new SqlCommand("SELECT * FROM State WHERE StateId = @StateId", sqlConnection))
+					{
+						cmd.Parameters.AddWithValue("@StateId", stateId);
+						using (SqlDataReader dr = cmd.ExecuteReader())
+						{
+							while (dr.Read())
+							{
+								state.Add(new GeographyModel
+								{
+									StateId = (int)dr["StateId"],
+									StateName = (string)dr["StateName"]
+								});
+							}
+						}
+					}
+				}
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
 				throw;
 			}
+
+			return state;
+		}
+
+		public List<GeographyModel> GetAllMunicipalities()
+		{
+			List<GeographyModel> municipalities = new();
+
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					using (SqlCommand cmd = new SqlCommand("SELECT * FROM Municipality ORDER BY MunicipalityName", sqlConnection))
+					{
+						if (sqlConnection.State == ConnectionState.Closed)
+						{
+							sqlConnection.Open();
+						}
+
+						using (SqlDataReader dr = cmd.ExecuteReader())
+						{
+							while (dr.Read())
+							{
+								municipalities.Add(new GeographyModel
+								{
+									MunicipalityId = dr.GetInt32(dr.GetOrdinal("MunicipalityId")),
+									MunicipalityName = dr.GetString(dr.GetOrdinal("MunicipalityName"))
+								});
+							}
+						}
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Error al obtener los municipios", ex);
+			}
+
+			return municipalities;
+		}
+
+		public List<GeographyModel> GetMunicipalityByStateId(int stateId)
+		{
+			List<GeographyModel> municipality = new();
+
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					using (SqlCommand cmd = new SqlCommand("SELECT * FROM Geography_GetMunicipalityByStateId WHERE StateId = @StateId", sqlConnection))
+					{
+						cmd.Parameters.AddWithValue("@StateId", stateId);
+						using (SqlDataReader dr = cmd.ExecuteReader())
+						{
+							while (dr.Read())
+							{
+								municipality.Add(new GeographyModel
+								{
+									MunicipalityId = (int)dr["MunicipalityId"],
+									MunicipalityName = (string)dr["MunicipalityName"]
+								});
+							}
+						}
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				throw;
+			}
+
+			return municipality;
 		}
 	}
 }

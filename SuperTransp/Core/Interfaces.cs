@@ -11,7 +11,7 @@ namespace SuperTransp.Core
             public List<SecurityUserModel> GetAllUsers();
             public List<SecurityUserModel> GetAllUsersByStateId(int stateId);
             public SecurityUserModel GetUserById(int securityUserId);
-            public bool GroupModuleHasAccess(int securityGroupId, int securityModuleId);
+            public bool GroupHasAccessToModule(int securityGroupId, int securityModuleId);
 			public List<SecurityGroupModel> GetAllGroups();
 			public List<SecurityGroupModel> GetGroupById(int groupId);
             public List<SecurityModuleModel> GetModuleById(int securityModuleId);
@@ -19,6 +19,7 @@ namespace SuperTransp.Core
 			public List<SecurityStatusUserModel> GetAllUsersStatus();
 			public List<SecurityAccessTypeModel> GetAllAccessTypes();
             public List<SecurityGroupModuleModel> GetAllSecurityGroupModuleDetail();
+			public List<SecurityModuleModel> GetModulesByGroupId(int groupId);
 			public int AddOrEditUser(SecurityUserModel model);
 			public int RegisteredUser(string paramValue, string verifyBy);
 			public int AddOrEditGroup(SecurityGroupModel model);
@@ -30,6 +31,30 @@ namespace SuperTransp.Core
         {
             public List<GeographyModel> GetAllStates();
             public List<GeographyModel> GetStateById(int stateId);
+			public List<GeographyModel> GetAllMunicipalities();
+			public List<GeographyModel> GetMunicipalityByStateId(int stateId);
+		}
+
+        public interface IDesignation
+        {
+			public List<DesignationViewModel> GetAll();
+		}
+
+		public interface IMode
+		{
+			public List<ModeViewModel> GetAll();
+		}
+
+		public interface IUnion
+		{
+			public List<UnionViewModel> GetAll();
+		}
+
+		public interface IPublicTransportGroup
+        {
+			public int AddOrEdit(PublicTransportGroupModel model);
+			public PublicTransportGroupModel GetPublicTransportGroupById(int publicTransportGroupId);
+			public string? RegisteredRif(string publicTransportGroupRif);
 		}
 	}
 }

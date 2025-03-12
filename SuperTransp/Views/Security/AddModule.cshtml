@@ -25,7 +25,7 @@
 					<a href="index.html" class="logo">
 						<span class="symbol"><img src="~/images/logo_login.jpg" alt="" /></span><span class="title">SuperTransp</span>
 						<br />
-						<span class="title">@ViewBag.LocationName</span>
+						<span class="title">@ViewBag.EmployeeName</span>
 					</a>
 				</div>
 				<!-- Nav -->
@@ -42,6 +42,7 @@
 				<ul>
 					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
 					<li>@Html.ActionLink("Modificar modulo", "ModuleList", "Security")</li>
+					<li>@Html.ActionLink("Ajustes", "Index", "Settings")</li>
 					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 				</ul>
 			</nav>
@@ -58,7 +59,12 @@
 								<strong>Nombre:</strong>
 								@Html.TextBoxFor(x => x.SecurityModuleName, new { placeholder = "Nombre", tabindex = "0", maxlength = "20" })
 								<span asp-validation-for="SecurityModuleName" class="text-danger"></span>
-							</div>	
+							</div>
+							<div class="col-12">
+								<strong>Nombre:</strong>
+								@Html.TextBoxFor(x => x.SecurityModuleDescription, new { placeholder = "Descripción", tabindex = "0", maxlength = "100" })
+								<span asp-validation-for="SecurityModuleDescription" class="text-danger"></span>
+							</div>
 							<div class="col-12">
 								<ul class="actions">
 									<li><input type="submit" value="Actualizar" class="primary" id="saveRequest"/></li>

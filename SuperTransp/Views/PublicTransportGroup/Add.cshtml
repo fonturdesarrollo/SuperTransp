@@ -1,0 +1,291 @@
+﻿@model SuperTransp.Models.PublicTransportGroupModel
+@{
+	Layout = "";
+}
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Agregar Línea de Transporte</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+	<link rel="stylesheet" href="~/assets/css/main.css" />
+	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
+</head>
+<body class="is-preload">
+	@using (Html.BeginForm("Add", "PublicTransportGroup", FormMethod.Post))
+	{
+		<!-- Wrapper -->
+		<div id="wrapper">
+
+			<!-- Header -->
+			<header id="header">
+				<div class="inner">
+
+					<!-- Logo -->
+					<a href="index.html" class="logo">
+						<span class="symbol"><img src="~/images/logo_login.jpg" alt="" /></span><span class="title">SuperTransp</span>
+						<br />
+						<span class="title">@ViewBag.EmployeeName</span>
+					</a>
+				</div>
+				<!-- Nav -->
+				<nav>
+					<ul>
+						<li><a href="#menu">Menu</a></li>
+					</ul>
+				</nav>
+			</header>
+
+			<!-- Menu -->
+			<nav id="menu">
+				<h2>Menu</h2>
+				<ul>
+					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
+					<li>@Html.ActionLink("Modificar línea", "UserList", "Security")</li>
+					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
+				</ul>
+			</nav>
+
+			<!-- Main -->
+			<div id="main">
+				<div class="inner">
+					<!-- Form -->
+					<section>
+						<h1 style="color:#4cbece">Agregar línea de transporte</h1>
+						<br />
+						<div class="row gtr-uniform">
+							<div class="col-6">
+								<strong>RIF:</strong>
+								@Html.HiddenFor(x => x.PublicTransportGroupIdModifiedDate)
+								@Html.TextBoxFor(x => x.PublicTransportGroupRif, new { placeholder = "RIF", tabindex = "0", maxlength = "10" })
+								<span asp-validation-for="PublicTransportGroupRif" class="text-danger"></span>
+							</div>
+							<div class="col-6 col-12-xsmall">
+								<strong>Estado:</strong>
+								@Html.DropDownListFor(t => t.DesignationId, (SelectList)ViewBag.Designation, "-- Seleccione la nomenclatura --")
+							</div>
+							<div class="col-12">
+								<strong>Nombre:</strong>
+								@Html.TextBoxFor(x => x.PublicTransportGroupName, new { placeholder = "Nombre de la línea de transporte", maxlength = "100" })
+								<span asp-validation-for="PublicTransportGroupName" class="text-danger"></span>
+							</div>
+							<div class="col-6 col-12-xsmall">
+								<strong>Modalidad:</strong>
+								@Html.DropDownListFor(t => t.ModeId, (SelectList)ViewBag.Mode, "-- Seleccione la modalidad --")
+							</div>
+							<div class="col-6 col-12-xsmall">
+								<strong>Gremio o Sindicato:</strong>
+								@Html.DropDownListFor(t => t.UnionId, (SelectList)ViewBag.Union, "-- Seleccione el gremio o sindicato --")
+							</div>
+							<div class="col-6 col-12-xsmall">
+								<strong>Estado:</strong>
+								@Html.DropDownListFor(t => t.StateId, (SelectList)ViewBag.States, "-- Seleccione el estado --")
+							</div>
+							<div class="col-6 col-12-xsmall">
+								<strong>Municipio:</strong>
+								<select id="MunicipalityId" name="MunicipalityId" class="form-control">
+									<option value="">Seleccione un municipio</option>
+								</select>
+							</div>
+							<div class="col-6">
+								<strong>Cédula Representante:</strong>
+								@Html.TextBoxFor(x => x.RepresentativeIdentityDocument, new { placeholder = "Cédula Representante", maxlength = "10" })
+								<span asp-validation-for="RepresentativeIdentityDocument" class="text-danger"></span>
+							</div>
+							<div class="col-6">
+								<strong>Nombre Representante:</strong>
+								@Html.TextBoxFor(x => x.RepresentativeName, new { placeholder = "Nombre del Representante", maxlength = "50" })
+								<span asp-validation-for="RepresentativeName" class="text-danger"></span>
+							</div>
+							<div class="col-6">
+								<strong>Teléfono Representante:</strong>
+								@Html.TextBoxFor(x => x.RepresentativePhone, new { placeholder = "Teléfono del Representante", maxlength = "20" })
+								<span asp-validation-for="RepresentativePhone" class="text-danger"></span>
+							</div>
+							<div class="col-12">
+								<ul class="actions">
+									<li><input type="submit" value="Actualizar" class="primary" id="saveRequest"/></li>
+								</ul>
+							</div>
+						</div>
+					</section>
+				</div>
+			</div>
+		</div>
+	}
+	<!-- Scripts -->
+	<script src="~/assets/js/jquery.min.js"></script>
+	<script src="~/assets/js/browser.min.js"></script>
+	<script src="~/assets/js/breakpoints.min.js"></script>
+	<script src="~/assets/js/util.js"></script>
+	<script src="~/assets/js/main.js"></script>
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+
+	<script type="text/javascript">
+
+		document.addEventListener("DOMContentLoaded", function () {
+			var inputElement = document.querySelector("[name='PublicTransportGroupRif']");
+
+			inputElement.addEventListener("input", function () {
+				var value = inputElement.value;
+
+				if (value.length > 0 && !/^[JjVv]/.test(value[0])) {
+					value = "J" + value;
+				}
+
+				value = value.replace(/[^JjVv0-9]/g, "");
+
+				if (/^[Jj]/.test(value)) {
+					value = "J" + value.slice(1);
+				} else if (/^[Vv]/.test(value)) {
+					value = "V" + value.slice(1);
+				}
+
+				if (value.length > 1 && /^[JV]/.test(value[0])) {
+					value = value[0] + value.slice(1).replace(/[JV]/gi, "");
+				}
+
+				inputElement.value = value;
+			});
+		});
+
+		document.addEventListener("DOMContentLoaded", function () {
+			function handleInput(selector, transformFunction) {
+				var inputElement = document.querySelector(selector);
+				if (inputElement) {
+					inputElement.addEventListener("input", function () {
+						inputElement.value = transformFunction(inputElement.value);
+					});
+				}
+			}
+
+			handleInput("[name='PublicTransportGroupName']", function (value) {
+				return value.toUpperCase();
+			});
+
+			handleInput("[name='RepresentativeName']", function (value) {
+				return value.toUpperCase();
+			});
+
+			handleInput("[name='RepresentativeIdentityDocument']", function (value) {
+				return value.replace(/[^0-9]/g, "");
+			});
+
+			handleInput("[name='RepresentativePhone']", function (value) {
+				return value.replace(/[^0-9]/g, "");
+			});
+		});
+
+		$("body").on("click", "#saveRequest", function () {   
+			if(isOkToSave()){
+				return true;
+			}					
+		});
+
+		function isOkToSave() {
+			if ($("#PublicTransportGroupRif").val() == "") {
+				alert("Debe colocar el RIF");
+				return false;
+			}
+
+			if ($("#DesignationId").val() == "") {
+				alert("Debe seleccionar la nomenclatura");
+				return false;
+			}
+
+			if ($("#PublicTransportGroupName").val() == "") {
+				alert("Debe colocar el nombre de la línea");
+				return false;
+			}
+
+			if ($("#ModeId").val() == "") {
+				alert("Debe seleccionar la modalidad");
+				return false;
+			}
+
+			if ($("#UnionId").val() == "") {
+				alert("Debe seleccionar el gremio o sindicato");
+				return false;
+			}
+
+			if ($("#StateId").val() == "") {
+				alert("Debe seleccionar el estado");
+				return false;
+			}
+
+			if ($("#MunicipalityId").val() == "") {
+				alert("Debe seleccionar el municipio");
+				return false;
+			}
+
+			if ($("#RepresentativeIdentityDocument").val() == "") {
+				alert("Debe colocar el número de cédula del representante");
+				return false;
+			}
+
+			if ($("#RepresentativeName").val() == "") {
+				alert("Debe colocar el nombre del representante");
+				return false;
+			}
+
+			if ($("#RepresentativePhone").val() == "") {
+				alert("Debe colocar el número de teléfono del representante");
+				return false;
+			}
+		}
+
+		function showMsg(hasCurrentJob) {
+			if (hasCurrentJob != "OK") {
+				alert(hasCurrentJob);
+				return false;
+			} else {
+
+				$("form").unbind('submit').submit();
+			}
+		}
+
+		$(document).ready(function () {
+
+			$('#StateId').change(function () {
+				var stateId = $(this).val();
+
+				$('#MunicipalityId').empty().append('<option value="">Seleccione un municipio</option>');
+
+				if (stateId) {
+					$.getJSON('/PublictransportGroup/GetMunicipality', { stateId: stateId }, function (data) {
+						$.each(data, function (index, municipality) {
+							$('#MunicipalityId').append($('<option>', {
+								value: municipality.municipalityId,
+								text: municipality.municipalityName
+							}));
+						});
+					});
+				}
+			});
+
+			$("form").submit(function (e) {
+				e.preventDefault();
+
+				if ($(this).valid()) {
+					var paramValue1 = $('#PublicTransportGroupRif').val();
+
+					$.ajax({
+						url: '/PublicTransportGroup/CheckRifExist/',
+						data: {
+							paramValue1: paramValue1
+						},
+						success: function (data) {
+							showMsg(data);
+						},
+						cache: false
+					});
+				}
+			});
+		});
+	</script>
+</body>
+</html>
+
+
