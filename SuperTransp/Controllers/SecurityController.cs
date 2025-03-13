@@ -1,10 +1,11 @@
 ﻿using Azure.Core;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.IdentityModel.Tokens;
 using SuperTransp.Models;
 using System.Net.NetworkInformation;
+using System.Text;
 using static SuperTransp.Core.Interfaces;
 
 namespace SuperTransp.Controllers
@@ -13,6 +14,7 @@ namespace SuperTransp.Controllers
 	{
 		private readonly ISecurity _security;
 		private readonly IGeography _geography;
+
 		public SecurityController(ISecurity security, IGeography geography)
 		{
 			this._security = security;
@@ -35,6 +37,8 @@ namespace SuperTransp.Controllers
 			{
 				if(!string.IsNullOrEmpty(model.Login) && !string.IsNullOrEmpty(model.Password))
 				{
+					model.Password = _security.Encrypt(model.Password);
+
 					var validUser = _security.GetValidUser(model.Login, model.Password);
 
 					if (validUser != null && validUser.SecurityUserId != 0)
@@ -140,6 +144,8 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
 				{
+					model.Password = _security.Encrypt(model.Password);
+
 					int securityUserId = _security.AddOrEditUser(model);
 
 					if (securityUserId > 0)
@@ -297,7 +303,7 @@ namespace SuperTransp.Controllers
 
 				if(!string.IsNullOrEmpty(securityUpdatingUserId))
 				{
-					if (int.Parse(securityUpdatingUserId) != registeredUserLogin)
+					if (registeredUserLogin != 0 && int.Parse(securityUpdatingUserId) != registeredUserLogin)
 					{
 						return Json("El usuario " + paramValue2 + " ya está registrado.");
 					}
@@ -582,6 +588,75 @@ namespace SuperTransp.Controllers
 			{
 				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
 			}
+		}
+
+		[HttpGet]
+		public IActionResult ChangePassword()
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
+				{
+					var securityUserId = HttpContext.Session.GetInt32("SecurityUserId");
+
+					var model = _security.GetUserById((int)securityUserId);
+
+					ViewBag.ResultMessage = string.Empty;
+
+					return View(model);
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
+
+		[HttpPost]
+		public IActionResult ChangePassword(SecurityUserModel model)
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
+				{
+					model.NewPassword = _security.Encrypt(model.NewPassword);
+
+					int securityGroupModuleId = _security.ChangePassword(model);
+					
+					ViewBag.ResultMessage = "Clave cambiada correctamente";
+					
+					return View(model);
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
+
+		public JsonResult CheckOldPasswordExist(string paramValue1)
+		{
+			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+			{
+				int securityUserId = (int)HttpContext.Session.GetInt32("SecurityUserId");
+
+				paramValue1 = _security.Encrypt(paramValue1);
+
+				var oldPasswordValid = _security.OldPasswordValid(securityUserId, paramValue1);
+
+				if(!oldPasswordValid)
+				{
+					return Json("Clave anterior incorrecta");
+				}
+
+				return Json("OK");
+			}
+
+			return Json("ERROR");
 		}
 	}
 }

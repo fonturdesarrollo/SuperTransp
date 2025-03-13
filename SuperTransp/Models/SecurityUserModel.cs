@@ -14,6 +14,7 @@ namespace SuperTransp.Models
 		public string? Login { get; set; }
 
 		public string? Password { get; set; }
+		public string? NewPassword { get; set; }
 
 		[Required(ErrorMessage = "El nombre completo es requerido")]
 		public string? FullName { get; set; }

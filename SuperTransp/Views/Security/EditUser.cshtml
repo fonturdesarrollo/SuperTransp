@@ -10,6 +10,12 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 	<link rel="stylesheet" href="~/assets/css/main.css" />
 	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
+	<style>
+		.is-invalid {
+			border: 2px solid red;
+			background-color: #ffe6e6;
+		}
+	</style>
 </head>
 <body class="is-preload">
 	@using (Html.BeginForm("EditUser", "Security", FormMethod.Post))
@@ -41,6 +47,7 @@
 				<h2>Menu</h2>
 				<ul>
 					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
+					<li>@Html.ActionLink("Agregar usuario", "AddUser", "Security")</li>
 					<li>@Html.ActionLink("Modificar usuario", "UserList", "Security")</li>
 					<li>@Html.ActionLink("Ajustes", "Index", "Settings")</li>
 					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
@@ -81,7 +88,7 @@
 							</div>
 
 							<div class="col-6 col-12-xsmall">
-								<strong>Eastado:</strong>
+								<strong>Estado:</strong>
 								@Html.DropDownListFor(t => t.StateId, (SelectList)ViewBag.States, "-- Seleccione el estado --")
 							</div>
 
@@ -108,16 +115,115 @@
 
 	<script type="text/javascript">
 
-		function isNumberKey(evt) {
-			var charCode = (evt.which) ? evt.which : event.keyCode;
-			if (charCode == 44) {
-				return true;
+		document.addEventListener("DOMContentLoaded", function () {
+			function handleInput(selector, transformFunction) {
+				var inputElement = document.querySelector(selector);
+				if (inputElement) {
+					inputElement.addEventListener("input", function () {
+						inputElement.value = transformFunction(inputElement.value);
+					});
+				}
 			}
-			if (charCode != 46 && charCode > 31
-				&& (charCode < 48 || charCode > 57))
+
+			handleInput("[name='FullName']", function (value) {
+				return value.toUpperCase();
+			});
+
+			handleInput("[name='SecurityUserDocumentIdNumber']", function (value) {
+				return value.replace(/[^0-9]/g, "");
+			});
+		});
+
+		$("body").on("click", "#saveRequest", function (event) {
+			event.preventDefault();
+
+			if (!isOkToSave()) {
 				return false;
+			}
+
+			if (!confirm("¿Está seguro de que desea actualizar los registros?")) {
+				return false;
+			}
+
+			$(this).closest("form").trigger("submit");
+		});
+
+		$("form").submit(function (e) {
+			e.preventDefault();
+
+			if ($(this).valid()) {
+				var paramValue1 = $('#SecurityUserDocumentIdNumber').val();
+				var paramValue2 = $('#Login').val();
+				var paramValue3 = $('#SecurityUserId').val();
+				var checkExistingUrl = '@Url.Action("CheckUserExist", "Security")';
+
+				$.ajax({
+					url: checkExistingUrl,
+					data: {
+						paramValue1: paramValue1,
+						paramValue2: paramValue2,
+						paramValue3: paramValue3
+					},
+					success: function (data) {
+						showMsg(data);
+					},
+					cache: false
+				});
+			}
+
+		});
+
+		function isOkToSave() {
+			let firstInvalidField = null;
+			let message = "";
+
+			if ($("#SecurityUserDocumentIdNumber").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#SecurityUserDocumentIdNumber";
+				message = "Debe colocar la cedula";
+			}
+
+			if ($("#FullName").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#FullName";
+				message = "Debe colocar el nombre completo del usuario";
+			}
+
+
+			if ($("#Login").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#Login";
+				message = "Debe colocar el login";
+			}
+
+			if ($("#SecurityGroupId").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#SecurityGroupId";
+				message = "Debe seleccionar el grupo";
+			}
+
+			if ($("#SecurityStatusId").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#SecurityStatusId";
+				message = "Debe seleccionar el estatus";
+			}
+
+			if (firstInvalidField) {
+				showAlert(message, firstInvalidField);
+				return false;
+			}
 
 			return true;
+		}
+
+		function showAlert(message, selector) {
+			alert(message);
+			highlightErrorField(selector);
+			$(selector).focus();
+		}
+
+		function highlightErrorField(selector) {
+			$(selector).addClass("is-invalid");
+			$(selector).on("input", function () {
+				$(this).removeClass("is-invalid");
+			});
+
+			$(selector)[0].scrollIntoView({ behavior: "smooth", block: "center" });
 		}
 
 		function showMsg(hasCurrentJob) {
@@ -132,29 +238,7 @@
 
 		$(document).ready(function () {
 
-			$("form").submit(function (e) {
-				e.preventDefault();
 
-				if ($(this).valid()) {
-					var paramValue1 = $('#SecurityUserDocumentIdNumber').val();
-					var paramValue2 = $('#Login').val();
-					var paramValue3 = $('#SecurityUserId').val();
-
-					$.ajax({
-						url: '/Security/CheckUserExist/',
-						data: {
-							paramValue1: paramValue1,
-							paramValue2: paramValue2,
-							paramValue3: paramValue3
-						},
-						success: function (data) {
-							showMsg(data);
-						},
-						cache: false
-					});
-				}
-
-			});
 		});
 	</script>
 </body>

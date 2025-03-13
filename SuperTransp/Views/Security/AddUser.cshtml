@@ -10,6 +10,12 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 	<link rel="stylesheet" href="~/assets/css/main.css" />
 	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
+	<style>
+		.is-invalid {
+			border: 2px solid red;
+			background-color: #ffe6e6;
+		}
+	</style>
 </head>
 <body class="is-preload">
 	@using (Html.BeginForm("AddUser", "Security", FormMethod.Post))
@@ -57,7 +63,7 @@
 						<div class="row gtr-uniform">
 							<div class="col-12">
 								<strong>Cédula:</strong>
-								@Html.TextBoxFor(x => x.SecurityUserDocumentIdNumber, new { placeholder = "Cédula", tabindex = "0", maxlength = "11", onkeypress = "return isNumberKey(event)" })
+								@Html.TextBoxFor(x => x.SecurityUserDocumentIdNumber, new { placeholder = "Cédula", tabindex = "0", maxlength = "11" })
 								<span asp-validation-for="SecurityUserDocumentIdNumber" class="text-danger"></span>
 							</div>
 							<div class="col-12">
@@ -70,10 +76,15 @@
 								@Html.TextBoxFor(x => x.Login, new { placeholder = "Nombre de Usuario", maxlength = "50" })
 								<span asp-validation-for="Login" class="text-danger"></span>
 							</div>
-							<div class="col-6 col-12-xsmall">
+							<div class="col-4">
 								<strong>Clave:</strong>
 								@Html.PasswordFor(x => x.Password, new { placeholder = "Clave", maxlength = "50" })
 								<span asp-validation-for="Password" class="text-danger"></span>
+							</div>
+							<div class="col-2">
+								<span id="togglePassword" style=transform: translateY(-50%); cursor: pointer;">
+									<i class="fa fa-eye"></i>
+								</span>
 							</div>
 							<div class="col-6 col-12-xsmall">
 								<strong>Grupo:</strong>
@@ -85,7 +96,7 @@
 							</div>
 
 							<div class="col-6 col-12-xsmall">
-								<strong>Estatus:</strong>
+								<strong>Estado:</strong>
 								@Html.DropDownListFor(t => t.StateId, (SelectList)ViewBag.States, "-- Seleccione el estado --")
 							</div>
 
@@ -112,28 +123,132 @@
 
 	<script type="text/javascript">
 
-		function isNumberKey(evt) {
-			var charCode = (evt.which) ? evt.which : event.keyCode;
-			if (charCode == 44) {
-				return true;
+		document.addEventListener("DOMContentLoaded", function() {
+			const passwordInput = document.getElementById("Password");
+			const togglePassword = document.getElementById("togglePassword");
+
+			togglePassword.addEventListener("click", () => {
+
+				const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+				passwordInput.setAttribute("type", type);
+
+				togglePassword.innerHTML = type === "password"
+					? '<i class="fa fa-eye"></i>'
+					: '<i class="fa fa-eye-slash"></i>';
+			});
+		});
+
+		document.addEventListener("DOMContentLoaded", function () {
+			function handleInput(selector, transformFunction) {
+				var inputElement = document.querySelector(selector);
+				if (inputElement) {
+					inputElement.addEventListener("input", function () {
+						inputElement.value = transformFunction(inputElement.value);
+					});
+				}
 			}
-			if (charCode != 46 && charCode > 31
-				&& (charCode < 48 || charCode > 57))
+
+			handleInput("[name='FullName']", function (value) {
+				return value.toUpperCase();
+			});
+
+			handleInput("[name='SecurityUserDocumentIdNumber']", function (value) {
+				return value.replace(/[^0-9]/g, "");
+			});
+		});
+
+		$("body").on("click", "#saveRequest", function (event) {
+			event.preventDefault();
+
+			if (!isOkToSave()) {
 				return false;
+			}
+
+			if (!confirm("¿Está seguro de que desea actualizar los registros?")) {
+				return false;
+			}
+
+			$(this).closest("form").trigger("submit");
+		});
+
+		$("form").submit(function (e) {
+			e.preventDefault();
+
+			if ($(this).valid()) {
+				var paramValue1 = $('#SecurityUserDocumentIdNumber').val();
+				var paramValue2 = $('#Login').val();
+				var checkExistingUrl = '@Url.Action("CheckUserExist", "Security")';
+
+				$.ajax({
+					url: checkExistingUrl,
+					data: {
+						paramValue1: paramValue1,
+						paramValue2: paramValue2
+					},
+					success: function (data) {
+						showMsg(data);
+					},
+					cache: false
+				});
+			}
+		});
+
+		function isOkToSave() {
+			let firstInvalidField = null;
+			let message = "";
+
+			if ($("#SecurityUserDocumentIdNumber").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#SecurityUserDocumentIdNumber";
+				message = "Debe colocar la cedula";
+			}
+
+			if ($("#FullName").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#FullName";
+				message = "Debe colocar el nombre completo del usuario";
+			}
+
+
+			if ($("#Login").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#Login";
+				message = "Debe colocar el login";
+			}
+
+			if ($("#Password").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#Password";
+				message = "Debe seleccionar el password";
+			}
+
+			if ($("#SecurityGroupId").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#SecurityGroupId";
+				message = "Debe seleccionar el grupo";
+			}
+
+			if ($("#SecurityStatusId").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#SecurityStatusId";
+				message = "Debe seleccionar el estatus";
+			}
+
+			if (firstInvalidField) {
+				showAlert(message, firstInvalidField);
+				return false;
+			}
 
 			return true;
 		}
 
-		$("body").on("click", "#saveRequest", function () {   
-			if(isOkToSave()){
-				return true;
-			}					
-		});
-		function isOkToSave() {
-			if ($("#Password").val() == "") {
-				alert("Debe colocar el password");
-				return false;
-			}
+		function showAlert(message, selector) {
+			alert(message);
+			highlightErrorField(selector);
+			$(selector).focus();
+		}
+
+		function highlightErrorField(selector) {
+			$(selector).addClass("is-invalid");
+			$(selector).on("input", function () {
+				$(this).removeClass("is-invalid");
+			});
+
+			$(selector)[0].scrollIntoView({ behavior: "smooth", block: "center" });
 		}
 
 		function showMsg(hasCurrentJob) {
@@ -148,26 +263,7 @@
 
 		$(document).ready(function () {
 
-			$("form").submit(function (e) {
-				e.preventDefault();
 
-				if ($(this).valid()) {
-					var paramValue1 = $('#SecurityUserDocumentIdNumber').val();
-					var paramValue2 = $('#Login').val();
-
-					$.ajax({
-						url: '/Security/CheckUserExist/',
-						data: {
-							paramValue1: paramValue1,
-							paramValue2: paramValue2
-						},
-						success: function (data) {
-							showMsg(data);
-						},
-						cache: false
-					});
-				}
-			});
 		});
 	</script>
 </body>

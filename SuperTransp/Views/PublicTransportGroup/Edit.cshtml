@@ -10,6 +10,12 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 	<link rel="stylesheet" href="~/assets/css/main.css" />
 	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
+	<style>
+		.is-invalid {
+			border: 2px solid red;
+			background-color: #ffe6e6;
+		}
+	</style>
 </head>
 <body class="is-preload">
 	@using (Html.BeginForm("Edit", "PublicTransportGroup", FormMethod.Post))
@@ -41,7 +47,8 @@
 				<h2>Menu</h2>
 				<ul>
 					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
-					<li>@Html.ActionLink("Modificar línea", "UserList", "Security")</li>
+					<li>@Html.ActionLink("Agregar línea", "Add", "PublicTransportGroup")</li>
+					<li>@Html.ActionLink("Modificar línea", "PublicTransportGroupList", "PublicTransportGroup")</li>
 					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 				</ul>
 			</nav>
@@ -58,11 +65,11 @@
 								<strong>RIF:</strong>
 								@Html.HiddenFor(x => x.PublicTransportGroupIdModifiedDate)
 								@Html.HiddenFor(x => x.PublicTransportGroupId)
-								@Html.TextBoxFor(x => x.PublicTransportGroupRif, new { placeholder = "RIF", tabindex = "0", maxlength = "10" })
+								@Html.TextBoxFor(x => x.PublicTransportGroupRif, new { placeholder = "RIF", tabindex = "0", maxlength = "11" })
 								<span asp-validation-for="PublicTransportGroupRif" class="text-danger"></span>
 							</div>
 							<div class="col-6 col-12-xsmall">
-								<strong>Estado:</strong>
+								<strong>Tipo de Línea:</strong>
 								@Html.DropDownListFor(t => t.DesignationId, (SelectList)ViewBag.Designation, "-- Seleccione la nomenclatura --")
 							</div>
 							<div class="col-12">
@@ -103,7 +110,7 @@
 							</div>
 							<div class="col-12">
 								<ul class="actions">
-									<li><input type="submit" value="Actualizar" class="primary" id="saveRequest"/></li>
+									<li><button type="submit" id="saveRequest" class="primary">Actualizar</button></li>
 								</ul>
 							</div>
 						</div>
@@ -177,56 +184,150 @@
 			});
 		});
 
+		$("body").on("click", "#saveRequest", function (event) {
+			event.preventDefault();
+
+			if (!isOkToSave()) {
+				return false;
+			}
+
+			if (!confirm("¿Está seguro de que desea actualizar los registros?")) {
+				return false;
+			}
+
+			$(this).closest("form").trigger("submit");
+		});
+
+		$("form").on("submit", function (e) {
+			e.preventDefault();
+
+			if ($(this).valid()) {
+					var paramValue1 = $('#PublicTransportGroupRif').val();
+					var paramValue2 = $('#PublicTransportGroupId').val();
+				    var checkExistingUrl = '@Url.Action("CheckRifExistOnEdit", "PublicTransportGroup")';
+
+				$.ajax({
+					url: checkExistingUrl,
+					data: {
+						paramValue1: paramValue1,
+						paramValue2: paramValue2
+					},
+					success: function (data) {
+						showMsg(data);
+					},
+					cache: false
+				});
+			}
+		});
+
 		function isOkToSave() {
-			if ($("#PublicTransportGroupRif").val() == "") {
-				alert("Debe colocar el RIF");
+			let firstInvalidField = null;
+			let message = "";
+
+			if ($("#PublicTransportGroupRif").val() != "" && !firstInvalidField) {
+				const rifValue = $("#PublicTransportGroupRif").val();
+
+				const containsJ = rifValue.includes("J");
+				const numberCount = rifValue.replace(/\D/g, "").length;
+
+				if (containsJ && numberCount < 10) {
+					firstInvalidField = "#PublicTransportGroupRif";
+					message = "Debe colocar un RIF válido";
+				} else {
+
+					message = "Debe colocar el RIF";
+				}
+			}
+
+			if ($("#PublicTransportGroupRif").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#PublicTransportGroupRif";
+				message = "Debe colocar el RIF";
+			}
+
+			if ($("#DesignationId").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#DesignationId";
+				message = "Debe seleccionar la nomenclatura";
+			}
+
+			if ($("#PublicTransportGroupName").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#PublicTransportGroupName";
+				message = "Debe colocar el nombre de la línea";
+			}
+
+			if ($("#ModeId").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#ModeId";
+				message = "Debe seleccionar la modalidad";
+			}
+
+			if ($("#UnionId").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#UnionId";
+				message = "Debe seleccionar el gremio o sindicato";
+			}
+
+			if ($("#StateId").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#StateId";
+				message = "Debe seleccionar el estado";
+			}
+
+			if ($("#MunicipalityId").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#MunicipalityId";
+				message = "Debe seleccionar el municipio";
+			}
+
+			if (!firstInvalidField) {
+				const identityValue = $("#RepresentativeIdentityDocument").val();
+
+				if (identityValue == "" || identityValue.length < 7) {
+					firstInvalidField = "#RepresentativeIdentityDocument";
+					message = "Debe colocar un número de cédula válido";
+				}
+			}
+
+			if ($("#RepresentativeIdentityDocument").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#RepresentativeIdentityDocument";
+				message = "Debe colocar el número de cédula del representante";
+			}
+
+			if ($("#RepresentativeName").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#RepresentativeName";
+				message = "Debe colocar el nombre del representante";
+			}
+
+			if (!firstInvalidField) {
+				const identityValue = $("#RepresentativePhone").val();
+
+				if (identityValue == "" || identityValue.length < 11) {
+					firstInvalidField = "#RepresentativePhone";
+					message = "Debe colocar un número de télefono válido";
+				}
+			}
+
+			if ($("#RepresentativePhone").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#RepresentativePhone";
+				message = "Debe colocar el número de teléfono del representante";
+			}
+
+			if (firstInvalidField) {
+				showAlert(message, firstInvalidField);
 				return false;
 			}
 
-			if ($("#DesignationId").val() == "") {
-				alert("Debe seleccionar la nomenclatura");
-				return false;
-			}
+			return true;
+		}
 
-			if ($("#PublicTransportGroupName").val() == "") {
-				alert("Debe colocar el nombre de la línea");
-				return false;
-			}
+		function showAlert(message, selector) {
+			alert(message);
+			highlightErrorField(selector);
+			$(selector).focus();
+		}
 
-			if ($("#ModeId").val() == "") {
-				alert("Debe seleccionar la modalidad");
-				return false;
-			}
+		function highlightErrorField(selector) {
+			$(selector).addClass("is-invalid");
+			$(selector).on("input", function () {
+				$(this).removeClass("is-invalid");
+			});
 
-			if ($("#UnionId").val() == "") {
-				alert("Debe seleccionar el gremio o sindicato");
-				return false;
-			}
-
-			if ($("#StateId").val() == "") {
-				alert("Debe seleccionar el estado");
-				return false;
-			}
-
-			if ($("#MunicipalityId").val() == "") {
-				alert("Debe seleccionar el municipio");
-				return false;
-			}
-
-			if ($("#RepresentativeIdentityDocument").val() == "") {
-				alert("Debe colocar el número de cédula del representante");
-				return false;
-			}
-
-			if ($("#RepresentativeName").val() == "") {
-				alert("Debe colocar el nombre del representante");
-				return false;
-			}
-
-			if ($("#RepresentativePhone").val() == "") {
-				alert("Debe colocar el número de teléfono del representante");
-				return false;
-			}
+			$(selector)[0].scrollIntoView({ behavior: "smooth", block: "center" });
 		}
 
 		function showMsg(hasCurrentJob) {
@@ -243,39 +344,17 @@
 
 			$('#StateId').change(function () {
 				var stateId = $(this).val();
-
+				var getMunicipalityUrl = '@Url.Action("GetMunicipality", "PublicTransportGroup")';
 				$('#MunicipalityId').empty().append('<option value="">Seleccione un municipio</option>');
 
 				if (stateId) {
-					$.getJSON('/PublictransportGroup/GetMunicipality', { stateId: stateId }, function (data) {
+					$.getJSON(getMunicipalityUrl, { stateId: stateId }, function (data) {
 						$.each(data, function (index, municipality) {
 							$('#MunicipalityId').append($('<option>', {
 								value: municipality.municipalityId,
 								text: municipality.municipalityName
 							}));
 						});
-					});
-				}
-			});
-
-
-			$("form").submit(function (e) {
-				e.preventDefault();
-
-				if ($(this).valid()) {
-					var paramValue1 = $('#PublicTransportGroupRif').val();
-					var paramValue2 = $('#PublicTransportGroupId').val();
-
-					$.ajax({
-						url: '/PublicTransportGroup/CheckRifExistOnEdit/',
-						data: {
-							paramValue1: paramValue1,
-							paramValue2: paramValue2
-						},
-						success: function (data) {
-							showMsg(data);
-						},
-						cache: false
 					});
 				}
 			});

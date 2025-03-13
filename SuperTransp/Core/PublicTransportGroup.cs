@@ -110,6 +110,107 @@ namespace SuperTransp.Core
 			}
 		}
 
+		public List<PublicTransportGroupModel> GetAll()
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<PublicTransportGroupModel> ptg = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail", sqlConnection);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							ptg.Add(new PublicTransportGroupModel
+							{
+								PublicTransportGroupId = (int)dr["PublicTransportGroupId"],
+								PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"],
+								DesignationId = (int)dr["DesignationId"],
+								PublicTransportGroupName = (string)dr["PublicTransportGroupName"],
+								PTGCompleteName = (string)dr["PTGCompleteName"],
+								ModeId = (int)dr["ModeId"],
+								UnionId = (int)dr["UnionId"],
+								MunicipalityId = (int)dr["MunicipalityId"],
+								StateId = (int)dr["StateId"],
+								RepresentativeIdentityDocument = (int)dr["RepresentativeIdentityDocument"],
+								RepresentativeName = (string)dr["RepresentativeName"],
+								RepresentativePhone = (string)dr["RepresentativePhone"],
+								DesignationName = (string)dr["DesignationName"],
+								StateName = (string)dr["StateName"],
+								MunicipalityName = (string)dr["MunicipalityName"],
+								ModeName = (string)dr["ModeName"],
+								UnionName = (string)dr["UnionName"],
+							});
+						}
+					}
+
+					return ptg.ToList();
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Error al obtener todos las líneas", ex);
+			}
+		}
+
+		public List<PublicTransportGroupModel> GetByStateId(int stateId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<PublicTransportGroupModel> ptg = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail WHERE StateId = @StateId", sqlConnection);
+					cmd.Parameters.AddWithValue("@StateId", stateId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							ptg.Add(new PublicTransportGroupModel
+							{
+								PublicTransportGroupId = (int)dr["PublicTransportGroupId"],
+								PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"],
+								DesignationId = (int)dr["DesignationId"],
+								PublicTransportGroupName = (string)dr["PublicTransportGroupName"],
+								PTGCompleteName = (string)dr["PTGCompleteName"],
+								ModeId = (int)dr["ModeId"],
+								UnionId = (int)dr["UnionId"],
+								MunicipalityId = (int)dr["MunicipalityId"],
+								StateId = (int)dr["StateId"],
+								RepresentativeIdentityDocument = (int)dr["RepresentativeIdentityDocument"],
+								RepresentativeName = (string)dr["RepresentativeName"],
+								RepresentativePhone = (string)dr["RepresentativePhone"],
+								DesignationName = (string)dr["DesignationName"],
+								StateName = (string)dr["StateName"],
+								MunicipalityName = (string)dr["MunicipalityName"],
+								ModeName = (string)dr["ModeName"],
+								UnionName = (string)dr["UnionName"],
+							});
+						}
+					}
+
+					return ptg.ToList();
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Error al obtener todos las líneas", ex);
+			}
+		}
+
 		public string? RegisteredRif(string publicTransportGroupRif)
 		{
 			PublicTransportGroupModel publicTransportGroup = new();

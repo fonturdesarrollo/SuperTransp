@@ -27,5 +27,10 @@ namespace SuperTransp.Models
 		public string? RepresentativePhone { get; set; }
 		public DateTime PublicTransportGroupIdModifiedDate { get; set; }
 		public string? PTGCompleteName { get; set; }
+		public string? StateName { get; set; }
+		public string? MunicipalityName { get; set; }
+		public string? DesignationName { get; set; }
+		public string? ModeName { get; set; }
+		public string? UnionName { get; set; }
 	}
 }

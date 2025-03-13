@@ -46,6 +46,7 @@ namespace SuperTransp.Controllers
 						PublicTransportGroupIdModifiedDate = DateTime.Now
 					};
 
+					ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 					int? stateId = HttpContext.Session.GetInt32("StateId");
 					int supervisorsGroupId = 3;
@@ -120,6 +121,7 @@ namespace SuperTransp.Controllers
 				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 				int? stateId = HttpContext.Session.GetInt32("StateId");
 				int supervisorsGroupId = 3;
+				ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
 
 				if (securityGroupId.HasValue)
 				{
@@ -136,33 +138,17 @@ namespace SuperTransp.Controllers
 								ViewBag.States = new SelectList(_geography.GetStateById((int)stateId), "StateId", "StateName");
 							}
 						}
-
-						if (_security.GroupHasAccessToModule((int)securityGroupId, 7))
-						{
-							ViewBag.Groups = new SelectList(_security.GetAllGroups(), "SecurityGroupId", "SecurityGroupName");
-						}
-						else
-						{
-							//Coordinadores group
-							if (securityGroupId == 2)
-							{
-								ViewBag.Groups = new SelectList(_security.GetGroupById((int)supervisorsGroupId), "SecurityGroupId", "SecurityGroupName");
-							}
-							else
-							{
-								ViewBag.Groups = new SelectList(_security.GetGroupById((int)securityGroupId), "SecurityGroupId", "SecurityGroupName");
-							}
-						}
 					}
 					else
 					{
 						ViewBag.States = new SelectList(_geography.GetAllStates(), "StateId", "StateName");
+
 					}
 
+					ViewBag.Municipality = new SelectList(_geography.GetMunicipalityByStateId(model.StateId), "MunicipalityId", "MunicipalityName");
 					ViewBag.Designation = new SelectList(_designation.GetAll(), "DesignationId", "DesignationName");
 					ViewBag.Mode = new SelectList(_mode.GetAll(), "ModeId", "ModeName");
 					ViewBag.Union = new SelectList(_union.GetAll(), "UnionId", "UnionName");
-					ViewBag.Municipality = new SelectList(_geography.GetAllMunicipalities(), "MunicipalityId", "MunicipalityName");
 				}
 
 				return View(model);
@@ -179,7 +165,39 @@ namespace SuperTransp.Controllers
 				{
 					_publicTransportGroup.AddOrEdit(model);
 
-					return RedirectToAction("Edit", new { publicTransportGroupId = model.PublicTransportGroupId });
+					return RedirectToAction("PublicTransportGroupList");
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
+
+		public IActionResult PublicTransportGroupList()
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+				{
+					List<PublicTransportGroupModel> model = new();
+
+					ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+					int? stateId = HttpContext.Session.GetInt32("StateId");
+
+					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
+					{
+						model = _publicTransportGroup.GetByStateId((int)stateId);
+					}
+					else
+					{
+						model = _publicTransportGroup.GetAll();
+					}
+
+					return View(model);
 				}
 
 				return RedirectToAction("Login", "Security");

@@ -4,13 +4,18 @@ using static SuperTransp.Core.Interfaces;
 using System.Text.RegularExpressions;
 using System.Reflection;
 using System.Data;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace SuperTransp.Core
 {
     public class Security : ISecurity
     {
         private readonly IConfiguration _configuration;
-        public Security(IConfiguration configuration)
+		private static readonly string Key = "supertranspPasswordKey*-";
+
+		public Security(IConfiguration configuration)
         {
             this._configuration = configuration;
         }
@@ -55,7 +60,7 @@ namespace SuperTransp.Core
 			}
 			catch (Exception ex)
 			{
-				throw new Exception("Error al obtener el usuario válido", ex);
+				throw new Exception("Error al obtener el usuario válido " + _configuration.GetConnectionString("connectionString") + " " + ex.Message, ex);
 			}
 		}
 
@@ -87,7 +92,6 @@ namespace SuperTransp.Core
 				throw new Exception("Error al verificar el acceso del módulo del grupo", ex);
 			}
 		}
-
 
 		public List<SecurityGroupModel> GetAllGroups()
 		{
@@ -654,6 +658,106 @@ namespace SuperTransp.Core
 			catch (Exception ex)
 			{
 				throw new Exception("Error al eliminar los módulos de grupo de seguridad", ex);
+			}
+		}
+
+		public int ChangePassword(SecurityUserModel model)
+		{
+			int result = 0;
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					if (model != null)
+					{
+						SqlCommand cmd = new("Security_ChangePassword", sqlConnection)
+						{
+							CommandType = System.Data.CommandType.StoredProcedure
+						};
+
+						cmd.Parameters.AddWithValue("@SecurityUserId", model.SecurityUserId);
+						cmd.Parameters.AddWithValue("@Password", model.NewPassword);
+
+						result = Convert.ToInt32(cmd.ExecuteScalar());
+					}
+				}
+
+				return result;
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Error al añadir o editar el usuario", ex);
+			}
+		}
+
+		public bool OldPasswordValid(int securityUserId, string oldPassword)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					using (SqlCommand cmd = new SqlCommand("SELECT * FROM SecurityUser WHERE SecurityUserId = @SecurityUserId AND Password = @Password", sqlConnection))
+					{
+						cmd.Parameters.Add("@SecurityUserId", SqlDbType.Int).Value = securityUserId;
+						cmd.Parameters.Add("@Password", SqlDbType.VarChar).Value = oldPassword;
+
+						using (SqlDataReader dr = cmd.ExecuteReader())
+						{
+							return dr.HasRows;
+						}
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Error al verificar el password anterior", ex);
+			}
+		}
+
+		public string? Encrypt(string plainText)
+		{
+			using (Aes aes = Aes.Create())
+			{
+				aes.Key = Encoding.UTF8.GetBytes(Key);
+				aes.IV = new byte[16];
+
+				using (var encryptor = aes.CreateEncryptor(aes.Key, aes.IV))
+				using (var ms = new MemoryStream())
+				{
+					using (var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
+					using (var writer = new StreamWriter(cs))
+					{
+						writer.Write(plainText);
+					}
+					return Convert.ToBase64String(ms.ToArray());
+				}
+			}
+		}
+
+		public string Decrypt(string encryptedText)
+		{
+			using (Aes aes = Aes.Create())
+			{
+				aes.Key = Encoding.UTF8.GetBytes(Key);
+				aes.IV = new byte[16];
+
+				using (var decryptor = aes.CreateDecryptor(aes.Key, aes.IV))
+				using (var ms = new MemoryStream(Convert.FromBase64String(encryptedText)))
+				using (var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read))
+				using (var reader = new StreamReader(cs))
+				{
+					return reader.ReadToEnd();
+				}
 			}
 		}
 	}

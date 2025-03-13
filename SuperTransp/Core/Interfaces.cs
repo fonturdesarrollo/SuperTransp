@@ -26,6 +26,10 @@ namespace SuperTransp.Core
             public int AddOrEditModule(SecurityModuleModel model);
             public int AddOrEditGroupModules(SecurityGroupModuleModel model);
             public int DeleteGroupModules(int securityGroupModuleId);
+			public int ChangePassword(SecurityUserModel model);
+			public bool OldPasswordValid(int securityUserId, string oldPassword);
+			public string? Encrypt(string plainText);
+			public string? Decrypt(string encryptedText);
 		}
         public interface IGeography
         {
@@ -55,6 +59,8 @@ namespace SuperTransp.Core
 			public int AddOrEdit(PublicTransportGroupModel model);
 			public PublicTransportGroupModel GetPublicTransportGroupById(int publicTransportGroupId);
 			public string? RegisteredRif(string publicTransportGroupRif);
+			public List<PublicTransportGroupModel> GetAll();
+			public List<PublicTransportGroupModel> GetByStateId(int stateId);
 		}
 	}
 }
