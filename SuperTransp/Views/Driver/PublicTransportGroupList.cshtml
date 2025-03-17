@@ -1,4 +1,4 @@
-﻿@model List<SuperTransp.Models.SecurityModuleModel>
+﻿@model List<SuperTransp.Models.PublicTransportGroupModel>
 @{
 	Layout = "";
 }
@@ -6,7 +6,7 @@
 <html>
 
 <head>
-	<title>Lista de Modulos</title>
+	<title>Líneas Registradas</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 	<link rel="stylesheet" href="~/assets/css/main.css" />
@@ -45,7 +45,6 @@
 			<h2>Menu</h2>
 			<ul>
 				<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
-				<li>@Html.ActionLink("Ajustes", "Index", "Settings")</li>
 				<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 			</ul>
 		</nav>
@@ -54,24 +53,26 @@
 			<div class="inner">
 				<!-- Form -->
 				<section>
-					<h4 style="color:#4cbece">Modulos</h4>
+					<h4 style="color:#4cbece"> Seleccione una Línea</h4>
 					<br />
 					<table id="inventory" class="table table-striped table-bordered dt-responsive nowrap" style="width:100%">
 						<thead>
 							<tr>
 								<th>Nombre</th>
-								<th>Descripción</th>
+								<th>Estado</th>
 								<th>Seleccionar</th>
 							</tr>
 						</thead>
 						<tbody>
-							@foreach (var module in Model)
+							@foreach (var ptg in Model)
 							{
 								<tr>
-									<td>@module.SecurityModuleName</td>
-									<td>@module.SecurityModuleDescription</td>
-									<td id="@module.SecurityModuleId">
-										@Html.ActionLink("Modificar", "EditModule", "Security", new { SecurityModuleId = module.SecurityModuleId }, new { @id = "btnEdit" })
+									<td>
+										@Html.ActionLink(@ptg.PTGCompleteName, "Add", "Driver", new { publicTransportGroupId = ptg.PublicTransportGroupId, pTGCompleteName = ptg.PTGCompleteName })
+									</td>
+									<td>@ptg.StateName</td>
+									<td id="@ptg.PublicTransportGroupId">
+										@Html.ActionLink("Seleccionar", "Add", "Driver", new { publicTransportGroupId = ptg.PublicTransportGroupId, pTGCompleteName = ptg.PTGCompleteName }, new { @id = "btnEdit" })
 									</td>
 								</tr>
 							}
@@ -106,26 +107,26 @@
 
 			$('#inventory').DataTable({
 				"language": {
-					"sProcessing": "Procesando...",
-					"sLengthMenu": "Mostrar _MENU_ registros",
-					"sZeroRecords": "No se encontraron resultados",
-					"sEmptyTable": "Ningún dato disponible en esta tabla",
-					"sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
-					"sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0 registros",
-					"sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
-					"sInfoPostFix": "",
-					"sSearch": "Buscar:",
-					"sUrl": "",
-					"sInfoThousands": ",",
+					"sProcessing":    "Procesando...",
+					"sLengthMenu":    "Mostrar _MENU_ registros",
+					"sZeroRecords":   "No se encontraron resultados",
+					"sEmptyTable":    "Ningún dato disponible en esta tabla",
+					"sInfo":          "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+					"sInfoEmpty":     "Mostrando registros del 0 al 0 de un total de 0 registros",
+					"sInfoFiltered":  "(filtrado de un total de _MAX_ registros)",
+					"sInfoPostFix":   "",
+					"sSearch":        "Buscar:",
+					"sUrl":           "",
+					"sInfoThousands":  ",",
 					"sLoadingRecords": "Cargando...",
 					"oPaginate": {
-						"sFirst": "Primero",
-						"sLast": "Último",
-						"sNext": "Siguiente",
+						"sFirst":    "Primero",
+						"sLast":    "Último",
+						"sNext":    "Siguiente",
 						"sPrevious": "Anterior"
 					},
 					"oAria": {
-						"sSortAscending": ": Activar para ordenar la columna de manera ascendente",
+						"sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
 						"sSortDescending": ": Activar para ordenar la columna de manera descendente"
 					}
 				}

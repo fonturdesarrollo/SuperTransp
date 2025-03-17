@@ -20,6 +20,40 @@ namespace SuperTransp.Core
 			return sqlConnection;
 		}
 
+		public int AddOrEdit(UnionViewModel model)
+		{
+			int result = 0;
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					if (model != null)
+					{
+						SqlCommand cmd = new("SuperTransp_UnionAddOrEdit", sqlConnection)
+						{
+							CommandType = System.Data.CommandType.StoredProcedure
+						};
+
+						cmd.Parameters.AddWithValue("@UnionId", model.UnionId);
+						cmd.Parameters.AddWithValue("@UnionName", model.UnionName);
+
+						result = Convert.ToInt32(cmd.ExecuteScalar());
+					}
+				}
+
+				return result;
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Error al añadir o editar el gremio de transporte", ex);
+			}
+		}
+
 		public List<UnionViewModel> GetAll()
 		{
 			List<UnionViewModel> unions = new();

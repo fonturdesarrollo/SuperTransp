@@ -19,6 +19,39 @@ namespace SuperTransp.Core
 			SqlConnection sqlConnection = new(_configuration.GetConnectionString("connectionString"));
 			return sqlConnection;
 		}
+		public int AddOrEdit(DesignationViewModel model)
+		{
+			int result = 0;
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					if (model != null)
+					{
+						SqlCommand cmd = new("SuperTransp_DesignationAddOrEdit", sqlConnection)
+						{
+							CommandType = System.Data.CommandType.StoredProcedure
+						};
+
+						cmd.Parameters.AddWithValue("@DesignationId", model.DesignationId);
+						cmd.Parameters.AddWithValue("@DesignationName", model.DesignationName);
+
+						result = Convert.ToInt32(cmd.ExecuteScalar());
+					}
+				}
+
+				return result;
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Error al añadir o editar el tipo de línea", ex);
+			}
+		}
 
 		public List<DesignationViewModel> GetAll()
 		{

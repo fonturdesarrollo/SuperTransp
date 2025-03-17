@@ -150,7 +150,9 @@ namespace SuperTransp.Controllers
 
 					if (securityUserId > 0)
 					{
-						return RedirectToAction("EditUser", new { securityUserId = securityUserId });
+						TempData["SuccessMessage"] = "Datos actualizados correctamente";
+
+						return RedirectToAction("AddUser");
 					}
 				}
 
@@ -230,7 +232,10 @@ namespace SuperTransp.Controllers
 				{
 					var currentPassword = _security.GetUserById(model.SecurityUserId);
 					model.Password = currentPassword.Password;
+
 					_security.AddOrEditUser(model);
+
+					TempData["SuccessMessage"] = "Datos actualizados correctamente";
 
 					return RedirectToAction("EditUser", new { securityUserId = model.SecurityUserId });
 
@@ -624,8 +629,8 @@ namespace SuperTransp.Controllers
 					model.NewPassword = _security.Encrypt(model.NewPassword);
 
 					int securityGroupModuleId = _security.ChangePassword(model);
-					
-					ViewBag.ResultMessage = "Clave cambiada correctamente";
+
+					TempData["SuccessMessage"] = "Clave cambiada correctamente";
 					
 					return View(model);
 				}

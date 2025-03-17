@@ -1,11 +1,11 @@
-﻿@model SuperTransp.Models.SecurityUserModel
+﻿@model SuperTransp.Models.DriverViewModel
 @{
 	Layout = "";
 }
 <!DOCTYPE HTML>
 <html>
 <head>
-	<title>Agregar Usuario</title>
+	<title>Modificar Transportista</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 	<link rel="stylesheet" href="~/assets/css/main.css" />
@@ -19,7 +19,7 @@
 	</style>
 </head>
 <body class="is-preload">
-	@using (Html.BeginForm("AddUser", "Security", FormMethod.Post))
+	@using (Html.BeginForm("Edit", "Driver", FormMethod.Post))
 	{
 		<!-- Wrapper -->
 		<div id="wrapper">
@@ -55,8 +55,7 @@
 				<h2>Menu</h2>
 				<ul>
 					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
-					<li>@Html.ActionLink("Modificar usuario", "UserList", "Security")</li>
-					<li>@Html.ActionLink("Ajustes", "Index", "Settings")</li>
+					<li>@Html.ActionLink("Agregar transportistas a otra línea", "PublicTransportGroupList", "Driver")</li>
 					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 				</ul>
 			</nav>
@@ -66,51 +65,35 @@
 				<div class="inner">
 					<!-- Form -->
 					<section>
-						<h1 style="color:#4cbece">Agregar usuario</h1>
+						<h1 style="color:#4cbece">Modificar transportista</h1>
+						<label>Linea: @Model.PTGCompleteName</label>
 						<br />
 						<div class="row gtr-uniform">
-							<div class="col-12">
+							<div class="col-6">
 								<strong>Cédula:</strong>
-								@Html.TextBoxFor(x => x.SecurityUserDocumentIdNumber, new { placeholder = "Cédula", tabindex = "0", maxlength = "11" })
-								<span asp-validation-for="SecurityUserDocumentIdNumber" class="text-danger"></span>
-							</div>
-							<div class="col-12">
-								<strong>Nombre Completo:</strong>
-								@Html.TextBoxFor(x => x.FullName, new { placeholder = "Nombre Completo",  maxlength = "50" })
-								<span asp-validation-for="FullName" class="text-danger"></span>
-							</div>
-							<div class="col-12">
-								<strong>Nombre de Usuario:</strong>
-								@Html.TextBoxFor(x => x.Login, new { placeholder = "Nombre de Usuario", maxlength = "50" })
-								<span asp-validation-for="Login" class="text-danger"></span>
-							</div>
-							<div class="col-4">
-								<strong>Clave:</strong>
-								@Html.PasswordFor(x => x.Password, new { placeholder = "Clave", maxlength = "50" })
-								<span asp-validation-for="Password" class="text-danger"></span>
-							</div>
-							<div class="col-2">
-								<span id="togglePassword" style=transform: translateY(-50%); cursor: pointer;">
-									<i class="fa fa-eye"></i>
-								</span>
+								@Html.HiddenFor(x => x.PTGCompleteName)
+								@Html.HiddenFor(x => x.DriverId)
+								@Html.HiddenFor(x => x.PublicTransportGroupId)
+								@Html.TextBoxFor(x => x.DriverIdentityDocument, new { placeholder = "Cédula", tabindex = "0", maxlength = "8" })
+								<span asp-validation-for="DriverIdentityDocument" class="text-danger"></span>
 							</div>
 							<div class="col-6 col-12-xsmall">
-								<strong>Grupo:</strong>
-								@Html.DropDownListFor(t => t.SecurityGroupId, (SelectList)ViewBag.Groups, "-- Seleccione el grupo --")
+								<strong>Nombre:</strong>
+								@Html.TextBoxFor(x => x.DriverFullName, new { placeholder = "Nombre del transportista", tabindex = "0", maxlength = "50" })
 							</div>
-							<div class="col-6 col-12-xsmall">
-								<strong>Estatus:</strong>
-								@Html.DropDownListFor(t => t.SecurityStatusId, (SelectList)ViewBag.Status, "-- Seleccione el estatus --")
+							<div class="col-6">
+								<strong>Número de Socio:</strong>
+								@Html.TextBoxFor(x => x.PartnerNumber, new { placeholder = "Número de socio", maxlength = "2" })
+								<span asp-validation-for="PartnerNumber" class="text-danger"></span>
 							</div>
-
-							<div class="col-6 col-12-xsmall">
-								<strong>Estado:</strong>
-								@Html.DropDownListFor(t => t.StateId, (SelectList)ViewBag.States, "-- Seleccione el estado --")
+							<div class="col-6">
+								<strong>Teléfono:</strong>
+								@Html.TextBoxFor(x => x.DriverPhone, new { placeholder = "Teléfono del transportista", maxlength = "11" })
+								<span asp-validation-for="DriverPhone" class="text-danger"></span>
 							</div>
-
 							<div class="col-12">
 								<ul class="actions">
-									<li><input type="submit" value="Actualizar" class="primary" id="saveRequest"/></li>
+									<li><button type="submit" id="saveRequest" class="primary">Modificar</button></li>
 								</ul>
 							</div>
 						</div>
@@ -131,21 +114,6 @@
 
 	<script type="text/javascript">
 
-		document.addEventListener("DOMContentLoaded", function() {
-			const passwordInput = document.getElementById("Password");
-			const togglePassword = document.getElementById("togglePassword");
-
-			togglePassword.addEventListener("click", () => {
-
-				const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
-				passwordInput.setAttribute("type", type);
-
-				togglePassword.innerHTML = type === "password"
-					? '<i class="fa fa-eye"></i>'
-					: '<i class="fa fa-eye-slash"></i>';
-			});
-		});
-
 		document.addEventListener("DOMContentLoaded", function () {
 			function handleInput(selector, transformFunction) {
 				var inputElement = document.querySelector(selector);
@@ -156,11 +124,19 @@
 				}
 			}
 
-			handleInput("[name='FullName']", function (value) {
+			handleInput("[name='DriverIdentityDocument']", function (value) {
+				return value.replace(/[^0-9]/g, "");
+			});
+
+			handleInput("[name='DriverFullName']", function (value) {
 				return value.toUpperCase();
 			});
 
-			handleInput("[name='SecurityUserDocumentIdNumber']", function (value) {
+			handleInput("[name='PartnerNumber']", function (value) {
+				return value.replace(/[^0-9]/g, "");
+			});
+
+			handleInput("[name='DriverPhone']", function (value) {
 				return value.replace(/[^0-9]/g, "");
 			});
 		});
@@ -179,19 +155,24 @@
 			$(this).closest("form").trigger("submit");
 		});
 
-		$("form").submit(function (e) {
+		$("form").on("submit", function (e) {
 			e.preventDefault();
 
 			if ($(this).valid()) {
-				var paramValue1 = $('#SecurityUserDocumentIdNumber').val();
-				var paramValue2 = $('#Login').val();
-				var checkExistingUrl = '@Url.Action("CheckUserExist", "Security")';
-
+				var paramValue1 = $('#DriverIdentityDocument').val();
+				var paramValue2 = $('#PublicTransportGroupId').val();
+				var paramValue3 = $('#DriverPhone').val();
+				var paramValue4 = $('#PartnerNumber').val();
+				var paramValue5 = $('#DriverId').val();
+				var checkExistingUrl = '@Url.Action("CheckExistingValuesOnEdit", "Driver")';
 				$.ajax({
 					url: checkExistingUrl,
 					data: {
 						paramValue1: paramValue1,
-						paramValue2: paramValue2
+						paramValue2: paramValue2,
+						paramValue3: paramValue3,
+						paramValue4: paramValue4,
+						paramValue5: paramValue5
 					},
 					success: function (data) {
 						showMsg(data);
@@ -205,35 +186,47 @@
 			let firstInvalidField = null;
 			let message = "";
 
-			if ($("#SecurityUserDocumentIdNumber").val() == "" && !firstInvalidField) {
-				firstInvalidField = "#SecurityUserDocumentIdNumber";
-				message = "Debe colocar la cedula";
+			if ($("#DriverIdentityDocument").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#DriverIdentityDocument";
+				message = "Debe colocar la cédula del transportista";
 			}
 
-			if ($("#FullName").val() == "" && !firstInvalidField) {
-				firstInvalidField = "#FullName";
-				message = "Debe colocar el nombre completo del usuario";
+			if (!firstInvalidField) {
+				const identityValue = $("#DriverIdentityDocument").val();
+
+				if (identityValue == "" || identityValue.length < 7) {
+					firstInvalidField = "#DriverIdentityDocument";
+					message = "Debe colocar un número de cédula válido";
+				}
 			}
 
-
-			if ($("#Login").val() == "" && !firstInvalidField) {
-				firstInvalidField = "#Login";
-				message = "Debe colocar el login";
+			if ($("#DriverFullName").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#DriverFullName";
+				message = "Debe colocar el nombre del transportista";
 			}
 
-			if ($("#Password").val() == "" && !firstInvalidField) {
-				firstInvalidField = "#Password";
-				message = "Debe seleccionar el password";
+			if ($("#PartnerNumber").val() != "" &&  $("#PartnerNumber").val() == "0" && !firstInvalidField) {
+				firstInvalidField = "#PartnerNumber";
+				message = "El número de socio no puede ser cero";
 			}
 
-			if ($("#SecurityGroupId").val() == "" && !firstInvalidField) {
-				firstInvalidField = "#SecurityGroupId";
-				message = "Debe seleccionar el grupo";
+			if ($("#PartnerNumber").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#PartnerNumber";
+				message = "Debe colocar el número de socio";
 			}
 
-			if ($("#SecurityStatusId").val() == "" && !firstInvalidField) {
-				firstInvalidField = "#SecurityStatusId";
-				message = "Debe seleccionar el estatus";
+			if ($("#RepresentativePhone").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#RepresentativePhone";
+				message = "Debe colocar el número de teléfono del representante";
+			}
+
+			if (!firstInvalidField) {
+				const identityValue = $("#DriverPhone").val();
+
+				if (identityValue == "" || identityValue.length < 11) {
+					firstInvalidField = "#DriverPhone";
+					message = "Debe colocar un número de télefono válido";
+				}
 			}
 
 			if (firstInvalidField) {
@@ -277,5 +270,3 @@
 	</script>
 </body>
 </html>
-
-

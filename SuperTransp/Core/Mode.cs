@@ -56,5 +56,10 @@ namespace SuperTransp.Core
 
 			return modes;
 		}
+
+		public int AddOrEdit(ModeViewModel model)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

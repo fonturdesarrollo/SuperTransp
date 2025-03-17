@@ -42,15 +42,18 @@ namespace SuperTransp.Core
         public interface IDesignation
         {
 			public List<DesignationViewModel> GetAll();
+			public int AddOrEdit(DesignationViewModel model);
 		}
 
 		public interface IMode
 		{
+			public int AddOrEdit(ModeViewModel model);
 			public List<ModeViewModel> GetAll();
 		}
 
 		public interface IUnion
 		{
+			public int AddOrEdit(UnionViewModel model);
 			public List<UnionViewModel> GetAll();
 		}
 
@@ -61,6 +64,17 @@ namespace SuperTransp.Core
 			public string? RegisteredRif(string publicTransportGroupRif);
 			public List<PublicTransportGroupModel> GetAll();
 			public List<PublicTransportGroupModel> GetByStateId(int stateId);
+		}
+		public interface IDriver
+		{
+			public int AddOrEdit(DriverViewModel model);
+			public List<DriverViewModel> GetByPublicTransportGroupId(int publicTransportGroupId);
+			public DriverViewModel GetByDriverPublicTransportGroupId(int driverPublicTransportGroupId);
+			public bool RegisteredDocumentId(int driverIdentityDocument, int publicTransportGroupId);
+			public bool RegisteredPhone(string driverPhone, int publicTransportGroupId);
+			public bool RegisteredPartnerNumber(int partnerNumber, int publicTransportGroupId);
+			public List<DriverViewModel> GetAll();
+			public bool Delete(int driverId);
 		}
 	}
 }

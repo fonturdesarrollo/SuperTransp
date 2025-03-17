@@ -21,7 +21,7 @@
 			<header id="header">
 				<div class="inner">
 					<!-- Logo -->
-					<a href="index.html" class="logo">
+					<a href="#" class="logo">
 						<span class="symbol"><img src="~/images/logo_login.jpg" alt="" /></span><span class="title">SuperTransp</span>
 						<br />
 						<span class="title">@ViewBag.EmployeeName</span>
@@ -52,17 +52,17 @@
 					<section>
 						<h2>Ajustes Generales</h2>
 						<div class="row">
-@* 							<div class="col-6 col-12-medium">
+							<div class="col-6 col-12-medium">
 								<h3>Organizaciones de Transporte</h3>
 								<ul>
-									<li>@Html.ActionLink("Agregar tipo de Organización", "Add", "Clinic")</li>
-									<li>@Html.ActionLink("Modificar tipo de Organización", "SelectClinic", "Setting")</li>
+									<li>@Html.ActionLink("Agregar tipo de Línea", "AddDesignation", "CommonData")</li>
+									<li>@Html.ActionLink("Agregar Gremio o Sindicato", "AddUnion", "CommonData")</li>
 								</ul>
-							</div> *@
+							</div>
 							<div class="col-6 col-12-medium">
 								<h3>Seguridad</h3>
 								<ul>
-									<li>Cambiar Password</li>
+									<li>@Html.ActionLink("Cambiar Clave", "ChangePassword", "Security")</li>
 									@{
 										var modulesInGroup = (IEnumerable<SecurityModuleModel>)ViewBag.ModulesInGroup;
 

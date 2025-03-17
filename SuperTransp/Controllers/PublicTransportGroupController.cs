@@ -28,10 +28,15 @@ namespace SuperTransp.Controllers
 
 		public IActionResult Index()
 		{
-			ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
-			ViewBag.SecurityGroupId = (int)HttpContext.Session.GetInt32("SecurityGroupId");
+			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("FullName")) && HttpContext.Session.GetInt32("SecurityGroupId") != null)
+			{
+				ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+				ViewBag.SecurityGroupId = (int)HttpContext.Session.GetInt32("SecurityGroupId");
 
-			return View();
+				return View();
+			}
+
+			return RedirectToAction("Login", "Security");
 		}
 
 		public IActionResult Add()
@@ -100,7 +105,9 @@ namespace SuperTransp.Controllers
 
 					if (publicTransportGroupId > 0)
 					{
-						return RedirectToAction("Edit", new { publicTransportGroupId = publicTransportGroupId });
+						TempData["SuccessMessage"] = "Datos actualizados correctamente";
+
+						return RedirectToAction("Add");
 					}
 				}
 

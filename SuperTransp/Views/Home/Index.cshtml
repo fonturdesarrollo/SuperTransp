@@ -57,7 +57,7 @@
 									<span class="image">
 										<img src="~/images/image7.jpg" alt="" />
 									</span>
-									@Html.ActionLink("Organizaciones de Transporte", "Index", "PublicTransportGroup")
+									@Html.ActionLink("Líneas de Transporte", "Index", "PublicTransportGroup")
 								</article>
 							}
 							if (ViewBag.SecurityGroupId == 1 || item.SecurityModuleId == 2)
@@ -66,7 +66,7 @@
 									<span class="image">
 										<img src="~/images/image8.jpg" alt="" />
 									</span>
-									@Html.ActionLink("Unidades de Transporte y Transportistas", "", "")
+									@Html.ActionLink("Transportistas", "Index", "Driver")
 								</article>
 							}
 							if (ViewBag.SecurityGroupId == 1 || item.SecurityModuleId == 3)

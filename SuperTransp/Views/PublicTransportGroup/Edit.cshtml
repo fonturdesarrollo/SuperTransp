@@ -10,6 +10,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 	<link rel="stylesheet" href="~/assets/css/main.css" />
 	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
+	<link rel="stylesheet" href="~/datatable/css/bootstrap.css" />
 	<style>
 		.is-invalid {
 			border: 2px solid red;
@@ -28,10 +29,17 @@
 				<div class="inner">
 
 					<!-- Logo -->
-					<a href="index.html" class="logo">
+					<a href="#" class="logo">
 						<span class="symbol"><img src="~/images/logo_login.jpg" alt="" /></span><span class="title">SuperTransp</span>
 						<br />
 						<span class="title">@ViewBag.EmployeeName</span>
+						<br />
+						@if (TempData["SuccessMessage"] != null)
+						{
+							<div id="successMessage" class="alert alert-success">
+								@TempData["SuccessMessage"]
+							</div>
+						}
 					</a>
 				</div>
 				<!-- Nav -->
@@ -341,6 +349,10 @@
 		}
 
 		$(document).ready(function () {
+
+			setTimeout(function(){
+				$("#successMessage").fadeOut("slow");
+			}, 2500);
 
 			$('#StateId').change(function () {
 				var stateId = $(this).val();

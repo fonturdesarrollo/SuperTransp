@@ -24,6 +24,7 @@ builder.Services.AddTransient<IPublicTransportGroup, PublicTransportGroup>();
 builder.Services.AddTransient<IDesignation, Designation>();
 builder.Services.AddTransient<IMode, Mode>();
 builder.Services.AddTransient<IUnion, Union>();
+builder.Services.AddTransient<IDriver, Driver>();
 
 var app = builder.Build();
 
