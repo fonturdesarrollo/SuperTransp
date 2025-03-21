@@ -159,18 +159,14 @@
 			e.preventDefault();
 
 			if ($(this).valid()) {
-				var paramValue1 = $('#DriverIdentityDocument').val();
 				var paramValue2 = $('#PublicTransportGroupId').val();
-				var paramValue3 = $('#DriverPhone').val();
 				var paramValue4 = $('#PartnerNumber').val();
 				var paramValue5 = $('#DriverId').val();
 				var checkExistingUrl = '@Url.Action("CheckExistingValuesOnEdit", "Driver")';
 				$.ajax({
 					url: checkExistingUrl,
 					data: {
-						paramValue1: paramValue1,
 						paramValue2: paramValue2,
-						paramValue3: paramValue3,
 						paramValue4: paramValue4,
 						paramValue5: paramValue5
 					},

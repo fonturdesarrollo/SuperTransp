@@ -81,6 +81,11 @@
 						<br />
 						<div class="row gtr-uniform">
 							<div class="col-12">
+								<strong>Estado:</strong>
+								@Html.DropDownListFor(t => t.StateId, (SelectList)ViewBag.States, "-- Seleccione el estado --")
+								<span asp-validation-for="StateId" class="text-danger"></span>
+							</div>
+							<div class="col-12">
 								<strong>Nombre:</strong>
 								@Html.TextBoxFor(x => x.UnionName, new { placeholder = "Nombre de gremio o sindicato", tabindex = "0", maxlength = "50" })
 								<span asp-validation-for="UnionName" class="text-danger"></span>
@@ -141,6 +146,11 @@
 		function isOkToSave() {
 			let firstInvalidField = null;
 			let message = "";
+
+			if ($("#StateId").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#StateId";
+				message = "Debe seleccionar el estado";
+			}
 
 			if ($("#UnionName").val() == "" && !firstInvalidField) {
 				firstInvalidField = "#UnionName";

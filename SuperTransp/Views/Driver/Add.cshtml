@@ -106,7 +106,7 @@
 					<section>
 						<br />
 						<br />
-						<h4 style="color:#4cbece">Transportisas asignados a la línea</h4>
+						<h4 style="color:#4cbece">Transportistas asignados a la línea</h4>
 						<br />
 						<table id="inventory" class="table table-striped table-bordered dt-responsive nowrap" style="width:100%">
 							<thead>
@@ -219,17 +219,13 @@
 			e.preventDefault();
 
 			if ($(this).valid()) {
-				var paramValue1 = $('#DriverIdentityDocument').val();
 				var paramValue2 = $('#PublicTransportGroupId').val();
-				var paramValue3 = $('#DriverPhone').val();
 				var paramValue4 = $('#PartnerNumber').val();
 				var checkExistingUrl = '@Url.Action("CheckExistingValues", "Driver")';
 				$.ajax({
 					url: checkExistingUrl,
 					data: {
-						paramValue1: paramValue1,
 						paramValue2: paramValue2,
-						paramValue3: paramValue3,
 						paramValue4: paramValue4
 					},
 					success: function (data) {
@@ -261,7 +257,18 @@
 			if ($("#DriverFullName").val() == "" && !firstInvalidField) {
 				firstInvalidField = "#DriverFullName";
 				message = "Debe colocar el nombre del transportista";
+			} else {
+				const driverFullName = $("#DriverFullName").val().trim();
+				const parts = driverFullName.split(" ");
+
+				if (parts.length < 2 || parts[0].length < 3 || parts[1].length < 3) {
+					if (!firstInvalidField) {
+						firstInvalidField = "#DriverFullName";
+					}
+					message = "Debe colocar nombre y apellido correctamente";
+				}
 			}
+
 
 			if ($("#PartnerNumber").val() != "" &&  $("#PartnerNumber").val() == "0" && !firstInvalidField) {
 				firstInvalidField = "#PartnerNumber";
@@ -324,6 +331,53 @@
 			setTimeout(function(){
 				$("#successMessage").fadeOut("slow");
 			}, 2500);
+
+			$("#DriverIdentityDocument").on("blur keypress", function (event) {
+				if (event.type === "blur" || (event.type === "keypress" && event.which === 13)) {
+					event.preventDefault();
+					let inputValue = $(this).val();
+					llamarControlador(inputValue);
+				}
+			});
+
+			function llamarControlador(value) {
+				var checkExistingUrl = '@Url.Action("GetDriverDataByIdDocument", "Driver")';
+				$.ajax({
+					url: checkExistingUrl,
+					type: 'POST',
+					data: { driverIdentityDocument: value },
+					success: function (response) {
+					if (response && response.driverFullName && response.driverPhone) {
+						$("#DriverFullName").val(response.driverFullName);
+						$("#DriverPhone").val(response.driverPhone);
+
+						$("#DriverFullName").prop("readonly", true);
+						$("#DriverPhone").prop("readonly", true);
+
+						$("#PartnerNumber").focus();
+					} else {
+
+						$("#DriverFullName").prop("readonly", false);
+						$("#DriverPhone").prop("readonly", false);
+
+						$("#DriverFullName").val("");
+						$("#DriverPhone").val("");
+
+						$("#DriverFullName").focus();
+					}
+				},
+				error: function (xhr, status, error) {
+					console.error("Error en la petición:", error);
+
+					$("#DriverFullName").prop("readonly", false);
+					$("#DriverPhone").prop("readonly", false);
+
+					$("#DriverFullName").val("");
+					$("#DriverPhone").val("");
+
+					},
+				});
+			}
 
 			$('#inventory').DataTable({
 				"language": {

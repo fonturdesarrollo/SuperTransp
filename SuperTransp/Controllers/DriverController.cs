@@ -194,20 +194,26 @@ namespace SuperTransp.Controllers
 			return Json("ERROR");
 		}
 
-		public JsonResult CheckExistingValues(int paramValue1, int paramValue2, string paramValue3, int paramValue4, bool isUpdating)
+		[HttpPost]
+		public IActionResult GetDriverDataByIdDocument(int driverIdentityDocument)
+		{
+			if (driverIdentityDocument > 0)
+			{
+				var driver = _driver.GetByIdentityDocument(driverIdentityDocument);
+
+				if (driver != null)
+				{
+					return Json(new { driverFullName = driver.DriverFullName, driverPhone = driver.DriverPhone });
+				}
+			}
+
+			return Json(new { driverFullName = "", driverPhone = "" });			
+		}
+
+		public JsonResult CheckExistingValues(int paramValue2, int paramValue4)
 		{
 			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 			{
-				if (_driver.RegisteredDocumentId(paramValue1, paramValue2))
-				{
-					return Json($"La cédula {paramValue1} ya está registrada a la línea.");
-				}
-
-				if (_driver.RegisteredPhone(paramValue3, paramValue2))
-				{
-					return Json($"El número de teléfono {paramValue3} ya está registrado a la línea.");
-				}
-
 				if (_driver.RegisteredPartnerNumber(paramValue4, paramValue2))
 				{
 					return Json($"El número de socio {paramValue4} ya está registrado a la línea.");
@@ -219,25 +225,10 @@ namespace SuperTransp.Controllers
 			return Json("ERROR");
 		}
 
-		public JsonResult CheckExistingValuesOnEdit(int paramValue1, int paramValue2, string paramValue3, int paramValue4, int paramValue5)
+		public JsonResult CheckExistingValuesOnEdit(int paramValue2, int paramValue4, int paramValue5)
 		{
 			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 			{
-				if (_driver.RegisteredDocumentId(paramValue1, paramValue2))
-				{
-					var allData = _driver.GetByPublicTransportGroupId(paramValue2);
-					var driverData = allData.Where(x => x.DriverIdentityDocument == paramValue1 &&  x.DriverId == paramValue5).ToList();
-
-					if (!driverData.Any()) 
-					{
-						var finalData = allData.Where(x => x.DriverIdentityDocument == paramValue1 && x.DriverId != paramValue5);
-						if (finalData.Any())
-						{
-							return Json($"La cédula {paramValue1} ya está registrada a la línea.");
-						}
-					}
-				}
-
 				if (_driver.RegisteredPartnerNumber(paramValue4, paramValue2))
 				{
 					var allData = _driver.GetByPublicTransportGroupId(paramValue2);

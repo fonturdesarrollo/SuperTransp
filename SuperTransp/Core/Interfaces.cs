@@ -55,6 +55,7 @@ namespace SuperTransp.Core
 		{
 			public int AddOrEdit(UnionViewModel model);
 			public List<UnionViewModel> GetAll();
+			public List<UnionViewModel> GetByStateId(int stateId);
 		}
 
 		public interface IPublicTransportGroup
@@ -70,6 +71,7 @@ namespace SuperTransp.Core
 			public int AddOrEdit(DriverViewModel model);
 			public List<DriverViewModel> GetByPublicTransportGroupId(int publicTransportGroupId);
 			public DriverViewModel GetByDriverPublicTransportGroupId(int driverPublicTransportGroupId);
+			public DriverViewModel GetByIdentityDocument(int driverIdentityDocument);
 			public bool RegisteredDocumentId(int driverIdentityDocument, int publicTransportGroupId);
 			public bool RegisteredPhone(string driverPhone, int publicTransportGroupId);
 			public bool RegisteredPartnerNumber(int partnerNumber, int publicTransportGroupId);

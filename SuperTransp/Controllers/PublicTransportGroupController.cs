@@ -69,18 +69,19 @@ namespace SuperTransp.Controllers
 								if (stateId.HasValue)
 								{
 									ViewBag.States = new SelectList(_geography.GetStateById((int)stateId), "StateId", "StateName");
+									ViewBag.Union = new SelectList(_union.GetByStateId((int)stateId), "UnionId", "UnionName");
 								}
 							}
 						}
 						else
 						{
 							ViewBag.States = new SelectList(_geography.GetAllStates(), "StateId", "StateName");
+							ViewBag.Union = new SelectList(_union.GetAll(), "UnionId", "UnionName");
 						}
 					}
 
 					ViewBag.Designation = new SelectList(_designation.GetAll(), "DesignationId", "DesignationName");
 					ViewBag.Mode = new SelectList(_mode.GetAll(), "ModeId", "ModeName");
-					ViewBag.Union = new SelectList(_union.GetAll(), "UnionId", "UnionName");
 
 					return View(model);
 				}
@@ -143,19 +144,19 @@ namespace SuperTransp.Controllers
 							if (stateId.HasValue)
 							{
 								ViewBag.States = new SelectList(_geography.GetStateById((int)stateId), "StateId", "StateName");
+								ViewBag.Union = new SelectList(_union.GetByStateId((int)stateId), "UnionId", "UnionName");
 							}
 						}
 					}
 					else
 					{
 						ViewBag.States = new SelectList(_geography.GetAllStates(), "StateId", "StateName");
-
+						ViewBag.Union = new SelectList(_union.GetAll(), "UnionId", "UnionName");
 					}
 
 					ViewBag.Municipality = new SelectList(_geography.GetMunicipalityByStateId(model.StateId), "MunicipalityId", "MunicipalityName");
 					ViewBag.Designation = new SelectList(_designation.GetAll(), "DesignationId", "DesignationName");
-					ViewBag.Mode = new SelectList(_mode.GetAll(), "ModeId", "ModeName");
-					ViewBag.Union = new SelectList(_union.GetAll(), "UnionId", "UnionName");
+					ViewBag.Mode = new SelectList(_mode.GetAll(), "ModeId", "ModeName");					
 				}
 
 				return View(model);

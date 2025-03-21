@@ -40,6 +40,7 @@ namespace SuperTransp.Core
 						};
 
 						cmd.Parameters.AddWithValue("@UnionId", model.UnionId);
+						cmd.Parameters.AddWithValue("@StateId", model.StateId);
 						cmd.Parameters.AddWithValue("@UnionName", model.UnionName);
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
@@ -86,6 +87,44 @@ namespace SuperTransp.Core
 			catch (Exception ex)
 			{
 				throw new Exception("Error al obtener los gremios", ex);
+			}
+
+			return unions;
+		}
+
+		public List<UnionViewModel> GetByStateId(int stateId)
+		{
+			List<UnionViewModel> unions = new();
+
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SqlCommand cmd = new("SELECT * FROM [Union] WHERE StateId = @StateId ORDER BY UnionName", sqlConnection);
+					cmd.Parameters.AddWithValue("@StateId", stateId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							unions.Add(new UnionViewModel
+							{
+								UnionId = dr.GetInt32(dr.GetOrdinal("UnionId")),
+								StateId = dr.GetInt32(dr.GetOrdinal("StateId")),
+								UnionName = dr.GetString(dr.GetOrdinal("UnionName"))
+							});
+						}
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener los gremios {ex}", ex);
 			}
 
 			return unions;

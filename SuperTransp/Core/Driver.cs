@@ -56,7 +56,7 @@ namespace SuperTransp.Core
 			}
 			catch (Exception ex)
 			{
-				throw new Exception("Error al añadir o editar el transportista", ex);
+				throw new Exception($"Error al añadir o editar el transportista {ex.Message}", ex);
 			}
 		}
 
@@ -98,7 +98,7 @@ namespace SuperTransp.Core
 			}
 			catch (Exception ex)
 			{
-				throw new Exception("Error al obtener los transportistas", ex);
+				throw new Exception($"Error al obtener los transportistas {ex.Message}", ex);
 			}
 		}
 
@@ -137,7 +137,47 @@ namespace SuperTransp.Core
 			}
 			catch (Exception ex)
 			{
-				throw new Exception("Error al obtener los transportistas", ex);
+				throw new Exception($"Error al obtener los transportistas {ex.Message}", ex);
+			}
+		}
+
+		public DriverViewModel GetByIdentityDocument(int driverIdentityDocument)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					DriverViewModel driver = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_DriversDetail WHERE DriverIdentityDocument = @DriverIdentityDocument", sqlConnection);
+					cmd.Parameters.AddWithValue("@DriverIdentityDocument", driverIdentityDocument);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							driver.DriverId = (int)dr["DriverId"];
+							driver.PublicTransportGroupId = (int)dr["PublicTransportGroupId"];
+							driver.DriverIdentityDocument = (int)dr["DriverIdentityDocument"];
+							driver.DriverFullName = (string)dr["DriverFullName"];
+							driver.PartnerNumber = (int)dr["PartnerNumber"];
+							driver.DriverPhone = (string)dr["DriverPhone"];
+							driver.PTGCompleteName = (string)dr["PTGCompleteName"];
+							driver.DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"];
+							break;
+						}
+					}
+
+					return driver;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener el registro del transportista {ex.Message}", ex);
 			}
 		}
 
