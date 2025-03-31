@@ -1,6 +1,6 @@
 ﻿namespace SuperTransp.Models
 {
-	public class GeographyModel
+	public class GeographyViewModel
 	{
         public int StateId { get; set; }
         public string? StateName { get; set; }

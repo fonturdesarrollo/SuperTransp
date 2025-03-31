@@ -26,7 +26,7 @@ namespace SuperTransp.Core
 			return sqlConnection;
 		}
 
-		public SecurityUserModel GetValidUser(string login, string password)
+		public SecurityUserViewModel GetValidUser(string login, string password)
 		{
 			try
 			{
@@ -37,7 +37,7 @@ namespace SuperTransp.Core
 						sqlConnection.Open();
 					}
 
-					SecurityUserModel user = new();
+					SecurityUserViewModel user = new();
 					SqlCommand cmd = new("SELECT * FROM SecurityUser WHERE Login = @Login AND Password = @Password AND SecurityStatusId = 1", sqlConnection);
 					cmd.Parameters.AddWithValue("@Login", login);
 					cmd.Parameters.AddWithValue("@Password", password);
@@ -180,7 +180,7 @@ namespace SuperTransp.Core
 			}
 		}
 
-		public int AddOrEditUser(SecurityUserModel model)
+		public int AddOrEditUser(SecurityUserViewModel model)
 		{
 			int result = 0;
 			try
@@ -220,7 +220,7 @@ namespace SuperTransp.Core
 			}
 		}
 
-		public SecurityUserModel GetUserById(int securityUserId)
+		public SecurityUserViewModel GetUserById(int securityUserId)
 		{
 			try
 			{
@@ -231,7 +231,7 @@ namespace SuperTransp.Core
 						sqlConnection.Open();
 					}
 
-					SecurityUserModel user = new();
+					SecurityUserViewModel user = new();
 					SqlCommand cmd = new("SELECT * FROM SecurityUser WHERE SecurityUserId = @SecurityUserId", sqlConnection);
 					cmd.Parameters.AddWithValue("@SecurityUserId", securityUserId);
 
@@ -261,7 +261,7 @@ namespace SuperTransp.Core
 
 		public int RegisteredUser(string paramValue, string verifyBy)
 		{
-			SecurityUserModel user = new();
+			SecurityUserViewModel user = new();
 			using (SqlConnection sqlConnection = GetConnection())
 			{
 				if (sqlConnection.State == ConnectionState.Closed)
@@ -291,7 +291,7 @@ namespace SuperTransp.Core
 			}
 		}
 
-		public List<SecurityUserModel> GetAllUsers()
+		public List<SecurityUserViewModel> GetAllUsers()
 		{
 			try
 			{
@@ -302,14 +302,14 @@ namespace SuperTransp.Core
 						sqlConnection.Open();
 					}
 
-					List<SecurityUserModel> users = new();
+					List<SecurityUserViewModel> users = new();
 					SqlCommand cmd = new("SELECT * FROM Security_GetAllUsers", sqlConnection);
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
 					{
 						while (dr.Read())
 						{
-							users.Add(new SecurityUserModel
+							users.Add(new SecurityUserViewModel
 							{
 								SecurityUserDocumentIdNumber = (int)dr["SecurityUserDocumentIdNumber"],
 								Login = (string)dr["Login"],
@@ -335,7 +335,7 @@ namespace SuperTransp.Core
 			}
 		}
 
-		public List<SecurityUserModel> GetAllUsersByStateId(int stateId)
+		public List<SecurityUserViewModel> GetAllUsersByStateId(int stateId)
 		{
 			try
 			{
@@ -346,7 +346,7 @@ namespace SuperTransp.Core
 						sqlConnection.Open();
 					}
 
-					List<SecurityUserModel> users = new();
+					List<SecurityUserViewModel> users = new();
 					SqlCommand cmd = new("SELECT * FROM Security_GetAllUsers WHERE StateId = @StateId", sqlConnection);
 					cmd.Parameters.AddWithValue("@StateId", stateId);
 
@@ -354,7 +354,7 @@ namespace SuperTransp.Core
 					{
 						while (dr.Read())
 						{
-							users.Add(new SecurityUserModel
+							users.Add(new SecurityUserViewModel
 							{
 								SecurityUserDocumentIdNumber = (int)dr["SecurityUserDocumentIdNumber"],
 								Login = (string)dr["Login"],
@@ -661,7 +661,7 @@ namespace SuperTransp.Core
 			}
 		}
 
-		public int ChangePassword(SecurityUserModel model)
+		public int ChangePassword(SecurityUserViewModel model)
 		{
 			int result = 0;
 			try

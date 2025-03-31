@@ -19,9 +19,9 @@ namespace SuperTransp.Core
 			return sqlConnection;
 		}
 
-		public List<GeographyModel> GetAllStates()
+		public List<GeographyViewModel> GetAllStates()
 		{
-			List<GeographyModel> states = new();
+			List<GeographyViewModel> states = new();
 
 			try
 			{
@@ -38,7 +38,7 @@ namespace SuperTransp.Core
 						{
 							while (dr.Read())
 							{
-								states.Add(new GeographyModel
+								states.Add(new GeographyViewModel
 								{
 									StateId = dr.GetInt32(dr.GetOrdinal("StateId")),
 									StateName = dr.GetString(dr.GetOrdinal("StateName"))
@@ -56,9 +56,9 @@ namespace SuperTransp.Core
 			return states;
 		}
 
-		public List<GeographyModel> GetStateById(int stateId)
+		public List<GeographyViewModel> GetStateById(int stateId)
 		{
-			List<GeographyModel> state = new();
+			List<GeographyViewModel> state = new();
 
 			try
 			{
@@ -76,7 +76,7 @@ namespace SuperTransp.Core
 						{
 							while (dr.Read())
 							{
-								state.Add(new GeographyModel
+								state.Add(new GeographyViewModel
 								{
 									StateId = (int)dr["StateId"],
 									StateName = (string)dr["StateName"]
@@ -94,9 +94,9 @@ namespace SuperTransp.Core
 			return state;
 		}
 
-		public List<GeographyModel> GetAllMunicipalities()
+		public List<GeographyViewModel> GetAllMunicipalities()
 		{
-			List<GeographyModel> municipalities = new();
+			List<GeographyViewModel> municipalities = new();
 
 			try
 			{
@@ -113,7 +113,7 @@ namespace SuperTransp.Core
 						{
 							while (dr.Read())
 							{
-								municipalities.Add(new GeographyModel
+								municipalities.Add(new GeographyViewModel
 								{
 									MunicipalityId = dr.GetInt32(dr.GetOrdinal("MunicipalityId")),
 									MunicipalityName = dr.GetString(dr.GetOrdinal("MunicipalityName"))
@@ -131,9 +131,9 @@ namespace SuperTransp.Core
 			return municipalities;
 		}
 
-		public List<GeographyModel> GetMunicipalityByStateId(int stateId)
+		public List<GeographyViewModel> GetMunicipalityByStateId(int stateId)
 		{
-			List<GeographyModel> municipality = new();
+			List<GeographyViewModel> municipality = new();
 
 			try
 			{
@@ -151,7 +151,7 @@ namespace SuperTransp.Core
 						{
 							while (dr.Read())
 							{
-								municipality.Add(new GeographyModel
+								municipality.Add(new GeographyViewModel
 								{
 									MunicipalityId = (int)dr["MunicipalityId"],
 									MunicipalityName = (string)dr["MunicipalityName"]

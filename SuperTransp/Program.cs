@@ -25,6 +25,8 @@ builder.Services.AddTransient<IDesignation, Designation>();
 builder.Services.AddTransient<IMode, Mode>();
 builder.Services.AddTransient<IUnion, Union>();
 builder.Services.AddTransient<IDriver, Driver>();
+builder.Services.AddTransient<ISupervision, Supervision>();
+builder.Services.AddTransient<ICommonData, CommonData>();
 
 var app = builder.Build();
 
@@ -33,6 +35,13 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
     ForwardedHeaders = ForwardedHeaders.XForwardedFor |
     ForwardedHeaders.XForwardedProto
 });
+
+app.Use(async (context, next) =>
+{
+	context.Request.EnableBuffering();
+	await next();
+});
+
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

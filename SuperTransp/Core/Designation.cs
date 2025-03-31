@@ -19,6 +19,7 @@ namespace SuperTransp.Core
 			SqlConnection sqlConnection = new(_configuration.GetConnectionString("connectionString"));
 			return sqlConnection;
 		}
+
 		public int AddOrEdit(DesignationViewModel model)
 		{
 			int result = 0;

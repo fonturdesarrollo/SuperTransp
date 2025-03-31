@@ -40,7 +40,7 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
-					List<PublicTransportGroupModel> model = new();
+					List<PublicTransportGroupViewModel> model = new();
 
 					ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");

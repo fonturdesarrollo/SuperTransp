@@ -31,7 +31,7 @@ namespace SuperTransp.Controllers
 		}
 
 		[HttpPost]
-		public IActionResult Login(SecurityUserModel model)
+		public IActionResult Login(SecurityUserViewModel model)
 		{
 			try
 			{
@@ -73,7 +73,7 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
-					var model = new SecurityUserModel
+					var model = new SecurityUserViewModel
 					{
 						SecurityUserDocumentIdNumber = null
 					};
@@ -138,7 +138,7 @@ namespace SuperTransp.Controllers
 		}
 
 		[HttpPost]
-		public IActionResult AddUser(SecurityUserModel model)
+		public IActionResult AddUser(SecurityUserViewModel model)
 		{
 			try
 			{
@@ -224,7 +224,7 @@ namespace SuperTransp.Controllers
 		}
 
 		[HttpPost]
-		public IActionResult EditUser(SecurityUserModel model)
+		public IActionResult EditUser(SecurityUserViewModel model)
 		{
 			try
 			{
@@ -255,7 +255,7 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
-					List<SecurityUserModel> model = _security.GetAllUsers();
+					List<SecurityUserViewModel> model = _security.GetAllUsers();
 
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 					int? stateId = HttpContext.Session.GetInt32("StateId");
@@ -620,7 +620,7 @@ namespace SuperTransp.Controllers
 		}
 
 		[HttpPost]
-		public IActionResult ChangePassword(SecurityUserModel model)
+		public IActionResult ChangePassword(SecurityUserViewModel model)
 		{
 			try
 			{

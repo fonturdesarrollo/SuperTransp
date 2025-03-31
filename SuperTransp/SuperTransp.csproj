@@ -25,5 +25,14 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
   </ItemGroup>
+<ItemGroup>
+  <None Update="appsettings.json">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
+</ItemGroup>
+<ItemGroup>
+  <Folder Include="wwwroot\plugins\dropzone\" />
+  <Folder Include="wwwroot\uploads\" />
+</ItemGroup>  
 
 </Project>

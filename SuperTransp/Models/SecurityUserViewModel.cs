@@ -2,7 +2,7 @@
 
 namespace SuperTransp.Models
 {
-	public class SecurityUserModel
+	public class SecurityUserViewModel
 	{
 		[Key]
 		public int SecurityUserId { get; set; }

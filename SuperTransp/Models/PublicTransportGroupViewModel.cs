@@ -2,7 +2,7 @@
 
 namespace SuperTransp.Models
 {
-	public class PublicTransportGroupModel
+	public class PublicTransportGroupViewModel
 	{
 		[Key]
 		public int PublicTransportGroupId { get; set; }
@@ -32,5 +32,10 @@ namespace SuperTransp.Models
 		public string? DesignationName { get; set; }
 		public string? ModeName { get; set; }
 		public string? UnionName { get; set; }
+		public int DriverId { get; set; }
+		public int DriverIdentityDocument { get; set; }
+		public string? DriverFullName { get; set; }
+		public int PartnerNumber { get; set; }
+		public int? SupervisionStatus { get; set; }
 	}
 }

@@ -45,7 +45,7 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
-					var model = new PublicTransportGroupModel
+					var model = new PublicTransportGroupViewModel
 					{
 						PublicTransportGroupId = 0,
 						PublicTransportGroupIdModifiedDate = DateTime.Now
@@ -96,7 +96,7 @@ namespace SuperTransp.Controllers
 		}
 
 		[HttpPost]
-		public IActionResult Add(PublicTransportGroupModel model)
+		public IActionResult Add(PublicTransportGroupViewModel model)
 		{
 			try
 			{
@@ -165,7 +165,7 @@ namespace SuperTransp.Controllers
 			return RedirectToAction("Login", "Security");
 		}
 
-		public IActionResult Edit(PublicTransportGroupModel model)
+		public IActionResult Edit(PublicTransportGroupViewModel model)
 		{
 			try
 			{
@@ -190,7 +190,7 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
-					List<PublicTransportGroupModel> model = new();
+					List<PublicTransportGroupViewModel> model = new();
 
 					ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");

@@ -19,7 +19,7 @@ namespace SuperTransp.Core
 			SqlConnection sqlConnection = new(_configuration.GetConnectionString("connectionString"));
 			return sqlConnection;
 		}
-		public int AddOrEdit(PublicTransportGroupModel model)
+		public int AddOrEdit(PublicTransportGroupViewModel model)
 		{
 			int result = 0;
 			try
@@ -58,11 +58,11 @@ namespace SuperTransp.Core
 			}
 			catch (Exception ex)
 			{
-				throw new Exception("Error al añadir o editar la línea de transporte", ex);
+				throw new Exception($"Error al añadir o editar la línea de transporte {ex.Message}", ex);
 			}
 		}
 
-		public PublicTransportGroupModel GetPublicTransportGroupById(int publicTransportGroupId)
+		public PublicTransportGroupViewModel GetPublicTransportGroupById(int publicTransportGroupId)
 		{
 			try
 			{
@@ -73,7 +73,7 @@ namespace SuperTransp.Core
 						sqlConnection.Open();
 					}
 
-					PublicTransportGroupModel publicTransportGroup = new();
+					PublicTransportGroupViewModel publicTransportGroup = new();
 					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail WHERE PublicTransportGroupId = @PublicTransportGroupId", sqlConnection);
 					cmd.Parameters.AddWithValue("@PublicTransportGroupId", publicTransportGroupId);
 
@@ -106,11 +106,11 @@ namespace SuperTransp.Core
 			}
 			catch (Exception ex)
 			{
-				throw new Exception("Error al obtener la línea por ID", ex);
+				throw new Exception($"Error al obtener la línea por ID {ex.Message}", ex);
 			}
 		}
 
-		public List<PublicTransportGroupModel> GetAll()
+		public List<PublicTransportGroupViewModel> GetAll()
 		{
 			try
 			{
@@ -121,14 +121,14 @@ namespace SuperTransp.Core
 						sqlConnection.Open();
 					}
 
-					List<PublicTransportGroupModel> ptg = new();
+					List<PublicTransportGroupViewModel> ptg = new();
 					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail", sqlConnection);
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
 					{
 						while (dr.Read())
 						{
-							ptg.Add(new PublicTransportGroupModel
+							ptg.Add(new PublicTransportGroupViewModel
 							{
 								PublicTransportGroupId = (int)dr["PublicTransportGroupId"],
 								PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"],
@@ -156,11 +156,11 @@ namespace SuperTransp.Core
 			}
 			catch (Exception ex)
 			{
-				throw new Exception("Error al obtener todos las líneas", ex);
+				throw new Exception($"Error al obtener todas las líneas {ex.Message}", ex);
 			}
 		}
 
-		public List<PublicTransportGroupModel> GetByStateId(int stateId)
+		public List<PublicTransportGroupViewModel> GetByStateId(int stateId)
 		{
 			try
 			{
@@ -171,7 +171,7 @@ namespace SuperTransp.Core
 						sqlConnection.Open();
 					}
 
-					List<PublicTransportGroupModel> ptg = new();
+					List<PublicTransportGroupViewModel> ptg = new();
 					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail WHERE StateId = @StateId", sqlConnection);
 					cmd.Parameters.AddWithValue("@StateId", stateId);
 
@@ -179,7 +179,7 @@ namespace SuperTransp.Core
 					{
 						while (dr.Read())
 						{
-							ptg.Add(new PublicTransportGroupModel
+							ptg.Add(new PublicTransportGroupViewModel
 							{
 								PublicTransportGroupId = (int)dr["PublicTransportGroupId"],
 								PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"],
@@ -207,13 +207,13 @@ namespace SuperTransp.Core
 			}
 			catch (Exception ex)
 			{
-				throw new Exception("Error al obtener todos las líneas", ex);
+				throw new Exception($"Error al obtener todas las líneas {ex.Message}", ex);
 			}
 		}
 
 		public string? RegisteredRif(string publicTransportGroupRif)
 		{
-			PublicTransportGroupModel publicTransportGroup = new();
+			PublicTransportGroupViewModel publicTransportGroup = new();
 			using (SqlConnection sqlConnection = GetConnection())
 			{
 				if (sqlConnection.State == ConnectionState.Closed)
