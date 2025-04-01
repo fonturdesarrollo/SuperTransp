@@ -41,19 +41,25 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@SupervisionId", model.SupervisionId);
 						cmd.Parameters.AddWithValue("@DriverId", model.DriverId);
 						cmd.Parameters.AddWithValue("@DriverWithVehicle", model.DriverWithVehicle);
+						cmd.Parameters.AddWithValue("@WorkingVehicle", model.WorkingVehicle);
 						cmd.Parameters.AddWithValue("@InPerson", model.InPerson);
-						cmd.Parameters.AddWithValue("@Operational", model.Operational);
 						cmd.Parameters.AddWithValue("@Plate", model.Plate);
+						cmd.Parameters.AddWithValue("@VehicleDataId", model.VehicleDataId);
+						cmd.Parameters.AddWithValue("@Passengers", model.Passengers);
 						cmd.Parameters.AddWithValue("@RimId", model.RimId);
 						cmd.Parameters.AddWithValue("@Wheels", model.Wheels);
 						cmd.Parameters.AddWithValue("@MotorOilId", model.MotorOilId);
 						cmd.Parameters.AddWithValue("@Liters", model.Liters);
 						cmd.Parameters.AddWithValue("@FuelTypeId", model.FuelTypeId);
 						cmd.Parameters.AddWithValue("@TankCapacity", model.TankCapacity);
+						cmd.Parameters.AddWithValue("@BatteryId", model.BatteryId);
+						cmd.Parameters.AddWithValue("@NumberOfBatteries", model.NumberOfBatteries);
 						cmd.Parameters.AddWithValue("@FailureTypeId", model.FailureTypeId);
 						cmd.Parameters.AddWithValue("@FingerprintTrouble", model.FingerprintTrouble);
+						cmd.Parameters.AddWithValue("@VehicleImageUrl", model.VehicleImageUrl);
 						cmd.Parameters.AddWithValue("@Remarks", model.Remarks);
 						cmd.Parameters.AddWithValue("@SecurityUserId", model.SecurityUserId);
+						cmd.Parameters.AddWithValue("@SupervisionStatus", model.SupervisionStatus);
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
 					}
@@ -66,6 +72,43 @@ namespace SuperTransp.Core
 				throw new Exception($"Error al añadir o editar la supervisión {ex.Message}", ex);
 			}
 		}
+
+		public int AddSimple(SupervisionViewModel model)
+		{
+			int result = 0;
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					if (model != null)
+					{
+						SqlCommand cmd = new("SuperTransp_SupervisionAddSimple", sqlConnection)
+						{
+							CommandType = System.Data.CommandType.StoredProcedure
+						};
+
+						cmd.Parameters.AddWithValue("@SupervisionId", model.SupervisionId);
+						cmd.Parameters.AddWithValue("@DriverId", model.DriverId);
+						cmd.Parameters.AddWithValue("@DriverWithVehicle", model.DriverWithVehicle);
+						cmd.Parameters.AddWithValue("@SecurityUserId", model.SecurityUserId);
+
+						result = Convert.ToInt32(cmd.ExecuteScalar());
+					}
+				}
+
+				return result;
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al añadir la supervisión {ex.Message}", ex);
+			}
+		}
+
 
 		public List<PublicTransportGroupViewModel> GetDriverPublicTransportGroupByStateId(int stateId)
 		{
@@ -109,6 +152,10 @@ namespace SuperTransp.Core
 								DriverFullName = (string)dr["DriverFullName"],
 								DriverIdentityDocument = (int)dr["DriverIdentityDocument"],
 								PartnerNumber = (int)dr["PartnerNumber"],
+								SupervisionStatusName = (string)dr["SupervisionStatusText"],
+								TotalDrivers = (int)dr["TotalDrivers"],
+								TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"],
+								SupervisionId = (int)dr["SupervisionId"]
 							});
 						}
 					}
@@ -163,6 +210,10 @@ namespace SuperTransp.Core
 								DriverFullName = (string)dr["DriverFullName"],
 								DriverIdentityDocument = (int)dr["DriverIdentityDocument"],
 								PartnerNumber = (int)dr["PartnerNumber"],
+								SupervisionStatusName = (string)dr["SupervisionStatusText"],
+								TotalDrivers = (int)dr["TotalDrivers"],
+								TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"],
+								SupervisionId = (int)dr["SupervisionId"]
 							});
 						}
 					}

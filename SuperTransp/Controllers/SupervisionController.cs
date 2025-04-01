@@ -71,7 +71,7 @@ namespace SuperTransp.Controllers
 			}
 		}
 
-		public IActionResult Add(int publicTransportGroupId, string pTGCompleteName, string driverFullName, int partnerNumber, string? publicTransportGroupRif, int driverIdentityDocument, string stateName, int? supervisionStatus, int driverId)
+		public IActionResult Add(int publicTransportGroupId, string pTGCompleteName, string driverFullName, int partnerNumber, string? publicTransportGroupRif, int driverIdentityDocument, string stateName, int? supervisionStatus, int driverId, int supervisionId)
 		{
 			try
 			{
@@ -86,7 +86,9 @@ namespace SuperTransp.Controllers
 						PartnerNumber = partnerNumber,
 						PublicTransportGroupRif = publicTransportGroupRif,
 						DriverIdentityDocument = driverIdentityDocument,
-						StateName = stateName
+						StateName = stateName,
+						SecurityUserId = (int)HttpContext.Session.GetInt32("SecurityUserId"),
+						SupervisionId =  supervisionId
 					};
 
 					ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
@@ -127,13 +129,24 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
 				{
-					int supervisionId = 1;// _supervision.AddOrEdit(model);
+					int supervisionId = 0;
+
+					if (model.DriverWithVehicle == 0)
+					{
+						supervisionId = _supervision.AddSimple(model);
+					}
+					else
+					{
+						model.Remarks = string.IsNullOrEmpty(model.Remarks) ? string.Empty : model.Remarks;
+						model.VehicleImageUrl = string.IsNullOrEmpty(model.VehicleImageUrl) ? string.Empty : model.VehicleImageUrl;
+						model.SupervisionStatus = 1;
+
+						supervisionId = _supervision.AddOrEdit(model);
+					}
 
 					if (supervisionId > 0)
 					{
-						TempData["SuccessMessage"] = "Datos actualizados correctamente";
-
-						return RedirectToAction("Add");
+						return RedirectToAction("PublicTransportGroupList");
 					}
 				}
 

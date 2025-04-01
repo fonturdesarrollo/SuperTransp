@@ -57,6 +57,7 @@
 					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
 					<li>@Html.ActionLink("Agregar línea", "Add", "PublicTransportGroup")</li>
 					<li>@Html.ActionLink("Modificar línea", "PublicTransportGroupList", "PublicTransportGroup")</li>
+					<li>@Html.ActionLink("Agregar transportistas a línea", "PublicTransportGroupList", "Driver")</li>
 					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 				</ul>
 			</nav>
@@ -78,7 +79,7 @@
 							</div>
 							<div class="col-6 col-12-xsmall">
 								<strong>Tipo de Línea:</strong>
-								@Html.DropDownListFor(t => t.DesignationId, (SelectList)ViewBag.Designation, "-- Seleccione la nomenclatura --")
+								@Html.DropDownListFor(t => t.DesignationId, (SelectList)ViewBag.Designation, "-- Seleccione la nomenclatura --", new { @class = "form-control" })
 							</div>
 							<div class="col-12">
 								<strong>Nombre:</strong>
@@ -87,19 +88,19 @@
 							</div>
 							<div class="col-6 col-12-xsmall">
 								<strong>Modalidad:</strong>
-								@Html.DropDownListFor(t => t.ModeId, (SelectList)ViewBag.Mode, "-- Seleccione la modalidad --")
+								@Html.DropDownListFor(t => t.ModeId, (SelectList)ViewBag.Mode, "-- Seleccione la modalidad --", new { @class = "form-control" })
 							</div>
 							<div class="col-6 col-12-xsmall">
 								<strong>Gremio:</strong>
-								@Html.DropDownListFor(t => t.UnionId, (SelectList)ViewBag.Union, "-- Seleccione el gremio --")
+								@Html.DropDownListFor(t => t.UnionId, (SelectList)ViewBag.Union, "-- Seleccione el gremio --", new { @class = "form-control" })
 							</div>
 							<div class="col-6 col-12-xsmall">
 								<strong>Estado:</strong>
-								@Html.DropDownListFor(t => t.StateId, (SelectList)ViewBag.States, "-- Seleccione el estado --")
+								@Html.DropDownListFor(t => t.StateId, (SelectList)ViewBag.States, "-- Seleccione el estado --", new { @class = "form-control" })
 							</div>
 							<div class="col-6 col-12-xsmall">
 								<strong>Municipio:</strong>
-								@Html.DropDownListFor(t => t.MunicipalityId, (SelectList)ViewBag.Municipality, "-- Seleccione el municipio --")
+								@Html.DropDownListFor(t => t.MunicipalityId, (SelectList)ViewBag.Municipality, "-- Seleccione el municipio --", new { @class = "form-control" })
 							</div>
 							<div class="col-6">
 								<strong>Cédula Representante:</strong>

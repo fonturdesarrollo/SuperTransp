@@ -58,11 +58,11 @@
 					<table id="inventory" class="table table-striped table-bordered dt-responsive nowrap" style="width:100%">
 						<thead>
 							<tr>
-								<th draggable="true">Nombre Línea</th>
-								<th draggable="true">Nombre Transportista</th>
-								<th draggable="true"># Socio</th>
-								<th draggable="true">Estado</th>
-								<th draggable="true">Estatus</th>
+								<th>Nombre Línea</th>
+								<th>Nombre Transportista</th>
+								<th># Socio</th>
+								<th>Estado</th>
+								<th>Estatus</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -70,21 +70,88 @@
 							{
 								<tr>
 									<td>
-										@Html.ActionLink(@ptg.PTGCompleteName, "Add", "Supervision", new { publicTransportGroupId = ptg.PublicTransportGroupId, pTGCompleteName = ptg.PTGCompleteName, driverFullName = ptg.DriverFullName, partnerNumber = ptg.PartnerNumber, publicTransportGroupRif = ptg.PublicTransportGroupRif, driverIdentityDocument = ptg.DriverIdentityDocument, stateName = ptg.StateName, supervisionStatus = ptg.SupervisionStatus, driverId = ptg.DriverId})
+										@if (ptg.TotalDrivers == ptg.TotalSupervisedDrivers)
+										{
+											@Html.ActionLink(@ptg.PTGCompleteName, "Add", "Supervision",
+												new
+												{
+													publicTransportGroupId = ptg.PublicTransportGroupId,
+													pTGCompleteName = ptg.PTGCompleteName,
+													driverFullName = ptg.DriverFullName,
+													partnerNumber = ptg.PartnerNumber,
+													publicTransportGroupRif = ptg.PublicTransportGroupRif,
+													driverIdentityDocument = ptg.DriverIdentityDocument,
+													stateName = ptg.StateName,
+													supervisionStatus = ptg.SupervisionStatus,
+													driverId = ptg.DriverId,
+													supervisionId = ptg.SupervisionId
+												},
+												new { style = "color: green;" }
+												)
+										}
+										else
+										{
+											@Html.ActionLink(@ptg.PTGCompleteName, "Add", "Supervision",
+												new
+												{
+													publicTransportGroupId = ptg.PublicTransportGroupId,
+													pTGCompleteName = ptg.PTGCompleteName,
+													driverFullName = ptg.DriverFullName,
+													partnerNumber = ptg.PartnerNumber,
+													publicTransportGroupRif = ptg.PublicTransportGroupRif,
+													driverIdentityDocument = ptg.DriverIdentityDocument,
+													stateName = ptg.StateName,
+													supervisionStatus = ptg.SupervisionStatus,
+													driverId = ptg.DriverId,
+													supervisionId = ptg.SupervisionId
+												},
+												new { style = "color: red;" }
+												)
+										}
 									</td>
-									<td>@ptg.DriverFullName</td>
+									<td>
+										@if (ptg.SupervisionStatusName == "Pendiente")
+										{
+											@Html.ActionLink(@ptg.DriverFullName,"Add",	"Supervision",
+												new
+												{
+													publicTransportGroupId = ptg.PublicTransportGroupId,
+													pTGCompleteName = ptg.PTGCompleteName,
+													driverFullName = ptg.DriverFullName,
+													partnerNumber = ptg.PartnerNumber,
+													publicTransportGroupRif = ptg.PublicTransportGroupRif,
+													driverIdentityDocument = ptg.DriverIdentityDocument,
+													stateName = ptg.StateName,
+													supervisionStatus = ptg.SupervisionStatus,
+													driverId = ptg.DriverId,
+													supervisionId = ptg.SupervisionId
+												},
+												new { style = "color: red;" }
+											)
+										}
+										else
+										{
+											@Html.ActionLink(@ptg.DriverFullName,"Add",	"Supervision",
+												new
+												{
+													publicTransportGroupId = ptg.PublicTransportGroupId,
+													pTGCompleteName = ptg.PTGCompleteName,
+													driverFullName = ptg.DriverFullName,
+													partnerNumber = ptg.PartnerNumber,
+													publicTransportGroupRif = ptg.PublicTransportGroupRif,
+													driverIdentityDocument = ptg.DriverIdentityDocument,
+													stateName = ptg.StateName,
+													supervisionStatus = ptg.SupervisionStatus,
+													driverId = ptg.DriverId,
+													supervisionId = ptg.SupervisionId
+												},
+												new { style = "color: green;" }
+											)
+										}
+									</td>
 									<td>@ptg.PartnerNumber</td>
 									<td>@ptg.StateName</td>
-										@{
-										if (ptg.SupervisionStatus != null && ptg.SupervisionStatus == 1)
-											{
-												<td>Supervisado</td>
-											}
-											else
-											{
-												<td>Pendiente</td>																
-											}
-										}
+									<td>@ptg.SupervisionStatusName</td>
 								</tr>
 							}
 						</tbody>
@@ -113,49 +180,11 @@
 	@***********************************************************@
 
 	<script type="text/javascript">
-		
-		// Drag and Drop Columns
-		document.addEventListener("DOMContentLoaded", function () {
-			const table = document.getElementById("inventory");
-			const headers = table.querySelectorAll("thead th");
-			let draggedIndex = null;
-
-			headers.forEach((header, index) => {
-				header.addEventListener("dragstart", function (e) {
-					draggedIndex = index;
-					e.dataTransfer.setData("text/plain", index);
-				});
-
-				header.addEventListener("dragover", function (e) {
-					e.preventDefault();
-				});
-
-				header.addEventListener("drop", function (e) {
-					const targetIndex = index;
-					if (draggedIndex !== null && draggedIndex !== targetIndex) {
-						swapColumns(table, draggedIndex, targetIndex);
-						draggedIndex = null;
-					}
-				});
-			});
-
-			function swapColumns(table, fromIndex, toIndex) {
-				const rows = table.rows;
-
-				for (let i = 0; i < rows.length; i++) {
-					const cells = rows[i].cells;
-					if (cells[fromIndex] && cells[toIndex]) {
-						const temp = cells[fromIndex].innerHTML;
-						cells[fromIndex].innerHTML = cells[toIndex].innerHTML;
-						cells[toIndex].innerHTML = temp;
-					}
-				}
-			}
-		});
 
 		$(document).ready(function () {
 
 			$('#inventory').DataTable({
+				stateSave: true,
 				"language": {
 					"sProcessing":    "Procesando...",
 					"sLengthMenu":    "Mostrar _MENU_ registros",

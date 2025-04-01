@@ -55,7 +55,9 @@
 				<h2>Menu</h2>
 				<ul>
 					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
-					<li>@Html.ActionLink("Agregar transportistas a otra línea", "PublicTransportGroupList", "Driver")</li>
+					<li>@Html.ActionLink("Agregar transportistas a línea", "PublicTransportGroupList", "Driver")</li>
+					<li>@Html.ActionLink("Agregar línea", "Add", "PublicTransportGroup")</li>
+					<li>@Html.ActionLink("Modificar línea", "PublicTransportGroupList", "PublicTransportGroup")</li>
 					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 				</ul>
 			</nav>

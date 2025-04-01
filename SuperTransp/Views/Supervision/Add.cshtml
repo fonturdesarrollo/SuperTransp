@@ -105,16 +105,20 @@
 								@Html.HiddenFor(x => x.DriverIdentityDocument)
 								@Html.HiddenFor(x => x.StateName)
 								@Html.HiddenFor(x => x.DriverId)
+								@Html.HiddenFor(x => x.SecurityUserId)
+								@Html.HiddenFor(x => x.SupervisionId)
 								@Html.DropDownList("DriverWithVehicle", (IEnumerable<SelectListItem>)ViewBag.DriverWithVehicle, "Seleccione", new { @class = "form-control" })
 							</div>
 							<div class="row" id="additionalFields" style="visibility: hidden; opacity: 0; height: 0; overflow: hidden; transition: opacity 0.3s ease-in-out;">
 								<div class="col-6">
 									<strong>¿Transportista presente?:</strong>
-									@Html.DropDownList("InPerson", (IEnumerable<SelectListItem>)ViewBag.InPerson, "Seleccione", new { @class = "form-control" })
+									@* @Html.DropDownList("InPerson", (IEnumerable<SelectListItem>)ViewBag.InPerson, "Seleccione", new { @class = "form-control" }) *@
+									@Html.DropDownListFor(t => t.InPerson, (SelectList)ViewBag.InPerson, "-- Seleccione --", new { @class = "form-control" })
 								</div>
 								<div class="col-6">
 									<strong>¿Vehículo operativo?:</strong>
-									@Html.DropDownList("WorkingVehicle", (IEnumerable<SelectListItem>)ViewBag.WorkingVehicle, "Seleccione", new { @class = "form-control" })
+									@* @Html.DropDownList("WorkingVehicle", (IEnumerable<SelectListItem>)ViewBag.WorkingVehicle, "Seleccione", new { @class = "form-control" }) *@
+									@Html.DropDownListFor(t => t.WorkingVehicle, (SelectList)ViewBag.WorkingVehicle, "-- Seleccione --", new { @class = "form-control" })
 								</div>
 								<div class="col-12">
 									<br />
@@ -136,69 +140,69 @@
 								<div class="col-3">
 									<br />
 									<strong>Modelo:</strong>
-									<select id="ModelId" name="Model" class="form-control">
+									<select id="VehicleDataId" name="VehicleDataId" class="form-control">
 										<option value="">Seleccione el modelo</option>
 									</select>
 								</div>
 								<div class="col-3">
 									<br />
 									<strong>Puestos:</strong>
-									@Html.DropDownList("Passengers", (IEnumerable<SelectListItem>)ViewBag.Passengers, "Seleccione", new { @class = "form-control" })
+									@Html.DropDownListFor(t => t.Passengers, (SelectList)ViewBag.Passengers, "-- Seleccione --", new { @class = "form-control" })
 								</div>
 								<div class="col-3">
 									<br />
 									<strong>Medida neumáticos:</strong>
-									@Html.DropDownList("Rims", (IEnumerable<SelectListItem>)ViewBag.Rims, "Seleccione", new { @class = "form-control" })
+									@Html.DropDownListFor(t => t.RimId, (SelectList)ViewBag.Rims, "-- Seleccione --", new { @class = "form-control" })
 								</div>
 								<div class="col-3">
 									<br />
 									<strong>Cantidad neumáticos:</strong>
-									@Html.DropDownList("Wheels", (IEnumerable<SelectListItem>)ViewBag.Wheels, "Seleccione", new { @class = "form-control" })
+									@Html.DropDownListFor(t => t.Wheels, (SelectList)ViewBag.Wheels, "-- Seleccione --", new { @class = "form-control" })
 								</div>
 								<div class="col-3">
 									<br />
 									<strong>Tipo combustible:</strong>
-									@Html.DropDownList("FuelTypes", (IEnumerable<SelectListItem>)ViewBag.FuelTypes, "Seleccione", new { @class = "form-control" })
+									@Html.DropDownListFor(t => t.FuelTypeId, (SelectList)ViewBag.FuelTypes, "-- Seleccione --", new { @class = "form-control" })
 								</div>
 								<div class="col-3">
 									<br />
 									<strong>Capacidad tanque:</strong>
-									@Html.DropDownList("TankCapacity", (IEnumerable<SelectListItem>)ViewBag.TankCapacity, "Seleccione", new { @class = "form-control" })
+									@Html.DropDownListFor(t => t.TankCapacity, (SelectList)ViewBag.TankCapacity, "-- Seleccione --", new { @class = "form-control" })
 								</div>
 								<div class="col-3">
 									<br />
 									<strong>Tipo batería:</strong>
-									@Html.DropDownList("Batteries", (IEnumerable<SelectListItem>)ViewBag.Batteries, "Seleccione", new { @class = "form-control" })
+									@Html.DropDownListFor(t => t.BatteryId, (SelectList)ViewBag.Batteries, "-- Seleccione --", new { @class = "form-control" })
 								</div>
 								<div class="col-3">
 									<br />
 									<strong>Cantidad baterias:</strong>
-									@Html.DropDownList("NumberOfBatteries", (IEnumerable<SelectListItem>)ViewBag.NumberOfBatteries, "Seleccione", new { @class = "form-control" })
+									@Html.DropDownListFor(t => t.NumberOfBatteries, (SelectList)ViewBag.NumberOfBatteries, "-- Seleccione --", new { @class = "form-control" })
 								</div>
 								<div class="col-3">
 									<br />
 									<strong>Tipo de aceite:</strong>
-									@Html.DropDownList("MotorOil", (IEnumerable<SelectListItem>)ViewBag.MotorOil, "Seleccione", new { @class = "form-control" })
+									@Html.DropDownListFor(t => t.MotorOilId, (SelectList)ViewBag.MotorOil, "-- Seleccione --", new { @class = "form-control" })
 								</div>
 								<div class="col-3">
 									<br />
 									<strong>Litros:</strong>
-									@Html.DropDownList("OilLitters", (IEnumerable<SelectListItem>)ViewBag.OilLitters, "Seleccione", new { @class = "form-control" })
+									@Html.DropDownListFor(t => t.Liters, (SelectList)ViewBag.OilLitters, "-- Seleccione --", new { @class = "form-control" })
 								</div>
 								<div class="col-6">
 									<br />
 									<strong>Problema huella:</strong>
-									@Html.DropDownList("FingerprintProblem", (IEnumerable<SelectListItem>)ViewBag.FingerprintProblem, "Seleccione", new { @class = "form-control" })
+									@Html.DropDownListFor(t => t.FingerprintTrouble, (SelectList)ViewBag.FingerprintProblem, "-- Seleccione --", new { @class = "form-control" })
 								</div>
 								<div class="col-6">
 									<br />
 									<strong>Tipo falla:</strong>
-									@Html.DropDownList("FailureType", (IEnumerable<SelectListItem>)ViewBag.FailureType, "Seleccione", new { @class = "form-control" })
+									@Html.DropDownListFor(t => t.FailureTypeId, (SelectList)ViewBag.FailureType, "-- Seleccione --", new { @class = "form-control" })
 								</div>
 								<div class="col-11">
 									<br />
 									<strong>Observaciones:</strong>
-									@Html.TextAreaFor(x => x.Plate, new
+									@Html.TextAreaFor(x => x.Remarks, new
 										{
 											@class = "custom-textarea",
 											placeholder = "Observaciones",
@@ -214,7 +218,7 @@
 										</div>
 									</div>
 								</div>
-								<div class="col-6">
+								<div class="col-8">
 									<br />
 									<ul class="actions">
 										<li><button type="submit" id="saveRequest" class="primary">Agregar supervisón</button></li>
@@ -223,46 +227,6 @@
 							</div>
 
 						</div>
-					</section>
-					<section>
-						<br />
-						<br />
-						<h4 style="color:#4cbece">Transportistas supervisados</h4>
-						<br />
-						<table id="inventory" class="table table-striped table-bordered dt-responsive nowrap" style="width:100%">
-							<thead>
-								<tr>
-									<th>Nombre</th>
-									<th>Cédula</th>
-									<th># Socio</th>
-									<th># Teléfono</th>
-									<th>Modificar</th>
-									<th>Eliminar</th>
-								</tr>
-							</thead>
-							<tbody>
-@* 								@foreach (var driver in ViewBag.Drivers)
-								{
-									<tr>
-
-										<td>@driver.DriverFullName</td>
-										<td>@driver.DriverIdentityDocument</td>
-										<td>@driver.PartnerNumber</td>
-										<td>@driver.DriverPhone</td>
-										<td id="@driver.PublicTransportGroupId">
-											@Html.ActionLink("Modificar", "Edit", "Driver", new { driverPublicTransportGroupId = driver.DriverPublicTransportGroupId }, new { @id = "btnEdit" })
-										</td>
-										<td id="@driver.DriverPublicTransportGroupId">
-											<a href="javascript:void(0);"
-											   id="btnDelete"
-											   onclick="confirmDeletion('@Url.Action("Delete", "Driver", new { driverId = @driver.DriverId, publicTransportGroupId = @driver.PublicTransportGroupId, pTGCompleteName = @driver.PTGCompleteName })')">
-												Eliminar
-											</a>
-										</td>
-									</tr>
-								} *@
-							</tbody>
-						</table>
 					</section>
 				</div>
 			</div>
@@ -370,20 +334,6 @@
 			});
 		});
 
-		// $("body").on("click", "#saveRequest", function (event) {
-		// 	event.preventDefault();
-
-		// 	// if (!isOkToSave()) {
-		// 	// 	return false;
-		// 	// }
-
-		// 	if (!confirm("¿Está seguro de que desea actualizar los registros?")) {
-		// 		return false;
-		// 	}
-
-		// 	$(this).closest("form").trigger("submit");
-		// });
-
 		function handleSaveRequest(event) {
 			if (event) {
 				event.preventDefault();
@@ -400,11 +350,9 @@
 			$("#saveRequest").closest("form").trigger("submit");
 		}
 
-		// Evento click
-		// $("body").on("click", "#saveRequest", function (event) {
-		// 	handleSaveRequest(event);
-		// });
-
+		$("body").on("click", "#saveRequest", function (event) {
+			handleSaveRequest(event);
+		});
 
 
 
@@ -475,8 +423,8 @@
 					message = "Debe seleccionar la marca del vehículo";
 				}
 
-				if ($("#ModelId").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#ModelId";
+				if ($("#VehicleDataId").val() == "" && !firstInvalidField) {
+					firstInvalidField = "#VehicleDataId";
 					message = "Debe seleccionar el modelo del vehículo";
 				}
 
@@ -485,8 +433,8 @@
 					message = "Debe seleccionar la cantidad de puestos";
 				}
 
-				if ($("#Rims").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#Rims";
+				if ($("#RimId").val() == "" && !firstInvalidField) {
+					firstInvalidField = "#RimId";
 					message = "Debe seleccionar el tipo de neumáticos";
 				}
 
@@ -495,8 +443,8 @@
 					message = "Debe seleccionar la cantidad de neumáticos";
 				}
 
-				if ($("#FuelTypes").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#FuelTypes";
+				if ($("#FuelTypeId").val() == "" && !firstInvalidField) {
+					firstInvalidField = "#FuelTypeId";
 					message = "Debe seleccionar el tipo de combustible";
 				}
 
@@ -505,8 +453,8 @@
 					message = "Debe seleccionar la capacidad del tanque de combustible";
 				}
 
-				if ($("#Batteries").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#Batteries";
+				if ($("#BatteryId").val() == "" && !firstInvalidField) {
+					firstInvalidField = "#BatteryId";
 					message = "Debe seleccionar el tipo de batería";
 				}
 
@@ -515,19 +463,24 @@
 					message = "Debe seleccionar la cantidad de baterías";
 				}
 
-				if ($("#MotorOil").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#MotorOil";
+				if ($("#MotorOilId").val() == "" && !firstInvalidField) {
+					firstInvalidField = "#MotorOilId";
 					message = "Debe seleccionar el tipo de aceite";
 				}
 
-				if ($("#OilLitters").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#OilLitters";
+				if ($("#Liters").val() == "" && !firstInvalidField) {
+					firstInvalidField = "#Liters";
 					message = "Debe seleccionar los litros de aceite";
 				}
 
-				if ($("#FingerprintProblem").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#FingerprintProblem";
+				if ($("#FingerprintTrouble").val() == "" && !firstInvalidField) {
+					firstInvalidField = "#FingerprintTrouble";
 					message = "Debe seleccionar si tiene o no problemas con la huella";
+				}
+
+				if ($("#FailureTypeId").val() == "" && !firstInvalidField) {
+					firstInvalidField = "#FailureTypeId";
+					message = "Debe seleccionar si tiene o no alguna falla";
 				}
 
 				if (firstInvalidField) {
@@ -572,9 +525,15 @@
 			$('#DriverWithVehicle').change(function (event) {
 				if ($(this).val() === "1") {
 					$('#additionalFields').css({ visibility: 'visible', opacity: '1', height: 'auto', overflow: 'visible' });
+					$('#InPerson').val("");
 				} else if($(this).val() === "0") {
 					$('#additionalFields').css({ opacity: '0', visibility: 'hidden', height: '0', overflow: 'hidden' });
-					//handleSaveRequest(event);
+					$('#InPerson').val("1");
+					if (confirm("¿Está seguro de que desea actualizar los registros?")) {
+						$(this).closest("form")[0].submit(); // Enviar el formulario si se confirma
+					} else {
+						$('#DriverWithVehicle').val("");
+					}
 				}
 			});
 
@@ -601,44 +560,17 @@
 				var make = $('#MakeId option:selected').text();
 				var getSupervisionUrl = '@Url.Action("GetModels", "Supervision")';
 
-				$('#ModelId').empty().append('<option value="">Seleccione un modelo</option>');
+				$('#VehicleDataId').empty().append('<option value="">Seleccione un modelo</option>');
 
 				if (yearId) {
 					$.getJSON(getSupervisionUrl, { yearId: yearId, make: make }, function (data) {
 						$.each(data, function (index, models) {
-							$('#ModelId').append($('<option>', {
+							$('#VehicleDataId').append($('<option>', {
 								value: models.vehicleDataId,
 								text: models.model
 							}));
 						});
 					});
-				}
-			});
-
-			$('#inventory').DataTable({
-				"language": {
-					"sProcessing":    "Procesando...",
-					"sLengthMenu":    "Mostrar _MENU_ registros",
-					"sZeroRecords":   "No se encontraron resultados",
-					"sEmptyTable":    "Ningún dato disponible en esta tabla",
-					"sInfo":          "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
-					"sInfoEmpty":     "Mostrando registros del 0 al 0 de un total de 0 registros",
-					"sInfoFiltered":  "(filtrado de un total de _MAX_ registros)",
-					"sInfoPostFix":   "",
-					"sSearch":        "Buscar:",
-					"sUrl":           "",
-					"sInfoThousands":  ",",
-					"sLoadingRecords": "Cargando...",
-					"oPaginate": {
-						"sFirst":    "Primero",
-						"sLast":    "Último",
-						"sNext":    "Siguiente",
-						"sPrevious": "Anterior"
-					},
-					"oAria": {
-						"sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
-						"sSortDescending": ": Activar para ordenar la columna de manera descendente"
-					}
 				}
 			});
 		});

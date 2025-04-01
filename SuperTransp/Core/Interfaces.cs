@@ -87,6 +87,7 @@ namespace SuperTransp.Core
 		public interface ISupervision
 		{
 			public int AddOrEdit(SupervisionViewModel model);
+			public int AddSimple(SupervisionViewModel model);
 			public List<PublicTransportGroupViewModel> GetDriverPublicTransportGroupByStateId(int stateId);
 			public List<PublicTransportGroupViewModel> GetAllDriverPublicTransportGroup();
 		}

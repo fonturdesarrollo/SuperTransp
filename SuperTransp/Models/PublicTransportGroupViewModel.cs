@@ -36,6 +36,10 @@ namespace SuperTransp.Models
 		public int DriverIdentityDocument { get; set; }
 		public string? DriverFullName { get; set; }
 		public int PartnerNumber { get; set; }
-		public int? SupervisionStatus { get; set; }
+		public bool? SupervisionStatus { get; set; }
+		public string? SupervisionStatusName { get; set; }
+		public int TotalDrivers { get; set; }
+		public int TotalSupervisedDrivers { get; set; }
+		public int? SupervisionId { get; set; }
 	}
 }

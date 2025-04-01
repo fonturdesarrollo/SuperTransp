@@ -56,7 +56,7 @@
 				<section>
 					<h4 style="color:#4cbece">Líneas Registradas</h4>
 					<br />
-					<table id="inventory" class="table table-striped table-bordered dt-responsive nowrap" style="width:100%">
+					<table id="publicTransportGroupListDetail" class="table table-striped table-bordered dt-responsive nowrap" style="width:100%">
 						<thead>
 							<tr>
 								<th>Nombre</th>
@@ -110,7 +110,8 @@
 
 		$(document).ready(function () {
 
-			$('#inventory').DataTable({
+			$('#publicTransportGroupListDetail').DataTable({
+				stateSave: true,
 				"language": {
 					"sProcessing":    "Procesando...",
 					"sLengthMenu":    "Mostrar _MENU_ registros",
@@ -138,6 +139,5 @@
 			});
 		});
 	</script>
-
 </body>
 </html>
