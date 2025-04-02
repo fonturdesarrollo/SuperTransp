@@ -41,5 +41,25 @@ namespace SuperTransp.Models
 		public int TotalDrivers { get; set; }
 		public int TotalSupervisedDrivers { get; set; }
 		public int? SupervisionId { get; set; }
+		public bool DriverWithVehicle { get; set; }
+		public bool WorkingVehicle { get; set; }
+		public bool InPerson { get; set; }
+		public string? Plate { get; set; }
+		public int Year { get; set; }
+		public string? Make { get; set; }
+		public string? Model { get; set; }
+		public int Passengers { get; set; }
+		public string? RimName { get; set; }
+		public int Wheels { get; set; }
+		public string? MotorOilName { get; set; }
+		public int Liters { get; set; }
+		public string? FuelTypeName { get; set; }
+		public int TankCapacity { get; set; }
+		public string? BatteryName { get; set; }
+		public int NumberOfBatteries { get; set; }
+		public string? FailureTypeName { get; set; }
+		public bool FingerprintTrouble { get; set; }
+		public string? Remarks { get; set; }
+		public string? VehicleImageUrl { get; set; }
 	}
 }

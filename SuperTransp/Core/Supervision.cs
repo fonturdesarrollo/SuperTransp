@@ -57,7 +57,7 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@FailureTypeId", model.FailureTypeId);
 						cmd.Parameters.AddWithValue("@FingerprintTrouble", model.FingerprintTrouble);
 						cmd.Parameters.AddWithValue("@VehicleImageUrl", model.VehicleImageUrl);
-						cmd.Parameters.AddWithValue("@Remarks", model.Remarks);
+						cmd.Parameters.AddWithValue("@Remarks", string.IsNullOrEmpty(model.Remarks) ? string.Empty : model.Remarks.ToUpper().Trim());
 						cmd.Parameters.AddWithValue("@SecurityUserId", model.SecurityUserId);
 						cmd.Parameters.AddWithValue("@SupervisionStatus", model.SupervisionStatus);
 
@@ -155,7 +155,27 @@ namespace SuperTransp.Core
 								SupervisionStatusName = (string)dr["SupervisionStatusText"],
 								TotalDrivers = (int)dr["TotalDrivers"],
 								TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"],
-								SupervisionId = (int)dr["SupervisionId"]
+								SupervisionId = (int)dr["SupervisionId"],
+								DriverWithVehicle = (bool)dr["DriverWithVehicle"],
+								WorkingVehicle = (bool)dr["WorkingVehicle"],
+								InPerson = (bool)dr["InPerson"],
+								Plate = (string)dr["Plate"],
+								Year = (int)dr["Year"],
+								Make = (string)dr["Make"],
+								Model = (string)dr["Model"],
+								Passengers = (int)dr["Passengers"],
+								RimName = (string)dr["RimName"],
+								Wheels = (int)dr["Wheels"],
+								MotorOilName = (string)dr["MotorOilName"],
+								Liters = (int)dr["Liters"],
+								FuelTypeName = (string)dr["FuelTypeName"],
+								TankCapacity = (int)dr["TankCapacity"],
+								BatteryName = (string)dr["BatteryName"],
+								NumberOfBatteries = (int)dr["NumberOfBatteries"],
+								FailureTypeName = (string)dr["FailureTypeName"],
+								VehicleImageUrl = (string)dr["VehicleImageUrl"],
+								FingerprintTrouble = (bool)dr["FingerprintTrouble"],
+								Remarks = (string)dr["Remarks"],
 							});
 						}
 					}
@@ -213,7 +233,27 @@ namespace SuperTransp.Core
 								SupervisionStatusName = (string)dr["SupervisionStatusText"],
 								TotalDrivers = (int)dr["TotalDrivers"],
 								TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"],
-								SupervisionId = (int)dr["SupervisionId"]
+								SupervisionId = (int)dr["SupervisionId"],
+								DriverWithVehicle = (bool)dr["DriverWithVehicle"],
+								WorkingVehicle = (bool)dr["WorkingVehicle"],
+								InPerson = (bool)dr["InPerson"],
+								Plate = (string)dr["Plate"],
+								Year = (int)dr["Year"],
+								Make = (string)dr["Make"],
+								Model = (string)dr["Model"],
+								Passengers = (int)dr["Passengers"],
+								RimName = (string)dr["RimName"],
+								Wheels = (int)dr["Wheels"],
+								MotorOilName = (string)dr["MotorOilName"],
+								Liters = (int)dr["Liters"],
+								FuelTypeName = (string)dr["FuelTypeName"],
+								TankCapacity = (int)dr["TankCapacity"],
+								BatteryName = (string)dr["BatteryName"],
+								NumberOfBatteries = (int)dr["NumberOfBatteries"],
+								FailureTypeName = (string)dr["FailureTypeName"],
+								VehicleImageUrl = (string)dr["VehicleImageUrl"],
+								FingerprintTrouble = (bool)dr["FingerprintTrouble"],
+								Remarks = (string)dr["Remarks"],
 							});
 						}
 					}
@@ -224,6 +264,49 @@ namespace SuperTransp.Core
 			catch (Exception ex)
 			{
 				throw new Exception($"Error al obtener todas las líneas {ex.Message}", ex);
+			}
+		}
+
+		public List<PublicTransportGroupViewModel> RegisteredPlate(string plate)
+		{
+			using (SqlConnection sqlConnection = GetConnection())
+			{
+				if (sqlConnection.State == ConnectionState.Closed)
+				{
+					sqlConnection.Open();
+				}
+
+				List<PublicTransportGroupViewModel> existingPlate = new();
+
+				SqlCommand cmd = new("SELECT  dbo.Supervision.Plate, dbo.Driver.DriverIdentityDocument, dbo.Driver.DriverFullName, dbo.PublicTransportGroup.PublicTransportGroupRif, dbo.Designation.DesignationName + ' ' + dbo.PublicTransportGroup.PublicTransportGroupName AS PTGCompleteName, dbo.State.StateName, dbo.Driver.DriverId " +
+					"FROM  dbo.Supervision INNER JOIN  dbo.Driver ON dbo.Supervision.DriverId = dbo.Driver.DriverId " +
+					"INNER JOIN dbo.DriverPublicTransportGroup ON dbo.Driver.DriverId = dbo.DriverPublicTransportGroup.DriverId " +
+					"INNER JOIN dbo.PublicTransportGroup ON dbo.DriverPublicTransportGroup.PublicTransportGroupId = dbo.PublicTransportGroup.PublicTransportGroupId " +
+					"INNER JOIN dbo.Designation ON dbo.PublicTransportGroup.DesignationId = dbo.Designation.DesignationId " +
+					"INNER JOIN  dbo.Municipality ON dbo.PublicTransportGroup.MunicipalityId = dbo.Municipality.MunicipalityId " +
+					"INNER JOIN dbo.State ON dbo.Municipality.StateId = dbo.State.StateId " +
+					"WHERE (dbo.Supervision.Plate = @Plate)", sqlConnection);
+
+				cmd.Parameters.AddWithValue("@Plate", plate);
+
+				using (SqlDataReader dr = cmd.ExecuteReader())
+				{
+					while (dr.Read())
+					{
+						existingPlate.Add(new PublicTransportGroupViewModel
+						{
+							Plate = (string)dr["Plate"],
+							DriverId = (int)dr["DriverId"],
+							DriverIdentityDocument = (int)dr["DriverIdentityDocument"],
+							DriverFullName = (string)dr["DriverFullName"],
+							PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"],
+							PTGCompleteName = (string)dr["PTGCompleteName"],
+							StateName = (string)dr["StateName"],
+						});
+					}
+				}
+
+				return existingPlate.ToList();
 			}
 		}
 	}

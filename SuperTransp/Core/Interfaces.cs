@@ -90,6 +90,7 @@ namespace SuperTransp.Core
 			public int AddSimple(SupervisionViewModel model);
 			public List<PublicTransportGroupViewModel> GetDriverPublicTransportGroupByStateId(int stateId);
 			public List<PublicTransportGroupViewModel> GetAllDriverPublicTransportGroup();
+			public List<PublicTransportGroupViewModel> RegisteredPlate(string plate);
 		}
 
 		public interface ICommonData

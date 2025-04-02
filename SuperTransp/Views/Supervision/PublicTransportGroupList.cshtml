@@ -12,11 +12,41 @@
 	<link rel="stylesheet" href="~/assets/css/main.css" />
 	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
 
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+	<!-- Bootstrap JS (con Popper incluido) -->
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 	@*DataTable************************************************************************@
 	<link rel="stylesheet" href="~/datatable/css/bootstrap.css" />
 	<link rel="stylesheet" href="~/datatable/css/dataTables.bootstrap4.min.css" />
 	<link rel="stylesheet" href="~/datatable/css/responsive.bootstrap4.min.css" />
 	@*************************************************************************************@
+
+	<style>
+		.view-info {
+			border: none;
+			background: none;
+			height: 30px;
+			outline: none;
+			box-shadow: none;
+		}
+
+		.view-info:focus, .view-info:active {
+			outline: none !important;
+			box-shadow: none !important;
+		}
+
+		body.modal-open {
+			overflow: auto !important;
+		}
+
+		.modal {
+			z-index: 1050 !important;
+		}
+
+	</style>
 
 </head>
 <body class="is-preload">
@@ -62,7 +92,7 @@
 								<th>Nombre Transportista</th>
 								<th># Socio</th>
 								<th>Estado</th>
-								<th>Estatus</th>
+								<th>Est. Transportista</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -149,14 +179,89 @@
 											)
 										}
 									</td>
-									<td>@ptg.PartnerNumber</td>
+									<td>
+										@ptg.PartnerNumber
+									</td>
 									<td>@ptg.StateName</td>
-									<td>@ptg.SupervisionStatusName</td>
+									<td>
+										@ptg.SupervisionStatusName
+										@{
+											if (@ptg.SupervisionStatusName == "Supervisado"){
+												<button class="view-info p-1" data-name="@ptg.PTGCompleteName" data-driver="@ptg.DriverFullName" data-partner="@ptg.PartnerNumber" 
+												data-driver-with-vehicle="@ptg.DriverWithVehicle" data-driver-with-working-vehicle="@ptg.WorkingVehicle"
+														data-driver-in-person="@ptg.InPerson"
+														data-vehicle-plate="@ptg.Plate" 
+														data-vehicle-year="@ptg.Year"
+														data-vehicle-make="@ptg.Make"
+														data-vehicle-model="@ptg.Model"
+														data-vehicle-passengers="@ptg.Passengers"
+														data-vehicle-rim-name="@ptg.RimName"
+														data-vehicle-wheels="@ptg.Wheels"
+														data-vehicle-motor-oil-name="@ptg.MotorOilName"
+														data-vehicle-motor-oil-liters="@ptg.Liters"
+														data-vehicle-fuel-type="@ptg.FuelTypeName"
+														data-vehicle-tank-capacity="@ptg.TankCapacity"
+														data-vehicle-battery-name="@ptg.BatteryName"
+														data-vehicle-number-batteries="@ptg.NumberOfBatteries"
+														data-vehicle-failure-type-name="@ptg.FailureTypeName"
+														data-vehicle-image-url="@ptg.VehicleImageUrl"
+														data-fingerprint-trouble="@ptg.FingerprintTrouble"
+														data-remarks="@ptg.Remarks"										
+														data-status="@ptg.SupervisionStatusName">
+													<i class="fas fa-eye" style="font-size: 14px;"></i>
+												</button>
+											}
+										}
+									</td>
 								</tr>
 							}
 						</tbody>
 					</table>
 				</section>
+			</div>
+		</div>
+	</div>
+
+	<!-- Modal -->
+	<div id="infoModal" class="modal fade" tabindex="-1" role="dialog">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Detalles de la supervisión</h5>
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+				</div>
+				<div class="modal-body">
+					<p><strong>Transportista:</strong> <span id="modalDriver"></span></p>
+					<p><strong># Socio:</strong> <span id="modalPartner"></span></p>
+					<p><strong>¿Tiene vehículo:</strong> <span id="modalDriverWithVehicle"></span></p>
+					<div class="modal-vehicle-data">
+						<p><strong>¿Transportista presente?:</strong> <span id="modalDriverInPerson"></span></p>
+						<p><strong>¿Vehículo en funcionamiento?:</strong> <span id="modalDriverWithWorkingVehicle"></span></p>
+						<p><strong>Placa:</strong> <span id="modalVehiclePlate"></span></p>
+						<p><strong>Año:</strong> <span id="modalVehicleYear"></span></p>
+						<p><strong>Marca:</strong> <span id="modalVehicleMake"></span></p>
+						<p><strong>Modelo:</strong> <span id="modalVehicleModel"></span></p>
+						<p><strong># Pasajeros:</strong> <span id="modalVehiclePassengers"></span> puestos</p>
+						<p><strong>Tipo de neumáticos:</strong> <span id="modalVehicleRimName"></span></p>
+						<p><strong># Neumáticos:</strong> <span id="modalVehicleWheels"></span></p>
+						<p><strong>Tipo de aceite:</strong> <span id="modalVehicleMotorOilname"></span></p>
+						<p><strong># Litros:</strong> <span id="modalVehicleMotorOilLiters"></span></p>
+						<p><strong>Tipo de combustible:</strong> <span id="modalVehicleFuelType"></span></p>
+						<p><strong># Capacidad:</strong> <span id="modalVehicleTankCapacity"></span>  litros</p>
+						<p><strong>Tipo de batería:</strong> <span id="modalVehicleBatteryName"></span></p>
+						<p><strong># Cantidad:</strong> <span id="modalVehicleNumberOfBatteries"></span></p>
+						<p><strong>Tipo de falla:</strong> <span id="modalVehicleFailureTypeName"></span></p>
+						<p><strong>Problemas con huella:</strong> <span id="modalDriverFingerprintTrouble"></span></p>
+						<p><strong>Observaciones:</strong> <span id="modalRemarks"></span></p>
+					</div>
+				</div>
+				<div class="modal-image">
+					<div class="modal-footer" style="display:flex; justify-content:center;align-items:center;height:300px">
+						<a id="image-link" target="_blank">
+							<img id="vehicleImage" style="width: 250px; height: 200px;" />
+						</a>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -182,6 +287,70 @@
 	<script type="text/javascript">
 
 		$(document).ready(function () {
+
+			$(document).on('click touchstart', '.view-info', function () {
+				$('#modalName').text($(this).data('name'));
+				$('#modalDriver').text($(this).data('driver'));
+				$('#modalPartner').text($(this).data('partner'));
+
+				if($(this).data('driver-with-vehicle') == "True"){
+					$('#modalDriverWithVehicle').text('Sí')
+					$(".modal-vehicle-data").show();
+					$(".modal-image").show();
+				}else {
+					$('#modalDriverWithVehicle').text('No')
+				    $(".modal-vehicle-data").hide();
+					$(".modal-image").show().hide();
+				}
+
+				if($(this).data('driver-with-working-vehicle') == "True"){
+					$('#modalDriverWithWorkingVehicle').text('Sí')
+				}else {
+					$('#modalDriverWithWorkingVehicle').text('No')
+				}
+
+				if($(this).data('driver-in-person') == "True"){
+					$('#modalDriverInPerson').text('Sí')
+				}else {
+					$('#modalDriverInPerson').text('No')
+				}
+
+
+
+				$('#modalVehiclePlate').text($(this).data('vehicle-plate'));
+				$('#modalVehicleYear').text($(this).data('vehicle-year'));
+				$('#modalVehicleMake').text($(this).data('vehicle-make'));
+				$('#modalVehicleModel').text($(this).data('vehicle-model'));
+				$('#modalVehiclePassengers').text($(this).data('vehicle-passengers'));
+				$('#modalVehicleRimName').text($(this).data('vehicle-rim-name'));
+				$('#modalVehicleWheels').text($(this).data('vehicle-wheels'));
+				$('#modalVehicleMotorOilname').text($(this).data('vehicle-motor-oil-name'));
+				$('#modalVehicleMotorOilLiters').text($(this).data('vehicle-motor-oil-liters'));
+				$('#modalVehicleFuelType').text($(this).data('vehicle-fuel-type'));
+				$('#modalVehicleTankCapacity').text($(this).data('vehicle-tank-capacity'));
+				$('#modalVehicleBatteryName').text($(this).data('vehicle-battery-name'));
+				$('#modalVehicleNumberOfBatteries').text($(this).data('vehicle-number-batteries'));
+				$('#modalVehicleFailureTypeName').text($(this).data('vehicle-failure-type-name'));
+
+				var url = $(this).data('vehicle-image-url') + "?timestamp=" + new Date().getTime();
+				$("#vehicleImage").attr("src", url);
+				$("#image-link").attr("href", url);
+
+				if($(this).data('fingerprint-trouble') == "True"){
+					$('#modalDriverFingerprintTrouble').text('Sí')
+				}else {
+					$('#modalDriverFingerprintTrouble').text('No')
+				}
+
+				$('#modalRemarks').text($(this).data('remarks'));
+
+				$('#modalStatus').text($(this).data('status'));
+				$('#infoModal').modal('show');
+			});
+
+			$('.close-modal, .close').on('click', function () {
+				$('#infoModal').modal('hide');
+			});
 
 			$('#inventory').DataTable({
 				stateSave: true,

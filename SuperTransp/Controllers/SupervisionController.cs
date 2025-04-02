@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Routing;
 using SuperTransp.Core;
 using SuperTransp.Models;
 using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 using static SuperTransp.Core.Interfaces;
 
@@ -133,14 +134,16 @@ namespace SuperTransp.Controllers
 
 					if (model.DriverWithVehicle == 0)
 					{
-						supervisionId = _supervision.AddSimple(model);
+						supervisionId = _supervision.AddSimple(model);	
 					}
 					else
 					{
 						model.Remarks = string.IsNullOrEmpty(model.Remarks) ? string.Empty : model.Remarks;
 						model.VehicleImageUrl = string.IsNullOrEmpty(model.VehicleImageUrl) ? string.Empty : model.VehicleImageUrl;
 						model.SupervisionStatus = 1;
-
+						model.FailureTypeId = model.WorkingVehicle == 1 ? 1 : model.FailureTypeId;
+						var imageUrl = SupervisionPictureUrl(model.StateName, model.PublicTransportGroupRif, model.DriverIdentityDocument, model.PartnerNumber);
+						model.VehicleImageUrl = imageUrl;
 						supervisionId = _supervision.AddOrEdit(model);
 					}
 
@@ -309,6 +312,74 @@ namespace SuperTransp.Controllers
 			}
 
 			return BadRequest("No se pudo subir el archivo.");
+		}
+
+		private string SupervisionPictureUrl(string stateName, string publicTransportGroupRif, int driverIdentityDocument, int partnerNumber)
+		{
+			var ftpBaseUrl = _configuration["FtpSettings:BaseUrl"];
+			var ftpUsername = _configuration["FtpSettings:Username"];
+			var ftpPassword = _configuration["FtpSettings:Password"];
+			var baseImagesUrl = _configuration["FtpSettings:BaseImagesUrl"];
+
+			var newFolderName = $"{stateName.ToUpper().Trim()}";
+			var ftpFolderPath = Path.Combine(ftpBaseUrl, newFolderName).Replace("\\", "/");
+			var subFolderName = $"{publicTransportGroupRif}-{driverIdentityDocument}-{partnerNumber}";
+			var ftpSubFolderPath = Path.Combine(ftpFolderPath, subFolderName).Replace("\\", "/");
+			var filePath = string.Empty;
+
+			try
+			{
+				// Verificar si la subcarpeta ESTADO/RIF-CEDULA-SOCIO existe y eliminar su contenido
+				FtpWebRequest listSubFolderRequest = (FtpWebRequest)WebRequest.Create(ftpSubFolderPath);
+				listSubFolderRequest.Method = WebRequestMethods.Ftp.ListDirectory;
+				listSubFolderRequest.Credentials = new NetworkCredential(ftpUsername, ftpPassword);
+
+				try
+				{
+					using (var listSubFolderResponse = (FtpWebResponse)listSubFolderRequest.GetResponse())
+					using (StreamReader reader = new StreamReader(listSubFolderResponse.GetResponseStream()))
+					{
+						string line;
+						while ((line = reader.ReadLine()) != null)
+						{
+							filePath = Path.Combine(ftpSubFolderPath, line).Replace("\\", "/").Replace(ftpBaseUrl, baseImagesUrl);
+						}
+					}
+				}
+				catch (WebException ex)
+				{
+					var response = (FtpWebResponse)ex.Response;
+					if (response.StatusCode != FtpStatusCode.ActionNotTakenFileUnavailable)
+					{
+						return filePath;
+					}
+				}
+			}
+			catch
+			{
+				// Manejo de excepciones genéricas
+			}
+
+			return filePath;
+		}
+
+		public JsonResult CheckExistingPlate(int paramValue1, string paramValue2)
+		{
+			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+			{
+				var existingPlate = _supervision.RegisteredPlate(paramValue2);
+				if (existingPlate.Any())
+				{
+					if(!existingPlate.Where(x=> x.DriverId == paramValue1).Any())
+					{
+						return Json($"El número de placa {paramValue2} ya está asignado al transportista {existingPlate.FirstOrDefault().DriverFullName} línea {existingPlate.FirstOrDefault().PTGCompleteName} estado {existingPlate.FirstOrDefault().StateName.ToUpper()}.");
+					}					
+				}				
+
+				return Json("OK");
+			}
+
+			return Json("ERROR");
 		}
 	}
 }
