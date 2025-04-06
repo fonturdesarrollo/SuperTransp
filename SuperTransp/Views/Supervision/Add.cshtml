@@ -212,14 +212,15 @@
 								</div>
 								<div class="col-12">
 									<br />
-									<strong>Cargar imágenes:</strong>
+									<strong>Cargar imágen:</strong>
 									<div id="myDropzone" class="dropzone dz-clickable">
 										<div class="dz-message">
-											Arrastra tus imágenes aquí o haz clic para subirlas.
+											Arrastre la imágen aquí o haga clic para subirla.
 										</div>
 									</div>
 								</div>
-								<div class="col-12" style="display: flex; justify-content: center; align-items: center; margin-top: 20px;">
+								<div class="col-12">
+									<br />
 									<ul class="actions">
 										<li><button type="submit" id="saveRequest" class="primary">Agregar supervisión</button></li>
 									</ul>
@@ -276,7 +277,7 @@
 			paramName: "file",
 			maxFilesize: 20,
 			acceptedFiles: ".jpg,.png",
-			dictDefaultMessage: "Arrastra tus imagenes aquí o haz clic para agregarlos.",
+			dictDefaultMessage: "Arrastra las imagenes aquí o haga clic para agregarlas.",
 			addRemoveLinks: true,
 			maxFiles: 1,
 
@@ -302,7 +303,7 @@
 				});
 
 				this.on("success", function (file, response) {
-					alert("Imagen se cargada correctamente.");
+					alert("Imagen cargada correctamente.");
 				});
 
 				this.on("error", function (file, errorMessage) {
@@ -357,7 +358,7 @@
 				return false;
 			}
 
-			if (!confirm("¿Está seguro de que desea actualizar los registros?")) {
+			if (!confirm("¿Está seguro que desea actualizar los registros?")) {
 				return false;
 			}
 
