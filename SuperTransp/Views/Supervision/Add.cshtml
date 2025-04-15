@@ -80,7 +80,7 @@
 				<h2>Menu</h2>
 				<ul>
 					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
-					<li>@Html.ActionLink("Seleccionar línea", "PublicTransportGroupList", "Supervision")</li>
+					<li>@Html.ActionLink("Seleccionar línea", "PublicTransportGroupDriverList", "Supervision")</li>
 					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 				</ul>
 			</nav>
@@ -92,6 +92,7 @@
 					<section>
 						<h1 style="color:#4cbece">Agregar supervisión</h1>
 						<label>Linea: @Model.PublicTransportGroupRif @Model.PTGCompleteName</label><br />
+						<label>Tipo: @Model.ModeName</label><br />
 						<label>Transportista: @Model.DriverIdentityDocument @Model.DriverFullName</label><br />
 						<label>Socio: @Model.PartnerNumber</label>
 						<br />
@@ -109,17 +110,16 @@
 								@Html.HiddenFor(x => x.SupervisionId)
 								@Html.HiddenFor(x => x.PartnerNumber)
 								@Html.HiddenFor(x => x.PublicTransportGroupRif)
+								@Html.HiddenFor(x => x.ModeId)
 								@Html.DropDownList("DriverWithVehicle", (IEnumerable<SelectListItem>)ViewBag.DriverWithVehicle, "Seleccione", new { @class = "form-control" })
 							</div>
 							<div class="row" id="additionalFields" style="visibility: hidden; opacity: 0; height: 0; overflow: hidden; transition: opacity 0.3s ease-in-out;">
 								<div class="col-4">
 									<strong>¿Transportista presente?:</strong>
-									@* @Html.DropDownList("InPerson", (IEnumerable<SelectListItem>)ViewBag.InPerson, "Seleccione", new { @class = "form-control" }) *@
 									@Html.DropDownListFor(t => t.InPerson, (SelectList)ViewBag.InPerson, "-- Seleccione --", new { @class = "form-control" })
 								</div>
 								<div class="col-4">
 									<strong>¿Vehículo operativo?:</strong>
-									@* @Html.DropDownList("WorkingVehicle", (IEnumerable<SelectListItem>)ViewBag.WorkingVehicle, "Seleccione", new { @class = "form-control" }) *@
 									@Html.DropDownListFor(t => t.WorkingVehicle, (SelectList)ViewBag.WorkingVehicle, "-- Seleccione --", new { @class = "form-control" })
 								</div>
 								<div class="col-4">
@@ -532,10 +532,41 @@
 			}
 		}
 
+		function setTransportTypeDefaultValues(modeId){
+			switch (modeId) {
+			  case "3":
+				$('#Passengers').val("4");
+				$('#Wheels').val("4");
+				$('#FuelTypeId').val("1");
+				$('#BatteryId').val("1");
+				$('#TankCapacity').val("50");
+				$('#NumberOfBatteries').val("1");
+				$('#Liters').val("4");
+				break;
+			  case "4":
+				$('#Passengers').val("2");
+				$('#Wheels').val("2");
+				$('#FuelTypeId').val("1");
+				$('#BatteryId').val("9");
+				$('#TankCapacity').val("10");
+				$('#NumberOfBatteries').val("1");
+				$('#Liters').val("1");
+				break;
+			}
+		}
+
 		$(document).ready(function () {
 			setTimeout(function(){
 				$("#successMessage").fadeOut("slow");
 			}, 2500);
+
+			$('#Plate').on('input', function() {
+				const value = $(this).val();
+				const sanitizedValue = value.replace(/[^a-zA-Z0-9\s]/g, '');
+				$(this).val(sanitizedValue);
+			});			
+
+			setTransportTypeDefaultValues($("#ModeId").val())
 
 			$('#DriverWithVehicle').change(function (event) {
 				if ($(this).val() === "1") {
@@ -575,7 +606,8 @@
 				var yearId = $(this).val();
 				var getSupervisionUrl = '@Url.Action("GetMakes", "Supervision")';
 
-				$('#MakeId').empty().append('<option value="">Seleccione una marca</option>');
+				$('#MakeId').empty().append('<option value="">Seleccione</option>');
+						$('#VehicleDataId').empty().append('<option value="">Seleccione</option>');
 
 				if (yearId) {
 					$.getJSON(getSupervisionUrl, { yearId: yearId }, function (data) {
@@ -594,14 +626,14 @@
 				var make = $('#MakeId option:selected').text();
 				var getSupervisionUrl = '@Url.Action("GetModels", "Supervision")';
 
-				$('#VehicleDataId').empty().append('<option value="">Seleccione un modelo</option>');
+				$('#VehicleDataId').empty().append('<option value="">Seleccione</option>');
 
 				if (yearId) {
 					$.getJSON(getSupervisionUrl, { yearId: yearId, make: make }, function (data) {
 						$.each(data, function (index, models) {
 							$('#VehicleDataId').append($('<option>', {
 								value: models.vehicleDataId,
-								text: models.model
+								text: models.modelName
 							}));
 						});
 					});

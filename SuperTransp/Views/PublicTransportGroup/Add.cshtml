@@ -258,6 +258,16 @@
 			if ($("#PublicTransportGroupName").val() == "" && !firstInvalidField) {
 				firstInvalidField = "#PublicTransportGroupName";
 				message = "Debe colocar el nombre de la línea";
+			} else {
+				const fullName = $("#PublicTransportGroupName").val().trim();
+				const regex = /^[a-zA-Z0-9\s]{5,}$/;
+
+				if (!regex.test(fullName)) {
+					if (!firstInvalidField) {
+						firstInvalidField = "#PublicTransportGroupName";
+					}
+					message = "El nombre debe contener solo letras, números y espacios, y al menos 5 caracteres.";
+				}
 			}
 
 			if ($("#ModeId").val() == "" && !firstInvalidField) {
@@ -297,7 +307,18 @@
 			if ($("#RepresentativeName").val() == "" && !firstInvalidField) {
 				firstInvalidField = "#RepresentativeName";
 				message = "Debe colocar el nombre del representante";
+			} else {
+				const fullName = $("#RepresentativeName").val().trim();
+				const regex = /^[a-zA-Z\s]{5,}$/;
+
+				if (!regex.test(fullName)) {
+					if (!firstInvalidField) {
+						firstInvalidField = "#RepresentativeName";
+					}
+					message = "El nombre debe contener solo letras y espacios, y al menos 5 caracteres.";
+				}
 			}
+
 
 			if (!firstInvalidField) {
 				const identityValue = $("#RepresentativePhone").val();
@@ -352,6 +373,18 @@
 			setTimeout(function(){
 				$("#successMessage").fadeOut("slow");
 			}, 2500);
+
+			$('#PublicTransportGroupName').on('input', function() {
+				const value = $(this).val();
+				const sanitizedValue = value.replace(/[^a-zA-Z0-9\s]/g, '');
+				$(this).val(sanitizedValue);
+			});
+
+			$('#RepresentativeName').on('input', function() {
+				const value = $(this).val();
+				const sanitizedValue = value.replace(/[^a-zA-Z\s]/g, '');
+				$(this).val(sanitizedValue);
+			});
 
 			$('#StateId').change(function () {
 				var stateId = $(this).val();

@@ -86,7 +86,7 @@
 							</div>
 							<div class="col-6 col-12-xsmall">
 								<strong>Nombre:</strong>
-								@Html.TextBoxFor(x => x.DriverFullName, new { placeholder = "Nombre del transportista", tabindex = "0", maxlength = "20" })
+								@Html.TextBoxFor(x => x.DriverFullName, new { placeholder = "Nombre del transportista", tabindex = "0", maxlength = "50" })
 							</div>
 							<div class="col-6">
 								<strong>Número de Socio:</strong>
@@ -261,7 +261,7 @@
 				message = "Debe colocar el nombre del transportista";
 			} else {
 				const driverFullName = $("#DriverFullName").val().trim();
-				const regex = /^[a-zA-Z\s]{5,}$/;
+				const regex = /^[a-zA-Z\s]{5,}$/; // Solo letras y espacios, mínimo 5 caracteres
 
 				if (!regex.test(driverFullName)) {
 					if (!firstInvalidField) {

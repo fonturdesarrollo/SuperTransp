@@ -35,5 +35,7 @@ namespace SuperTransp.Models
 		public string? PublicTransportGroupRif { get; set; }
 		public int? SupervisionStatus { get; set; }
 		public string? VehicleImageUrl { get; set; }
+		public int ModeId { get; set; }
+		public string? ModeName { get; set; }
 	}
 }

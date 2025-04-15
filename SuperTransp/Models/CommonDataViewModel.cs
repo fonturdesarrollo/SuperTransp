@@ -7,7 +7,7 @@
 		public int YearId { get; set; }
 		public string? YearName { get; set; }
 		public string? Make { get; set; }
-		public string? Model { get; set; }
+		public string? ModelName { get; set; }
 		public int VehicleDataId { get; set; }
 		public int Passengers { get; set; }
 		public int PassengerId { get; set; }

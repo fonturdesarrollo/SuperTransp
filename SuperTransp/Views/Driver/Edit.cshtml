@@ -81,7 +81,7 @@
 							</div>
 							<div class="col-6 col-12-xsmall">
 								<strong>Nombre:</strong>
-								@Html.TextBoxFor(x => x.DriverFullName, new { placeholder = "Nombre del transportista", tabindex = "0", maxlength = "50" })
+								@Html.TextBoxFor(x => x.DriverFullName, new { placeholder = "Nombre del transportista", tabindex = "0", maxlength = "20" })
 							</div>
 							<div class="col-6">
 								<strong>Número de Socio:</strong>
@@ -264,6 +264,12 @@
 			setTimeout(function(){
 				$("#successMessage").fadeOut("slow");
 			}, 2500);
+
+			$('#DriverFullName').on('input', function() {
+				const value = $(this).val();
+				const sanitizedValue = value.replace(/[^a-zA-Z\s]/g, '');
+				$(this).val(sanitizedValue);
+			});
 		});
 	</script>
 </body>

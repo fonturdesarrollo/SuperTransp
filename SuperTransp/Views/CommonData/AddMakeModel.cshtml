@@ -1,0 +1,197 @@
+﻿@model SuperTransp.Models.CommonDataViewModel
+@{
+	Layout = "";
+}
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Agregar Marca de Vehículo</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+	<link rel="stylesheet" href="~/assets/css/main.css" />
+	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
+	<link rel="stylesheet" href="~/datatable/css/bootstrap.css" />
+	<style>
+		.is-invalid {
+			border: 2px solid red;
+			background-color: #ffe6e6;
+		}
+	</style>
+</head>
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Agregar Marca de Vehículo</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+	<link rel="stylesheet" href="~/assets/css/main.css" />
+	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
+</head>
+<body class="is-preload">
+	@using (Html.BeginForm("AddMakeModel", "CommonData", FormMethod.Post))
+	{
+		<!-- Wrapper -->
+		<div id="wrapper">
+
+			<!-- Header -->
+			<header id="header">
+				<div class="inner">
+
+					<!-- Logo -->
+					<a href="#" class="logo">
+						<span class="symbol"><img src="~/images/logo_login.jpg" alt="" /></span><span class="title">SuperTransp</span>
+						<br />
+						<span class="title">@ViewBag.EmployeeName</span>
+						<br />
+						@if (TempData["SuccessMessage"] != null)
+						{
+							<div id="successMessage" class="alert alert-success">
+								@TempData["SuccessMessage"]
+							</div>
+						}
+					</a>
+				</div>
+				<!-- Nav -->
+				<nav>
+					<ul>
+						<li><a href="#menu">Menu</a></li>
+					</ul>
+				</nav>
+			</header>
+
+			<!-- Menu -->
+			<nav id="menu">
+				<h2>Menu</h2>
+				<ul>
+					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
+					<li>@Html.ActionLink("Ajustes", "Index", "Settings")</li>
+					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
+				</ul>
+			</nav>
+
+			<!-- Main -->
+			<div id="main">
+				<div class="inner">
+					<!-- Form -->
+					<section>
+						<h1 style="color:#4cbece">Agregar Marca Modelo del Vehículo</h1>
+						<br />
+						<div class="row gtr-uniform">
+							<div class="col-12">
+								<strong>Año:</strong>
+								@Html.DropDownListFor(t => t.YearId, (SelectList)ViewBag.Years, "-- Seleccione --", new { @class = "form-control" })
+							</div>
+							<div class="col-6">
+								<strong>Marca:</strong>
+								@Html.TextBoxFor(x => x.Make, new { placeholder = "Nombre de la marca del vehículo", tabindex = "0", maxlength = "10" })
+							</div>
+							<div class="col-6">
+								<strong>Modelo:</strong>
+								@Html.TextBoxFor(x => x.ModelName, new { placeholder = "Nombre del modelo del vehículo", tabindex = "0", maxlength = "15" })
+							</div>
+							<div class="col-12">
+								<ul class="actions">
+									<li><input type="submit" value="Actualizar" class="primary" id="saveRequest"/></li>
+								</ul>
+							</div>
+						</div>
+					</section>
+				</div>
+			</div>
+		</div>
+	}
+	<!-- Scripts -->
+	<script src="~/assets/js/jquery.min.js"></script>
+	<script src="~/assets/js/browser.min.js"></script>
+	<script src="~/assets/js/breakpoints.min.js"></script>
+	<script src="~/assets/js/util.js"></script>
+	<script src="~/assets/js/main.js"></script>
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+
+	<script type="text/javascript">
+
+		document.addEventListener("DOMContentLoaded", function () {
+			function handleInput(selector, transformFunction) {
+				var inputElement = document.querySelector(selector);
+				if (inputElement) {
+					inputElement.addEventListener("input", function () {
+						inputElement.value = transformFunction(inputElement.value);
+					});
+				}
+			}
+
+			handleInput("[name='Make']", function (value) {
+				return value.toUpperCase();
+			});
+
+			handleInput("[name='ModelName']", function (value) {
+				return value.toUpperCase();
+			});
+		});
+
+		$("body").on("click", "#saveRequest", function (event) {
+			event.preventDefault();
+
+			if (!isOkToSave()) {
+				return false;
+			}
+
+			if (!confirm("¿Está seguro de que desea actualizar los registros?")) {
+				return false;
+			}
+
+			$(this).closest("form").trigger("submit");
+		});
+
+		function isOkToSave() {
+			let firstInvalidField = null;
+			let message = "";
+
+			if ($("#YearId").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#YearId";
+				message = "Debe seleccionar el año";
+			}
+
+			if ($("#Make").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#Make";
+				message = "Debe colocar la marca";
+			}
+
+			if ($("#ModelName").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#ModelName";
+				message = "Debe colocar el modelo";
+			}
+
+			if (firstInvalidField) {
+				showAlert(message, firstInvalidField);
+				return false;
+			}
+
+			return true;
+		}
+
+		function showAlert(message, selector) {
+			alert(message);
+			highlightErrorField(selector);
+			$(selector).focus();
+		}
+
+		function highlightErrorField(selector) {
+			$(selector).addClass("is-invalid");
+			$(selector).on("input", function () {
+				$(this).removeClass("is-invalid");
+			});
+
+			$(selector)[0].scrollIntoView({ behavior: "smooth", block: "center" });
+		}
+
+		$(document).ready(function () {
+			setTimeout(function(){
+				$("#successMessage").fadeOut("slow");
+			}, 2500);
+		});
+	</script>
+</body>
+</html>

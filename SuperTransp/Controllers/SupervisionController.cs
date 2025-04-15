@@ -40,7 +40,7 @@ namespace SuperTransp.Controllers
 			return RedirectToAction("Login", "Security");
 		}
 
-		public IActionResult PublicTransportGroupList()
+		public IActionResult PublicTransportGroupDriverList()
 		{
 			try
 			{
@@ -72,7 +72,7 @@ namespace SuperTransp.Controllers
 			}
 		}
 
-		public IActionResult Add(int publicTransportGroupId, string pTGCompleteName, string driverFullName, int partnerNumber, string? publicTransportGroupRif, int driverIdentityDocument, string stateName, int? supervisionStatus, int driverId, int supervisionId)
+		public IActionResult Add(int publicTransportGroupId, string pTGCompleteName, string driverFullName, int partnerNumber, string? publicTransportGroupRif, int driverIdentityDocument, string stateName, int? supervisionStatus, int driverId, int supervisionId, int modeId, string modeName)
 		{
 			try
 			{
@@ -89,7 +89,9 @@ namespace SuperTransp.Controllers
 						DriverIdentityDocument = driverIdentityDocument,
 						StateName = stateName,
 						SecurityUserId = (int)HttpContext.Session.GetInt32("SecurityUserId"),
-						SupervisionId =  supervisionId
+						SupervisionId =  supervisionId,
+						ModeId = modeId,
+						ModeName = modeName
 					};
 
 					ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
@@ -149,7 +151,7 @@ namespace SuperTransp.Controllers
 
 					if (supervisionId > 0)
 					{
-						return RedirectToAction("PublicTransportGroupList");
+						return RedirectToAction("PublicTransportGroupDriverList");
 					}
 				}
 
@@ -380,6 +382,66 @@ namespace SuperTransp.Controllers
 			}
 
 			return Json("ERROR");
+		}
+
+		public IActionResult PublicTransportGroupList()
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+				{
+					List<PublicTransportGroupViewModel> model = new();
+
+					ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+					int? stateId = HttpContext.Session.GetInt32("StateId");
+
+					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
+					{
+						model = _supervision.GetDriverPublicTransportGroupByStateId((int)stateId);
+					}
+					else
+					{
+						model = _supervision.GetAllDriverPublicTransportGroup();
+					}
+
+					return View(model);
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
+
+		public IActionResult AddSummary(int publicTransportGroupId, string pTGCompleteName)
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+				{
+					var model = new DriverViewModel
+					{
+						PublicTransportGroupId = publicTransportGroupId,
+						PTGCompleteName = pTGCompleteName,
+						DriverModifiedDate = DateTime.Now
+					};
+
+					//ViewBag.Drivers = _driver.GetByPublicTransportGroupId(publicTransportGroupId);
+					ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+
+					return View(model);
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
 		}
 	}
 }

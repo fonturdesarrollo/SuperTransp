@@ -309,5 +309,10 @@ namespace SuperTransp.Core
 				return existingPlate.ToList();
 			}
 		}
+
+		public int AddOrEditSummary(SupervisionSummaryViewModel model)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

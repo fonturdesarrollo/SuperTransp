@@ -15,13 +15,15 @@ namespace SuperTransp.Controllers
 		private IUnion _union;
 		private ISecurity _security;
 		private IGeography _geography;
+		private ICommonData _commonData;
 
-		public CommonDataController(IDesignation designation, IUnion union, ISecurity security, IGeography geography)
+		public CommonDataController(IDesignation designation, IUnion union, ISecurity security, IGeography geography, ICommonData commonData)
 		{
 			_designation = designation;
 			_union = union;
 			_security = security;
 			_geography = geography;
+			_commonData = commonData;
 		}
 
 		public IActionResult AddDesignation()
@@ -103,6 +105,44 @@ namespace SuperTransp.Controllers
 						TempData["SuccessMessage"] = "Datos actualizados correctamente";
 
 						return RedirectToAction("AddUnion");
+					}
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
+
+		public IActionResult AddMakeModel()
+		{
+			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+			{
+				ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+				ViewBag.Years = new SelectList(_commonData.GetYears(), "YearId", "YearName");
+			}
+
+			return View();
+		}
+
+		[HttpPost]
+		public IActionResult AddMakeModel(CommonDataViewModel model)
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
+				{
+					int vehicleDataId = _commonData.AddOrEditMakeModel(model);
+
+					if (vehicleDataId > 0)
+					{
+						TempData["SuccessMessage"] = "Datos actualizados correctamente";
+
+						return RedirectToAction("AddMakeModel");
 					}
 				}
 

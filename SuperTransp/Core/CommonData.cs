@@ -43,7 +43,7 @@ namespace SuperTransp.Core
 		public List<CommonDataViewModel> GetPassengers()
 		{
 			List<CommonDataViewModel> passengers = new List<CommonDataViewModel>();
-			
+
 			for (int i = 1; i <= 80; i++)
 			{
 				passengers.Add(new CommonDataViewModel { Passengers = i, PassengerId = i });
@@ -111,7 +111,7 @@ namespace SuperTransp.Core
 						{
 							makes.Add(new CommonDataViewModel
 							{
-								Model = (string)dr["Model"],
+								ModelName = (string)dr["Model"],
 								Make = (string)dr["Make"],
 								VehicleDataId = (int)dr["VehicleDataId"],
 							});
@@ -347,6 +347,42 @@ namespace SuperTransp.Core
 			catch (Exception ex)
 			{
 				throw new Exception($"Error al obtener los tipos de falla {ex.Message}", ex);
+			}
+		}
+
+		public int AddOrEditMakeModel(CommonDataViewModel model)
+		{
+			int result = 0;
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					if (model != null)
+					{
+						SqlCommand cmd = new("SuperTransp_MakeModelAddOrEdit", sqlConnection)
+						{
+							CommandType = System.Data.CommandType.StoredProcedure
+						};
+
+						cmd.Parameters.AddWithValue("@VehicleDataId", model.VehicleDataId);
+						cmd.Parameters.AddWithValue("@Year", model.YearId);
+						cmd.Parameters.AddWithValue("@Make", model.Make.Trim());
+						cmd.Parameters.AddWithValue("@Model", model.ModelName.Trim());
+
+						result = Convert.ToInt32(cmd.ExecuteScalar());
+					}
+				}
+
+				return result;
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Error al añadir o editar la marca del vehículo", ex);
 			}
 		}
 	}
