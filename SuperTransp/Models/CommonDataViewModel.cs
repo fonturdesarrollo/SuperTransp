@@ -2,7 +2,7 @@
 {
 	public class CommonDataViewModel
 	{
-		public int YesNoId { get; set; }
+		public bool YesNoId { get; set; }
 		public string? YesNoName { get; set; }
 		public int YearId { get; set; }
 		public string? YearName { get; set; }

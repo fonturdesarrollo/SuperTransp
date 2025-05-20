@@ -9,9 +9,12 @@ namespace SuperTransp.Core
 	public class PublicTransportGroup : IPublicTransportGroup
 	{
 		private readonly IConfiguration _configuration;
-		public PublicTransportGroup(IConfiguration configuration)
+		private readonly ISecurity _security;
+
+		public PublicTransportGroup(IConfiguration configuration, ISecurity security)
 		{
 			this._configuration = configuration;
+			this._security = security;
 		}
 
 		private SqlConnection GetConnection()
@@ -49,8 +52,11 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@RepresentativeName", model.RepresentativeName.ToUpper().Trim());
 						cmd.Parameters.AddWithValue("@RepresentativePhone", model.RepresentativePhone);
 						cmd.Parameters.AddWithValue("@PublicTransportGroupIdModifiedDate", DateTime.Now);
+						cmd.Parameters.AddWithValue("@Partners", model.Partners);
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
+
+						_security.AddLogbook(model.PublicTransportGroupId, $"linea de transporte RIF {model.PublicTransportGroupRif} nombre {model.PublicTransportGroupName} cantidad socios: {model.Partners} representante {model.RepresentativeName} cedula representante {model.RepresentativeIdentityDocument}");											
 					}
 				}
 
@@ -93,6 +99,8 @@ namespace SuperTransp.Core
 							publicTransportGroup.RepresentativeIdentityDocument = (int)dr["RepresentativeIdentityDocument"];
 							publicTransportGroup.RepresentativeName = (string)dr["RepresentativeName"];
 							publicTransportGroup.RepresentativePhone = (string)dr["RepresentativePhone"];
+							publicTransportGroup.StateName = (string)dr["StateName"];
+							publicTransportGroup.Partners = (int)dr["Partners"];
 
 							if (dr["PublicTransportGroupIdModifiedDate"] != DBNull.Value)
 							{

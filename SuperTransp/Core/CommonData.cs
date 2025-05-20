@@ -22,8 +22,8 @@ namespace SuperTransp.Core
 		{
 			return new List<CommonDataViewModel>
 			{
-				new CommonDataViewModel { YesNoId = 1, YesNoName = "Sí" },
-				new CommonDataViewModel { YesNoId = 0, YesNoName = "No" }
+				new CommonDataViewModel { YesNoId = true, YesNoName = "Sí" },
+				new CommonDataViewModel { YesNoId = false, YesNoName = "No" }
 			};
 		}
 

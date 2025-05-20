@@ -7,6 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\assets\css\main.css" />
+    <Content Remove="wwwroot\images\cintillo.jpg" />
+    <Content Remove="wwwroot\images\image9.jpg" />
+    <Content Remove="wwwroot\images\splash2-o.jpg" />
+    <Content Remove="wwwroot\images\splash2.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="Core\Interfaces.cs" />
   </ItemGroup>
 
@@ -24,6 +32,18 @@
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
+    <Content Update="Views\Supervision\Edit.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Views\Supervision\EditSummary.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Views\Supervision\SummaryList.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
 <ItemGroup>
   <None Update="appsettings.json">
@@ -31,8 +51,6 @@
   </None>
 </ItemGroup>
 <ItemGroup>
-  <Folder Include="wwwroot\plugins\dropzone\" />
   <Folder Include="wwwroot\uploads\" />
 </ItemGroup>  
-
 </Project>

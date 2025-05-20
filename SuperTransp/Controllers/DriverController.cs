@@ -159,7 +159,7 @@ namespace SuperTransp.Controllers
 		{
 			try
 			{
-				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
+				if (!string.IsNullOrEmpty(HttpContext.Session?.GetString("SecurityUserId")) && ModelState.IsValid)
 				{
 					var result = _driver.Delete(driverId);
 

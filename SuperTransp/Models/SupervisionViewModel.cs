@@ -6,9 +6,9 @@ namespace SuperTransp.Models
 	{
 		[Key]
 		public int SupervisionId { get; set; }
-		public int? InPerson { get; set; }
-		public int DriverWithVehicle { get; set; }
-		public int? WorkingVehicle { get; set; }
+		public bool InPerson { get; set; }
+		public bool DriverWithVehicle { get; set; }
+		public bool WorkingVehicle { get; set; }
 		public int DriverId { get; set; }
 		public string? Plate { get; set; }
 		public int? VehicleDataId { get; set; }
@@ -22,7 +22,7 @@ namespace SuperTransp.Models
 		public int? BatteryId { get; set; }
 		public int? NumberOfBatteries { get; set; }
 		public int? FailureTypeId { get; set; }	
-		public int? FingerprintTrouble { get; set; }
+		public bool FingerprintTrouble { get; set; }
 		public string? Remarks { get; set; }
 		public DateTime SupervisionDateAdded { get; set; }
 		public int SecurityUserId { get; set; }
@@ -37,5 +37,16 @@ namespace SuperTransp.Models
 		public string? VehicleImageUrl { get; set; }
 		public int ModeId { get; set; }
 		public string? ModeName { get; set; }
+		public string? SupervisionStatusName { get; set; }
+		public int TotalDrivers { get; set; }
+		public int TotalSupervisedDrivers { get; set; }
+		public int Year { get; set; }
+		public string? Make { get; set; }
+		public string? Model { get; set; }
+		public string? RimName { get; set; }
+		public string? MotorOilName { get; set; }
+		public string? FuelTypeName { get; set; }
+		public string? BatteryName { get; set; }
+		public string? FailureTypeName { get; set; }
 	}
 }

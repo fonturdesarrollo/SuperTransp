@@ -24,8 +24,11 @@ namespace SuperTransp.Controllers
 		{
 			HttpContext.Session.Remove("SecurityUserId");
 			HttpContext.Session.Remove("FullName");
+			HttpContext.Session.Remove("UserLogin");
 			HttpContext.Session.Remove("SecurityGroupId");
 			HttpContext.Session.Remove("StateId");
+			HttpContext.Session.Remove("StateName");
+			HttpContext.Session.Remove("DeviceIP");
 
 			return View();
 		}
@@ -45,8 +48,11 @@ namespace SuperTransp.Controllers
 					{
 						HttpContext.Session.SetInt32("SecurityUserId", validUser.SecurityUserId);
 						HttpContext.Session.SetString("FullName", validUser.FullName);
+						HttpContext.Session.SetString("UserLogin", validUser.Login);
 						HttpContext.Session.SetInt32("SecurityGroupId", validUser.SecurityGroupId);
 						HttpContext.Session.SetInt32("StateId", validUser.StateId);
+						HttpContext.Session.SetString("StateName", validUser.StateName);
+						HttpContext.Session.SetString("DeviceIP", HttpContext.Connection.RemoteIpAddress?.ToString());
 
 						return RedirectToAction("Index", "Home");
 					}

@@ -61,5 +61,6 @@ namespace SuperTransp.Models
 		public bool FingerprintTrouble { get; set; }
 		public string? Remarks { get; set; }
 		public string? VehicleImageUrl { get; set; }
+		public int? Partners { get; set; }
 	}
 }

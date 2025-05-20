@@ -117,6 +117,11 @@
 								@Html.TextBoxFor(x => x.RepresentativePhone, new { placeholder = "Teléfono del Representante", maxlength = "11" })
 								<span asp-validation-for="RepresentativePhone" class="text-danger"></span>
 							</div>
+							<div class="col-6">
+								<strong>Cantidad de Socios:</strong>
+								@Html.TextBoxFor(x => x.Partners, new { placeholder = "Cantidad de Socios", maxlength = "3" })
+								<span asp-validation-for="Partners" class="text-danger"></span>
+							</div>
 							<div class="col-12">
 								<ul class="actions">
 									<li><button type="submit" id="saveRequest" class="primary">Actualizar</button></li>
@@ -191,6 +196,10 @@
 			handleInput("[name='RepresentativePhone']", function (value) {
 				return value.replace(/[^0-9]/g, "");
 			});
+
+			handleInput("[name='Partners']", function (value) {
+				return value.replace(/[^0-9]/g, "");
+			});
 		});
 
 		$("body").on("click", "#saveRequest", function (event) {
@@ -260,7 +269,7 @@
 				message = "Debe colocar el nombre de la línea";
 			} else {
 				const fullName = $("#PublicTransportGroupName").val().trim();
-				const regex = /^[a-zA-Z0-9\s]{5,}$/;
+				const regex = /^[a-zA-ZñÑ0-9\s]{5,}$/;
 
 				if (!regex.test(fullName)) {
 					if (!firstInvalidField) {
@@ -334,6 +343,16 @@
 				message = "Debe colocar el número de teléfono del representante";
 			}
 
+			if ($("#Partners").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#Partners";
+				message = "Debe colocar la cantidad de socios";
+			}
+
+			if ($("#Partners").val() == "0" && !firstInvalidField) {
+				firstInvalidField = "#Partners";
+				message = "La cantidad de socios no puede ser cero";
+			}
+
 			if (firstInvalidField) {
 				showAlert(message, firstInvalidField);
 				return false;
@@ -376,7 +395,7 @@
 
 			$('#PublicTransportGroupName').on('input', function() {
 				const value = $(this).val();
-				const sanitizedValue = value.replace(/[^a-zA-Z0-9\s]/g, '');
+				const sanitizedValue = value.replace(/[^a-zA-ZñÑ0-9\s]/g, '');
 				$(this).val(sanitizedValue);
 			});
 

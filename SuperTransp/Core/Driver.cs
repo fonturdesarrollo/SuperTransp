@@ -10,10 +10,12 @@ namespace SuperTransp.Core
 	public class Driver : IDriver
 	{
 		private readonly IConfiguration _configuration;
+		private readonly ISecurity _security;
 
-		public Driver(IConfiguration configuration)
+		public Driver(IConfiguration configuration, ISecurity security)
 		{
 			this._configuration = configuration;
+			this._security = security;
 		}
 		private SqlConnection GetConnection()
 		{
@@ -49,6 +51,8 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@DriverModifiedDate", DateTime.Now);
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
+
+						_security.AddLogbook(model.DriverId, $"transportista cedula {model.DriverIdentityDocument} nombre {model.DriverFullName.ToUpper().Trim()} socio n° {model.PartnerNumber} telefono {model.DriverPhone} linea Id {model.PublicTransportGroupId}");
 					}
 				}
 

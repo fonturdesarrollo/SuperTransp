@@ -14,11 +14,13 @@ namespace SuperTransp.Core
     {
         private readonly IConfiguration _configuration;
 		private static readonly string Key = "supertranspPasswordKey*-";
+		private readonly IHttpContextAccessor _httpContextAccessor;
 
-		public Security(IConfiguration configuration)
+		public Security(IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
         {
             this._configuration = configuration;
-        }
+			this._httpContextAccessor = httpContextAccessor;
+		}
 
 		private SqlConnection GetConnection()
 		{
@@ -38,7 +40,10 @@ namespace SuperTransp.Core
 					}
 
 					SecurityUserViewModel user = new();
-					SqlCommand cmd = new("SELECT * FROM SecurityUser WHERE Login = @Login AND Password = @Password AND SecurityStatusId = 1", sqlConnection);
+					SqlCommand cmd = new("SELECT  dbo.SecurityUser.SecurityUserId, dbo.SecurityUser.SecurityUserDocumentIdNumber, dbo.SecurityUser.Login, dbo.SecurityUser.Password, dbo.SecurityUser.FullName, dbo.SecurityUser.SecurityGroupId," +
+					" dbo.SecurityUser.SecurityStatusId, dbo.State.StateId, dbo.State.StateName, dbo.SecurityUser.SecurityUserDateAdded " +
+					" FROM  dbo.SecurityUser INNER JOIN  dbo.State ON dbo.SecurityUser.StateId = dbo.State.StateId" +
+					" WHERE  (dbo.SecurityUser.Login = @Login) AND (dbo.SecurityUser.Password = @Password)", sqlConnection);
 					cmd.Parameters.AddWithValue("@Login", login);
 					cmd.Parameters.AddWithValue("@Password", password);
 
@@ -52,6 +57,7 @@ namespace SuperTransp.Core
 							user.Password = (string)dr["Password"];
 							user.SecurityGroupId = (int)dr["SecurityGroupId"];
 							user.StateId = (int)dr["StateId"];
+							user.StateName = (string)dr["StateName"];
 						}
 					}
 
@@ -209,6 +215,8 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@StateId", model.StateId);
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
+
+						AddLogbook(model.SecurityUserId, $"usuario {model.FullName.ToUpper()} login {model.Login} grupo Id {model.SecurityGroupId} estatus {model.SecurityStatusId}");
 					}
 				}
 
@@ -216,7 +224,7 @@ namespace SuperTransp.Core
 			}
 			catch (Exception ex)
 			{
-				throw new Exception("Error al añadir o editar el usuario", ex);
+				throw new Exception($"Error al añadir o editar el usuario {ex.Message}", ex);
 			}
 		}
 
@@ -758,6 +766,47 @@ namespace SuperTransp.Core
 				{
 					return reader.ReadToEnd();
 				}
+			}
+		}
+
+		public int AddLogbook(int processId, string actionDescription)
+		{
+			int result = 0;
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SqlCommand cmd = new("Security_LogbookAdd", sqlConnection)
+					{
+						CommandType = System.Data.CommandType.StoredProcedure
+					};
+
+					var userFullName = _httpContextAccessor.HttpContext?.Session.GetString("FullName");
+					var userLogin = _httpContextAccessor.HttpContext?.Session.GetString("UserLogin");
+					var userState = _httpContextAccessor.HttpContext?.Session.GetString("StateName");
+					var deviceIP = _httpContextAccessor.HttpContext?.Session.GetString("DeviceIP");
+					var addOrEdit = processId == 0 ? "Agregó" : "Modificó";
+
+
+					cmd.Parameters.AddWithValue("@DeviceIP", deviceIP);
+					cmd.Parameters.AddWithValue("@UserFullName", userFullName);
+					cmd.Parameters.AddWithValue("@UserLogin", userLogin);
+					cmd.Parameters.AddWithValue("@UserState", userState);
+					cmd.Parameters.AddWithValue("@ActionDescription",  $"{addOrEdit} {actionDescription}");
+
+					result = Convert.ToInt32(cmd.ExecuteScalar());					
+				}
+
+				return result;
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al añadir el logbook {ex.Message}", ex);
 			}
 		}
 	}

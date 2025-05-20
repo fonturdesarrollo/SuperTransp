@@ -191,6 +191,18 @@
 			setTimeout(function(){
 				$("#successMessage").fadeOut("slow");
 			}, 2500);
+
+			$('#Make').on('input', function() {
+				const value = $(this).val();
+				const sanitizedValue = value.replace(/[^a-zA-Z0-9\s]/g, '');
+				$(this).val(sanitizedValue);
+			});
+
+			$('#ModelName').on('input', function() {
+				const value = $(this).val();
+				const sanitizedValue = value.replace(/[^a-zA-Z0-9\s]/g, '');
+				$(this).val(sanitizedValue);
+			});
 		});
 	</script>
 </body>

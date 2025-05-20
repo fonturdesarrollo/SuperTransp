@@ -5,7 +5,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-	<title>Agregar Resumen de Supervisión</title>
+	<title>Modificar Resumen de Supervisión</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 	<link rel="stylesheet" href="~/assets/css/main.css" />
@@ -34,7 +34,7 @@
 	</style>
 </head>
 <body class="is-preload">
-	@using (Html.BeginForm("AddSummary", "Supervision", FormMethod.Post))
+	@using (Html.BeginForm("EditSummary", "Supervision", FormMethod.Post))
 	{
 		<!-- Wrapper -->
 		<div id="wrapper">
@@ -81,7 +81,7 @@
 				<div class="inner">
 					<!-- Form -->
 					<section>
-						<h1 style="color:#4cbece">Agregar Resumen de Supervisión</h1>
+						<h1 style="color:#4cbece">Modificar Resumen de Supervisión</h1>
 						<label>Linea: @Model.PTGCompleteName</label>
 						<br />
 						<br />
@@ -127,6 +127,11 @@
 								</div>
 							</div>
 							<div class="col-12">
+								<br />
+								<strong>Imagenes:</strong>
+								<div id="thumbnail-container"></div>
+							</div>
+							<div class="col-12">
 								<ul class="actions">
 									<li><button type="submit" id="saveRequest" class="primary">Agregar resumen</button></li>
 								</ul>
@@ -157,6 +162,26 @@
 	}
 
 	<script type="text/javascript">
+
+
+		// La variable modelPictures obtiene las URLs del modelo Razor y las pasa al script JavaScript
+		const imageUrls = @Html.Raw(Json.Serialize(Model.Pictures.Select(p => p.SupervisionSummaryPictureUrl)));
+
+		// Selecciona el contenedor donde se mostrarán los thumbnails
+		const container = document.getElementById('thumbnail-container');
+
+		// Itera sobre los URLs y crea elementos <img> para cada thumbnail
+		imageUrls.forEach(url => {
+			const img = document.createElement('img');
+			img.src = url; // Establece el URL de la imagen
+			img.alt = 'Thumbnail';
+			img.style.width = '100px'; // Ajusta el tamaño
+			img.style.height = 'auto';
+			img.style.margin = '5px';
+
+			// Agrega la imagen al contenedor
+			container.appendChild(img);
+		})
 
 		document.addEventListener("DOMContentLoaded", function() {
 			new AirDatepicker('#SupervisionDate', {

@@ -30,6 +30,7 @@ namespace SuperTransp.Core
 			public bool OldPasswordValid(int securityUserId, string oldPassword);
 			public string? Encrypt(string plainText);
 			public string? Decrypt(string encryptedText);
+			public int AddLogbook(int processId, string actionDescription);
 		}
 		public interface IGeography
 		{
@@ -88,10 +89,14 @@ namespace SuperTransp.Core
 		{
 			public int AddOrEdit(SupervisionViewModel model);
 			public int AddSimple(SupervisionViewModel model);
+			public SupervisionViewModel GetByPublicTransportGroupIdAndDriverIdAndPartnerNumberStateId(int publicTransportGroupId, int driverId, int partnerNumber, int stateId);
 			public List<PublicTransportGroupViewModel> GetDriverPublicTransportGroupByStateId(int stateId);
 			public List<PublicTransportGroupViewModel> GetAllDriverPublicTransportGroup();
 			public List<PublicTransportGroupViewModel> RegisteredPlate(string plate);
 			public int AddOrEditSummary(SupervisionSummaryViewModel model);
+			public List<SupervisionSummaryViewModel> GetAllSupervisionSummary();
+			public List<SupervisionSummaryViewModel> GetSupervisionSummaryByStateId(int stateId);
+			public SupervisionSummaryViewModel GetSupervisionSummaryById(int supervisionSummaryId);
 		}
 
 		public interface ICommonData

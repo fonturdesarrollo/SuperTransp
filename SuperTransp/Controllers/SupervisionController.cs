@@ -78,6 +78,14 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
+					int? stateId = HttpContext.Session.GetInt32("StateId");
+					var test = _supervision.GetByPublicTransportGroupIdAndDriverIdAndPartnerNumberStateId(publicTransportGroupId, driverId, partnerNumber, (int)stateId);
+					
+					if(test.TotalSupervisedDrivers > 0)
+					{
+						RedirectToAction("Edit", test);
+					}
+
 					var model = new SupervisionViewModel
 					{
 						PublicTransportGroupId = publicTransportGroupId,
@@ -134,7 +142,7 @@ namespace SuperTransp.Controllers
 				{
 					int supervisionId = 0;
 
-					if (model.DriverWithVehicle == 0)
+					if (!model.DriverWithVehicle)
 					{
 						supervisionId = _supervision.AddSimple(model);	
 					}
@@ -143,7 +151,7 @@ namespace SuperTransp.Controllers
 						model.Remarks = string.IsNullOrEmpty(model.Remarks) ? string.Empty : model.Remarks;
 						model.VehicleImageUrl = string.IsNullOrEmpty(model.VehicleImageUrl) ? string.Empty : model.VehicleImageUrl;
 						model.SupervisionStatus = 1;
-						model.FailureTypeId = model.WorkingVehicle == 1 ? 1 : model.FailureTypeId;
+						model.FailureTypeId = model.WorkingVehicle ? 1 : model.FailureTypeId;
 						var imageUrl = SupervisionPictureUrl(model.StateName, model.PublicTransportGroupRif, model.DriverIdentityDocument, model.PartnerNumber);
 						model.VehicleImageUrl = imageUrl;
 						supervisionId = _supervision.AddOrEdit(model);
@@ -161,6 +169,12 @@ namespace SuperTransp.Controllers
 			{
 				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
 			}
+		}
+
+
+		public IActionResult Edit(SupervisionSummaryViewModel model)
+		{
+			return View(model);
 		}
 
 		[HttpGet]
@@ -213,36 +227,7 @@ namespace SuperTransp.Controllers
 					listSubFolderRequest.Method = WebRequestMethods.Ftp.ListDirectory;
 					listSubFolderRequest.Credentials = new NetworkCredential(ftpUsername, ftpPassword);
 
-					try
-					{
-						using (var listSubFolderResponse = (FtpWebResponse)await listSubFolderRequest.GetResponseAsync())
-						using (StreamReader reader = new StreamReader(listSubFolderResponse.GetResponseStream()))
-						{
-							string line;
-							while ((line = reader.ReadLine()) != null)
-							{
-								// Eliminar cada archivo dentro de la subcarpeta ESTADO/RIF-CEDULA-SOCIO
-								var filePath = Path.Combine(ftpSubFolderPath, line).Replace("\\", "/");
-								FtpWebRequest deleteFileRequest = (FtpWebRequest)WebRequest.Create(filePath);
-								deleteFileRequest.Method = WebRequestMethods.Ftp.DeleteFile;
-								deleteFileRequest.Credentials = new NetworkCredential(ftpUsername, ftpPassword);
-
-								using (var deleteFileResponse = (FtpWebResponse)await deleteFileRequest.GetResponseAsync())
-								{
-									Console.WriteLine($"Archivo eliminado: {deleteFileResponse.StatusDescription}");
-								}
-							}
-						}
-					}
-					catch (WebException ex)
-					{
-						var response = (FtpWebResponse)ex.Response;
-						// Ignorar error si la subcarpeta ESTADO/RIF-CEDULA-SOCIO no existe
-						if (response.StatusCode != FtpStatusCode.ActionNotTakenFileUnavailable)
-						{
-							throw;
-						}
-					}
+					await DeleteFilesInFTPFolderAsync(ftpSubFolderPath);
 
 					// Crear la subcarpeta ESTADO dentro de la carpeta principal si no existe
 					FtpWebRequest subFolderRequest = (FtpWebRequest)WebRequest.Create(ftpFolderPath);
@@ -316,6 +301,170 @@ namespace SuperTransp.Controllers
 			return BadRequest("No se pudo subir el archivo.");
 		}
 
+		[HttpPost]
+		public async Task<IActionResult> SaveSummaryFiles(IFormFile file, string stateName, string driverIdentityDocument, string partnerNumber, string publicTransportGroupRif)
+		{
+			if (file?.Length > 0 &&
+				!string.IsNullOrEmpty(stateName) &&
+				!string.IsNullOrEmpty(driverIdentityDocument) &&
+				!string.IsNullOrEmpty(partnerNumber) &&
+				!string.IsNullOrEmpty(publicTransportGroupRif))
+			{
+				var ftpBaseUrl = _configuration["FtpSettings:BaseUrl"];
+				var ftpUsername = _configuration["FtpSettings:Username"];
+				var ftpPassword = _configuration["FtpSettings:Password"];
+
+				var newFolderName = $"{stateName.ToUpper().Trim()}";
+				var ftpFolderPath = Path.Combine(ftpBaseUrl, newFolderName).Replace("\\", "/");
+				//var subFolderName = $"Resumen_Supervision";
+				var subFolderName = $"{publicTransportGroupRif}-resumen_supervision_temp";
+				var ftpSubFolderPath = Path.Combine(ftpFolderPath, subFolderName).Replace("\\", "/");
+				var ftpFileName = Guid.NewGuid().ToString();
+
+				Regex regex = new Regex(@"\.[^\.]+$");
+				Match match = regex.Match(file.FileName);
+
+				if (match.Success)
+				{
+					ftpFileName = $"{ftpFileName}{match.Value}";
+				}
+
+				try
+				{
+					// Verificar si la subcarpeta ESTADO/RIF-CEDULA-SOCIO existe y eliminar su contenido
+					FtpWebRequest listSubFolderRequest = (FtpWebRequest)WebRequest.Create(ftpSubFolderPath);
+					listSubFolderRequest.Method = WebRequestMethods.Ftp.ListDirectory;
+					listSubFolderRequest.Credentials = new NetworkCredential(ftpUsername, ftpPassword);
+
+					// Crear la subcarpeta ESTADO dentro de la carpeta principal si no existe
+					FtpWebRequest subFolderRequest = (FtpWebRequest)WebRequest.Create(ftpFolderPath);
+					subFolderRequest.Method = WebRequestMethods.Ftp.MakeDirectory;
+					subFolderRequest.Credentials = new NetworkCredential(ftpUsername, ftpPassword);
+
+					try
+					{
+						using (var subFolderResponse = (FtpWebResponse)await subFolderRequest.GetResponseAsync())
+						{
+							Console.WriteLine($"Subcarpeta creada: {subFolderResponse.StatusDescription}");
+						}
+					}
+					catch (WebException ex)
+					{
+						var response = (FtpWebResponse)ex.Response;
+						// Ignorar error si la subcarpeta ya existe
+						if (response.StatusCode != FtpStatusCode.ActionNotTakenFileUnavailable)
+						{
+							throw;
+						}
+					}
+
+					// Crear la subcarpeta ESTADO/RIF-CEDULA-SOCIO dentro de la carpeta ESTADO si no existe
+					FtpWebRequest subSubFolderRequest = (FtpWebRequest)WebRequest.Create(ftpSubFolderPath);
+					subSubFolderRequest.Method = WebRequestMethods.Ftp.MakeDirectory;
+					subSubFolderRequest.Credentials = new NetworkCredential(ftpUsername, ftpPassword);
+
+					try
+					{
+						using (var subFolderResponse = (FtpWebResponse)await subSubFolderRequest.GetResponseAsync())
+						{
+							Console.WriteLine($"Subcarpeta creada: {subFolderResponse.StatusDescription}");
+						}
+					}
+					catch (WebException ex)
+					{
+						var response = (FtpWebResponse)ex.Response;
+						// Ignorar error si la subcarpeta ya existe
+						if (response.StatusCode != FtpStatusCode.ActionNotTakenFileUnavailable)
+						{
+							throw;
+						}
+					}
+
+					// Subir el archivo a la subcarpeta ESTADO/RIF-CEDULA-SOCIO
+					var ftpFilePath = Path.Combine(ftpSubFolderPath, ftpFileName).Replace("\\", "/");
+					FtpWebRequest fileRequest = (FtpWebRequest)WebRequest.Create(ftpFilePath);
+					fileRequest.Method = WebRequestMethods.Ftp.UploadFile;
+					fileRequest.Credentials = new NetworkCredential(ftpUsername, ftpPassword);
+
+					using (var memoryStream = new MemoryStream())
+					{
+						await file.CopyToAsync(memoryStream);
+						byte[] fileContents = memoryStream.ToArray();
+
+						using (Stream requestStream = fileRequest.GetRequestStream())
+						{
+							await requestStream.WriteAsync(fileContents, 0, fileContents.Length);
+						}
+					}
+
+					return Ok(new { message = $"Archivo cargado exitosamente en {ftpFilePath}" });
+				}
+				catch (Exception ex)
+				{
+					return BadRequest($"Error al procesar el archivo o la carpeta: {ex.Message}");
+				}
+			}
+
+			return BadRequest("No se pudo subir el archivo.");
+		}
+
+
+		private async Task DeleteFilesInFTPFolderAsync(string ftpSubFolderPath)
+		{
+			var ftpUsername = _configuration["FtpSettings:Username"];
+			var ftpPassword = _configuration["FtpSettings:Password"];
+
+			// Obtener lista de archivos en la carpeta Temp
+			FtpWebRequest listFilesRequest = (FtpWebRequest)WebRequest.Create(ftpSubFolderPath);
+			listFilesRequest.Method = WebRequestMethods.Ftp.ListDirectory;
+			listFilesRequest.Credentials = new NetworkCredential(ftpUsername, ftpPassword);
+
+			try
+			{
+				using (var listFilesResponse = (FtpWebResponse)await listFilesRequest.GetResponseAsync())
+				using (StreamReader reader = new StreamReader(listFilesResponse.GetResponseStream()))
+				{
+					string fileName;
+					while ((fileName = reader.ReadLine()) != null)
+					{
+						// Construir la ruta de cada archivo dentro de Temp
+						var filePath = Path.Combine(ftpSubFolderPath, fileName).Replace("\\", "/");
+						FtpWebRequest deleteFileRequest = (FtpWebRequest)WebRequest.Create(filePath);
+						deleteFileRequest.Method = WebRequestMethods.Ftp.DeleteFile;
+						deleteFileRequest.Credentials = new NetworkCredential(ftpUsername, ftpPassword);
+
+						try
+						{
+							using (var deleteFileResponse = (FtpWebResponse)await deleteFileRequest.GetResponseAsync())
+							{
+								Console.WriteLine($"Archivo eliminado: {fileName}");
+							}
+						}
+						catch (WebException ex)
+						{
+							var response = (FtpWebResponse)ex.Response;
+							if (response.StatusCode != FtpStatusCode.ActionNotTakenFileUnavailable)
+							{
+								throw;
+							}
+						}
+					}
+				}
+			}
+			catch (WebException ex)
+			{
+				var response = (FtpWebResponse)ex.Response;
+				if (response.StatusCode == FtpStatusCode.ActionNotTakenFileUnavailable)
+				{
+					Console.WriteLine("La carpeta Temp no existe o está vacía.");
+				}
+				else
+				{
+					throw;
+				}
+			}
+		}
+
 		private string SupervisionPictureUrl(string stateName, string publicTransportGroupRif, int driverIdentityDocument, int partnerNumber)
 		{
 			var ftpBaseUrl = _configuration["FtpSettings:BaseUrl"];
@@ -365,6 +514,62 @@ namespace SuperTransp.Controllers
 			return filePath;
 		}
 
+		private List<SupervisionSummaryPictures> SupervisionSummaryPictureUrl(string stateName, string publicTransportGroupRif)
+		{
+			var ftpBaseUrl = _configuration["FtpSettings:BaseUrl"];
+			var ftpUsername = _configuration["FtpSettings:Username"];
+			var ftpPassword = _configuration["FtpSettings:Password"];
+			var baseImagesUrl = _configuration["FtpSettings:BaseImagesUrl"];
+
+			var newFolderName = $"{stateName.ToUpper().Trim()}";
+			var ftpFolderPath = Path.Combine(ftpBaseUrl, newFolderName).Replace("\\", "/");
+			var subFolderName = $"{publicTransportGroupRif}-resumen_supervision_temp";
+			var ftpSubFolderPath = Path.Combine(ftpFolderPath, subFolderName).Replace("\\", "/");
+			var filePath = string.Empty;
+			List<SupervisionSummaryPictures> images = new List<SupervisionSummaryPictures>();
+
+			try
+			{
+				FtpWebRequest listSubFolderRequest = (FtpWebRequest)WebRequest.Create(ftpSubFolderPath);
+				listSubFolderRequest.Method = WebRequestMethods.Ftp.ListDirectory;
+				listSubFolderRequest.Credentials = new NetworkCredential(ftpUsername, ftpPassword);
+
+				try
+				{
+					using (var listSubFolderResponse = (FtpWebResponse)listSubFolderRequest.GetResponse())
+					using (StreamReader reader = new StreamReader(listSubFolderResponse.GetResponseStream()))
+					{
+						string line;
+						while ((line = reader.ReadLine()) != null)
+						{
+							filePath = Path.Combine(ftpSubFolderPath, line).Replace("\\", "/").Replace(ftpBaseUrl, baseImagesUrl);
+
+							SupervisionSummaryPictures picture = new SupervisionSummaryPictures
+							{
+								SupervisionSummaryPictureUrl = filePath
+							};
+
+							images.Add(picture);
+						}
+					}
+				}
+				catch (WebException ex)
+				{
+					var response = (FtpWebResponse)ex.Response;
+					if (response.StatusCode != FtpStatusCode.ActionNotTakenFileUnavailable)
+					{
+						return images;
+					}
+				}
+			}
+			catch
+			{
+				//
+			}
+
+			return images;
+		}
+
 		public JsonResult CheckExistingPlate(int paramValue1, string paramValue2)
 		{
 			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
@@ -398,11 +603,11 @@ namespace SuperTransp.Controllers
 
 					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
 					{
-						model = _supervision.GetDriverPublicTransportGroupByStateId((int)stateId);
+						model = _publicTransportGroup.GetByStateId((int)stateId);
 					}
 					else
 					{
-						model = _supervision.GetAllDriverPublicTransportGroup();
+						model = _publicTransportGroup.GetAll();
 					}
 
 					return View(model);
@@ -416,28 +621,109 @@ namespace SuperTransp.Controllers
 			}
 		}
 
-		public IActionResult AddSummary(int publicTransportGroupId, string pTGCompleteName)
+		public async Task<IActionResult> AddSummaryAsync(int publicTransportGroupId)
 		{
 			try
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
-					var model = new DriverViewModel
+					var ptg = _publicTransportGroup.GetPublicTransportGroupById(publicTransportGroupId);
+					
+					if (ptg != null) 
 					{
-						PublicTransportGroupId = publicTransportGroupId,
-						PTGCompleteName = pTGCompleteName,
-						DriverModifiedDate = DateTime.Now
-					};
+						var ftpBaseUrl = _configuration["FtpSettings:BaseUrl"];
+						string stateName = ptg.StateName;
+						var tempFolderName = $"{ptg.PublicTransportGroupRif}-resumen_supervision_temp";
+						string ftpTempFolderPath = Path.Combine(ftpBaseUrl, stateName.ToUpper().Trim(), tempFolderName).Replace("\\", "/");
 
-					//ViewBag.Drivers = _driver.GetByPublicTransportGroupId(publicTransportGroupId);
+						await DeleteFilesInFTPFolderAsync(ftpTempFolderPath);
+
+						var model = new SupervisionSummaryViewModel
+						{
+							PublicTransportGroupId = publicTransportGroupId,
+							PTGCompleteName = ptg.PTGCompleteName,
+							PublicTransportGroupRif = ptg.PublicTransportGroupRif,
+							StateName = ptg.StateName,
+							SupervisionDate = DateTime.Now,
+							SecurityUserId = (int)HttpContext.Session.GetInt32("SecurityUserId")
+						};
+
+						ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+
+						return View(model);
+					}
+
+					return RedirectToAction("PublicTransportGroupList");
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
+
+		[HttpPost]
+		public IActionResult AddSummary(SupervisionSummaryViewModel model)
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
+				{
+					int supervisionSummaryId = 0;					
+					model.Pictures = SupervisionSummaryPictureUrl(model.StateName, model.PublicTransportGroupRif);
+
+					supervisionSummaryId = _supervision.AddOrEditSummary(model);					
+
+					if (supervisionSummaryId > 0)
+					{
+						return RedirectToAction("SummaryList");
+					}
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
+
+		public IActionResult EditSummary(int supervisionSummaryId)
+		{
+			var model = _supervision.GetSupervisionSummaryById(supervisionSummaryId);
+
+			return View(model);
+		}
+
+		public IActionResult SummaryList()
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+				{
+					List<SupervisionSummaryViewModel> model = new();
+
 					ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+					int? stateId = HttpContext.Session.GetInt32("StateId");
+
+					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
+					{
+						model = _supervision.GetSupervisionSummaryByStateId((int)stateId);
+					}
+					else
+					{
+						model = _supervision.GetAllSupervisionSummary();
+					}
 
 					return View(model);
 				}
 
 				return RedirectToAction("Login", "Security");
 			}
-
 			catch (Exception ex)
 			{
 				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });

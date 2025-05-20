@@ -5,7 +5,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-	<title>Agregar Supervisión</title>
+	<title>Modificar Supervisión</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 	<link rel="stylesheet" href="~/assets/css/main.css" />
@@ -86,7 +86,7 @@
 				<div class="inner">
 					<!-- Form -->
 					<section>
-						<h1 style="color:#4cbece">Agregar supervisión</h1>
+						<h1 style="color:#4cbece">Modificar supervisión</h1>
 						<label>Linea: @Model.PublicTransportGroupRif @Model.PTGCompleteName</label><br />
 						<label>Tipo: @Model.ModeName</label><br />
 						<label>Transportista: @Model.DriverIdentityDocument @Model.DriverFullName</label><br />
@@ -390,7 +390,7 @@
 				message = "Debe indicar si el transportista posee o no vehículo";
 			}
 
-			if($("#DriverWithVehicle option:selected").text() == true)
+			if($("#DriverWithVehicle option:selected").text() == "Sí")
 			{
 				if ($("#InPerson").val() == "" && !firstInvalidField) {
 					firstInvalidField = "#InPerson";
@@ -564,10 +564,10 @@
 			setTransportTypeDefaultValues($("#ModeId").val())
 
 			$('#DriverWithVehicle').change(function (event) {
-				if ($(this).val() === "true") {
+				if ($(this).val() === "1") {
 					$('#additionalFields').css({ visibility: 'visible', opacity: '1', height: 'auto', overflow: 'visible' });
 					$('#InPerson').val("");
-				} else if($(this).val() === false) {
+				} else if($(this).val() === "0") {
 					$('#additionalFields').css({ opacity: '0', visibility: 'hidden', height: '0', overflow: 'hidden' });
 					$('#InPerson').val("1");
 					if (confirm("¿Está seguro de que desea actualizar los registros?")) {
