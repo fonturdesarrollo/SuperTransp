@@ -74,7 +74,7 @@
 								<strong>RIF:</strong>
 								@Html.HiddenFor(x => x.PublicTransportGroupIdModifiedDate)
 								@Html.HiddenFor(x => x.PublicTransportGroupId)
-								@Html.TextBoxFor(x => x.PublicTransportGroupRif, new { placeholder = "RIF", tabindex = "0", maxlength = "11" })
+								@Html.TextBoxFor(x => x.PublicTransportGroupRif, new { placeholder = "RIF", tabindex = "0", maxlength = "10" })
 								<span asp-validation-for="PublicTransportGroupRif" class="text-danger"></span>
 							</div>
 							<div class="col-6 col-12-xsmall">
@@ -248,7 +248,7 @@
 				const containsJ = rifValue.includes("J");
 				const numberCount = rifValue.replace(/\D/g, "").length;
 
-				if (containsJ && numberCount < 10) {
+				if (containsJ && numberCount < 9) {
 					firstInvalidField = "#PublicTransportGroupRif";
 					message = "Debe colocar un RIF válido";
 				} else {

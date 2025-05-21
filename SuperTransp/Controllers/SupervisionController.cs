@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Routing;
 using SuperTransp.Core;
 using SuperTransp.Models;
 using System.Net;
-using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 using static SuperTransp.Core.Interfaces;
 

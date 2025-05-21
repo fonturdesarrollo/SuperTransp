@@ -385,12 +385,12 @@
 			let firstInvalidField = null;
 			let message = "";
 
-			if ($("#DriverWithVehicle").val() == "" && $("#DriverWithVehicle").val() != "0" && !firstInvalidField) {
+			if ($("#DriverWithVehicle").val() == "" && $("#DriverWithVehicle").val() != "False" && !firstInvalidField) {
 				firstInvalidField = "#DriverWithVehicle";
 				message = "Debe indicar si el transportista posee o no vehículo";
 			}
 
-			if($("#DriverWithVehicle option:selected").text() == true)
+			if($("#DriverWithVehicle option:selected").text() == "Sí")
 			{
 				if ($("#InPerson").val() == "" && !firstInvalidField) {
 					firstInvalidField = "#InPerson";
@@ -400,7 +400,12 @@
 				if ($("#WorkingVehicle").val() == "" && !firstInvalidField) {
 					firstInvalidField = "#WorkingVehicle";
 					message = "Debe indicar si el vehículo está operativo o no";
-				}			
+				}
+
+				if ($("#WorkingVehicle").val() == "False" &&  $("#FailureTypeId").val() == ""  &&  !firstInvalidField) {
+					firstInvalidField = "#FailureTypeId";
+					message = "Debe indicar si el tipo de falla";
+				}	
 
 				if($("#Plate").val() == "" && !firstInvalidField){
 					firstInvalidField = "#Plate";
@@ -564,10 +569,11 @@
 			setTransportTypeDefaultValues($("#ModeId").val())
 
 			$('#DriverWithVehicle').change(function (event) {
-				if ($(this).val() === "true") {
+						var test = $(this).val();
+				if ($(this).val() === "True") {
 					$('#additionalFields').css({ visibility: 'visible', opacity: '1', height: 'auto', overflow: 'visible' });
 					$('#InPerson').val("");
-				} else if($(this).val() === false) {
+				} else if($(this).val() === "False") {
 					$('#additionalFields').css({ opacity: '0', visibility: 'hidden', height: '0', overflow: 'hidden' });
 					$('#InPerson').val("1");
 					if (confirm("¿Está seguro de que desea actualizar los registros?")) {
@@ -579,20 +585,20 @@
 			});
 
 			$('#WorkingVehicle').change(function (event) {
-				if ($(this).val() === "0") {
+				if ($(this).val() === "False") {
 					$('#FailureTypeId').val("").prop("disabled", false);
 ;
-				} else if($(this).val() === "1") {
+				} else if($(this).val() === "True") {
 					$('#FailureTypeId').val("1").prop("disabled", true);
 				}
 			});
 
 			$('#FailureTypeId').change(function (event) {
 				if ($(this).val() === "1") {
-					$('#WorkingVehicle').val("1");
+					$('#WorkingVehicle').val("True");
 ;
 				} else {
-					$('#WorkingVehicle').val("0");
+					$('#WorkingVehicle').val("False");
 				}
 			});
 

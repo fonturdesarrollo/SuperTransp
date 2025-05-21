@@ -1,0 +1,313 @@
+﻿@model List<SuperTransp.Models.PublicTransportGroupViewModel>
+@{
+	Layout = "";
+}
+<!DOCTYPE HTML>
+<html>
+
+<head>
+	<title>Transportistas</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+	<link rel="stylesheet" href="~/assets/css/main.css" />
+	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
+
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+	<!-- Bootstrap JS (con Popper incluido) -->
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+	@*DataTable************************************************************************@
+	<link rel="stylesheet" href="~/datatable/css/bootstrap.css" />
+	<link rel="stylesheet" href="~/datatable/css/dataTables.bootstrap4.min.css" />
+	<link rel="stylesheet" href="~/datatable/css/responsive.bootstrap4.min.css" />
+	@*************************************************************************************@
+
+	<style>
+		.view-info {
+			border: none;
+			background: none;
+			height: 30px;
+			outline: none;
+			box-shadow: none;
+		}
+
+		.view-info:focus, .view-info:active {
+			outline: none !important;
+			box-shadow: none !important;
+		}
+
+		body.modal-open {
+			overflow: auto !important;
+		}
+
+		.modal {
+			z-index: 1050 !important;
+		}
+
+	</style>
+
+</head>
+<body class="is-preload">
+	<div id="wrapper">
+		<!-- Header -->
+		<header id="header">
+			<div class="inner">
+
+				<!-- Logo -->
+				<a href="#" class="logo">
+					<span class="symbol"><img src="~/images/logo_login.jpg" alt="" /></span><span class="title">SuperTransp</span>
+					<br />
+					<span class="title">@ViewBag.EmployeeName</span>
+				</a>
+			</div>
+			<!-- Nav -->
+			<nav>
+				<ul>
+					<li><a href="#menu">Menu</a></li>
+				</ul>
+			</nav>
+		</header>
+
+		<!-- Menu -->
+		<nav id="menu">
+			<h2>Menu</h2>
+			<ul>
+				<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
+				<li>@Html.ActionLink("Líneas", "PublicTransportGroupList", "Reports")</li>
+				<li>@Html.ActionLink("Salir", "Login", "Security")</li>
+			</ul>
+		</nav>
+
+		<div id="main">
+			<div class="inner">
+				<!-- Form -->
+				<section>
+					<h4 style="color:#4cbece">
+						@{
+							if (Model != null && Model.Any())
+							{
+								@Model.FirstOrDefault().PTGCompleteName
+							}
+						}						
+					</h4>
+					<h4 style="color:#4cbece">Socios</h4>
+					<br />
+					<table id="inventory" class="table table-striped table-bordered dt-responsive nowrap" style="width:100%">
+						<thead>
+							<tr>
+								<th>Nombre</th>
+								<th># Socio</th>
+								<th>Vehículo</th>
+							</tr>
+						</thead>
+						<tbody>
+							@{
+								if(Model != null && Model.Any())
+								{
+									@foreach (var ptg in Model)
+									{
+										<tr>
+											<td>
+												@ptg.DriverFullName
+											</td>
+											<td>
+												@ptg.PartnerNumber
+											</td>
+											<td>
+												<button type="button" class="view-info p-1" data-id="@ptg.PublicTransportGroupId" data-name="@ptg.PTGCompleteName" data-driver="@ptg.DriverFullName" data-partner="@ptg.PartnerNumber"
+														data-driver-with-vehicle="@ptg.DriverWithVehicle" data-driver-with-working-vehicle="@ptg.WorkingVehicle"
+														data-driver-in-person="@ptg.InPerson"
+														data-vehicle-plate="@ptg.Plate"
+														data-vehicle-year="@ptg.Year"
+														data-vehicle-make="@ptg.Make"
+														data-vehicle-model="@ptg.Model"
+														data-vehicle-passengers="@ptg.Passengers"
+														data-vehicle-rim-name="@ptg.RimName"
+														data-vehicle-wheels="@ptg.Wheels"
+														data-vehicle-motor-oil-name="@ptg.MotorOilName"
+														data-vehicle-motor-oil-liters="@ptg.Liters"
+														data-vehicle-fuel-type="@ptg.FuelTypeName"
+														data-vehicle-tank-capacity="@ptg.TankCapacity"
+														data-vehicle-battery-name="@ptg.BatteryName"
+														data-vehicle-number-batteries="@ptg.NumberOfBatteries"
+														data-vehicle-failure-type-name="@ptg.FailureTypeName"
+														data-vehicle-image-url="@ptg.VehicleImageUrl"
+														data-fingerprint-trouble="@ptg.FingerprintTrouble"
+														data-remarks="@ptg.Remarks"
+														data-status="@ptg.SupervisionStatusName">
+													<i class="fas fa-eye" style="font-size: 14px;"></i>
+												</button>
+											</td>
+										</tr>
+									}
+
+								}
+							}
+						</tbody>
+					</table>
+				</section>
+			</div>
+		</div>
+	</div>
+
+	<!-- Modal -->
+	<div id="infoModal" class="modal fade" tabindex="-1" role="dialog">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Detalles del vehículo</h5>
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+				</div>
+				<div class="modal-body">
+					<p><strong>Transportista:</strong> <span id="modalDriver"></span></p>
+					<p><strong># Socio:</strong> <span id="modalPartner"></span></p>
+					<p><strong>¿Tiene vehículo:</strong> <span id="modalDriverWithVehicle"></span></p>
+					<div class="modal-vehicle-data">
+						<p><strong>¿Transportista presente?:</strong> <span id="modalDriverInPerson"></span></p>
+						<p><strong>¿Vehículo en funcionamiento?:</strong> <span id="modalDriverWithWorkingVehicle"></span></p>
+						<p><strong>Placa:</strong> <span id="modalVehiclePlate"></span></p>
+						<p><strong>Año:</strong> <span id="modalVehicleYear"></span></p>
+						<p><strong>Marca:</strong> <span id="modalVehicleMake"></span></p>
+						<p><strong>Modelo:</strong> <span id="modalVehicleModel"></span></p>
+						<p><strong># Pasajeros:</strong> <span id="modalVehiclePassengers"></span> puestos</p>
+						<p><strong>Tipo de neumáticos:</strong> <span id="modalVehicleRimName"></span></p>
+						<p><strong># Neumáticos:</strong> <span id="modalVehicleWheels"></span></p>
+						<p><strong>Tipo de aceite:</strong> <span id="modalVehicleMotorOilname"></span></p>
+						<p><strong># Litros:</strong> <span id="modalVehicleMotorOilLiters"></span></p>
+						<p><strong>Tipo de combustible:</strong> <span id="modalVehicleFuelType"></span></p>
+						<p><strong># Capacidad:</strong> <span id="modalVehicleTankCapacity"></span>  litros</p>
+						<p><strong>Tipo de batería:</strong> <span id="modalVehicleBatteryName"></span></p>
+						<p><strong># Cantidad:</strong> <span id="modalVehicleNumberOfBatteries"></span></p>
+						<p><strong>Tipo de falla:</strong> <span id="modalVehicleFailureTypeName"></span></p>
+						<p><strong>Problemas con huella:</strong> <span id="modalDriverFingerprintTrouble"></span></p>
+						<p><strong>Observaciones:</strong> <span id="modalRemarks"></span></p>
+					</div>
+				</div>
+				<div class="modal-image">
+					<div class="modal-footer" style="display:flex; justify-content:center;align-items:center;height:300px">
+						<a id="image-link" target="_blank">
+							<img id="vehicleImage" style="width: 250px; height: 200px;" />
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Scripts -->
+	<script src="~/assets/js/jquery.min.js"></script>
+	<script src="~/assets/js/browser.min.js"></script>
+	<script src="~/assets/js/breakpoints.min.js"></script>
+	<script src="~/assets/js/util.js"></script>
+	<script src="~/assets/js/main.js"></script>
+
+	@*DataTable*******************************************@
+	<script src="~/datatable/js/jquery-3.5.1.js"></script>
+	<script src="~/datatable/js/jquery.dataTables.min.js"></script>
+	<script src="~/datatable/js/dataTables.bootstrap4.js"></script>
+	<script src="~/datatable/js/dataTables.responsive.min.js"></script>
+	<script src="~/datatable/js/responsive.bootstrap4.min.js"></script>
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+	@***********************************************************@
+
+	<script type="text/javascript">
+
+		$(document).ready(function () {
+
+			$(document).on('click touchstart', '.view-info', function () {
+				$('#modalName').text($(this).data('name'));
+				$('#modalDriver').text($(this).data('driver'));
+				$('#modalPartner').text($(this).data('partner'));
+
+				if($(this).data('driver-with-vehicle') == "True"){
+					$('#modalDriverWithVehicle').text('Sí')
+					$(".modal-vehicle-data").show();
+					$(".modal-image").show();
+				}else {
+					$('#modalDriverWithVehicle').text('No')
+				    $(".modal-vehicle-data").hide();
+					$(".modal-image").show().hide();
+				}
+
+				if($(this).data('driver-with-working-vehicle') == "True"){
+					$('#modalDriverWithWorkingVehicle').text('Sí')
+				}else {
+					$('#modalDriverWithWorkingVehicle').text('No')
+				}
+
+				if($(this).data('driver-in-person') == "True"){
+					$('#modalDriverInPerson').text('Sí')
+				}else {
+					$('#modalDriverInPerson').text('No')
+				}
+
+				$('#modalVehiclePlate').text($(this).data('vehicle-plate'));
+				$('#modalVehicleYear').text($(this).data('vehicle-year'));
+				$('#modalVehicleMake').text($(this).data('vehicle-make'));
+				$('#modalVehicleModel').text($(this).data('vehicle-model'));
+				$('#modalVehiclePassengers').text($(this).data('vehicle-passengers'));
+				$('#modalVehicleRimName').text($(this).data('vehicle-rim-name'));
+				$('#modalVehicleWheels').text($(this).data('vehicle-wheels'));
+				$('#modalVehicleMotorOilname').text($(this).data('vehicle-motor-oil-name'));
+				$('#modalVehicleMotorOilLiters').text($(this).data('vehicle-motor-oil-liters'));
+				$('#modalVehicleFuelType').text($(this).data('vehicle-fuel-type'));
+				$('#modalVehicleTankCapacity').text($(this).data('vehicle-tank-capacity'));
+				$('#modalVehicleBatteryName').text($(this).data('vehicle-battery-name'));
+				$('#modalVehicleNumberOfBatteries').text($(this).data('vehicle-number-batteries'));
+				$('#modalVehicleFailureTypeName').text($(this).data('vehicle-failure-type-name'));
+
+				var url = $(this).data('vehicle-image-url') + "?timestamp=" + new Date().getTime();
+				$("#vehicleImage").attr("src", url);
+				$("#image-link").attr("href", url);
+
+				if($(this).data('fingerprint-trouble') == "True"){
+					$('#modalDriverFingerprintTrouble').text('Sí')
+				}else {
+					$('#modalDriverFingerprintTrouble').text('No')
+				}
+
+				$('#modalRemarks').text($(this).data('remarks'));
+
+				$('#modalStatus').text($(this).data('status'));
+				$('#infoModal').modal('show');
+			});
+
+			$('.close-modal, .close').on('click', function () {
+				$('#infoModal').modal('hide');
+			});
+
+			$('#inventory').DataTable({
+				stateSave: true,
+				"language": {
+					"sProcessing":    "Procesando...",
+					"sLengthMenu":    "Mostrar _MENU_ registros",
+					"sZeroRecords":   "No se encontraron resultados",
+					"sEmptyTable":    "Ningún dato disponible en esta tabla",
+					"sInfo":          "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+					"sInfoEmpty":     "Mostrando registros del 0 al 0 de un total de 0 registros",
+					"sInfoFiltered":  "(filtrado de un total de _MAX_ registros)",
+					"sInfoPostFix":   "",
+					"sSearch":        "Buscar:",
+					"sUrl":           "",
+					"sInfoThousands":  ",",
+					"sLoadingRecords": "Cargando...",
+					"oPaginate": {
+						"sFirst":    "Primero",
+						"sLast":    "Último",
+						"sNext":    "Siguiente",
+						"sPrevious": "Anterior"
+					},
+					"oAria": {
+						"sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
+						"sSortDescending": ": Activar para ordenar la columna de manera descendente"
+					}
+				}
+			});
+		});
+	</script>
+</body>
+</html>

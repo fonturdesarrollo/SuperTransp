@@ -1,11 +1,11 @@
-﻿@model SupervisionViewModel
+﻿@model SecurityUserViewModel
 @{
 	Layout = "";
 }
 <!DOCTYPE HTML>
 <html>
 <head>
-	<title>Supervisión</title>
+	<title>Ajustes</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 	<link rel="stylesheet" href="~/assets/css/main.css" />
@@ -50,15 +50,12 @@
 					<!-- Form -->
 					<br />
 					<section>
-						<h2>Opciones de Supervisión</h2>
+						<h2>Consultas Generales</h2>
 						<div class="row">
 							<div class="col-6 col-12-medium">
+								<h3>Organizaciones de Transporte</h3>
 								<ul>
-@* 									<li>@Html.ActionLink("Resumen de supervisión", "PublicTransportGroupList", "Supervision")</li>
-									<li>@Html.ActionLink("Modificar resumen de supervisión", "SummaryList", "Supervision")</li> *@
-									<li>@Html.ActionLink("Agregar supervisión", "PublicTransportGroupDriverList", "Supervision")</li>									
-									@* <li>@Html.ActionLink("Cerrar supervisión a líneas finalizadas", "ClosePublicTransportGroupSupervision", "Supervision")</li> *@
-									@* <li>@Html.ActionLink("Cerrar supervisión", "CloseSupervision", "Supervision")</li> *@
+									<li>@Html.ActionLink("Líneas y Transportistas", "PublicTransportGroupList", "Reports")</li>
 								</ul>
 							</div>
 						</div>

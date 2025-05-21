@@ -191,6 +191,85 @@ namespace SuperTransp.Core
 			}
 		}
 
+		public List<PublicTransportGroupViewModel> GetDriverPublicTransportGroupByPtgId(int publicTransportGroupId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<PublicTransportGroupViewModel> ptg = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE PublicTransportGroupId = @PublicTransportGroupId", sqlConnection);
+					cmd.Parameters.AddWithValue("@PublicTransportGroupId", publicTransportGroupId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							ptg.Add(new PublicTransportGroupViewModel
+							{
+								PublicTransportGroupId = (int)dr["PublicTransportGroupId"],
+								PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"],
+								DesignationId = (int)dr["DesignationId"],
+								PublicTransportGroupName = (string)dr["PublicTransportGroupName"],
+								PTGCompleteName = (string)dr["PTGCompleteName"],
+								ModeId = (int)dr["ModeId"],
+								UnionId = (int)dr["UnionId"],
+								MunicipalityId = (int)dr["MunicipalityId"],
+								StateId = (int)dr["StateId"],
+								RepresentativeIdentityDocument = (int)dr["RepresentativeIdentityDocument"],
+								RepresentativeName = (string)dr["RepresentativeName"],
+								RepresentativePhone = (string)dr["RepresentativePhone"],
+								DesignationName = (string)dr["DesignationName"],
+								StateName = (string)dr["StateName"],
+								MunicipalityName = (string)dr["MunicipalityName"],
+								ModeName = (string)dr["ModeName"],
+								UnionName = (string)dr["UnionName"],
+								DriverId = (int)dr["DriverId"],
+								DriverFullName = (string)dr["DriverFullName"],
+								DriverIdentityDocument = (int)dr["DriverIdentityDocument"],
+								PartnerNumber = (int)dr["PartnerNumber"],
+								SupervisionStatusName = (string)dr["SupervisionStatusText"],
+								TotalDrivers = (int)dr["TotalDrivers"],
+								TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"],
+								SupervisionId = (int)dr["SupervisionId"],
+								DriverWithVehicle = (bool)dr["DriverWithVehicle"],
+								WorkingVehicle = (bool)dr["WorkingVehicle"],
+								InPerson = (bool)dr["InPerson"],
+								Plate = (string)dr["Plate"],
+								Year = (int)dr["Year"],
+								Make = (string)dr["Make"],
+								Model = (string)dr["Model"],
+								Passengers = (int)dr["Passengers"],
+								RimName = (string)dr["RimName"],
+								Wheels = (int)dr["Wheels"],
+								MotorOilName = (string)dr["MotorOilName"],
+								Liters = (int)dr["Liters"],
+								FuelTypeName = (string)dr["FuelTypeName"],
+								TankCapacity = (int)dr["TankCapacity"],
+								BatteryName = (string)dr["BatteryName"],
+								NumberOfBatteries = (int)dr["NumberOfBatteries"],
+								FailureTypeName = (string)dr["FailureTypeName"],
+								VehicleImageUrl = (string)dr["VehicleImageUrl"],
+								FingerprintTrouble = (bool)dr["FingerprintTrouble"],
+								Remarks = (string)dr["Remarks"],
+							});
+						}
+					}
+
+					return ptg.ToList();
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener transportistas {ex.Message}", ex);
+			}
+		}
+
 		public SupervisionViewModel GetByPublicTransportGroupIdAndDriverIdAndPartnerNumberStateId(int publicTransportGroupId, int driverId, int partnerNumber, int stateId)
 		{
 			try
