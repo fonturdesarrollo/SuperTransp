@@ -207,6 +207,7 @@ namespace SuperTransp.Core
 								MunicipalityName = (string)dr["MunicipalityName"],
 								ModeName = (string)dr["ModeName"],
 								UnionName = (string)dr["UnionName"],
+								Partners = (int)dr["Partners"],
 							});
 						}
 					}

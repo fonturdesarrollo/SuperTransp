@@ -124,7 +124,12 @@
 							</div>
 							<div class="col-12">
 								<ul class="actions">
-									<li><button type="submit" id="saveRequest" class="primary">Actualizar</button></li>
+									@{
+										if (ViewBag.IsTotalAccess)
+										{
+											<li><button type="submit" id="saveRequest" class="primary">Actualizar</button></li>
+										}
+									}									
 								</ul>
 							</div>
 						</div>

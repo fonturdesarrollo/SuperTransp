@@ -22,11 +22,18 @@ namespace SuperTransp.Controllers
 				if (ViewBag.SecurityGroupId != 1)
 				{
 					ViewBag.ModulesInGroup = _security.GetModulesByGroupId(ViewBag.SecurityGroupId);
+					ViewBag.IsTotalAccessDesignation = _security.IsTotalAccess(15);
+					ViewBag.IsTotalAccessUnion = _security.IsTotalAccess(16);
+					ViewBag.IsTotalAccessMakeModel = _security.IsTotalAccess(17);
 				}
 				else
 				{
 					ViewBag.ModulesInGroup = _security.GetAllModules();
+					ViewBag.IsTotalAccessDesignation = true;
+					ViewBag.IsTotalAccessUnion = true;
+					ViewBag.IsTotalAccessMakeModel = true;
 				}
+
 				return View();
 			}
 

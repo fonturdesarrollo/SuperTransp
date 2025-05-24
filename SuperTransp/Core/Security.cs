@@ -99,6 +99,38 @@ namespace SuperTransp.Core
 			}
 		}
 
+		public bool IsTotalAccess(int securityModuleId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+					
+					var userGroup = _httpContextAccessor.HttpContext?.Session.GetInt32("SecurityGroupId");
+
+					using (SqlCommand cmd = new SqlCommand("SELECT * FROM Security_GetUserGroupModuleAccess WHERE SecurityGroupId = @SecurityGroupId AND SecurityModuleId = @SecurityModuleId AND SecurityAccessTypeId = @SecurityAccessTypeId", sqlConnection))
+					{
+						cmd.Parameters.Add("@SecurityGroupId", SqlDbType.Int).Value = userGroup;
+						cmd.Parameters.Add("@SecurityModuleId", SqlDbType.Int).Value = securityModuleId;
+						cmd.Parameters.Add("@SecurityAccessTypeId", SqlDbType.Int).Value = 1; //total access
+
+						using (SqlDataReader dr = cmd.ExecuteReader())
+						{
+							return dr.HasRows;
+						}
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al verificar el tipo de acceso al modulo {ex.Message}", ex);
+			}
+		}
+
 		public List<SecurityGroupModel> GetAllGroups()
 		{
 			using (SqlConnection sqlConnection = GetConnection())

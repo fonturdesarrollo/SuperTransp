@@ -53,7 +53,10 @@ namespace SuperTransp.Controllers
 					else
 					{
 						model = _publicTransportGroup.GetAll();
+						ViewBag.IsTotalAccess = true;
 					}
+
+					ViewBag.IsTotalAccess = _security.IsTotalAccess(2);
 
 					return View(model);
 				}
@@ -72,6 +75,8 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
+					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
 					var model = new DriverViewModel
 					{
 						PublicTransportGroupId = publicTransportGroupId,
@@ -82,6 +87,15 @@ namespace SuperTransp.Controllers
 					ViewBag.Drivers = _driver.GetByPublicTransportGroupId(publicTransportGroupId);
 					ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
 
+					if (securityGroupId != 1)
+					{
+						ViewBag.IsTotalAccess = _security.IsTotalAccess(2);
+					}
+					else
+					{
+						ViewBag.IsTotalAccess = true;
+					}
+					
 					return View(model);
 				}
 
@@ -125,8 +139,18 @@ namespace SuperTransp.Controllers
 			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 			{
 				var model = _driver.GetByDriverPublicTransportGroupId(driverPublicTransportGroupId);
+				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 
 				ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+
+				if (securityGroupId != 1)
+				{
+					ViewBag.IsTotalAccess = _security.IsTotalAccess(2);
+				}
+				else
+				{
+					ViewBag.IsTotalAccess = true;
+				}
 
 				return View(model);
 			}

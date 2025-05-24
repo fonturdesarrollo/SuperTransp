@@ -100,7 +100,12 @@
 							</div>
 							<div class="col-12">
 								<ul class="actions">
-									<li><button type="submit" id="saveRequest" class="primary">Agregar a la línea</button></li>
+									@{
+										if (ViewBag.IsTotalAccess)
+										{
+											<li><button type="submit" id="saveRequest" class="primary">Agregar a la línea</button></li>
+										}
+									}									
 								</ul>
 							</div>
 						</div>
@@ -131,14 +136,32 @@
 										<td>@driver.PartnerNumber</td>
 										<td>@driver.DriverPhone</td>
 										<td id="@driver.PublicTransportGroupId">
-											@Html.ActionLink("Modificar", "Edit", "Driver", new { driverPublicTransportGroupId = driver.DriverPublicTransportGroupId }, new { @id = "btnEdit" })
+											@{
+												if(ViewBag.IsTotalAccess)
+												{
+													@Html.ActionLink("Modificar", "Edit", "Driver", new { driverPublicTransportGroupId = driver.DriverPublicTransportGroupId }, new { @id = "btnEdit" })
+												}
+												else
+												{
+													<span>Solo lectura</span>
+												}
+											}											
 										</td>
 										<td id="@driver.DriverPublicTransportGroupId">
-											<a href="javascript:void(0);"
-											   id="btnDelete"
-											   onclick="confirmDeletion('@Url.Action("Delete", "Driver", new { driverId = @driver.DriverId, publicTransportGroupId = @driver.PublicTransportGroupId, pTGCompleteName = @driver.PTGCompleteName })')">
-												Eliminar
-											</a>
+											@{
+												if (ViewBag.IsTotalAccess)
+												{
+													<a href="javascript:void(0);"
+													   id="btnDelete"
+													   onclick="confirmDeletion('@Url.Action("Delete", "Driver", new { driverId = @driver.DriverId, publicTransportGroupId = @driver.PublicTransportGroupId, pTGCompleteName = @driver.PTGCompleteName })')">
+														Eliminar
+													</a>
+												}
+												else
+												{
+													<span>Solo lectura</span>
+												}
+											}			
 										</td>
 									</tr>
 								}

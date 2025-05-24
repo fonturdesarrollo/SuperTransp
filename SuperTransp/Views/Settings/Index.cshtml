@@ -55,9 +55,20 @@
 							<div class="col-6 col-12-medium">
 								<h3>Organizaciones de Transporte</h3>
 								<ul>
-									<li>@Html.ActionLink("Agregar tipo de Línea", "AddDesignation", "CommonData")</li>
-									<li>@Html.ActionLink("Agregar Gremio o Sindicato", "AddUnion", "CommonData")</li>
-									<li>@Html.ActionLink("Agregar Marca / Modelo", "AddMakeModel", "CommonData")</li>
+									@{
+										if (ViewBag.IsTotalAccessDesignation)
+										{
+											<li>@Html.ActionLink("Agregar tipo de Línea", "AddDesignation", "CommonData")</li>
+										}
+										if (ViewBag.IsTotalAccessUnion)
+										{
+											<li>@Html.ActionLink("Agregar Gremio o Sindicato", "AddUnion", "CommonData")</li>
+										}
+										if (ViewBag.IsTotalAccessMakeModel)
+										{
+											<li>@Html.ActionLink("Agregar Marca / Modelo", "AddMakeModel", "CommonData")</li>
+										}
+									}
 								</ul>
 							</div>
 							<div class="col-6 col-12-medium">

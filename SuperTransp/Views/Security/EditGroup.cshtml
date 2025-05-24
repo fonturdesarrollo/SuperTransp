@@ -64,7 +64,7 @@
 							</div>
 							<div class="col-12">
 								<strong>Descripción:</strong>
-								@Html.TextBoxFor(x => x.FirstOrDefault().SecurityGroupDescription, new { placeholder = "Descripción", maxlength = "50" })
+								@Html.TextBoxFor(x => x.FirstOrDefault().SecurityGroupDescription, new { placeholder = "Descripción", maxlength = "150" })
 								<span asp-validation-for="FirstOrDefault().SecurityGroupDescription" class="text-danger"></span>
 							</div>
 							<div class="col-12">

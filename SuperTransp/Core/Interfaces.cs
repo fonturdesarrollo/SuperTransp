@@ -31,6 +31,7 @@ namespace SuperTransp.Core
 			public string? Encrypt(string plainText);
 			public string? Decrypt(string encryptedText);
 			public int AddLogbook(int processId, string actionDescription);
+			public bool IsTotalAccess(int securityModuleId);
 		}
 		public interface IGeography
 		{

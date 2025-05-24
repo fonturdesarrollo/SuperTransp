@@ -218,7 +218,12 @@
 								<div class="col-12">
 									<br />
 									<ul class="actions">
-										<li><button type="submit" id="saveRequest" class="primary">Agregar supervisión</button></li>
+										@{
+											if(ViewBag.IsTotalAccess)
+											{
+												<li><button type="submit" id="saveRequest" class="primary">Agregar supervisión</button></li>
+											}
+										}
 									</ul>
 								</div>
 							</div>

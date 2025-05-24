@@ -78,12 +78,15 @@ namespace SuperTransp.Controllers
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
 					int? stateId = HttpContext.Session.GetInt32("StateId");
-					var test = _supervision.GetByPublicTransportGroupIdAndDriverIdAndPartnerNumberStateId(publicTransportGroupId, driverId, partnerNumber, (int)stateId);
+					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+					//TODO PROCESO DE MODIFICAR DATOS DEL VEHICULO SUPERVISADO 
+					//var test = _supervision.GetByPublicTransportGroupIdAndDriverIdAndPartnerNumberStateId(publicTransportGroupId, driverId, partnerNumber, (int)stateId);
 					
-					if(test.TotalSupervisedDrivers > 0)
-					{
-						RedirectToAction("Edit", test);
-					}
+					//if(test.TotalSupervisedDrivers > 0)
+					//{
+					//	RedirectToAction("Edit", test);
+					//}
 
 					var model = new SupervisionViewModel
 					{
@@ -119,6 +122,16 @@ namespace SuperTransp.Controllers
 					ViewBag.OilLitters = new SelectList( _commonData.GetOilLitters(), "OilLittersId", "OilLitters");
 					ViewBag.FailureType = new SelectList( _commonData.GetFailureType(), "FailureTypeId", "FailureTypeName");
 					ViewBag.FingerprintProblem = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
+
+					if (securityGroupId != 1)
+					{
+						ViewBag.IsTotalAccess = _security.IsTotalAccess(3);
+					}
+					else
+					{
+
+						ViewBag.IsTotalAccess = true;
+					}
 
 					return View(model);
 				}
