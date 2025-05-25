@@ -294,21 +294,10 @@ namespace SuperTransp.Core
 						{
 							ptg.PublicTransportGroupId = (int)dr["PublicTransportGroupId"];
 							ptg.PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"];
-							//ptg.DesignationId = (int)dr["DesignationId"];
-							//ptg.PublicTransportGroupName = (string)dr["PublicTransportGroupName"];
 							ptg.PTGCompleteName = (string)dr["PTGCompleteName"];
 							ptg.ModeId = (int)dr["ModeId"];
-							//ptg.UnionId = (int)dr["UnionId"];
-							//ptg.MunicipalityId = (int)dr["MunicipalityId"];
-							//ptg.StateId = (int)dr["StateId"];
-							//ptg.RepresentativeIdentityDocument = (int)dr["RepresentativeIdentityDocument"];
-							//ptg.RepresentativeName = (string)dr["RepresentativeName"];
-							//ptg.RepresentativePhone = (string)dr["RepresentativePhone"];
-							//ptg.DesignationName = (string)dr["DesignationName"];
 							ptg.StateName = (string)dr["StateName"];
-							//ptg.MunicipalityName = (string)dr["MunicipalityName"];
 							ptg.ModeName = (string)dr["ModeName"];
-							//ptg.UnionName = (string)dr["UnionName"];
 							ptg.DriverId = (int)dr["DriverId"];
 							ptg.DriverFullName = (string)dr["DriverFullName"];
 							ptg.DriverIdentityDocument = (int)dr["DriverIdentityDocument"];
@@ -326,17 +315,23 @@ namespace SuperTransp.Core
 							ptg.Model = (string)dr["Model"];
 							ptg.Passengers = (int)dr["Passengers"];
 							ptg.RimName = (string)dr["RimName"];
+							ptg.RimId = (int)dr["RimId"];
 							ptg.Wheels = (int)dr["Wheels"];
 							ptg.MotorOilName = (string)dr["MotorOilName"];
+							ptg.MotorOilId = (int)dr["MotorOilId"];
 							ptg.Liters = (int)dr["Liters"];
 							ptg.FuelTypeName = (string)dr["FuelTypeName"];
+							ptg.FuelTypeId = (int)dr["FuelTypeId"];
 							ptg.TankCapacity = (int)dr["TankCapacity"];
 							ptg.BatteryName = (string)dr["BatteryName"];
+							ptg.BatteryId = (int)dr["BatteryId"];
 							ptg.NumberOfBatteries = (int)dr["NumberOfBatteries"];
 							ptg.FailureTypeName = (string)dr["FailureTypeName"];
+							ptg.FailureTypeId = (int)dr["FailureTypeId"];
 							ptg.VehicleImageUrl = (string)dr["VehicleImageUrl"];
 							ptg.FingerprintTrouble = (bool)dr["FingerprintTrouble"];
 							ptg.Remarks = (string)dr["Remarks"];							
+							ptg.VehicleDataId = (int)dr["VehicleDataId"];					
 						}
 					}
 

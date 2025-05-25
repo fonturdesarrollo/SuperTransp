@@ -73,8 +73,7 @@ namespace SuperTransp.Core
 						{
 							makes.Add(new CommonDataViewModel
 							{
-								Make = (string)dr["Make"],
-								VehicleDataId = makeId,
+								Make = (string)dr["Make"]
 							});
 							makeId++;
 						}

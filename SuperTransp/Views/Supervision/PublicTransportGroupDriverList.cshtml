@@ -102,7 +102,7 @@
 									<td>
 										@if (ptg.TotalDrivers == ptg.TotalSupervisedDrivers)
 										{
-											@Html.ActionLink(@ptg.PTGCompleteName, "Add", "Supervision",
+											@Html.ActionLink(@ptg.PTGCompleteName, "Edit", "Supervision",
 												new
 												{
 													publicTransportGroupId = ptg.PublicTransportGroupId,
@@ -167,7 +167,7 @@
 										}
 										else
 										{
-											@Html.ActionLink(@ptg.DriverFullName,"Add",	"Supervision",
+											@Html.ActionLink(@ptg.DriverFullName,"Edit","Supervision",
 												new
 												{
 													publicTransportGroupId = ptg.PublicTransportGroupId,

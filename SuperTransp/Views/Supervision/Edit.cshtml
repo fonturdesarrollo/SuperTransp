@@ -5,7 +5,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-	<title>Modificar Supervisión</title>
+	<title>Vehículo Supervisado</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 	<link rel="stylesheet" href="~/assets/css/main.css" />
@@ -86,7 +86,7 @@
 				<div class="inner">
 					<!-- Form -->
 					<section>
-						<h1 style="color:#4cbece">Modificar supervisión</h1>
+						<h1 style="color:#4cbece">Vehículo Supervisado</h1>
 						<label>Linea: @Model.PublicTransportGroupRif @Model.PTGCompleteName</label><br />
 						<label>Tipo: @Model.ModeName</label><br />
 						<label>Transportista: @Model.DriverIdentityDocument @Model.DriverFullName</label><br />
@@ -107,7 +107,7 @@
 								@Html.HiddenFor(x => x.PartnerNumber)
 								@Html.HiddenFor(x => x.PublicTransportGroupRif)
 								@Html.HiddenFor(x => x.ModeId)
-								@Html.DropDownList("DriverWithVehicle", (IEnumerable<SelectListItem>)ViewBag.DriverWithVehicle, "Seleccione", new { @class = "form-control" })
+								@Html.DropDownListFor(t => t.DriverWithVehicle, (SelectList)ViewBag.DriverWithVehicle, "-- Seleccione --", new { @class = "form-control" })
 							</div>
 							<div class="row" id="additionalFields" style="visibility: hidden; opacity: 0; height: 0; overflow: hidden; transition: opacity 0.3s ease-in-out;">
 								<div class="col-4">
@@ -130,21 +130,18 @@
 								<div class="col-6">
 									<br />
 									<strong>Año:</strong>
-									@Html.DropDownList("Years", (IEnumerable<SelectListItem>)ViewBag.Years, "Seleccione", new { @class = "form-control" })
+									@Html.DropDownListFor(t => t.Year, (SelectList)ViewBag.Years, "-- Seleccione --", new { @class = "form-control" })
+									@* @Html.DropDownList("Years", (IEnumerable<SelectListItem>)ViewBag.Years, "Seleccione", new { @class = "form-control" }) *@
 								</div>
 								<div class="col-6">
 									<br />
 									<strong>Marca:</strong>
-									<select id="MakeId" name="Make" class="form-control">
-										<option value="">Seleccione</option>
-									</select>
+									@Html.DropDownListFor(t => t.Make, (SelectList)ViewBag.Makes, "-- Seleccione --", new { @class = "form-control" })
 								</div>
 								<div class="col-6">
 									<br />
 									<strong>Modelo:</strong>
-									<select id="VehicleDataId" name="VehicleDataId" class="form-control">
-										<option value="">Seleccione</option>
-									</select>
+									@Html.DropDownListFor(t => t.VehicleDataId, (SelectList)ViewBag.VehicleModel, "-- Seleccione --", new { @class = "form-control" })
 								</div>
 								<div class="col-6">
 									<br />
@@ -218,7 +215,12 @@
 								<div class="col-12">
 									<br />
 									<ul class="actions">
-										<li><button type="submit" id="saveRequest" class="primary">Agregar supervisión</button></li>
+										@{
+											if(ViewBag.IsTotalAccess)
+											{
+												<li><button type="submit" id="saveRequest" class="primary">Agregar supervisión</button></li>
+											}
+										}
 									</ul>
 								</div>
 							</div>
@@ -385,7 +387,7 @@
 			let firstInvalidField = null;
 			let message = "";
 
-			if ($("#DriverWithVehicle").val() == "" && $("#DriverWithVehicle").val() != "0" && !firstInvalidField) {
+			if ($("#DriverWithVehicle").val() == "" && $("#DriverWithVehicle").val() != "False" && !firstInvalidField) {
 				firstInvalidField = "#DriverWithVehicle";
 				message = "Debe indicar si el transportista posee o no vehículo";
 			}
@@ -400,7 +402,12 @@
 				if ($("#WorkingVehicle").val() == "" && !firstInvalidField) {
 					firstInvalidField = "#WorkingVehicle";
 					message = "Debe indicar si el vehículo está operativo o no";
-				}			
+				}
+
+				if ($("#WorkingVehicle").val() == "False" &&  $("#FailureTypeId").val() == ""  &&  !firstInvalidField) {
+					firstInvalidField = "#FailureTypeId";
+					message = "Debe indicar si el tipo de falla";
+				}	
 
 				if($("#Plate").val() == "" && !firstInvalidField){
 					firstInvalidField = "#Plate";
@@ -422,8 +429,8 @@
 					message = "Debe seleccionar el año del vehículo";
 				}
 
-				if ($("#MakeId").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#MakeId";
+				if ($("#Make").val() == "" && !firstInvalidField) {
+					firstInvalidField = "#Make";
 					message = "Debe seleccionar la marca del vehículo";
 				}
 
@@ -561,15 +568,19 @@
 				$(this).val(sanitizedValue); 
 			});
 
-			setTransportTypeDefaultValues($("#ModeId").val())
+			//setTransportTypeDefaultValues($("#ModeId").val())
+
+			if($('#DriverWithVehicle').val() == "True"){
+				$('#additionalFields').css({ visibility: 'visible', opacity: '1', height: 'auto', overflow: 'visible' });
+			}
 
 			$('#DriverWithVehicle').change(function (event) {
-				if ($(this).val() === "1") {
+				if ($(this).val() === "True") {
 					$('#additionalFields').css({ visibility: 'visible', opacity: '1', height: 'auto', overflow: 'visible' });
-					$('#InPerson').val("");
-				} else if($(this).val() === "0") {
+
+				} else if($(this).val() === "False") {
 					$('#additionalFields').css({ opacity: '0', visibility: 'hidden', height: '0', overflow: 'hidden' });
-					$('#InPerson').val("1");
+
 					if (confirm("¿Está seguro de que desea actualizar los registros?")) {
 						$(this).closest("form")[0].submit();
 					} else {
@@ -579,35 +590,35 @@
 			});
 
 			$('#WorkingVehicle').change(function (event) {
-				if ($(this).val() === "0") {
+				if ($(this).val() === "False") {
 					$('#FailureTypeId').val("").prop("disabled", false);
 ;
-				} else if($(this).val() === "1") {
+				} else if($(this).val() === "True") {
 					$('#FailureTypeId').val("1").prop("disabled", true);
 				}
 			});
 
 			$('#FailureTypeId').change(function (event) {
 				if ($(this).val() === "1") {
-					$('#WorkingVehicle').val("1");
+					$('#WorkingVehicle').val("True");
 ;
 				} else {
-					$('#WorkingVehicle').val("0");
+					$('#WorkingVehicle').val("False");
 				}
 			});
 
 
-			$('#Years').change(function () {
+			$('#Year').change(function () {
 				var yearId = $(this).val();
 				var getSupervisionUrl = '@Url.Action("GetMakes", "Supervision")';
 
-				$('#MakeId').empty().append('<option value="">Seleccione</option>');
+				$('#Make').empty().append('<option value="">Seleccione</option>');
 						$('#VehicleDataId').empty().append('<option value="">Seleccione</option>');
 
 				if (yearId) {
 					$.getJSON(getSupervisionUrl, { yearId: yearId }, function (data) {
 						$.each(data, function (index, makes) {
-							$('#MakeId').append($('<option>', {
+							$('#Make').append($('<option>', {
 								value: makes.vehicleDataId,
 								text: makes.make
 							}));
@@ -616,9 +627,9 @@
 				}
 			});
 
-			$('#MakeId').change(function () {
-				var yearId = $('#Years').val();
-				var make = $('#MakeId option:selected').text();
+			$('#Make').change(function () {
+				var yearId = $('#Year').val();
+				var make = $('#Make option:selected').text();
 				var getSupervisionUrl = '@Url.Action("GetModels", "Supervision")';
 
 				$('#VehicleDataId').empty().append('<option value="">Seleccione</option>');
