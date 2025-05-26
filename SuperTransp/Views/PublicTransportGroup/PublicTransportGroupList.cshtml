@@ -20,7 +20,7 @@
 
 </head>
 <body class="is-preload">
-	<div id="wrapper">
+	<div style="width:100%; max-width: 100em; margin: 0 auto; padding: 0 1em;">
 		<!-- Header -->
 		<header id="header">
 			<div class="inner">
@@ -60,10 +60,11 @@
 						<thead>
 							<tr>
 								<th>Nombre</th>
-								<th>Estado</th>
-								<th>Rif</th>
 								<th>Tipo</th>
-								<th>Seleccionar</th>
+								<th>Rif</th>
+								<th>Socios Línea</th>
+								<th>Socios Cargados</th>
+								<th>Estado</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -73,12 +74,11 @@
 									<td>
 										@Html.ActionLink(@ptg.PTGCompleteName, "Edit", "PublicTransportGroup", new { publicTransportGroupId = ptg.PublicTransportGroupId })
 									</td>
-									<td>@ptg.StateName</td>
-									<td>@ptg.PublicTransportGroupRif</td>
 									<td>@ptg.ModeName</td>
-									<td id="@ptg.PublicTransportGroupId">
-										@Html.ActionLink("Modificar", "Edit", "PublicTransportGroup", new { publicTransportGroupId = ptg.PublicTransportGroupId }, new { @id = "btnEdit" })
-									</td>
+									<td>@ptg.PublicTransportGroupRif</td>
+									<td>@ptg.Partners</td>
+									<td>@ptg.TotalDrivers</td>
+									<td>@ptg.StateName</td>
 								</tr>
 							}
 						</tbody>

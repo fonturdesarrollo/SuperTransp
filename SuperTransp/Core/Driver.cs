@@ -277,5 +277,31 @@ namespace SuperTransp.Core
 				}
 			}
 		}
+
+		public int TotalDriversByPublicTransportGroup(int publicTransportGroupId)
+		{
+			int totalDrivers = 0;
+			using (SqlConnection sqlConnection = GetConnection())
+			{
+				if (sqlConnection.State == ConnectionState.Closed)
+				{
+					sqlConnection.Open();
+				}
+
+				string sql = "SELECT PublicTransportGroupId, COUNT(DriverId) AS TotalDriversByPTG FROM dbo.DriverPublicTransportGroup GROUP BY PublicTransportGroupId HAVING  (PublicTransportGroupId = @PublicTransportGroupId)";
+				SqlCommand cmd = new(sql, sqlConnection);
+				cmd.Parameters.AddWithValue("@PublicTransportGroupId", publicTransportGroupId);
+
+				using (SqlDataReader dr = cmd.ExecuteReader())
+				{
+					while(dr.Read())
+					{
+						totalDrivers = (int)dr["TotalDriversByPTG"];
+					}
+				}
+			}
+
+			return totalDrivers;
+		}
 	}
 }

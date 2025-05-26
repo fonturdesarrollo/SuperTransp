@@ -156,6 +156,7 @@ namespace SuperTransp.Core
 								ModeName = (string)dr["ModeName"],
 								UnionName = (string)dr["UnionName"],
 								Partners = (int)dr["Partners"],
+								TotalDrivers = (int)dr["TotalDrivers"],
 							});
 						}
 					}
@@ -208,6 +209,7 @@ namespace SuperTransp.Core
 								ModeName = (string)dr["ModeName"],
 								UnionName = (string)dr["UnionName"],
 								Partners = (int)dr["Partners"],
+								TotalDrivers = (int)dr["TotalDrivers"],
 							});
 						}
 					}

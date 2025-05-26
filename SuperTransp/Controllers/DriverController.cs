@@ -243,6 +243,14 @@ namespace SuperTransp.Controllers
 					return Json($"El número de socio {paramValue4} ya está registrado a la línea.");
 				}
 
+				var ptgPartners = _publicTransportGroup.GetPublicTransportGroupById(paramValue2);
+				var totalDrivers = _driver.TotalDriversByPublicTransportGroup(paramValue2);
+
+				if (totalDrivers >= ptgPartners.Partners)
+				{
+					return Json($"La línea tiene cupo solo para {ptgPartners.Partners} transportista(s) no puede agregar mas.");
+				}
+
 				return Json("OK");
 			}
 

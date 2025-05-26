@@ -43,15 +43,17 @@
 								}
 							<div class="form-group row">
 								<div class="col-12">
-									@Html.TextBoxFor(x => x.Login, new { @class = "form-control", maxlength = "20", placeholder = "Usuario", onclick = "$(this).select();" })
+								<span>Usuario</span>
+									@Html.TextBoxFor(x => x.Login, new { @class = "form-control", maxlength = "20", placeholder = "Nombre de usuario", onclick = "$(this).select();" })
 									<span asp-validation-for="Login" class="text-danger"></span>
 								</div>
 							</div>
 							<p>
 							<div class="form-group row">
 								<div class="col-12">
-									@Html.CheckBox("nombreCheckBox", new { @class = "form-check-input", @checked = "checked" })
-									@Html.PasswordFor(x => x.Password, new { @class = "form-control", maxlength = "30", placeholder = "Clave", onclick = "$(this).select();" })
+									@* @Html.CheckBox("nombreCheckBox", new { @class = "form-check-input", @checked = "checked" }) *@
+									<span>Clave</span>
+									@Html.PasswordFor(x => x.Password, new { @class = "form-control", maxlength = "30", placeholder = "Indique su clave", onclick = "$(this).select();" })
 									<span asp-validation-for="Password" class="text-danger"></span>
 								</div>
 							</div>
