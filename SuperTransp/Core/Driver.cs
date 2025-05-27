@@ -278,7 +278,7 @@ namespace SuperTransp.Core
 			}
 		}
 
-		public int TotalDriversByPublicTransportGroup(int publicTransportGroupId)
+		public int TotalDriversByPublicTransportGroupId(int publicTransportGroupId)
 		{
 			int totalDrivers = 0;
 			using (SqlConnection sqlConnection = GetConnection())

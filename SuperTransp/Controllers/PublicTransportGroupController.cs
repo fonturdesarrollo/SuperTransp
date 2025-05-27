@@ -15,8 +15,9 @@ namespace SuperTransp.Controllers
 		private IUnion _union;
 		private IMode _mode;
 		private IPublicTransportGroup _publicTransportGroup;
+		private IDriver _driver;
 
-		public PublicTransportGroupController(IPublicTransportGroup publicTransportGroup, ISecurity security, IGeography geography, IDesignation designation, IUnion union, IMode mode)
+		public PublicTransportGroupController(IPublicTransportGroup publicTransportGroup, ISecurity security, IGeography geography, IDesignation designation, IUnion union, IMode mode, IDriver driver)
 		{
 			_publicTransportGroup = publicTransportGroup;
 			_security = security;
@@ -24,6 +25,7 @@ namespace SuperTransp.Controllers
 			_designation = designation;
 			_union = union;
 			_mode = mode;
+			_driver = driver;
 		}
 
 		public IActionResult Index()
@@ -251,7 +253,7 @@ namespace SuperTransp.Controllers
 			return Json("ERROR");
 		}
 
-		public JsonResult CheckRifExistOnEdit(string paramValue1, int paramValue2)
+		public JsonResult CheckRifExistOnEdit(string paramValue1, int paramValue2, int paramValue3)
 		{
 			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 			{
@@ -264,6 +266,16 @@ namespace SuperTransp.Controllers
 					if(currentRif.PublicTransportGroupRif != registeredRif)
 					{
 						return Json($"La línea con el RIF {paramValue1} ya está registrada.");
+					}
+				}
+
+				if (paramValue2 > 0)
+				{
+					var totalDrivers = _driver.TotalDriversByPublicTransportGroupId(paramValue2);
+
+					if (totalDrivers > paramValue3)
+					{
+						return Json($"Existen {totalDrivers} transportista(s) cargado(s) a esta línea, si desea reducir el cupo debe eliminar los necesarios.");
 					}
 				}
 

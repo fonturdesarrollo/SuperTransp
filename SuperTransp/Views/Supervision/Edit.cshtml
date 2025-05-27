@@ -205,10 +205,34 @@
 								</div>
 								<div class="col-12">
 									<br />
+									@{
+										if (!string.IsNullOrEmpty(Model.VehicleImageUrl))
+										{
+											<strong>Vehículo:</strong>
+											<div id="thumbnail-container"></div>
+										}
+									}
+								</div>
+								<div class="col-12">
+									<br />
 									<strong>Cargar imágen:</strong>
 									<div id="myDropzone" class="dropzone dz-clickable">
 										<div class="dz-message">
-											Arrastre la imágen aquí o haga clic para subirla.
+											@{
+												if(!string.IsNullOrEmpty(Model.VehicleImageUrl))
+												{
+													<span>
+														Sí desea cambiar la imagen actual arrastre una nueva imágen aquí o haga clic para subirla.
+													</span>
+												}
+												else
+												{
+													<span>
+														Arrastre la imágen aquí o haga clic para subirla.
+													</span>
+												}
+											}
+											
 										</div>
 									</div>
 								</div>
@@ -218,7 +242,7 @@
 										@{
 											if(ViewBag.IsTotalAccess)
 											{
-												<li><button type="submit" id="saveRequest" class="primary">Agregar supervisión</button></li>
+												<li><button type="submit" id="saveRequest" class="primary">Actualizar registros</button></li>
 											}
 										}
 									</ul>
@@ -302,6 +326,26 @@
 				});
 			}
 		});
+
+	
+		const imageUrl = '@Model.VehicleImageUrl';
+		const container = document.getElementById('thumbnail-container');
+
+		if (imageUrl && imageUrl.trim() !== "") {
+			const anchor = document.createElement('a');
+			anchor.href = imageUrl;
+			anchor.target = "_blank";
+
+			const img = document.createElement('img');
+			img.src = imageUrl;
+			img.alt = 'Thumbnail';
+			img.style.width = '100px';
+			img.style.height = 'auto';
+			img.style.margin = '5px';
+
+			anchor.appendChild(img);
+			container.appendChild(anchor);
+		}	
 
 		document.addEventListener("DOMContentLoaded", function () {
 			function handleInput(selector, transformFunction) {

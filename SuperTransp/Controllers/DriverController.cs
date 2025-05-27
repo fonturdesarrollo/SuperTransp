@@ -244,7 +244,7 @@ namespace SuperTransp.Controllers
 				}
 
 				var ptgPartners = _publicTransportGroup.GetPublicTransportGroupById(paramValue2);
-				var totalDrivers = _driver.TotalDriversByPublicTransportGroup(paramValue2);
+				var totalDrivers = _driver.TotalDriversByPublicTransportGroupId(paramValue2);
 
 				if (totalDrivers >= ptgPartners.Partners)
 				{

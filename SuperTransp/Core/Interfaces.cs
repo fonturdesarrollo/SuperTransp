@@ -84,7 +84,7 @@ namespace SuperTransp.Core
 			public bool RegisteredPartnerNumber(int partnerNumber, int publicTransportGroupId);
 			public List<DriverViewModel> GetAll();
 			public bool Delete(int driverId);
-			public int TotalDriversByPublicTransportGroup(int publicTransportGroupId);
+			public int TotalDriversByPublicTransportGroupId(int publicTransportGroupId);
 		}
 
 		public interface ISupervision

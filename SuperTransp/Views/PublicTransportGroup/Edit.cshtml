@@ -227,13 +227,15 @@
 			if ($(this).valid()) {
 					var paramValue1 = $('#PublicTransportGroupRif').val();
 					var paramValue2 = $('#PublicTransportGroupId').val();
+					var paramValue3 = $('#Partners').val();
 				    var checkExistingUrl = '@Url.Action("CheckRifExistOnEdit", "PublicTransportGroup")';
 
 				$.ajax({
 					url: checkExistingUrl,
 					data: {
 						paramValue1: paramValue1,
-						paramValue2: paramValue2
+						paramValue2: paramValue2,
+						paramValue3:paramValue3,
 					},
 					success: function (data) {
 						showMsg(data);

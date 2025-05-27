@@ -277,7 +277,7 @@ namespace SuperTransp.Controllers
 
 				var newFolderName = $"{stateName.ToUpper().Trim()}";
 				var ftpFolderPath = Path.Combine(ftpBaseUrl, newFolderName).Replace("\\", "/");
-				var subFolderName = $"{publicTransportGroupRif}-{driverIdentityDocument}-{partnerNumber}";
+				var subFolderName = $"{publicTransportGroupRif}-{partnerNumber}";
 				var ftpSubFolderPath = Path.Combine(ftpFolderPath, subFolderName).Replace("\\", "/");
 				var ftpFileName = Guid.NewGuid().ToString();
 
@@ -291,7 +291,7 @@ namespace SuperTransp.Controllers
 
 				try
 				{
-					// Verificar si la subcarpeta ESTADO/RIF-CEDULA-SOCIO existe y eliminar su contenido
+					// Verificar si la subcarpeta ESTADO-RIF-SOCIO existe y eliminar su contenido
 					FtpWebRequest listSubFolderRequest = (FtpWebRequest)WebRequest.Create(ftpSubFolderPath);
 					listSubFolderRequest.Method = WebRequestMethods.Ftp.ListDirectory;
 					listSubFolderRequest.Credentials = new NetworkCredential(ftpUsername, ftpPassword);
@@ -320,7 +320,7 @@ namespace SuperTransp.Controllers
 						}
 					}
 
-					// Crear la subcarpeta ESTADO/RIF-CEDULA-SOCIO dentro de la carpeta ESTADO si no existe
+					// Crear la subcarpeta ESTADO-RIF-SOCIO dentro de la carpeta ESTADO si no existe
 					FtpWebRequest subSubFolderRequest = (FtpWebRequest)WebRequest.Create(ftpSubFolderPath);
 					subSubFolderRequest.Method = WebRequestMethods.Ftp.MakeDirectory;
 					subSubFolderRequest.Credentials = new NetworkCredential(ftpUsername, ftpPassword);
@@ -342,7 +342,7 @@ namespace SuperTransp.Controllers
 						}
 					}
 
-					// Subir el archivo a la subcarpeta ESTADO/RIF-CEDULA-SOCIO
+					// Subir el archivo a la subcarpeta ESTADO-RIF-SOCIO
 					var ftpFilePath = Path.Combine(ftpSubFolderPath, ftpFileName).Replace("\\", "/");
 					FtpWebRequest fileRequest = (FtpWebRequest)WebRequest.Create(ftpFilePath);
 					fileRequest.Method = WebRequestMethods.Ftp.UploadFile;
@@ -543,13 +543,13 @@ namespace SuperTransp.Controllers
 
 			var newFolderName = $"{stateName.ToUpper().Trim()}";
 			var ftpFolderPath = Path.Combine(ftpBaseUrl, newFolderName).Replace("\\", "/");
-			var subFolderName = $"{publicTransportGroupRif}-{driverIdentityDocument}-{partnerNumber}";
+			var subFolderName = $"{publicTransportGroupRif}-{partnerNumber}";
 			var ftpSubFolderPath = Path.Combine(ftpFolderPath, subFolderName).Replace("\\", "/");
 			var filePath = string.Empty;
 
 			try
 			{
-				// Verificar si la subcarpeta ESTADO/RIF-CEDULA-SOCIO existe y eliminar su contenido
+				// Verificar si la subcarpeta ESTADO-RIF-SOCIO existe y eliminar su contenido
 				FtpWebRequest listSubFolderRequest = (FtpWebRequest)WebRequest.Create(ftpSubFolderPath);
 				listSubFolderRequest.Method = WebRequestMethods.Ftp.ListDirectory;
 				listSubFolderRequest.Credentials = new NetworkCredential(ftpUsername, ftpPassword);

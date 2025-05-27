@@ -89,7 +89,9 @@
 						<thead>
 							<tr>
 								<th>Nombre Línea</th>
-								<th>Nombre Transportista</th>
+								<th>Rif</th>								
+								<th>Cédula</th>
+								<th>Transportista</th>
 								<th># Socio</th>
 								<th>Estado</th>
 								<th>Estatus</th>
@@ -100,6 +102,7 @@
 							{
 								<tr>
 									<td>
+										@* Nombre Linea *@
 										@if (ptg.TotalDrivers == ptg.TotalSupervisedDrivers)
 										{
 											@Html.ActionLink(@ptg.PTGCompleteName, "Edit", "Supervision",
@@ -141,6 +144,96 @@
 												},
 												new { style = "color: red;" }
 												)
+										}
+									</td>
+									<td>
+										@* RIF *@
+										@if (ptg.SupervisionStatusName == "Pendiente")
+										{
+											@Html.ActionLink(@ptg.PublicTransportGroupRif,"Add",	"Supervision",
+												new
+												{
+													publicTransportGroupId = ptg.PublicTransportGroupId,
+													pTGCompleteName = ptg.PTGCompleteName,
+													driverFullName = ptg.DriverFullName,
+													partnerNumber = ptg.PartnerNumber,
+													publicTransportGroupRif = ptg.PublicTransportGroupRif,
+													driverIdentityDocument = ptg.DriverIdentityDocument,
+													stateName = ptg.StateName,
+													supervisionStatus = ptg.SupervisionStatus,
+													driverId = ptg.DriverId,
+													supervisionId = ptg.SupervisionId,
+													modeId = ptg.ModeId,
+													modeName = ptg.ModeName,
+												},
+												new { style = "color: red;" }
+											)
+										}
+										else
+										{
+											@Html.ActionLink(@ptg.PublicTransportGroupRif,"Edit","Supervision",
+												new
+												{
+													publicTransportGroupId = ptg.PublicTransportGroupId,
+													pTGCompleteName = ptg.PTGCompleteName,
+													driverFullName = ptg.DriverFullName,
+													partnerNumber = ptg.PartnerNumber,
+													publicTransportGroupRif = ptg.PublicTransportGroupRif,
+													driverIdentityDocument = ptg.DriverIdentityDocument,
+													stateName = ptg.StateName,
+													supervisionStatus = ptg.SupervisionStatus,
+													driverId = ptg.DriverId,
+													supervisionId = ptg.SupervisionId,
+													modeId = ptg.ModeId,
+													modeName = ptg.ModeName
+												},
+												new { style = "color: green;" }
+											)
+										}
+									</td>
+									<td>
+										@* Cedula *@
+										@if (ptg.SupervisionStatusName == "Pendiente")
+										{
+											@Html.ActionLink(@ptg.DriverIdentityDocument.ToString(),"Add",	"Supervision",
+												new
+												{
+													publicTransportGroupId = ptg.PublicTransportGroupId,
+													pTGCompleteName = ptg.PTGCompleteName,
+													driverFullName = ptg.DriverFullName,
+													partnerNumber = ptg.PartnerNumber,
+													publicTransportGroupRif = ptg.PublicTransportGroupRif,
+													driverIdentityDocument = ptg.DriverIdentityDocument,
+													stateName = ptg.StateName,
+													supervisionStatus = ptg.SupervisionStatus,
+													driverId = ptg.DriverId,
+													supervisionId = ptg.SupervisionId,
+													modeId = ptg.ModeId,
+													modeName = ptg.ModeName,
+												},
+												new { style = "color: red;" }
+											)
+										}
+										else
+										{
+											@Html.ActionLink(@ptg.DriverIdentityDocument.ToString(),"Edit","Supervision",
+												new
+												{
+													publicTransportGroupId = ptg.PublicTransportGroupId,
+													pTGCompleteName = ptg.PTGCompleteName,
+													driverFullName = ptg.DriverFullName,
+													partnerNumber = ptg.PartnerNumber,
+													publicTransportGroupRif = ptg.PublicTransportGroupRif,
+													driverIdentityDocument = ptg.DriverIdentityDocument,
+													stateName = ptg.StateName,
+													supervisionStatus = ptg.SupervisionStatus,
+													driverId = ptg.DriverId,
+													supervisionId = ptg.SupervisionId,
+													modeId = ptg.ModeId,
+													modeName = ptg.ModeName
+												},
+												new { style = "color: green;" }
+											)
 										}
 									</td>
 									<td>
