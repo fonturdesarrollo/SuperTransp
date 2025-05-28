@@ -1,0 +1,78 @@
+﻿@model SuperTransp.Models.PublicTransportGroupViewModel
+@{
+	Layout = "";
+}
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Línea de Transporte</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+	<link rel="stylesheet" href="~/assets/css/main.css" />
+	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
+	<link rel="stylesheet" href="~/datatable/css/bootstrap.css" />
+	<style>
+		.is-invalid {
+			border: 2px solid red;
+			background-color: #ffe6e6;
+		}
+	</style>
+</head>
+<body class="is-preload">
+
+		<!-- Wrapper -->
+		<div id="wrapper">
+
+			<!-- Header -->
+			<header id="header">
+				<div class="inner">
+
+					<!-- Logo -->
+					<a href="#" class="logo">
+						<span class="symbol"><img src="~/images/logo_login.jpg" alt="" /></span><span class="title">SuperTransp</span>
+						<br />
+						<br />
+					</a>
+				</div>
+			</header>
+
+
+			<!-- Main -->
+			<div id="main">
+				<div class="inner">
+					<!-- Form -->
+					<section>
+						<h1 style="color:#4cbece">Línea de transporte cargada</h1>
+						<br />
+						<div class="row gtr-uniform">
+							<div class="col-6">
+								<strong>RIF:</strong>
+								@Model.PublicTransportGroupRif
+							</div>
+
+							<div class="col-12">
+								<strong>Nombre:</strong>
+								@Model.PTGCompleteName
+							</div>
+
+							<div class="col-12">
+								<strong>Representante:</strong>
+								@Model.RepresentativeName
+							</div>
+							<div class="col-12">
+								<strong>Teléfono Representante:</strong>
+								@Model.RepresentativePhone
+							</div>
+							<div class="col-12">
+								<strong>Cantidad de Socios:</strong>
+								@Model.Partners
+							</div>
+						</div>
+					</section>
+				</div>
+			</div>
+		</div>
+</body>
+</html>
+
+

@@ -62,5 +62,6 @@ namespace SuperTransp.Models
 		public string? Remarks { get; set; }
 		public string? VehicleImageUrl { get; set; }
 		public int? Partners { get; set; }
+		public string? PublicTransportGroupGUID { get; set; }
 	}
 }

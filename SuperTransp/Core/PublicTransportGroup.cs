@@ -101,6 +101,7 @@ namespace SuperTransp.Core
 							publicTransportGroup.RepresentativePhone = (string)dr["RepresentativePhone"];
 							publicTransportGroup.StateName = (string)dr["StateName"];
 							publicTransportGroup.Partners = (int)dr["Partners"];
+							publicTransportGroup.PublicTransportGroupGUID = (string)dr["PublicTransportGroupGUID"];
 
 							if (dr["PublicTransportGroupIdModifiedDate"] != DBNull.Value)
 							{
@@ -158,6 +159,7 @@ namespace SuperTransp.Core
 								Partners = (int)dr["Partners"],
 								TotalDrivers = (int)dr["TotalDrivers"],
 								TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"],
+								PublicTransportGroupGUID = (string)dr["PublicTransportGroupGUID"],
 							});
 						}
 					}
@@ -212,6 +214,7 @@ namespace SuperTransp.Core
 								Partners = (int)dr["Partners"],
 								TotalDrivers = (int)dr["TotalDrivers"],
 								TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"],
+								PublicTransportGroupGUID = (string)dr["PublicTransportGroupGUID"],
 							});
 						}
 					}
@@ -247,6 +250,43 @@ namespace SuperTransp.Core
 				}
 
 				return publicTransportGroup.PublicTransportGroupRif;
+			}
+		}
+
+		public PublicTransportGroupViewModel GetByGUIDId(string guidId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					PublicTransportGroupViewModel ptg = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail WHERE PublicTransportGroupGUID = @PublicTransportGroupGUID", sqlConnection);
+					cmd.Parameters.AddWithValue("@PublicTransportGroupGUID", guidId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							ptg.PTGCompleteName = (string)dr["PTGCompleteName"];
+							ptg.PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"];
+							ptg.DesignationName = (string)dr["DesignationName"];
+							ptg.RepresentativeName = (string)dr["RepresentativeName"];
+							ptg.RepresentativePhone = (string)dr["RepresentativePhone"];
+							ptg.Partners = (int)dr["Partners"];
+						}
+					}
+
+					return ptg;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener los transportistas {ex.Message}", ex);
 			}
 		}
 	}

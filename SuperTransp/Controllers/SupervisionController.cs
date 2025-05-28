@@ -577,7 +577,7 @@ namespace SuperTransp.Controllers
 			}
 			catch
 			{
-				// Manejo de excepciones genéricas
+				//
 			}
 
 			return filePath;

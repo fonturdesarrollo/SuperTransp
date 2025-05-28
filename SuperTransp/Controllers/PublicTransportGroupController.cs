@@ -1,8 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Azure.Core;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using QRCoder;
 using SuperTransp.Core;
 using SuperTransp.Models;
+using System;
+using System.Drawing;
 using System.Security;
+using System.Text.RegularExpressions;
 using static SuperTransp.Core.Interfaces;
 
 namespace SuperTransp.Controllers
@@ -16,8 +21,9 @@ namespace SuperTransp.Controllers
 		private IMode _mode;
 		private IPublicTransportGroup _publicTransportGroup;
 		private IDriver _driver;
+		private IConfiguration _configuration;
 
-		public PublicTransportGroupController(IPublicTransportGroup publicTransportGroup, ISecurity security, IGeography geography, IDesignation designation, IUnion union, IMode mode, IDriver driver)
+		public PublicTransportGroupController(IPublicTransportGroup publicTransportGroup, ISecurity security, IGeography geography, IDesignation designation, IUnion union, IMode mode, IDriver driver, IConfiguration configuration)
 		{
 			_publicTransportGroup = publicTransportGroup;
 			_security = security;
@@ -26,6 +32,7 @@ namespace SuperTransp.Controllers
 			_union = union;
 			_mode = mode;
 			_driver = driver;
+			_configuration = configuration;
 		}
 
 		public IActionResult Index()
@@ -165,6 +172,7 @@ namespace SuperTransp.Controllers
 					ViewBag.Designation = new SelectList(_designation.GetAll(), "DesignationId", "DesignationName");
 					ViewBag.Mode = new SelectList(_mode.GetAll(), "ModeId", "ModeName");
 					ViewBag.IsTotalAccess = _security.IsTotalAccess(1);
+					//GenerateQR(model.PublicTransportGroupGUID);
 				}
 
 				return View(model);
@@ -284,5 +292,34 @@ namespace SuperTransp.Controllers
 
 			return Json("ERROR");
 		}
+
+		public IActionResult PublicTransportGroupData(string ptgCode)
+		{
+			var model = _publicTransportGroup.GetByGUIDId(ptgCode);
+			
+			return View(model);
+		}
+
+		[HttpPost]
+		public IActionResult GenerateQR([FromBody] QRRequest request)
+		{
+			var baseWebSiteUrl = _configuration["FtpSettings:BaseWebSiteUrl"];
+
+			using (QRCodeGenerator qrGenerator = new QRCodeGenerator())
+			{
+				var ptgDataController = $"{baseWebSiteUrl}PublicTransportGroup/PublicTransportGroupData?ptgCode={request.ptgGUID}";
+
+				QRCodeData qrCodeData = qrGenerator.CreateQrCode(ptgDataController, QRCodeGenerator.ECCLevel.Q);
+				PngByteQRCode qrCode = new PngByteQRCode(qrCodeData);
+				byte[] qrCodeBytes = qrCode.GetGraphic(20);
+
+				string base64String = Convert.ToBase64String(qrCodeBytes);
+				return Json(new { qrImage = "data:image/png;base64," + base64String });
+			}
+		}
+	}
+	public class QRRequest
+	{
+		public string ptgGUID { get; set; }
 	}
 }
