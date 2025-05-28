@@ -99,6 +99,92 @@ namespace SuperTransp.Core
 			}
 		}
 
+		public bool IsInactiveLogin(string login)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					using (SqlCommand cmd = new SqlCommand("SELECT * FROM SecurityUser WHERE Login = @Login AND SecurityStatusId = @SecurityStatusId", sqlConnection))
+					{
+						cmd.Parameters.Add("@Login", SqlDbType.VarChar).Value = login;
+						cmd.Parameters.Add("@SecurityStatusId", SqlDbType.Int).Value = 2;
+
+						using (SqlDataReader dr = cmd.ExecuteReader())
+						{
+							return dr.HasRows;
+						}
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al verificar el tipo de acceso al modulo {ex.Message}", ex);
+			}
+		}
+
+		public bool IsBlockedLogin(string login)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					using (SqlCommand cmd = new SqlCommand("SELECT * FROM SecurityUser WHERE Login = @Login AND SecurityStatusId = @SecurityStatusId", sqlConnection))
+					{
+						cmd.Parameters.Add("@Login", SqlDbType.VarChar).Value = login;
+						cmd.Parameters.Add("@SecurityStatusId", SqlDbType.Int).Value = 3;
+
+						using (SqlDataReader dr = cmd.ExecuteReader())
+						{
+							return dr.HasRows;
+						}
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al verificar el tipo de acceso al modulo {ex.Message}", ex);
+			}
+		}
+
+		public bool BlockLogin(string login)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					using (SqlCommand cmd = new SqlCommand("UPDATE SecurityUser SET SecurityStatusId = @SecurityStatusId WHERE Login = @Login", sqlConnection))
+					{
+						cmd.Parameters.Add("@SecurityStatusId", SqlDbType.Int).Value = 3;
+						cmd.Parameters.Add("@Login", SqlDbType.VarChar).Value = login;
+
+						cmd.ExecuteNonQuery();
+
+						return true;
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al bloquear el login {ex.Message}", ex);
+			}
+		}
+
 		public bool IsTotalAccess(int securityModuleId)
 		{
 			try
@@ -200,7 +286,8 @@ namespace SuperTransp.Core
 				}
 
 				List<SecurityStatusUserModel> status = new();
-				SqlCommand cmd = new("SELECT * FROM SecurityStatus", sqlConnection);
+				SqlCommand cmd = new("SELECT * FROM SecurityStatus WHERE SecurityStatusId < @SecurityStatusId", sqlConnection);
+				cmd.Parameters.AddWithValue("@SecurityStatusId", 3);
 
 				using (SqlDataReader dr = cmd.ExecuteReader())
 				{
@@ -248,7 +335,7 @@ namespace SuperTransp.Core
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
 
-						AddLogbook(model.SecurityUserId, $"usuario {model.FullName.ToUpper()} login {model.Login} grupo Id {model.SecurityGroupId} estatus {model.SecurityStatusId}");
+						AddLogbook(model.SecurityUserId, false, $"usuario {model.FullName.ToUpper()} login {model.Login} grupo Id {model.SecurityGroupId} estatus {model.SecurityStatusId}");
 					}
 				}
 
@@ -801,9 +888,11 @@ namespace SuperTransp.Core
 			}
 		}
 
-		public int AddLogbook(int processId, string actionDescription)
+		public int AddLogbook(int processId, bool isDeleteAction, string actionDescription)
 		{
 			int result = 0;
+			string addEditDelete = processId == 0 ? "Agregó" : "Modificó";
+
 			try
 			{
 				using (SqlConnection sqlConnection = GetConnection())
@@ -822,14 +911,17 @@ namespace SuperTransp.Core
 					var userLogin = _httpContextAccessor.HttpContext?.Session.GetString("UserLogin");
 					var userState = _httpContextAccessor.HttpContext?.Session.GetString("StateName");
 					var deviceIP = _httpContextAccessor.HttpContext?.Session.GetString("DeviceIP");
-					var addOrEdit = processId == 0 ? "Agregó" : "Modificó";
 
+					if (isDeleteAction)
+					{
+						addEditDelete = "Eliminó";
+					}					
 
 					cmd.Parameters.AddWithValue("@DeviceIP", deviceIP);
 					cmd.Parameters.AddWithValue("@UserFullName", userFullName);
 					cmd.Parameters.AddWithValue("@UserLogin", userLogin);
 					cmd.Parameters.AddWithValue("@UserState", userState);
-					cmd.Parameters.AddWithValue("@ActionDescription",  $"{addOrEdit} {actionDescription}");
+					cmd.Parameters.AddWithValue("@ActionDescription",  $"{addEditDelete} {actionDescription}");
 
 					result = Convert.ToInt32(cmd.ExecuteScalar());					
 				}

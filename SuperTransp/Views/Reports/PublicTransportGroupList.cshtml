@@ -64,20 +64,27 @@
 								<th>Rif</th>
 								<th>Socios Línea</th>
 								<th>Socios Cargados</th>
+								<th>Estatus</th>
 							</tr>
 						</thead>
 						<tbody>
 							@foreach (var ptg in Model)
 							{
 								<tr>
+									@{
+										var statusColorPTG = ptg.Partners == ptg.TotalSupervisedDrivers ? "green" : "red";
+										var statusDescription = ptg.Partners == ptg.TotalSupervisedDrivers ? "Supervisada" : "Pendiente";
+									}
+
 									<td>
-										@Html.ActionLink(@ptg.PTGCompleteName, "PublicTransportGroupDriverList", "Reports", new { publicTransportGroupId = ptg.PublicTransportGroupId })
+										@Html.ActionLink(@ptg.PTGCompleteName, "PublicTransportGroupDriverList", "Reports", new { publicTransportGroupId = ptg.PublicTransportGroupId }, new { style = $"color: {statusColorPTG};" })
 									</td>
 									<td>@ptg.StateName</td>
 									<td>@ptg.ModeName</td>
 									<td>@ptg.PublicTransportGroupRif</td>
 									<td>@ptg.Partners</td>
 									<td>@ptg.TotalDrivers</td>
+									<td>@statusDescription</td>
 								</tr>
 							}
 						</tbody>

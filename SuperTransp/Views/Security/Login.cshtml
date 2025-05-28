@@ -33,12 +33,24 @@
 							<h2>
 								<span class="symbol"><img src="~/images/cintillo.jpg" alt="" /></span>
 
-							<label style="text-align:center">Sistema para la Supervisión de Unidades de Transporte (SuperTransp)</label>
+							<label style="text-align:center">Sistema para la Supervisión de Unidades de Transporte</label>
 							</h2>
 								@if (ViewBag.InvalidUser == "true")
 								{
 									<div>
 										<h5 style="color: #be3113; text-align:center;">Usuario o clave inválida</h5>
+									</div>
+								}
+								else if(ViewBag.InvalidUser == "inactive")
+								{
+									<div>
+										<h5 style="color: #be3113; text-align:center;">Usuario inactivo</h5>
+									</div>
+								}
+								else if(ViewBag.InvalidUser == "blocked")
+								{
+									<div>
+										<h5 style="color: #be3113; text-align:center;">Usuario bloqueado por número de intentos fallidos al iniciar</h5>
 									</div>
 								}
 							<div class="form-group row">

@@ -30,8 +30,11 @@ namespace SuperTransp.Core
 			public bool OldPasswordValid(int securityUserId, string oldPassword);
 			public string? Encrypt(string plainText);
 			public string? Decrypt(string encryptedText);
-			public int AddLogbook(int processId, string actionDescription);
+			public int AddLogbook(int processId, bool isDeleteAction, string actionDescription);
 			public bool IsTotalAccess(int securityModuleId);
+			public bool BlockLogin(string login);
+			public bool IsBlockedLogin(string login);
+			public bool IsInactiveLogin(string login);
 		}
 		public interface IGeography
 		{
@@ -82,7 +85,7 @@ namespace SuperTransp.Core
 			public bool RegisteredDocumentId(int driverIdentityDocument, int publicTransportGroupId);
 			public bool RegisteredPhone(string driverPhone, int publicTransportGroupId);
 			public bool RegisteredPartnerNumber(int partnerNumber, int publicTransportGroupId);
-			public List<DriverViewModel> GetAll();
+			public DriverViewModel GetById(int driverId);
 			public bool Delete(int driverId);
 			public int TotalDriversByPublicTransportGroupId(int publicTransportGroupId);
 		}

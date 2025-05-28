@@ -1,8 +1,6 @@
 ﻿using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Configuration;
 using SuperTransp.Models;
 using System.Data;
-using System.Reflection;
 using static SuperTransp.Core.Interfaces;
 
 namespace SuperTransp.Core
@@ -52,7 +50,7 @@ namespace SuperTransp.Core
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
 
-						_security.AddLogbook(model.DriverId, $"transportista cedula {model.DriverIdentityDocument} nombre {model.DriverFullName.ToUpper().Trim()} socio n° {model.PartnerNumber} telefono {model.DriverPhone} linea Id {model.PublicTransportGroupId}");
+						_security.AddLogbook(model.DriverId, false, $"transportista cedula {model.DriverIdentityDocument} nombre {model.DriverFullName.ToUpper().Trim()} socio n° {model.PartnerNumber} telefono {model.DriverPhone} linea Id {model.PublicTransportGroupId}");
 					}
 				}
 
@@ -181,18 +179,47 @@ namespace SuperTransp.Core
 			}
 			catch (Exception ex)
 			{
-				throw new Exception($"Error al obtener el registro del transportista {ex.Message}", ex);
+				throw new Exception($"Error al obtener el transportista por cedula {ex.Message}", ex);
 			}
 		}
 
-		public List<DriverViewModel> GetAll()
+		public DriverViewModel GetById(int driverId)
 		{
-			throw new NotImplementedException();
-		}
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
 
-		public List<DriverViewModel> GetByStateId(int stateId)
-		{
-			throw new NotImplementedException();
+					DriverViewModel driver = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_DriversDetail WHERE DriverId = @DriverId", sqlConnection);
+					cmd.Parameters.AddWithValue("@DriverId", driverId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							driver.DriverId = (int)dr["DriverId"];
+							driver.PublicTransportGroupId = (int)dr["PublicTransportGroupId"];
+							driver.DriverIdentityDocument = (int)dr["DriverIdentityDocument"];
+							driver.DriverFullName = (string)dr["DriverFullName"];
+							driver.PartnerNumber = (int)dr["PartnerNumber"];
+							driver.DriverPhone = (string)dr["DriverPhone"];
+							driver.PTGCompleteName = (string)dr["PTGCompleteName"];
+							driver.DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"];
+						}
+					}
+
+					return driver;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener el transportista por Id {ex.Message}", ex);
+			}
 		}
 
 		public bool Delete(int driverId)
@@ -204,13 +231,20 @@ namespace SuperTransp.Core
 					sqlConnection.Open();
 				}
 
+				var driver = GetById(driverId);
+
 				SqlCommand cmd = new("DELETE FROM Driver WHERE DriverId = @DriverId", sqlConnection);
 				cmd.Parameters.AddWithValue("@DriverId", driverId);
 
 				int rowsAffected = cmd.ExecuteNonQuery();
 
 				if(rowsAffected > 0)
-				{
+				{				
+					if (driver != null)
+					{
+						_security.AddLogbook(driverId, true, $"transportista cedula {driver.DriverIdentityDocument} nombre {driver.DriverFullName.ToUpper().Trim()} socio n° {driver.PartnerNumber} telefono {driver.DriverPhone} linea {driver.PTGCompleteName}");
+					}					
+
 					return true;
 				}
 			}

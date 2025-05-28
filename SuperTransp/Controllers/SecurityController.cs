@@ -29,6 +29,7 @@ namespace SuperTransp.Controllers
 			HttpContext.Session.Remove("StateId");
 			HttpContext.Session.Remove("StateName");
 			HttpContext.Session.Remove("DeviceIP");
+			HttpContext.Session.Remove("LoginAttempts");
 
 			return View();
 		}
@@ -41,6 +42,20 @@ namespace SuperTransp.Controllers
 				if(!string.IsNullOrEmpty(model.Login) && !string.IsNullOrEmpty(model.Password))
 				{
 					model.Password = _security.Encrypt(model.Password);
+
+					if (_security.IsInactiveLogin(model.Login))
+					{
+						ViewBag.InvalidUser = "inactive";
+
+						return View();
+					}
+
+					if (_security.IsBlockedLogin(model.Login))
+					{
+						ViewBag.InvalidUser = "blocked";
+
+						return View();
+					}
 
 					var validUser = _security.GetValidUser(model.Login, model.Password);
 
@@ -57,7 +72,35 @@ namespace SuperTransp.Controllers
 						return RedirectToAction("Index", "Home");
 					}
 
-					ViewBag.InvalidUser = "true";
+					if (HttpContext.Session.GetInt32("LoginAttempts") == null)
+					{
+						HttpContext.Session.SetInt32("LoginAttempts", 1);
+						
+						ViewBag.InvalidUser = "true";
+					}
+					else
+					{
+						var attemptCounter =  HttpContext.Session.GetInt32("LoginAttempts");
+						
+						if(attemptCounter <= 3)
+						{
+							HttpContext.Session.Remove("LoginAttempts");
+
+							attemptCounter++;
+
+							HttpContext.Session.SetInt32("LoginAttempts", (int)attemptCounter);
+
+							ViewBag.InvalidUser = "true";
+
+							return View();
+						}
+						else
+						{
+							_security.BlockLogin(model.Login);
+							
+							ViewBag.InvalidUser = "blocked";
+						}
+					}
 
 					return View();
 				}

@@ -1,8 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
+using SuperTransp.Extensions;
 using SuperTransp.Models;
 using System.Data;
-using System.Security.Cryptography.X509Certificates;
 using static SuperTransp.Core.Interfaces;
 
 namespace SuperTransp.Core
@@ -10,9 +9,14 @@ namespace SuperTransp.Core
 	public class Supervision : ISupervision
 	{
 		private readonly IConfiguration _configuration;
-		public Supervision(IConfiguration configuration)
+		private readonly ISecurity _security;
+		private readonly IDriver _driver;
+
+		public Supervision(IConfiguration configuration, ISecurity security, IDriver driver)
 		{
 			this._configuration = configuration;
+			this._security = security;
+			this._driver = driver;
 		}
 
 		private SqlConnection GetConnection()
@@ -64,6 +68,14 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@SupervisionStatus", model.SupervisionStatus);
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
+
+						var driver = _driver.GetById(model.DriverId);
+
+						if(driver != null)
+						{
+							_security.AddLogbook(model.SupervisionId, false, $"supervisión transportista codigo {model.DriverId} nombre {driver.DriverFullName} cedula {driver.DriverIdentityDocument} socio con vehículo {model.DriverWithVehicle.ToSpanishYesNo().ToLower()} vehículo en funcionamiento {model.WorkingVehicle.ToSpanishYesNo().ToLower()} socio presente {model.InPerson.ToSpanishYesNo().ToLower()} " +
+								$"placa {model.Plate} id del vehiculo {model.VehicleDataId} año vehículo {model.Year} marca vehículo {model.Make} modelo vehículo {model.ModeName} pasajeros {model.Passengers} litros de combustible {model.TankCapacity} litros de aceite {model.Liters} problemas con la huella {model.FingerprintTrouble.ToSpanishYesNo().ToLower()} observaciones {model.Remarks} foto vehículo {model.VehicleImageUrl}");
+						}
 					}
 				}
 
@@ -100,6 +112,13 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@SecurityUserId", model.SecurityUserId);
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
+
+						var driver = _driver.GetById(model.DriverId);
+
+						if(driver != null)
+						{
+							_security.AddLogbook(model.SupervisionId, false, $"supervisión de socio sin vehículo, código {model.DriverId} nombre {driver.DriverFullName} cedula {model.DriverIdentityDocument} ");
+						}						
 					}
 				}
 

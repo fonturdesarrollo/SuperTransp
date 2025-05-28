@@ -56,7 +56,7 @@ namespace SuperTransp.Core
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
 
-						_security.AddLogbook(model.PublicTransportGroupId, $"linea de transporte RIF {model.PublicTransportGroupRif} nombre {model.PublicTransportGroupName} cantidad socios: {model.Partners} representante {model.RepresentativeName} cedula representante {model.RepresentativeIdentityDocument}");											
+						_security.AddLogbook(model.PublicTransportGroupId, false, $"linea de transporte RIF {model.PublicTransportGroupRif} nombre {model.PublicTransportGroupName} cantidad socios: {model.Partners} representante {model.RepresentativeName} cedula representante {model.RepresentativeIdentityDocument}");											
 					}
 				}
 
@@ -157,6 +157,7 @@ namespace SuperTransp.Core
 								UnionName = (string)dr["UnionName"],
 								Partners = (int)dr["Partners"],
 								TotalDrivers = (int)dr["TotalDrivers"],
+								TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"],
 							});
 						}
 					}
@@ -210,6 +211,7 @@ namespace SuperTransp.Core
 								UnionName = (string)dr["UnionName"],
 								Partners = (int)dr["Partners"],
 								TotalDrivers = (int)dr["TotalDrivers"],
+								TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"],
 							});
 						}
 					}
