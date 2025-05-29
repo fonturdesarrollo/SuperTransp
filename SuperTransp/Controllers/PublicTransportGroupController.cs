@@ -304,20 +304,34 @@ namespace SuperTransp.Controllers
 		public IActionResult GenerateQR([FromBody] QRRequest request)
 		{
 			var baseWebSiteUrl = _configuration["FtpSettings:BaseWebSiteUrl"];
+			var ptgDataController = $"{baseWebSiteUrl}SuperTransp/PublicTransportGroup/PublicTransportGroupData?ptgCode={request.ptgGUID}";
 
-			using (QRCodeGenerator qrGenerator = new QRCodeGenerator())
+			if (request == null || string.IsNullOrEmpty(request.ptgGUID))
 			{
-				var ptgDataController = $"{baseWebSiteUrl}PublicTransportGroup/PublicTransportGroupData?ptgCode={request.ptgGUID}";
+				return BadRequest(new { success = false, message = "Se requiere el GUID para generar el código QR." });
+			}
 
+			try
+			{
+				QRCodeGenerator qrGenerator = new QRCodeGenerator();
 				QRCodeData qrCodeData = qrGenerator.CreateQrCode(ptgDataController, QRCodeGenerator.ECCLevel.Q);
-				PngByteQRCode qrCode = new PngByteQRCode(qrCodeData);
-				byte[] qrCodeBytes = qrCode.GetGraphic(20);
 
-				string base64String = Convert.ToBase64String(qrCodeBytes);
-				return Json(new { qrImage = "data:image/png;base64," + base64String });
+				using (PngByteQRCode pngByteQRCode = new PngByteQRCode(qrCodeData))
+				{
+					byte[] qrCodeBytes = pngByteQRCode.GetGraphic(20);
+					string qrCodeBase64 = Convert.ToBase64String(qrCodeBytes);
+
+					return Json(new { success = true, qrImage = "data:image/png;base64," + qrCodeBase64 });
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Error al generar el código QR: {ex.Message}");
+				return StatusCode(500, new { success = false, message = $"Error interno al generar el código QR: {ex.Message}" });
 			}
 		}
 	}
+
 	public class QRRequest
 	{
 		public string ptgGUID { get; set; }
