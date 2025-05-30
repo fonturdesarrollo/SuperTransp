@@ -90,7 +90,8 @@ namespace SuperTransp.Core
 								PartnerNumber = (int)dr["PartnerNumber"],
 								DriverPhone = (string)dr["DriverPhone"],
 								PTGCompleteName = (string)dr["PTGCompleteName"],
-								DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"]
+								DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"],
+								PublicTransportGroupGUID = (string)dr["PublicTransportGroupGUID"],
 							});
 						}
 					}

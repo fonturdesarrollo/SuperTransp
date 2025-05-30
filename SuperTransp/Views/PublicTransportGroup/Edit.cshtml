@@ -158,8 +158,8 @@
 		<div class="modal-dialog">
 			<div class="modal-content">
 				<div class="modal-header">
-					<h5 class="modal-title">Código QR Generado</h5>
-					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+					<h5 class="modal-title">Código QR</h5>
+					<button type="button" class="close" data-bs-dismiss="modal">&times;</button>
 				</div>
 				<div class="modal-body text-center">
 					<img id="qrImage" src="" alt="Código QR" class="img-fluid" />
@@ -167,7 +167,6 @@
 			</div>
 		</div>
 	</div>
-
 
 	<!-- Scripts -->
 	<script src="~/assets/js/jquery.min.js"></script>
@@ -460,9 +459,7 @@
 					});
 				}
 			});	
-		});
 
-		$(document).ready(function () {
 			$("#generateQR").click(function () {
 				var ptgGUID = $('#PublicTransportGroupGUID').val();
 				var generateQRUrl = '@Url.Action("GenerateQR", "PublicTransportGroup")';
@@ -471,7 +468,7 @@
 					url: generateQRUrl,
 					type: "POST",
 					contentType: "application/json",
-					data: JSON.stringify({ ptgGUID: ptgGUID }), // Enviar como objeto JSON
+					data: JSON.stringify({ ptgGUID: ptgGUID }),
 					success: function (response) {
 						$("#qrImage").attr("src", response.qrImage);
 						var myModal = new bootstrap.Modal(document.getElementById('qrModal'));

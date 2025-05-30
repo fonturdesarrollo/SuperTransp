@@ -18,5 +18,6 @@ namespace SuperTransp.Models
 		public string? DriverPhone { get; set; }
 		public DateTime DriverModifiedDate { get; set; }
 		public string? PTGCompleteName { get; set; }
+		public string? PublicTransportGroupGUID { get; set; }
 	}
 }

@@ -139,11 +139,11 @@
 											@{
 												if(ViewBag.IsTotalAccess)
 												{
-													@Html.ActionLink("Modificar", "Edit", "Driver", new { driverPublicTransportGroupId = driver.DriverPublicTransportGroupId }, new { @id = "btnEdit" })
+													@Html.ActionLink("MODIFICAR", "Edit", "Driver", new { driverPublicTransportGroupId = driver.DriverPublicTransportGroupId }, new { @id = "btnEdit" })
 												}
 												else
 												{
-													<span>Solo lectura</span>
+													<span>SOLO LECTURA</span>
 												}
 											}											
 										</td>
@@ -154,12 +154,12 @@
 													<a href="javascript:void(0);"
 													   id="btnDelete"
 													   onclick="confirmDeletion('@Url.Action("Delete", "Driver", new { driverId = @driver.DriverId, publicTransportGroupId = @driver.PublicTransportGroupId, pTGCompleteName = @driver.PTGCompleteName })')">
-														Eliminar
+														ELIMINAR
 													</a>
 												}
 												else
 												{
-													<span>Solo lectura</span>
+													<span>SOLO LECTURA</span>
 												}
 											}			
 										</td>
