@@ -350,7 +350,8 @@ namespace SuperTransp.Core
 							ptg.VehicleImageUrl = (string)dr["VehicleImageUrl"];
 							ptg.FingerprintTrouble = (bool)dr["FingerprintTrouble"];
 							ptg.Remarks = (string)dr["Remarks"];							
-							ptg.VehicleDataId = (int)dr["VehicleDataId"];					
+							ptg.VehicleDataId = (int)dr["VehicleDataId"];
+							ptg.SupervisionStatus = (bool)dr["SupervisionStatus"];
 						}
 					}
 
@@ -359,7 +360,80 @@ namespace SuperTransp.Core
 			}
 			catch (Exception ex)
 			{
-				throw new Exception($"Error al obtener todas las líneas {ex.Message}", ex);
+				throw new Exception($"Error al obtener los datos del transportista y el vehiculo {ex.Message}", ex);
+			}
+		}
+
+		public SupervisionViewModel GetByPublicTransportGroupGUIDAndPartnerNumber(string publicTransportGroupGUID, int partnerNumber)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SupervisionViewModel ptg = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE PublicTransportGroupGUID = @PublicTransportGroupGUID AND PartnerNumber = @PartnerNumber", sqlConnection);
+					cmd.Parameters.AddWithValue("@PublicTransportGroupGUID", publicTransportGroupGUID);
+					cmd.Parameters.AddWithValue("@PartnerNumber", partnerNumber);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							ptg.PublicTransportGroupId = (int)dr["PublicTransportGroupId"];
+							ptg.PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"];
+							ptg.PTGCompleteName = (string)dr["PTGCompleteName"];
+							ptg.ModeId = (int)dr["ModeId"];
+							ptg.StateName = (string)dr["StateName"];
+							ptg.ModeName = (string)dr["ModeName"];
+							ptg.DriverId = (int)dr["DriverId"];
+							ptg.DriverFullName = (string)dr["DriverFullName"];
+							ptg.DriverIdentityDocument = (int)dr["DriverIdentityDocument"];
+							ptg.PartnerNumber = (int)dr["PartnerNumber"];
+							ptg.SupervisionStatusName = (string)dr["SupervisionStatusText"];
+							ptg.TotalDrivers = (int)dr["TotalDrivers"];
+							ptg.TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"];
+							ptg.SupervisionId = (int)dr["SupervisionId"];
+							ptg.DriverWithVehicle = (bool)dr["DriverWithVehicle"];
+							ptg.WorkingVehicle = (bool)dr["WorkingVehicle"];
+							ptg.InPerson = (bool)dr["InPerson"];
+							ptg.Plate = (string)dr["Plate"];
+							ptg.Year = (int)dr["Year"];
+							ptg.Make = (string)dr["Make"];
+							ptg.Model = (string)dr["Model"];
+							ptg.Passengers = (int)dr["Passengers"];
+							ptg.RimName = (string)dr["RimName"];
+							ptg.RimId = (int)dr["RimId"];
+							ptg.Wheels = (int)dr["Wheels"];
+							ptg.MotorOilName = (string)dr["MotorOilName"];
+							ptg.MotorOilId = (int)dr["MotorOilId"];
+							ptg.Liters = (int)dr["Liters"];
+							ptg.FuelTypeName = (string)dr["FuelTypeName"];
+							ptg.FuelTypeId = (int)dr["FuelTypeId"];
+							ptg.TankCapacity = (int)dr["TankCapacity"];
+							ptg.BatteryName = (string)dr["BatteryName"];
+							ptg.BatteryId = (int)dr["BatteryId"];
+							ptg.NumberOfBatteries = (int)dr["NumberOfBatteries"];
+							ptg.FailureTypeName = (string)dr["FailureTypeName"];
+							ptg.FailureTypeId = (int)dr["FailureTypeId"];
+							ptg.VehicleImageUrl = (string)dr["VehicleImageUrl"];
+							ptg.FingerprintTrouble = (bool)dr["FingerprintTrouble"];
+							ptg.Remarks = (string)dr["Remarks"];
+							ptg.VehicleDataId = (int)dr["VehicleDataId"];
+							ptg.SupervisionStatus = (bool)dr["SupervisionStatus"];
+						}
+					}
+
+					return ptg;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener los datos del transportista y el vehiculo {ex.Message}", ex);
 			}
 		}
 

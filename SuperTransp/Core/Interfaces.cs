@@ -96,6 +96,7 @@ namespace SuperTransp.Core
 			public int AddOrEdit(SupervisionViewModel model);
 			public int AddSimple(SupervisionViewModel model);
 			public SupervisionViewModel GetByPublicTransportGroupIdAndDriverIdAndPartnerNumberStateId(int publicTransportGroupId, int driverId, int partnerNumber, int stateId);
+			public SupervisionViewModel GetByPublicTransportGroupGUIDAndPartnerNumber(string publicTransportGroupGUID, int partnerNumber);
 			public List<PublicTransportGroupViewModel> GetDriverPublicTransportGroupByStateId(int stateId);
 			public List<PublicTransportGroupViewModel> GetDriverPublicTransportGroupByPtgId(int publicTransportGroupId);
 			public List<PublicTransportGroupViewModel> GetAllDriverPublicTransportGroup();

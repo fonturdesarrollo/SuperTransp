@@ -293,18 +293,11 @@ namespace SuperTransp.Controllers
 			return Json("ERROR");
 		}
 
-		public IActionResult PublicTransportGroupData(string ptgCode)
-		{
-			var model = _publicTransportGroup.GetByGUIDId(ptgCode);
-			
-			return View(model);
-		}
-
 		[HttpPost]
 		public IActionResult GenerateQR([FromBody] QRRequest request)
 		{
 			var baseWebSiteUrl = _configuration["FtpSettings:BaseWebSiteUrl"];
-			var ptgDataController = $"{baseWebSiteUrl}SuperTransp/PublicTransportGroup/PublicTransportGroupData?ptgCode={request.ptgGUID}";
+			var ptgDataController = $"{baseWebSiteUrl}QR/PublicTransportGroupData?ptgCode={request.ptgGUID}";
 
 			if (request == null || string.IsNullOrEmpty(request.ptgGUID))
 			{

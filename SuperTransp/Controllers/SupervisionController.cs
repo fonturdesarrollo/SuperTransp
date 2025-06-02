@@ -152,7 +152,7 @@ namespace SuperTransp.Controllers
 					{
 						model.Remarks = string.IsNullOrEmpty(model.Remarks) ? string.Empty : model.Remarks;
 						model.VehicleImageUrl = string.IsNullOrEmpty(model.VehicleImageUrl) ? string.Empty : model.VehicleImageUrl;
-						model.SupervisionStatus = 1;
+						model.SupervisionStatus = true;
 						model.FailureTypeId = model.WorkingVehicle ? 1 : model.FailureTypeId;
 						var imageUrl = SupervisionPictureUrl(model.StateName, model.PublicTransportGroupRif, model.DriverIdentityDocument, model.PartnerNumber);
 						model.VehicleImageUrl = imageUrl;

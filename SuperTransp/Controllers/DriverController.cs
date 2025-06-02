@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using QRCoder;
 using SuperTransp.Core;
 using SuperTransp.Models;
 using System.Xml.Linq;
@@ -13,13 +14,15 @@ namespace SuperTransp.Controllers
 		private IGeography _geography;
 		private IPublicTransportGroup _publicTransportGroup;
 		private IDriver _driver;
+		private IConfiguration _configuration;
 
-		public DriverController(IDriver driver, IPublicTransportGroup publicTransportGroup, ISecurity security, IGeography geography)
+		public DriverController(IDriver driver, IPublicTransportGroup publicTransportGroup, ISecurity security, IGeography geography, IConfiguration configuration)
 		{
 			_driver = driver;
 			_publicTransportGroup = publicTransportGroup;
 			_security = security;
 			_geography = geography;
+			_configuration = configuration;
 		}
 		public IActionResult Index()
 		{
@@ -280,6 +283,48 @@ namespace SuperTransp.Controllers
 			}
 
 			return Json("ERROR");
+		}
+
+		[HttpPost]
+		public IActionResult GenerateQR([FromBody] QRDriverRequest request)
+		{
+
+			if(request == null)
+			{
+				return BadRequest(new { success = false, message = "Se requiere el GUID para generar el código QR." });
+			}
+
+			var baseWebSiteUrl = _configuration["FtpSettings:BaseWebSiteUrl"];
+			var ptgDataController = $"{baseWebSiteUrl}QR/DriverData?driverCode={request.ptgGUID}";
+
+			if (request == null || string.IsNullOrEmpty(request.ptgGUID))
+			{
+				return BadRequest(new { success = false, message = "Se requiere el GUID para generar el código QR." });
+			}
+
+			try
+			{
+				QRCodeGenerator qrGenerator = new QRCodeGenerator();
+				QRCodeData qrCodeData = qrGenerator.CreateQrCode(ptgDataController, QRCodeGenerator.ECCLevel.Q);
+
+				using (PngByteQRCode pngByteQRCode = new PngByteQRCode(qrCodeData))
+				{
+					byte[] qrCodeBytes = pngByteQRCode.GetGraphic(20);
+					string qrCodeBase64 = Convert.ToBase64String(qrCodeBytes);
+
+					return Json(new { success = true, qrImage = "data:image/png;base64," + qrCodeBase64 });
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"Error al generar el código QR: {ex.Message}");
+				return StatusCode(500, new { success = false, message = $"Error interno al generar el código QR: {ex.Message}" });
+			}
+		}
+
+		public class QRDriverRequest
+		{
+			public string ptgGUID { get; set; }
 		}
 	}
 }

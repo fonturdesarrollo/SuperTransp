@@ -1,0 +1,101 @@
+﻿@using SuperTransp.Extensions
+@model SuperTransp.Models.SupervisionViewModel
+@{
+	Layout = "";
+}
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Transportista</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+	<link rel="stylesheet" href="~/assets/css/main.css" />
+	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
+	<link rel="stylesheet" href="~/datatable/css/bootstrap.css" />
+	<style>
+		.is-invalid {
+			border: 2px solid red;
+			background-color: #ffe6e6;
+		}
+	</style>
+</head>
+<body class="is-preload">
+
+	<!-- Wrapper -->
+	<div id="wrapper">
+
+		<!-- Header -->
+		<header id="header">
+			<div class="inner">
+
+				<!-- Logo -->
+				<a href="#" class="logo">
+					<span class="symbol"><img src="~/images/logo_login.jpg" alt="" /></span><span class="title">SuperTransp</span>
+					<br />
+					<br />
+				</a>
+			</div>
+		</header>
+
+
+		<!-- Main -->
+		<div id="main">
+			<div class="inner">
+				<!-- Form -->
+				<section>
+					<h1 style="color:#4cbece">Transportista</h1>
+					<br />
+					<div class="row gtr-uniform">
+						<div class="col-6">
+							<strong>RIF:</strong>
+							@Model.PublicTransportGroupRif
+						</div>
+
+						<div class="col-12">
+							<strong>Línea:</strong>
+							@Model.PTGCompleteName
+						</div>
+						<div class="col-12">
+							<strong>Cedula:</strong>
+							@Model.DriverIdentityDocument
+						</div>
+
+						<div class="col-12">
+							<strong>Nombre Socio:</strong>
+							@Model.DriverFullName
+						</div>
+						<div class="col-12">
+							<strong>N° Socio:</strong>
+							@Model.PartnerNumber
+						</div>
+						@{
+							if (Model.SupervisionStatus != null && (bool)Model.SupervisionStatus)
+							{
+								<div class="col-3">
+									<strong>Estatus:</strong>
+									"SUPERVISADO"
+								</div>
+								<div class="col-3">
+									<strong>Posee vehículo:</strong>
+									@Model.DriverWithVehicle.ToSpanishYesNo()
+								</div>
+								<div class="col-3">
+									<strong>Presente en supervisión:</strong>
+									@Model.InPerson.ToSpanishYesNo()
+								</div>
+							}
+							else
+							{
+								<div class="col-6">
+									<strong>Estatus:</strong>
+									"PENDIENTE POR SUPERVISION"
+								</div>
+							}
+						}
+					</div>
+				</section>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

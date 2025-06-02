@@ -33,7 +33,7 @@ namespace SuperTransp.Models
 		public int PartnerNumber { get; set; }
 		public string? StateName { get; set; }
 		public string? PublicTransportGroupRif { get; set; }
-		public int? SupervisionStatus { get; set; }
+		public bool? SupervisionStatus { get; set; }
 		public string? VehicleImageUrl { get; set; }
 		public int ModeId { get; set; }
 		public string? ModeName { get; set; }
