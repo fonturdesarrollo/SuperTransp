@@ -35,6 +35,8 @@ namespace SuperTransp.Core
 			public bool BlockLogin(string login);
 			public bool IsBlockedLogin(string login);
 			public bool IsInactiveLogin(string login);
+			public string GeneratePublicKey();
+			public bool ValidateKey(string key, byte[] sign);
 		}
 		public interface IGeography
 		{

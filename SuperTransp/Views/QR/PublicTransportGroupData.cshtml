@@ -26,26 +26,22 @@
 		<!-- Header -->
 		<header id="header">
 			<div class="inner">
-
 				<!-- Logo -->
 				<a href="#" class="logo">
-					<span class="symbol"><img src="~/images/logo_login.jpg" alt="" /></span><span class="title">SuperTransp</span>
-					<br />
-					<br />
+					<span><img src="~/images/Logo.png" width="100px" height="100px" alt="" /></span><span class="title"></span>
 				</a>
 			</div>
 		</header>
-
 
 		<!-- Main -->
 		<div id="main">
 			<div class="inner">
 				<!-- Form -->
 				<section>
-					<h1 style="color:#4cbece">Línea de transporte cargada</h1>
+					<h1 style="color:#4cbece">Línea de Transporte</h1>
 					<br />
 					<div class="row gtr-uniform">
-						<div class="col-6">
+						<div class="col-12">
 							<strong>RIF:</strong>
 							@Model.PublicTransportGroupRif
 						</div>
@@ -66,6 +62,14 @@
 						<div class="col-12">
 							<strong>Cantidad de Socios:</strong>
 							@Model.Partners
+						</div>
+						<div class="col-12">
+							<br />
+							<br />
+							<br />
+							<ul class="actions">
+								<li><label id="ValidCode">@ViewBag.AllowedHash</label></li>
+							</ul>
 						</div>
 					</div>
 				</section>

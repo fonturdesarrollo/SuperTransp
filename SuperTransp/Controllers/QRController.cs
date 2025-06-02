@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using SuperTransp.Core;
+using System.Text;
 using static SuperTransp.Core.Interfaces;
 
 namespace SuperTransp.Controllers
@@ -10,17 +11,21 @@ namespace SuperTransp.Controllers
 		private IPublicTransportGroup _publicTransportGroup;
 		private IDriver _driver;
 		ISupervision _supervision;
+		ISecurity _security;
 
-		public QRController(IPublicTransportGroup publicTransportGroup, IDriver driver, ISupervision supervision)
+		public QRController(IPublicTransportGroup publicTransportGroup, IDriver driver, ISupervision supervision, ISecurity security)
 		{
 			_publicTransportGroup = publicTransportGroup;
 			_driver = driver;
 			_supervision = supervision;
+			_security = security;
 		}
 
 		public IActionResult PublicTransportGroupData(string ptgCode)
 		{
 			var model = _publicTransportGroup.GetByGUIDId(ptgCode);
+
+			ViewBag.AllowedHash = _security.GeneratePublicKey();
 
 			return View(model);
 		}
@@ -40,6 +45,8 @@ namespace SuperTransp.Controllers
 					partnerNumber = int.Parse(codes[1]);
 				}
 			}
+
+			ViewBag.AllowedHash = _security.GeneratePublicKey();
 
 			var model = _supervision.GetByPublicTransportGroupGUIDAndPartnerNumber(publicTransportGroupGUID, partnerNumber);
 

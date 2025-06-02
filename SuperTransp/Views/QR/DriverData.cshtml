@@ -19,8 +19,7 @@
 		}
 	</style>
 </head>
-<body class="is-preload">
-
+<body class="is-preload">	
 	<!-- Wrapper -->
 	<div id="wrapper">
 
@@ -30,13 +29,10 @@
 
 				<!-- Logo -->
 				<a href="#" class="logo">
-					<span class="symbol"><img src="~/images/logo_login.jpg" alt="" /></span><span class="title">SuperTransp</span>
-					<br />
-					<br />
+					<span ><img src="~/images/Logo.png" width="100px" height="100px" alt=""/></span><span class="title"></span>
 				</a>
 			</div>
 		</header>
-
 
 		<!-- Main -->
 		<div id="main">
@@ -71,27 +67,67 @@
 						@{
 							if (Model.SupervisionStatus != null && (bool)Model.SupervisionStatus)
 							{
-								<div class="col-3">
+								<div class="col-12">
 									<strong>Estatus:</strong>
-									"SUPERVISADO"
+									SUPERVISADO
 								</div>
-								<div class="col-3">
-									<strong>Posee vehículo:</strong>
+								<div class="col-12">
+									<strong>Fecha supervisión:</strong>
+									@Model.SupervisionDateAdded.ToString("dd/MM/yyyy")
+								</div>
+								<div class="col-12">
+									<strong>Con vehículo:</strong>
 									@Model.DriverWithVehicle.ToSpanishYesNo()
 								</div>
-								<div class="col-3">
-									<strong>Presente en supervisión:</strong>
+								<div class="col-12">
+									<strong>Presente:</strong>
 									@Model.InPerson.ToSpanishYesNo()
 								</div>
+								if (@Model.DriverWithVehicle)
+								{
+									<div class="col-12">
+										<strong>Placa:</strong>
+										@Model.Plate
+									</div>
+									<div class="col-12">
+										<strong>Año:</strong>
+										@Model.Year
+									</div>
+									<div class="col-12">
+										<strong>Marca:</strong>
+										@Model.Make
+									</div>
+									<div class="col-12">
+										<strong>Marca:</strong>
+										@Model.Model
+									</div>
+									if(!string.IsNullOrEmpty(Model.Remarks))
+									{
+										<div class="col-12">
+											<strong>Observaciones:</strong>
+											@Model.Remarks
+										</div>
+									}
+									<div class="col-12">
+										<strong>Foto supervisión:</strong>
+										<br />
+										<img src="@Model.VehicleImageUrl" alt="Imagen del vehículo" class="img-fluid" />
+									</div>
+								}
 							}
 							else
 							{
 								<div class="col-6">
 									<strong>Estatus:</strong>
-									"PENDIENTE POR SUPERVISION"
+									PENDIENTE POR SUPERVISION
 								</div>
 							}
 						}
+						<div class="col-12">
+							<ul class="actions">					
+								<li><label id="ValidCode">@ViewBag.AllowedHash</label></li>
+							</ul>
+						</div>
 					</div>
 				</section>
 			</div>

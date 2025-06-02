@@ -300,7 +300,7 @@ namespace SuperTransp.Core
 						sqlConnection.Open();
 					}
 
-					SupervisionViewModel ptg = new();
+					SupervisionViewModel supervision = new();
 					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE PublicTransportGroupId = @PublicTransportGroupId AND DriverId = @DriverId AND PartnerNumber = @PartnerNumber AND StateId = @StateId", sqlConnection);
 					cmd.Parameters.AddWithValue("@PublicTransportGroupId", publicTransportGroupId);
 					cmd.Parameters.AddWithValue("@DriverId", driverId);
@@ -311,51 +311,52 @@ namespace SuperTransp.Core
 					{
 						while (dr.Read())
 						{
-							ptg.PublicTransportGroupId = (int)dr["PublicTransportGroupId"];
-							ptg.PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"];
-							ptg.PTGCompleteName = (string)dr["PTGCompleteName"];
-							ptg.ModeId = (int)dr["ModeId"];
-							ptg.StateName = (string)dr["StateName"];
-							ptg.ModeName = (string)dr["ModeName"];
-							ptg.DriverId = (int)dr["DriverId"];
-							ptg.DriverFullName = (string)dr["DriverFullName"];
-							ptg.DriverIdentityDocument = (int)dr["DriverIdentityDocument"];
-							ptg.PartnerNumber = (int)dr["PartnerNumber"];
-							ptg.SupervisionStatusName = (string)dr["SupervisionStatusText"];
-							ptg.TotalDrivers = (int)dr["TotalDrivers"];
-							ptg.TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"];
-							ptg.SupervisionId = (int)dr["SupervisionId"];
-							ptg.DriverWithVehicle = (bool)dr["DriverWithVehicle"];
-							ptg.WorkingVehicle = (bool)dr["WorkingVehicle"];
-							ptg.InPerson = (bool)dr["InPerson"];
-							ptg.Plate = (string)dr["Plate"];
-							ptg.Year = (int)dr["Year"];
-							ptg.Make = (string)dr["Make"];
-							ptg.Model = (string)dr["Model"];
-							ptg.Passengers = (int)dr["Passengers"];
-							ptg.RimName = (string)dr["RimName"];
-							ptg.RimId = (int)dr["RimId"];
-							ptg.Wheels = (int)dr["Wheels"];
-							ptg.MotorOilName = (string)dr["MotorOilName"];
-							ptg.MotorOilId = (int)dr["MotorOilId"];
-							ptg.Liters = (int)dr["Liters"];
-							ptg.FuelTypeName = (string)dr["FuelTypeName"];
-							ptg.FuelTypeId = (int)dr["FuelTypeId"];
-							ptg.TankCapacity = (int)dr["TankCapacity"];
-							ptg.BatteryName = (string)dr["BatteryName"];
-							ptg.BatteryId = (int)dr["BatteryId"];
-							ptg.NumberOfBatteries = (int)dr["NumberOfBatteries"];
-							ptg.FailureTypeName = (string)dr["FailureTypeName"];
-							ptg.FailureTypeId = (int)dr["FailureTypeId"];
-							ptg.VehicleImageUrl = (string)dr["VehicleImageUrl"];
-							ptg.FingerprintTrouble = (bool)dr["FingerprintTrouble"];
-							ptg.Remarks = (string)dr["Remarks"];							
-							ptg.VehicleDataId = (int)dr["VehicleDataId"];
-							ptg.SupervisionStatus = (bool)dr["SupervisionStatus"];
+							supervision.PublicTransportGroupId = (int)dr["PublicTransportGroupId"];
+							supervision.PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"];
+							supervision.PTGCompleteName = (string)dr["PTGCompleteName"];
+							supervision.ModeId = (int)dr["ModeId"];
+							supervision.StateName = (string)dr["StateName"];
+							supervision.ModeName = (string)dr["ModeName"];
+							supervision.DriverId = (int)dr["DriverId"];
+							supervision.DriverFullName = (string)dr["DriverFullName"];
+							supervision.DriverIdentityDocument = (int)dr["DriverIdentityDocument"];
+							supervision.PartnerNumber = (int)dr["PartnerNumber"];
+							supervision.SupervisionStatusName = (string)dr["SupervisionStatusText"];
+							supervision.TotalDrivers = (int)dr["TotalDrivers"];
+							supervision.TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"];
+							supervision.SupervisionId = (int)dr["SupervisionId"];
+							supervision.DriverWithVehicle = (bool)dr["DriverWithVehicle"];
+							supervision.WorkingVehicle = (bool)dr["WorkingVehicle"];
+							supervision.InPerson = (bool)dr["InPerson"];
+							supervision.Plate = (string)dr["Plate"];
+							supervision.Year = (int)dr["Year"];
+							supervision.Make = (string)dr["Make"];
+							supervision.Model = (string)dr["Model"];
+							supervision.Passengers = (int)dr["Passengers"];
+							supervision.RimName = (string)dr["RimName"];
+							supervision.RimId = (int)dr["RimId"];
+							supervision.Wheels = (int)dr["Wheels"];
+							supervision.MotorOilName = (string)dr["MotorOilName"];
+							supervision.MotorOilId = (int)dr["MotorOilId"];
+							supervision.Liters = (int)dr["Liters"];
+							supervision.FuelTypeName = (string)dr["FuelTypeName"];
+							supervision.FuelTypeId = (int)dr["FuelTypeId"];
+							supervision.TankCapacity = (int)dr["TankCapacity"];
+							supervision.BatteryName = (string)dr["BatteryName"];
+							supervision.BatteryId = (int)dr["BatteryId"];
+							supervision.NumberOfBatteries = (int)dr["NumberOfBatteries"];
+							supervision.FailureTypeName = (string)dr["FailureTypeName"];
+							supervision.FailureTypeId = (int)dr["FailureTypeId"];
+							supervision.VehicleImageUrl = (string)dr["VehicleImageUrl"];
+							supervision.FingerprintTrouble = (bool)dr["FingerprintTrouble"];
+							supervision.Remarks = (string)dr["Remarks"];							
+							supervision.VehicleDataId = (int)dr["VehicleDataId"];
+							supervision.SupervisionStatus = (bool)dr["SupervisionStatus"];
+							supervision.SupervisionDateAdded = (DateTime)dr["SupervisionDateAdded"];
 						}
 					}
 
-					return ptg;
+					return supervision;
 				}
 			}
 			catch (Exception ex)
@@ -375,7 +376,7 @@ namespace SuperTransp.Core
 						sqlConnection.Open();
 					}
 
-					SupervisionViewModel ptg = new();
+					SupervisionViewModel supervision = new();
 					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE PublicTransportGroupGUID = @PublicTransportGroupGUID AND PartnerNumber = @PartnerNumber", sqlConnection);
 					cmd.Parameters.AddWithValue("@PublicTransportGroupGUID", publicTransportGroupGUID);
 					cmd.Parameters.AddWithValue("@PartnerNumber", partnerNumber);
@@ -384,51 +385,52 @@ namespace SuperTransp.Core
 					{
 						while (dr.Read())
 						{
-							ptg.PublicTransportGroupId = (int)dr["PublicTransportGroupId"];
-							ptg.PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"];
-							ptg.PTGCompleteName = (string)dr["PTGCompleteName"];
-							ptg.ModeId = (int)dr["ModeId"];
-							ptg.StateName = (string)dr["StateName"];
-							ptg.ModeName = (string)dr["ModeName"];
-							ptg.DriverId = (int)dr["DriverId"];
-							ptg.DriverFullName = (string)dr["DriverFullName"];
-							ptg.DriverIdentityDocument = (int)dr["DriverIdentityDocument"];
-							ptg.PartnerNumber = (int)dr["PartnerNumber"];
-							ptg.SupervisionStatusName = (string)dr["SupervisionStatusText"];
-							ptg.TotalDrivers = (int)dr["TotalDrivers"];
-							ptg.TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"];
-							ptg.SupervisionId = (int)dr["SupervisionId"];
-							ptg.DriverWithVehicle = (bool)dr["DriverWithVehicle"];
-							ptg.WorkingVehicle = (bool)dr["WorkingVehicle"];
-							ptg.InPerson = (bool)dr["InPerson"];
-							ptg.Plate = (string)dr["Plate"];
-							ptg.Year = (int)dr["Year"];
-							ptg.Make = (string)dr["Make"];
-							ptg.Model = (string)dr["Model"];
-							ptg.Passengers = (int)dr["Passengers"];
-							ptg.RimName = (string)dr["RimName"];
-							ptg.RimId = (int)dr["RimId"];
-							ptg.Wheels = (int)dr["Wheels"];
-							ptg.MotorOilName = (string)dr["MotorOilName"];
-							ptg.MotorOilId = (int)dr["MotorOilId"];
-							ptg.Liters = (int)dr["Liters"];
-							ptg.FuelTypeName = (string)dr["FuelTypeName"];
-							ptg.FuelTypeId = (int)dr["FuelTypeId"];
-							ptg.TankCapacity = (int)dr["TankCapacity"];
-							ptg.BatteryName = (string)dr["BatteryName"];
-							ptg.BatteryId = (int)dr["BatteryId"];
-							ptg.NumberOfBatteries = (int)dr["NumberOfBatteries"];
-							ptg.FailureTypeName = (string)dr["FailureTypeName"];
-							ptg.FailureTypeId = (int)dr["FailureTypeId"];
-							ptg.VehicleImageUrl = (string)dr["VehicleImageUrl"];
-							ptg.FingerprintTrouble = (bool)dr["FingerprintTrouble"];
-							ptg.Remarks = (string)dr["Remarks"];
-							ptg.VehicleDataId = (int)dr["VehicleDataId"];
-							ptg.SupervisionStatus = (bool)dr["SupervisionStatus"];
+							supervision.PublicTransportGroupId = (int)dr["PublicTransportGroupId"];
+							supervision.PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"];
+							supervision.PTGCompleteName = (string)dr["PTGCompleteName"];
+							supervision.ModeId = (int)dr["ModeId"];
+							supervision.StateName = (string)dr["StateName"];
+							supervision.ModeName = (string)dr["ModeName"];
+							supervision.DriverId = (int)dr["DriverId"];
+							supervision.DriverFullName = (string)dr["DriverFullName"];
+							supervision.DriverIdentityDocument = (int)dr["DriverIdentityDocument"];
+							supervision.PartnerNumber = (int)dr["PartnerNumber"];
+							supervision.SupervisionStatusName = (string)dr["SupervisionStatusText"];
+							supervision.TotalDrivers = (int)dr["TotalDrivers"];
+							supervision.TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"];
+							supervision.SupervisionId = (int)dr["SupervisionId"];
+							supervision.DriverWithVehicle = (bool)dr["DriverWithVehicle"];
+							supervision.WorkingVehicle = (bool)dr["WorkingVehicle"];
+							supervision.InPerson = (bool)dr["InPerson"];
+							supervision.Plate = (string)dr["Plate"];
+							supervision.Year = (int)dr["Year"];
+							supervision.Make = (string)dr["Make"];
+							supervision.Model = (string)dr["Model"];
+							supervision.Passengers = (int)dr["Passengers"];
+							supervision.RimName = (string)dr["RimName"];
+							supervision.RimId = (int)dr["RimId"];
+							supervision.Wheels = (int)dr["Wheels"];
+							supervision.MotorOilName = (string)dr["MotorOilName"];
+							supervision.MotorOilId = (int)dr["MotorOilId"];
+							supervision.Liters = (int)dr["Liters"];
+							supervision.FuelTypeName = (string)dr["FuelTypeName"];
+							supervision.FuelTypeId = (int)dr["FuelTypeId"];
+							supervision.TankCapacity = (int)dr["TankCapacity"];
+							supervision.BatteryName = (string)dr["BatteryName"];
+							supervision.BatteryId = (int)dr["BatteryId"];
+							supervision.NumberOfBatteries = (int)dr["NumberOfBatteries"];
+							supervision.FailureTypeName = (string)dr["FailureTypeName"];
+							supervision.FailureTypeId = (int)dr["FailureTypeId"];
+							supervision.VehicleImageUrl = (string)dr["VehicleImageUrl"];
+							supervision.FingerprintTrouble = (bool)dr["FingerprintTrouble"];
+							supervision.Remarks = (string)dr["Remarks"];
+							supervision.VehicleDataId = (int)dr["VehicleDataId"];
+							supervision.SupervisionStatus = (bool)dr["SupervisionStatus"];
+							supervision.SupervisionDateAdded = (DateTime)dr["SupervisionDateAdded"];
 						}
 					}
 
-					return ptg;
+					return supervision;
 				}
 			}
 			catch (Exception ex)

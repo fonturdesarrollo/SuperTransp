@@ -15,6 +15,8 @@ namespace SuperTransp.Core
         private readonly IConfiguration _configuration;
 		private static readonly string Key = "supertranspPasswordKey*-";
 		private readonly IHttpContextAccessor _httpContextAccessor;
+		private const string allowedCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+		private static RSA rsa = RSA.Create();
 
 		public Security(IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
         {
@@ -932,6 +934,23 @@ namespace SuperTransp.Core
 			{
 				throw new Exception($"Error al añadir el logbook {ex.Message}", ex);
 			}
+		}
+
+		public string GeneratePublicKey()
+		{
+			byte[] byteArray = new byte[6];
+			RandomNumberGenerator.Fill(byteArray);
+			return new string(byteArray.Select(b => allowedCharacters[b % allowedCharacters.Length]).ToArray());
+		}
+
+		public bool ValidateKey(string key, byte[] sign)
+		{
+			return rsa.VerifyData(Encoding.UTF8.GetBytes(key), sign, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+		}
+
+		private static byte[] SignPublicKey(string key)
+		{
+			return rsa.SignData(Encoding.UTF8.GetBytes(key), HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 		}
 	}
 }
