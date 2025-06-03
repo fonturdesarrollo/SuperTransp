@@ -80,6 +80,7 @@ namespace SuperTransp.Controllers
 								{
 									ViewBag.States = new SelectList(_geography.GetStateById((int)stateId), "StateId", "StateName");
 									ViewBag.Union = new SelectList(_union.GetByStateId((int)stateId), "UnionId", "UnionName");
+									ViewBag.IsTotalAccess = _security.IsTotalAccess(1);
 								}
 							}
 						}
@@ -93,7 +94,6 @@ namespace SuperTransp.Controllers
 
 					ViewBag.Designation = new SelectList(_designation.GetAll(), "DesignationId", "DesignationName");
 					ViewBag.Mode = new SelectList(_mode.GetAll(), "ModeId", "ModeName");
-					ViewBag.IsTotalAccess = _security.IsTotalAccess(1);
 
 					return View(model);
 				}
@@ -158,6 +158,7 @@ namespace SuperTransp.Controllers
 							{
 								ViewBag.States = new SelectList(_geography.GetStateById((int)stateId), "StateId", "StateName");
 								ViewBag.Union = new SelectList(_union.GetByStateId((int)stateId), "UnionId", "UnionName");
+								ViewBag.IsTotalAccess = _security.IsTotalAccess(1);
 							}
 						}
 					}
@@ -171,8 +172,6 @@ namespace SuperTransp.Controllers
 					ViewBag.Municipality = new SelectList(_geography.GetMunicipalityByStateId(model.StateId), "MunicipalityId", "MunicipalityName");
 					ViewBag.Designation = new SelectList(_designation.GetAll(), "DesignationId", "DesignationName");
 					ViewBag.Mode = new SelectList(_mode.GetAll(), "ModeId", "ModeName");
-					ViewBag.IsTotalAccess = _security.IsTotalAccess(1);
-					//GenerateQR(model.PublicTransportGroupGUID);
 				}
 
 				return View(model);

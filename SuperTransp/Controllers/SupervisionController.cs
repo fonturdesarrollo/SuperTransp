@@ -77,53 +77,55 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
-					int? stateId = HttpContext.Session.GetInt32("StateId");
-					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
-
-					var model = new SupervisionViewModel
+					int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
+					
+					if (securityGroupId != null && _security.GroupHasAccessToModule((int)securityGroupId, 3) || securityGroupId == 1)
 					{
-						PublicTransportGroupId = publicTransportGroupId,
-						PTGCompleteName = pTGCompleteName,
-						DriverId = driverId,
-						DriverFullName = driverFullName,
-						PartnerNumber = partnerNumber,
-						PublicTransportGroupRif = publicTransportGroupRif,
-						DriverIdentityDocument = driverIdentityDocument,
-						StateName = stateName,
-						SecurityUserId = (int)HttpContext.Session.GetInt32("SecurityUserId"),
-						SupervisionId =  supervisionId,
-						ModeId = modeId,
-						ModeName = modeName
-					};
+						var model = new SupervisionViewModel
+						{
+							PublicTransportGroupId = publicTransportGroupId,
+							PTGCompleteName = pTGCompleteName,
+							DriverId = driverId,
+							DriverFullName = driverFullName,
+							PartnerNumber = partnerNumber,
+							PublicTransportGroupRif = publicTransportGroupRif,
+							DriverIdentityDocument = driverIdentityDocument,
+							StateName = stateName,
+							SecurityUserId = (int)HttpContext.Session.GetInt32("SecurityUserId"),
+							SupervisionId = supervisionId,
+							ModeId = modeId,
+							ModeName = modeName
+						};
 
-					ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
-					ViewBag.DriverWithVehicle = new SelectList( _commonData.GetYesNo(), "YesNoId", "YesNoName");
-					ViewBag.WorkingVehicle = new SelectList( _commonData.GetYesNo(), "YesNoId", "YesNoName");
-					ViewBag.InPerson = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
-					ViewBag.Years = new SelectList( _commonData.GetYears(), "YearId", "YearName");
-					ViewBag.Passengers = new SelectList( _commonData.GetPassengers(), "PassengerId", "Passengers");
-					ViewBag.Rims = new SelectList( _commonData.GetRims(), "RimId", "RimName");
-					ViewBag.Wheels = new SelectList( _commonData.GetWheels(), "WheelId", "Wheels");
-					ViewBag.FuelTypes = new SelectList( _commonData.GetFuelTypes(), "FuelTypeId", "FuelTypeName");
-					ViewBag.TankCapacity = new SelectList( _commonData.GetTankCapacity(), "TankCapacityId", "TankCapacity");
-					ViewBag.Batteries = new SelectList( _commonData.GetBatteries(), "BatteryId", "BatteryName");
-					ViewBag.NumberOfBatteries = new SelectList( _commonData.GetNumberOfBatteries(), "BatteriesId", "Batteries");
-					ViewBag.MotorOil = new SelectList( _commonData.GetMotorOil(), "MotorOilId", "MotorOilName");
-					ViewBag.OilLitters = new SelectList( _commonData.GetOilLitters(), "OilLittersId", "OilLitters");
-					ViewBag.FailureType = new SelectList( _commonData.GetFailureType(), "FailureTypeId", "FailureTypeName");
-					ViewBag.FingerprintProblem = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
+						ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+						ViewBag.DriverWithVehicle = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
+						ViewBag.WorkingVehicle = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
+						ViewBag.InPerson = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
+						ViewBag.Years = new SelectList(_commonData.GetYears(), "YearId", "YearName");
+						ViewBag.Passengers = new SelectList(_commonData.GetPassengers(), "PassengerId", "Passengers");
+						ViewBag.Rims = new SelectList(_commonData.GetRims(), "RimId", "RimName");
+						ViewBag.Wheels = new SelectList(_commonData.GetWheels(), "WheelId", "Wheels");
+						ViewBag.FuelTypes = new SelectList(_commonData.GetFuelTypes(), "FuelTypeId", "FuelTypeName");
+						ViewBag.TankCapacity = new SelectList(_commonData.GetTankCapacity(), "TankCapacityId", "TankCapacity");
+						ViewBag.Batteries = new SelectList(_commonData.GetBatteries(), "BatteryId", "BatteryName");
+						ViewBag.NumberOfBatteries = new SelectList(_commonData.GetNumberOfBatteries(), "BatteriesId", "Batteries");
+						ViewBag.MotorOil = new SelectList(_commonData.GetMotorOil(), "MotorOilId", "MotorOilName");
+						ViewBag.OilLitters = new SelectList(_commonData.GetOilLitters(), "OilLittersId", "OilLitters");
+						ViewBag.FailureType = new SelectList(_commonData.GetFailureType(), "FailureTypeId", "FailureTypeName");
+						ViewBag.FingerprintProblem = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
 
-					if (securityGroupId != 1)
-					{
-						ViewBag.IsTotalAccess = _security.IsTotalAccess(3);
+						if (securityGroupId != 1)
+						{
+							ViewBag.IsTotalAccess = _security.IsTotalAccess(3);
+						}
+						else
+						{
+
+							ViewBag.IsTotalAccess = true;
+						}
+
+						return View(model);
 					}
-					else
-					{
-
-						ViewBag.IsTotalAccess = true;
-					}
-
-					return View(model);
 				}
 
 				return RedirectToAction("Login", "Security");
@@ -173,62 +175,64 @@ namespace SuperTransp.Controllers
 			}
 		}
 
-		public IActionResult Edit(int publicTransportGroupId, string pTGCompleteName, string driverFullName, int partnerNumber, string? publicTransportGroupRif, int driverIdentityDocument, string stateName, int? supervisionStatus, int driverId, int supervisionId, int modeId, string modeName)
+		public IActionResult Edit(int publicTransportGroupId, string pTGCompleteName, string driverFullName, int partnerNumber, string? publicTransportGroupRif, int driverIdentityDocument, string stateName, int? supervisionStatus, int driverId, int supervisionId, int modeId, string modeName, int stateId)
 		{
 			try
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
-					int? stateId = HttpContext.Session.GetInt32("StateId");
-					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+					int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
 
-					var model = _supervision.GetByPublicTransportGroupIdAndDriverIdAndPartnerNumberStateId(publicTransportGroupId, driverId, partnerNumber, (int)stateId);
-
-					model.PublicTransportGroupId = publicTransportGroupId;
-					model.PTGCompleteName = pTGCompleteName;
-					model.DriverId = driverId;
-					model.DriverFullName = driverFullName;
-					model.PartnerNumber = partnerNumber;
-					model.PublicTransportGroupRif = publicTransportGroupRif;
-					model.DriverIdentityDocument = driverIdentityDocument;
-					model.StateName = stateName;
-					model.SecurityUserId = (int)HttpContext.Session.GetInt32("SecurityUserId");
-					model.SupervisionId = supervisionId;
-					model.ModeId = modeId;
-					model.ModeName = modeName;
-
-					ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
-					ViewBag.DriverWithVehicle = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
-					ViewBag.WorkingVehicle = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
-					ViewBag.InPerson = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
-					ViewBag.Years = new SelectList(_commonData.GetYears(), "YearId", "YearName");
-					ViewBag.Passengers = new SelectList(_commonData.GetPassengers(), "PassengerId", "Passengers");
-					ViewBag.Rims = new SelectList(_commonData.GetRims(), "RimId", "RimName");
-					ViewBag.Wheels = new SelectList(_commonData.GetWheels(), "WheelId", "Wheels");
-					ViewBag.FuelTypes = new SelectList(_commonData.GetFuelTypes(), "FuelTypeId", "FuelTypeName");
-					ViewBag.TankCapacity = new SelectList(_commonData.GetTankCapacity(), "TankCapacityId", "TankCapacity");
-					ViewBag.Batteries = new SelectList(_commonData.GetBatteries(), "BatteryId", "BatteryName");
-					ViewBag.NumberOfBatteries = new SelectList(_commonData.GetNumberOfBatteries(), "BatteriesId", "Batteries");
-					ViewBag.MotorOil = new SelectList(_commonData.GetMotorOil(), "MotorOilId", "MotorOilName");
-					ViewBag.OilLitters = new SelectList(_commonData.GetOilLitters(), "OilLittersId", "OilLitters");
-					ViewBag.FailureType = new SelectList(_commonData.GetFailureType(), "FailureTypeId", "FailureTypeName");
-					ViewBag.FingerprintProblem = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
-
-					ViewBag.Makes = new SelectList(_commonData.GetMakesByYear(model.Year).ToList(), "Make", "Make");
-					ViewBag.VehicleModel = new SelectList(_commonData.GetModelsByYearAndMake(model.Year, model.Make).ToList(), "VehicleDataId", "ModelName");
-
-
-					if (securityGroupId != 1)
+					if(securityGroupId != null && _security.GroupHasAccessToModule((int)securityGroupId,3) || securityGroupId == 1)
 					{
-						ViewBag.IsTotalAccess = _security.IsTotalAccess(3);
-					}
-					else
-					{
+						var model = _supervision.GetByPublicTransportGroupIdAndDriverIdAndPartnerNumberStateId(publicTransportGroupId, driverId, partnerNumber, (int)stateId);
 
-						ViewBag.IsTotalAccess = true;
-					}
+						model.PublicTransportGroupId = publicTransportGroupId;
+						model.PTGCompleteName = pTGCompleteName;
+						model.DriverId = driverId;
+						model.DriverFullName = driverFullName;
+						model.PartnerNumber = partnerNumber;
+						model.PublicTransportGroupRif = publicTransportGroupRif;
+						model.DriverIdentityDocument = driverIdentityDocument;
+						model.StateName = stateName;
+						model.SecurityUserId = (int)HttpContext.Session.GetInt32("SecurityUserId");
+						model.SupervisionId = supervisionId;
+						model.ModeId = modeId;
+						model.ModeName = modeName;
 
-					return View(model);
+						ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+						ViewBag.DriverWithVehicle = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
+						ViewBag.WorkingVehicle = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
+						ViewBag.InPerson = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
+						ViewBag.Years = new SelectList(_commonData.GetYears(), "YearId", "YearName");
+						ViewBag.Passengers = new SelectList(_commonData.GetPassengers(), "PassengerId", "Passengers");
+						ViewBag.Rims = new SelectList(_commonData.GetRims(), "RimId", "RimName");
+						ViewBag.Wheels = new SelectList(_commonData.GetWheels(), "WheelId", "Wheels");
+						ViewBag.FuelTypes = new SelectList(_commonData.GetFuelTypes(), "FuelTypeId", "FuelTypeName");
+						ViewBag.TankCapacity = new SelectList(_commonData.GetTankCapacity(), "TankCapacityId", "TankCapacity");
+						ViewBag.Batteries = new SelectList(_commonData.GetBatteries(), "BatteryId", "BatteryName");
+						ViewBag.NumberOfBatteries = new SelectList(_commonData.GetNumberOfBatteries(), "BatteriesId", "Batteries");
+						ViewBag.MotorOil = new SelectList(_commonData.GetMotorOil(), "MotorOilId", "MotorOilName");
+						ViewBag.OilLitters = new SelectList(_commonData.GetOilLitters(), "OilLittersId", "OilLitters");
+						ViewBag.FailureType = new SelectList(_commonData.GetFailureType(), "FailureTypeId", "FailureTypeName");
+						ViewBag.FingerprintProblem = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
+
+						ViewBag.Makes = new SelectList(_commonData.GetMakesByYear(model.Year).ToList(), "Make", "Make");
+						ViewBag.VehicleModel = new SelectList(_commonData.GetModelsByYearAndMake(model.Year, model.Make).ToList(), "VehicleDataId", "ModelName");
+
+
+						if (securityGroupId != 1)
+						{
+							ViewBag.IsTotalAccess = _security.IsTotalAccess(3);
+						}
+						else
+						{
+
+							ViewBag.IsTotalAccess = true;
+						}
+
+						return View(model);
+					}
 				}
 
 				return RedirectToAction("Login", "Security");
