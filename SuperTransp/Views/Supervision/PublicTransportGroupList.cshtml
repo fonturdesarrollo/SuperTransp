@@ -53,14 +53,18 @@
 			<div class="inner">
 				<!-- Form -->
 				<section>
-					<h4 style="color:#4cbece"> Seleccione una Línea</h4>
+					<h4 style="color:#4cbece">Seleccione una Línea</h4>
+					<br />
+					<h5 style="color:#4cbece">Líneas con supervisiones completas</h5>
 					<br />
 					<table id="inventory" class="table table-striped table-bordered dt-responsive nowrap" style="width:100%">
 						<thead>
 							<tr>
 								<th>Nombre</th>
+								<th>Rif</th>
+								<th># Socios</th>
+								<th># Supervisados</th>
 								<th>Estado</th>
-								<th>Seleccionar</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -70,10 +74,10 @@
 									<td>
 										@Html.ActionLink(@ptg.PTGCompleteName, "AddSummary", "Supervision", new { publicTransportGroupId = ptg.PublicTransportGroupId })
 									</td>
+									<td>@ptg.PublicTransportGroupRif</td>
+									<td>@ptg.Partners</td>
+									<td>@ptg.TotalSupervisedDrivers</td>
 									<td>@ptg.StateName</td>
-									<td id="@ptg.PublicTransportGroupId">
-										@Html.ActionLink("Seleccionar", "AddSummary", "Supervision", new { publicTransportGroupId = ptg.PublicTransportGroupId }, new { @id = "btnEdit" })
-									</td>
 								</tr>
 							}
 						</tbody>

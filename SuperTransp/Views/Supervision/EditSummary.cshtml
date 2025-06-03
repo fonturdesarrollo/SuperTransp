@@ -117,7 +117,7 @@
 										maxlength = "150"
 									})
 							</div>
-							<div class="col-12">
+@* 							<div class="col-12">
 								<br />
 								<strong>Cargar imagenes:</strong>
 								<div id="myDropzone" class="dropzone dz-clickable">
@@ -125,15 +125,15 @@
 										Arrastre las imagenes aquí o haga clic para subirlas.
 									</div>
 								</div>
-							</div>
+							</div> *@
 							<div class="col-12">
 								<br />
-								<strong>Imagenes:</strong>
+								<strong>Imagenes o PDF:</strong>
 								<div id="thumbnail-container"></div>
 							</div>
 							<div class="col-12">
 								<ul class="actions">
-									<li><button type="submit" id="saveRequest" class="primary">Agregar resumen</button></li>
+									<li><button type="submit" id="saveRequest" class="primary">Modificar resumen</button></li>
 								</ul>
 							</div>
 						</div>
@@ -163,25 +163,49 @@
 
 	<script type="text/javascript">
 
+		const fileUrls = @Html.Raw(Json.Serialize(Model.Pictures.Select(p => p.SupervisionSummaryPictureUrl)));
 
-		// La variable modelPictures obtiene las URLs del modelo Razor y las pasa al script JavaScript
-		const imageUrls = @Html.Raw(Json.Serialize(Model.Pictures.Select(p => p.SupervisionSummaryPictureUrl)));
-
-		// Selecciona el contenedor donde se mostrarán los thumbnails
 		const container = document.getElementById('thumbnail-container');
 
-		// Itera sobre los URLs y crea elementos <img> para cada thumbnail
-		imageUrls.forEach(url => {
-			const img = document.createElement('img');
-			img.src = url; // Establece el URL de la imagen
-			img.alt = 'Thumbnail';
-			img.style.width = '100px'; // Ajusta el tamaño
-			img.style.height = 'auto';
-			img.style.margin = '5px';
+		function isImage(url) {
+			return /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(url);
+		}
 
-			// Agrega la imagen al contenedor
-			container.appendChild(img);
-		})
+		function getFileName(url) {
+			return url.split('/').pop();
+		}
+
+		fileUrls.forEach(url => {
+			const element = document.createElement('div');
+			element.style.display = 'inline-block';
+			element.style.margin = '5px';
+			element.style.cursor = 'pointer';
+
+			if (isImage(url)) {
+				const img = document.createElement('img');
+				img.src = url;
+				img.alt = 'Thumbnail';
+				img.style.width = '100px';
+				img.style.height = 'auto';
+
+				element.appendChild(img);
+			} else if (/\.pdf$/i.test(url)) {
+				const pdfIcon = document.createElement('img');
+				pdfIcon.src = '/images/pdf-icon.png';
+				pdfIcon.alt = 'PDF';
+				pdfIcon.style.width = '100px';
+				pdfIcon.style.height = 'auto';
+				pdfIcon.title = getFileName(url);
+
+				element.appendChild(pdfIcon);
+			}
+
+			element.addEventListener('click', () => {
+				window.open(url, '_blank');
+			});
+
+			container.appendChild(element);
+		});
 
 		document.addEventListener("DOMContentLoaded", function() {
 			new AirDatepicker('#SupervisionDate', {
@@ -234,47 +258,47 @@
 			});
 		});
 
-		Dropzone.autoDiscover = false;
-		var saveFilesUrl = '@Url.Action("SaveSummaryFiles", "Supervision")';
-		const stateName = '@Model.StateName';
-		const driverIdentityDocument = document.querySelector('[name="PublicTransportGroupId"]').value;
-		const partnerNumber = '@Model.PublicTransportGroupId';
-		const publicTransportGroupRif = '@Model.PublicTransportGroupRif';
+		// Dropzone.autoDiscover = false;
+		// var saveFilesUrl = '@Url.Action("SaveSummaryFiles", "Supervision")';
+		// const stateName = '@Model.StateName';
+		// const driverIdentityDocument = document.querySelector('[name="PublicTransportGroupId"]').value;
+		// const partnerNumber = '@Model.PublicTransportGroupId';
+		// const publicTransportGroupRif = '@Model.PublicTransportGroupRif';
 
-		const dropzone = new Dropzone("#myDropzone", {
-			url: saveFilesUrl,
-			autoProcessQueue: true,
-			paramName: "file",
-			maxFilesize: 20,
-			acceptedFiles: ".jpg,.png",
-			dictDefaultMessage: "Arrastra las imágenes aquí o haga clic para agregarlas.",
-			addRemoveLinks: true,
+		// const dropzone = new Dropzone("#myDropzone", {
+		// 	url: saveFilesUrl,
+		// 	autoProcessQueue: true,
+		// 	paramName: "file",
+		// 	maxFilesize: 20,
+		// 	acceptedFiles: ".jpg,.png",
+		// 	dictDefaultMessage: "Arrastra las imágenes aquí o haga clic para agregarlas.",
+		// 	addRemoveLinks: true,
 
-			params: {
-				stateName: stateName,
-				driverIdentityDocument: driverIdentityDocument,
-				partnerNumber: partnerNumber,
-				publicTransportGroupRif: publicTransportGroupRif
-			},
+		// 	params: {
+		// 		stateName: stateName,
+		// 		driverIdentityDocument: driverIdentityDocument,
+		// 		partnerNumber: partnerNumber,
+		// 		publicTransportGroupRif: publicTransportGroupRif
+		// 	},
 
-			init: function () {
-				this.on("addedfile", function (file) {
-					console.log("Archivo agregado:", file);
-				});
+		// 	init: function () {
+		// 		this.on("addedfile", function (file) {
+		// 			console.log("Archivo agregado:", file);
+		// 		});
 
-				this.on("removedfile", function (file) {
-					console.log("Archivo eliminado:", file);
-				});
+		// 		this.on("removedfile", function (file) {
+		// 			console.log("Archivo eliminado:", file);
+		// 		});
 
-				this.on("error", function (file, errorMessage) {
-					console.log("Hubo un error al subir la imagen: " + errorMessage);
-				});
+		// 		this.on("error", function (file, errorMessage) {
+		// 			console.log("Hubo un error al subir la imagen: " + errorMessage);
+		// 		});
 
-				this.on("queuecomplete", function () {
-					alert("Todas las imágenes han sido cargadas correctamente.");
-				});
-			}
-		});
+		// 		this.on("queuecomplete", function () {
+		// 			alert("Todas las imágenes han sido cargadas correctamente.");
+		// 		});
+		// 	}
+		// });
 
 
 		$("body").on("click", "#saveRequest", function (event) {

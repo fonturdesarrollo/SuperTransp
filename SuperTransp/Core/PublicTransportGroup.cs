@@ -102,6 +102,7 @@ namespace SuperTransp.Core
 							publicTransportGroup.StateName = (string)dr["StateName"];
 							publicTransportGroup.Partners = (int)dr["Partners"];
 							publicTransportGroup.PublicTransportGroupGUID = (string)dr["PublicTransportGroupGUID"];
+							publicTransportGroup.SupervisionSummaryId = (int)dr["SupervisionSummaryId"];
 
 							if (dr["PublicTransportGroupIdModifiedDate"] != DBNull.Value)
 							{
@@ -173,7 +174,7 @@ namespace SuperTransp.Core
 			}
 		}
 
-		public List<PublicTransportGroupViewModel> GetByStateId(int stateId)
+		public List<PublicTransportGroupViewModel> GetAllByStateId(int stateId)
 		{
 			try
 			{
@@ -215,6 +216,63 @@ namespace SuperTransp.Core
 								TotalDrivers = (int)dr["TotalDrivers"],
 								TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"],
 								PublicTransportGroupGUID = (string)dr["PublicTransportGroupGUID"],
+								SupervisionSummaryId = (int)dr["SupervisionSummaryId"],
+							});
+						}
+					}
+
+					return ptg.ToList();
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener todas las líneas {ex.Message}", ex);
+			}
+		}
+
+		public List<PublicTransportGroupViewModel> GetAllBySupervisedDriversAndStateIdAndNotSummaryAdded(int stateId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<PublicTransportGroupViewModel> ptg = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail WHERE StateId = @StateId AND TotalSupervisedDrivers = Partners AND SupervisionSummaryId = 0", sqlConnection);
+					cmd.Parameters.AddWithValue("@StateId", stateId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							ptg.Add(new PublicTransportGroupViewModel
+							{
+								PublicTransportGroupId = (int)dr["PublicTransportGroupId"],
+								PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"],
+								DesignationId = (int)dr["DesignationId"],
+								PublicTransportGroupName = (string)dr["PublicTransportGroupName"],
+								PTGCompleteName = (string)dr["PTGCompleteName"],
+								ModeId = (int)dr["ModeId"],
+								UnionId = (int)dr["UnionId"],
+								MunicipalityId = (int)dr["MunicipalityId"],
+								StateId = (int)dr["StateId"],
+								RepresentativeIdentityDocument = (int)dr["RepresentativeIdentityDocument"],
+								RepresentativeName = (string)dr["RepresentativeName"],
+								RepresentativePhone = (string)dr["RepresentativePhone"],
+								DesignationName = (string)dr["DesignationName"],
+								StateName = (string)dr["StateName"],
+								MunicipalityName = (string)dr["MunicipalityName"],
+								ModeName = (string)dr["ModeName"],
+								UnionName = (string)dr["UnionName"],
+								Partners = (int)dr["Partners"],
+								TotalDrivers = (int)dr["TotalDrivers"],
+								TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"],
+								PublicTransportGroupGUID = (string)dr["PublicTransportGroupGUID"],
+								SupervisionSummaryId = (int)dr["SupervisionSummaryId"],
 							});
 						}
 					}

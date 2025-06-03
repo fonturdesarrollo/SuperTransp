@@ -590,30 +590,34 @@ namespace SuperTransp.Core
 						summaryId = Convert.ToInt32(cmd.ExecuteScalar());
 
 						// Add pictures process
-						cmd = new("SuperTransp_SupervisionSummaryPicturesDelete", sqlConnection)
+						if(model.SupervisionSummaryId == 0)
 						{
-							CommandType = System.Data.CommandType.StoredProcedure
-						};
+							cmd = new("SuperTransp_SupervisionSummaryPicturesDelete", sqlConnection)
+							{
+								CommandType = System.Data.CommandType.StoredProcedure
+							};
 
-						cmd.Parameters.AddWithValue("@SupervisionSummaryId", summaryId);
-
-						cmd.ExecuteNonQuery();
-
-						cmd = new("SuperTransp_SupervisionSummaryPicturesAddOrEdit", sqlConnection)
-						{
-							CommandType = System.Data.CommandType.StoredProcedure
-						};					
-
-						foreach (var picture in model.Pictures)
-						{
-							cmd.Parameters.Clear();
-
-							cmd.Parameters.AddWithValue("@SupervisionSummaryPictureId", picture.SupervisionSummaryPictureId);
 							cmd.Parameters.AddWithValue("@SupervisionSummaryId", summaryId);
-							cmd.Parameters.AddWithValue("@SupervisionSummaryPictureUrl", picture.SupervisionSummaryPictureUrl);
 
-							cmd.ExecuteScalar();
+							cmd.ExecuteNonQuery();
+
+							cmd = new("SuperTransp_SupervisionSummaryPicturesAddOrEdit", sqlConnection)
+							{
+								CommandType = System.Data.CommandType.StoredProcedure
+							};
+
+							foreach (var picture in model.Pictures)
+							{
+								cmd.Parameters.Clear();
+
+								cmd.Parameters.AddWithValue("@SupervisionSummaryPictureId", picture.SupervisionSummaryPictureId);
+								cmd.Parameters.AddWithValue("@SupervisionSummaryId", summaryId);
+								cmd.Parameters.AddWithValue("@SupervisionSummaryPictureUrl", picture.SupervisionSummaryPictureUrl);
+
+								cmd.ExecuteScalar();
+							}
 						}
+
 					}
 				}
 

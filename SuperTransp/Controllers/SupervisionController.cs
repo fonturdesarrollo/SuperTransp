@@ -587,7 +587,7 @@ namespace SuperTransp.Controllers
 			return filePath;
 		}
 
-		private List<SupervisionSummaryPictures> SupervisionSummaryPictureUrl(string stateName, string publicTransportGroupRif)
+		private async Task<List<SupervisionSummaryPictures>> SupervisionSummaryPictureUrlAsync(string stateName, string publicTransportGroupRif)
 		{
 			var ftpBaseUrl = _configuration["FtpSettings:BaseUrl"];
 			var ftpUsername = _configuration["FtpSettings:Username"];
@@ -595,52 +595,133 @@ namespace SuperTransp.Controllers
 			var baseImagesUrl = _configuration["FtpSettings:BaseImagesUrl"];
 
 			var newFolderName = $"{stateName.ToUpper().Trim()}";
-			var ftpFolderPath = Path.Combine(ftpBaseUrl, newFolderName).Replace("\\", "/");
+			var ftpFolderPath = $"{ftpBaseUrl}/{newFolderName}";
 			var subFolderName = $"{publicTransportGroupRif}-resumen_supervision_temp";
-			var ftpSubFolderPath = Path.Combine(ftpFolderPath, subFolderName).Replace("\\", "/");
-			var filePath = string.Empty;
-			List<SupervisionSummaryPictures> images = new List<SupervisionSummaryPictures>();
+			var subFinalFolderName = $"{publicTransportGroupRif}-resumen_supervision";
+			var ftpSubFolderPath = $"{ftpFolderPath}/{subFolderName}";
+			var ftpfinalFolderPath = $"{ftpFolderPath}/{subFinalFolderName}";
+
+			var images = new List<SupervisionSummaryPictures>();
+
+			// Paso 1: Verificar si la carpeta destino existe antes de crearla
+			if (!await FolderExistsAsync(ftpfinalFolderPath, ftpUsername, ftpPassword))
+			{
+				await CreateFolderAsync(ftpfinalFolderPath, ftpUsername, ftpPassword);
+			}
 
 			try
 			{
-				FtpWebRequest listSubFolderRequest = (FtpWebRequest)WebRequest.Create(ftpSubFolderPath);
-				listSubFolderRequest.Method = WebRequestMethods.Ftp.ListDirectory;
-				listSubFolderRequest.Credentials = new NetworkCredential(ftpUsername, ftpPassword);
+				// Paso 2: Obtener lista de archivos
+				var fileList = await ListFilesAsync(ftpSubFolderPath, ftpUsername, ftpPassword);
+				if (fileList.Count == 0) return images;
 
-				try
+				// Paso 3: Transferir archivos a la carpeta final
+				var transferTasks = fileList.Select(fileName => TransferFileAsync($"{ftpSubFolderPath}/{fileName}", $"{ftpfinalFolderPath}/{fileName}", ftpUsername, ftpPassword));
+				await Task.WhenAll(transferTasks); // Transferencias en paralelo
+
+				// Paso 4: Eliminar archivos de la carpeta temporal
+				var deleteTasks = fileList.Select(fileName => DeleteFileAsync($"{ftpSubFolderPath}/{fileName}", ftpUsername, ftpPassword));
+				await Task.WhenAll(deleteTasks);
+
+				// Paso 5: Registrar imágenes
+				foreach (var fileName in await ListFilesAsync(ftpfinalFolderPath, ftpUsername, ftpPassword))
 				{
-					using (var listSubFolderResponse = (FtpWebResponse)listSubFolderRequest.GetResponse())
-					using (StreamReader reader = new StreamReader(listSubFolderResponse.GetResponseStream()))
-					{
-						string line;
-						while ((line = reader.ReadLine()) != null)
-						{
-							filePath = Path.Combine(ftpSubFolderPath, line).Replace("\\", "/").Replace(ftpBaseUrl, baseImagesUrl);
-
-							SupervisionSummaryPictures picture = new SupervisionSummaryPictures
-							{
-								SupervisionSummaryPictureUrl = filePath
-							};
-
-							images.Add(picture);
-						}
-					}
-				}
-				catch (WebException ex)
-				{
-					var response = (FtpWebResponse)ex.Response;
-					if (response.StatusCode != FtpStatusCode.ActionNotTakenFileUnavailable)
-					{
-						return images;
-					}
+					var filePath = $"{ftpfinalFolderPath}/{fileName}".Replace(ftpBaseUrl, baseImagesUrl);
+					images.Add(new SupervisionSummaryPictures { SupervisionSummaryPictureUrl = filePath });
 				}
 			}
-			catch
+			catch (WebException ex)
 			{
-				//
+				Console.WriteLine($"Error FTP: {((FtpWebResponse)ex.Response).StatusDescription}");
 			}
 
 			return images;
+		}
+
+		private async Task<bool> FolderExistsAsync(string folderPath, string username, string password)
+		{
+			try
+			{
+				FtpWebRequest request = (FtpWebRequest)WebRequest.Create(folderPath);
+				request.Method = WebRequestMethods.Ftp.ListDirectory;
+				request.Credentials = new NetworkCredential(username, password);
+				using (await request.GetResponseAsync()) { return true; }
+			}
+			catch (WebException ex)
+			{
+				return ((FtpWebResponse)ex.Response).StatusCode != FtpStatusCode.ActionNotTakenFileUnavailable;
+			}
+		}
+
+		private async Task CreateFolderAsync(string folderPath, string username, string password)
+		{
+			FtpWebRequest request = (FtpWebRequest)WebRequest.Create(folderPath);
+			request.Method = WebRequestMethods.Ftp.MakeDirectory;
+			request.Credentials = new NetworkCredential(username, password);
+			using (await request.GetResponseAsync()) { }
+		}
+
+		private async Task<List<string>> ListFilesAsync(string folderPath, string username, string password)
+		{
+			var files = new List<string>();
+			FtpWebRequest request = (FtpWebRequest)WebRequest.Create(folderPath);
+			request.Method = WebRequestMethods.Ftp.ListDirectory;
+			request.Credentials = new NetworkCredential(username, password);
+
+			using (var response = (FtpWebResponse)await request.GetResponseAsync())
+			using (var reader = new StreamReader(response.GetResponseStream()))
+			{
+				string line;
+				while ((line = await reader.ReadLineAsync()) != null)
+				{
+					files.Add(line);
+				}
+			}
+
+			return files;
+		}
+
+		private async Task TransferFileAsync(string sourcePath, string destinationPath, string username, string password)
+		{
+			FtpWebRequest downloadRequest = (FtpWebRequest)WebRequest.Create(sourcePath);
+			downloadRequest.Method = WebRequestMethods.Ftp.DownloadFile;
+			downloadRequest.Credentials = new NetworkCredential(username, password);
+
+			FtpWebResponse downloadResponse = (FtpWebResponse)await downloadRequest.GetResponseAsync();
+			Stream responseStream = downloadResponse.GetResponseStream();
+
+			FtpWebRequest uploadRequest = (FtpWebRequest)WebRequest.Create(destinationPath);
+			uploadRequest.Method = WebRequestMethods.Ftp.UploadFile;
+			uploadRequest.Credentials = new NetworkCredential(username, password);
+
+			Stream requestStream = await uploadRequest.GetRequestStreamAsync();
+
+			try
+			{
+				await responseStream.CopyToAsync(requestStream);
+			}
+			finally
+			{
+				responseStream.Close();
+				requestStream.Close();
+				downloadResponse.Close();
+			}
+		}
+
+		private async Task DeleteFileAsync(string filePath, string username, string password)
+		{
+			try
+			{
+				FtpWebRequest deleteRequest = (FtpWebRequest)WebRequest.Create(filePath);
+				deleteRequest.Method = WebRequestMethods.Ftp.DeleteFile;
+				deleteRequest.Credentials = new NetworkCredential(username, password);
+
+				using (await deleteRequest.GetResponseAsync()) { } // Confirmación de eliminación
+			}
+			catch (WebException ex)
+			{
+				Console.WriteLine($"Error al eliminar {filePath}: {((FtpWebResponse)ex.Response).StatusDescription}");
+			}
 		}
 
 		public JsonResult CheckExistingPlate(int paramValue1, string paramValue2)
@@ -676,7 +757,7 @@ namespace SuperTransp.Controllers
 
 					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
 					{
-						model = _publicTransportGroup.GetByStateId((int)stateId);
+						model = _publicTransportGroup.GetAllBySupervisedDriversAndStateIdAndNotSummaryAdded((int)stateId);
 					}
 					else
 					{
@@ -739,16 +820,17 @@ namespace SuperTransp.Controllers
 		}
 
 		[HttpPost]
-		public IActionResult AddSummary(SupervisionSummaryViewModel model)
+		public async Task<IActionResult> AddSummary(SupervisionSummaryViewModel model)
 		{
 			try
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
 				{
-					int supervisionSummaryId = 0;					
-					model.Pictures = SupervisionSummaryPictureUrl(model.StateName, model.PublicTransportGroupRif);
+					int supervisionSummaryId = 0;
 
-					supervisionSummaryId = _supervision.AddOrEditSummary(model);					
+					model.Pictures = await SupervisionSummaryPictureUrlAsync(model.StateName, model.PublicTransportGroupRif);
+
+					supervisionSummaryId = _supervision.AddOrEditSummary(model);
 
 					if (supervisionSummaryId > 0)
 					{
@@ -760,7 +842,7 @@ namespace SuperTransp.Controllers
 			}
 			catch (Exception ex)
 			{
-				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message });
 			}
 		}
 
@@ -769,6 +851,19 @@ namespace SuperTransp.Controllers
 			var model = _supervision.GetSupervisionSummaryById(supervisionSummaryId);
 
 			return View(model);
+		}
+
+		[HttpPost]
+		public IActionResult EditSummary(SupervisionSummaryViewModel model)
+		{
+			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
+			{
+				_supervision.AddOrEditSummary(model);
+
+				return RedirectToAction("EditSummary", new { supervisionSummaryId = model.SupervisionSummaryId });
+			}
+
+			return RedirectToAction("Login", "Security");
 		}
 
 		public IActionResult SummaryList()

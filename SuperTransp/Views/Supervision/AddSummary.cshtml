@@ -71,7 +71,7 @@
 				<ul>
 					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
 					<li>@Html.ActionLink("Seleccionar línea", "PublicTransportGroupList", "Supervision")</li>
-					<li>@Html.ActionLink("Modificar resumen", "", "")</li>
+					<li>@Html.ActionLink("Modificar resumen", "SummaryList", "Supervision")</li>
 					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 				</ul>
 			</nav>
@@ -119,10 +119,10 @@
 							</div>
 							<div class="col-12">
 								<br />
-								<strong>Cargar imagenes:</strong>
+								<strong>Cargar imagenes o PDF:</strong>
 								<div id="myDropzone" class="dropzone dz-clickable">
 									<div class="dz-message">
-										Arrastre las imagenes aquí o haga clic para subirlas.
+										Arrastre aquí o haga clic para subir los archivos.
 									</div>
 								</div>
 							</div>
@@ -221,7 +221,7 @@
 			autoProcessQueue: true,
 			paramName: "file",
 			maxFilesize: 20,
-			acceptedFiles: ".jpg,.png",
+			acceptedFiles: ".jpg,.png,.pdf",
 			dictDefaultMessage: "Arrastra las imágenes aquí o haga clic para agregarlas.",
 			addRemoveLinks: true,
 

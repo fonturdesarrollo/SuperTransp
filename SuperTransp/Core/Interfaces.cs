@@ -76,7 +76,8 @@ namespace SuperTransp.Core
 			public PublicTransportGroupViewModel GetPublicTransportGroupById(int publicTransportGroupId);
 			public string? RegisteredRif(string publicTransportGroupRif);
 			public List<PublicTransportGroupViewModel> GetAll();
-			public List<PublicTransportGroupViewModel> GetByStateId(int stateId);
+			public List<PublicTransportGroupViewModel> GetAllByStateId(int stateId);
+			public List<PublicTransportGroupViewModel> GetAllBySupervisedDriversAndStateIdAndNotSummaryAdded(int stateId);
 			public PublicTransportGroupViewModel GetByGUIDId(string guidId);
 		}
 		public interface IDriver

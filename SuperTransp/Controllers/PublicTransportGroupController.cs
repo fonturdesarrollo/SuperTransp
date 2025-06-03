@@ -213,7 +213,7 @@ namespace SuperTransp.Controllers
 
 					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
 					{
-						model = _publicTransportGroup.GetByStateId((int)stateId);
+						model = _publicTransportGroup.GetAllByStateId((int)stateId);
 					}
 					else
 					{
