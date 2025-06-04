@@ -41,6 +41,7 @@ namespace SuperTransp.Controllers
 			{
 				ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
 				ViewBag.SecurityGroupId = (int)HttpContext.Session.GetInt32("SecurityGroupId");
+				ViewBag.SystemVersion = (string)HttpContext.Session.GetString("SystemVersion");
 
 				return View();
 			}

@@ -848,9 +848,14 @@ namespace SuperTransp.Controllers
 
 		public IActionResult EditSummary(int supervisionSummaryId)
 		{
-			var model = _supervision.GetSupervisionSummaryById(supervisionSummaryId);
+			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+			{
+				var model = _supervision.GetSupervisionSummaryById(supervisionSummaryId);
 
-			return View(model);
+				return View(model);
+			}
+
+			return RedirectToAction("Login", "Security");
 		}
 
 		[HttpPost]

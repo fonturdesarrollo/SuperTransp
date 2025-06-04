@@ -54,12 +54,13 @@
 		<!-- Header -->
 		<header id="header">
 			<div class="inner">
-
 				<!-- Logo -->
 				<a href="#" class="logo">
-					<span class="symbol"><img src="~/images/logo_login.jpg" alt="" /></span><span class="title">SuperTransp</span>
+					<span><img src="~/images/Logo.png" width="100px" height="100px" alt="" /></span>
 					<br />
-					<span class="title">@ViewBag.EmployeeName</span>
+					<span>Agregar supervisión a línea de transporte</span>
+					<br />
+					<span>@ViewBag.EmployeeName</span>
 				</a>
 			</div>
 			<!-- Nav -->
@@ -107,7 +108,7 @@
 											var addEdit = ptg.SupervisionStatusName == "PENDIENTE" ? "Add" : "Edit";
 											var statusColorDriver = ptg.SupervisionStatusName == "PENDIENTE" ? "red" : "green";
 
-											if (ptg.TotalDrivers == ptg.TotalSupervisedDrivers)
+											if (ptg.TotalSupervisedDrivers > 0 && ptg.TotalDrivers == ptg.TotalSupervisedDrivers)
 											{
 												statusColorPTG = "green";
 											}

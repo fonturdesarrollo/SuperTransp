@@ -20,7 +20,15 @@ namespace SuperTransp.Controllers
 
 		public IActionResult Index()
 		{
-			return View();
+			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("FullName")) && HttpContext.Session.GetInt32("SecurityGroupId") != null)
+			{
+				ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+				ViewBag.SecurityGroupId = (int)HttpContext.Session.GetInt32("SecurityGroupId");
+
+				return View();
+			}
+
+			return RedirectToAction("Login", "Security");
 		}
 
 		public IActionResult PublicTransportGroupList()

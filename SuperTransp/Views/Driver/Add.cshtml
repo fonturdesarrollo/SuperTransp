@@ -65,7 +65,7 @@
 
 					<!-- Logo -->
 					<a href="#" class="logo">
-						<span class="symbol"><img src="~/images/logo_login.jpg" alt="" /></span><span class="title">SuperTransp</span>
+						<span><img src="~/images/Logo.png" width="100px" height="100px" alt="" /></span>
 						<br />
 						<span class="title">@ViewBag.EmployeeName</span>
 						<br />
@@ -90,7 +90,7 @@
 				<h2>Menu</h2>
 				<ul>
 					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
-					<li>@Html.ActionLink("Agregar transportistas a línea", "PublicTransportGroupList", "Driver")</li>
+					<li>@Html.ActionLink("Agregar socios a línea", "PublicTransportGroupList", "Driver")</li>
 					<li>@Html.ActionLink("Agregar línea", "Add", "PublicTransportGroup")</li>
 					<li>@Html.ActionLink("Modificar línea", "PublicTransportGroupList", "PublicTransportGroup")</li>
 					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
@@ -102,7 +102,7 @@
 				<div class="inner">
 					<!-- Form -->
 					<section>
-						<h1 style="color:#4cbece">Agregar transportista</h1>
+						<h1 style="color:#4cbece">Agregar socio</h1>
 						<label>Linea: @Model.PTGCompleteName</label>
 						<br />
 						<br />
@@ -139,12 +139,12 @@
 									}									
 								</ul>
 							</div>
-						</div>
+						</div>	
 					</section>
 					<section>
 						<br />
 						<br />
-						<h4 style="color:#4cbece">Transportistas asignados a la línea</h4>
+						<h4 style="color:#4cbece">Socios asignados a la línea</h4>
 						<br />
 						<table id="inventory" class="table table-striped table-bordered dt-responsive nowrap" style="width:100%">
 							<thead>

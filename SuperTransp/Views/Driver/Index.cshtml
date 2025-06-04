@@ -22,9 +22,11 @@
 				<div class="inner">
 					<!-- Logo -->
 					<a href="#" class="logo">
-						<span class="symbol"><img src="~/images/logo_login.jpg" alt="" /></span><span class="title">SuperTransp</span>
+						<span><img src="~/images/Logo.png" width="100px" height="100px" alt="" /></span>
 						<br />
-						<span class="title">@ViewBag.EmployeeName</span>
+						<span>Agregar socios a líneas de transporte</span>
+						<br />
+						<span>@ViewBag.EmployeeName</span>
 					</a>
 				</div>
 
@@ -50,11 +52,11 @@
 					<!-- Form -->
 					<br />
 					<section>
-						<h2>Transportistas</h2>
+						<h2>Opciones</h2>
 						<div class="row">
 							<div class="col-6 col-12-medium">
 								<ul>
-									<li>@Html.ActionLink("Agregar Transportistas a línea", "PublicTransportGroupList", "Driver")</li>
+									<li>@Html.ActionLink("Agregar socios a línea", "PublicTransportGroupList", "Driver")</li>
 								</ul>
 							</div>
 						</div>
@@ -62,6 +64,12 @@
 
 				</div>
 			</div>
+			<!-- Footer -->
+			<footer id="footer">
+				<label style="text-align:center">
+					Sistema para la Supervisión de Unidades de Transporte &copy; @DateTime.Now.Year
+				</label>
+			</footer>
 		</div>
 	}
 	<!-- Scripts -->

@@ -3165,8 +3165,14 @@ input, select, textarea {
 /* Footer */
 
 	#footer {
-		padding: 5em 0 6em 0 ;
-		background-color: #f6f6f6;
+	    position: fixed;
+	    bottom: 0;
+	    left: 0;
+	    width: 100%;
+	    height: 10vh; /* Mantiene la altura deseada */
+	    min-height: 10vh;
+	    padding: 1.5em 0 1.8em 0; /* Ajuste proporcional */
+	    background-color: #f6f6f7;
 	}
 
 		#footer > .inner {

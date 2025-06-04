@@ -30,6 +30,7 @@ namespace SuperTransp.Controllers
 			HttpContext.Session.Remove("StateName");
 			HttpContext.Session.Remove("DeviceIP");
 			HttpContext.Session.Remove("LoginAttempts");
+			HttpContext.Session.Remove("SystemVersion");
 
 			return View();
 		}
@@ -68,6 +69,7 @@ namespace SuperTransp.Controllers
 						HttpContext.Session.SetInt32("StateId", validUser.StateId);
 						HttpContext.Session.SetString("StateName", validUser.StateName);
 						HttpContext.Session.SetString("DeviceIP", HttpContext.Connection.RemoteIpAddress?.ToString());
+						HttpContext.Session.SetString("SystemVersion", "1.0 r1");
 
 						return RedirectToAction("Index", "Home");
 					}
