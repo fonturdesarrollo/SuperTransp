@@ -5,7 +5,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-	<title>Agregar Transportista</title>
+	<title>Agregar Socio</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 	<link rel="stylesheet" href="~/assets/css/main.css" />
@@ -423,7 +423,7 @@
 				type: "POST",
 				contentType: "application/json",
 				data: JSON.stringify({ ptgGUID: ptgGUID }),
-				datType: "json",
+				dataType: "json",
 				success: function (response) {
 					$("#qrImage").attr("src", response.qrImage);
 					var myModal = new bootstrap.Modal(document.getElementById('qrModal'));
@@ -435,48 +435,36 @@
 			});
 		});
 
-			$("#DriverIdentityDocument").on("blur keypress", function (event) {
-				if (event.type === "blur" || (event.type === "keypress" && event.which === 13)) {
-					event.preventDefault();
-					let inputValue = $(this).val();
-					llamarControlador(inputValue);
-				}
-			});
+		$("#DriverIdentityDocument").on("blur keypress", function (event) {
+			if (event.type === "blur" || (event.type === "keypress" && event.which === 13)) {
+				event.preventDefault();
+				let inputValue = $(this).val();
+				llamarControlador(inputValue);
+			}
+		});
 			
-			$('#DriverFullName').on('input', function() {
-				const value = $(this).val();
-				const sanitizedValue = value.replace(/[^a-zA-Z\s]/g, '');
-				$(this).val(sanitizedValue); 
-			});
+		$('#DriverFullName').on('input', function() {
+			const value = $(this).val();
+			const sanitizedValue = value.replace(/[^a-zA-Z\s]/g, '');
+			$(this).val(sanitizedValue); 
+		});
 
-			function llamarControlador(value) {
-				var checkExistingUrl = '@Url.Action("GetDriverDataByIdDocument", "Driver")';
-				$.ajax({
-					url: checkExistingUrl,
-					type: 'POST',
-					data: { driverIdentityDocument: value },
-					success: function (response) {
-					if (response && response.driverFullName && response.driverPhone) {
-						$("#DriverFullName").val(response.driverFullName);
-						$("#DriverPhone").val(response.driverPhone);
+		function llamarControlador(value) {
+			var checkExistingUrl = '@Url.Action("GetDriverDataByIdDocument", "Driver")';
+			$.ajax({
+				url: checkExistingUrl,
+				type: 'POST',
+				data: { driverIdentityDocument: value },
+				success: function (response) {
+				if (response && response.driverFullName && response.driverPhone) {
+					$("#DriverFullName").val(response.driverFullName);
+					$("#DriverPhone").val(response.driverPhone);
 
-						$("#DriverFullName").prop("readonly", true);
-						$("#DriverPhone").prop("readonly", true);
+					$("#DriverFullName").prop("readonly", true);
+					$("#DriverPhone").prop("readonly", true);
 
-						$("#PartnerNumber").focus();
-					} else {
-
-						$("#DriverFullName").prop("readonly", false);
-						$("#DriverPhone").prop("readonly", false);
-
-						$("#DriverFullName").val("");
-						$("#DriverPhone").val("");
-
-						$("#DriverFullName").focus();
-					}
-				},
-				error: function (xhr, status, error) {
-					console.error("Error en la petición:", error);
+					$("#PartnerNumber").focus();
+				} else {
 
 					$("#DriverFullName").prop("readonly", false);
 					$("#DriverPhone").prop("readonly", false);
@@ -484,37 +472,49 @@
 					$("#DriverFullName").val("");
 					$("#DriverPhone").val("");
 
-					},
-				});
-			}
-
-			$('#inventory').DataTable({
-				"language": {
-					"sProcessing":    "Procesando...",
-					"sLengthMenu":    "Mostrar _MENU_ registros",
-					"sZeroRecords":   "No se encontraron resultados",
-					"sEmptyTable":    "Ningún dato disponible en esta tabla",
-					"sInfo":          "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
-					"sInfoEmpty":     "Mostrando registros del 0 al 0 de un total de 0 registros",
-					"sInfoFiltered":  "(filtrado de un total de _MAX_ registros)",
-					"sInfoPostFix":   "",
-					"sSearch":        "Buscar:",
-					"sUrl":           "",
-					"sInfoThousands":  ",",
-					"sLoadingRecords": "Cargando...",
-					"oPaginate": {
-						"sFirst":    "Primero",
-						"sLast":    "Último",
-						"sNext":    "Siguiente",
-						"sPrevious": "Anterior"
-					},
-					"oAria": {
-						"sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
-						"sSortDescending": ": Activar para ordenar la columna de manera descendente"
-					}
+					$("#DriverFullName").focus();
 				}
+			},
+			error: function (xhr, status, error) {
+				console.error("Error en la petición:", error);
+
+				$("#DriverFullName").prop("readonly", false);
+				$("#DriverPhone").prop("readonly", false);
+
+				$("#DriverFullName").val("");
+				$("#DriverPhone").val("");
+
+				},
 			});
+		}
+
+		$('#inventory').DataTable({
+			"language": {
+				"sProcessing":    "Procesando...",
+				"sLengthMenu":    "Mostrar _MENU_ registros",
+				"sZeroRecords":   "No se encontraron resultados",
+				"sEmptyTable":    "Ningún dato disponible en esta tabla",
+				"sInfo":          "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+				"sInfoEmpty":     "Mostrando registros del 0 al 0 de un total de 0 registros",
+				"sInfoFiltered":  "(filtrado de un total de _MAX_ registros)",
+				"sInfoPostFix":   "",
+				"sSearch":        "Buscar:",
+				"sUrl":           "",
+				"sInfoThousands":  ",",
+				"sLoadingRecords": "Cargando...",
+				"oPaginate": {
+					"sFirst":    "Primero",
+					"sLast":    "Último",
+					"sNext":    "Siguiente",
+					"sPrevious": "Anterior"
+				},
+				"oAria": {
+					"sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
+					"sSortDescending": ": Activar para ordenar la columna de manera descendente"
+				}
+			}
 		});
+	});
 	</script>
 </body>
 </html>

@@ -288,12 +288,6 @@ namespace SuperTransp.Controllers
 		[HttpPost]
 		public IActionResult GenerateQR([FromBody] QRDriverRequest request)
 		{
-
-			if(request == null)
-			{
-				return BadRequest(new { success = false, message = "Se requiere el GUID para generar el código QR." });
-			}
-
 			var baseWebSiteUrl = _configuration["FtpSettings:BaseWebSiteUrl"];
 			var ptgDataController = $"{baseWebSiteUrl}QR/DriverData?driverCode={request.ptgGUID}";
 
