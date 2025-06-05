@@ -39,7 +39,7 @@ namespace SuperTransp.Controllers
 		{
 			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("FullName")) && HttpContext.Session.GetInt32("SecurityGroupId") != null)
 			{
-				ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 				ViewBag.SecurityGroupId = (int)HttpContext.Session.GetInt32("SecurityGroupId");
 				ViewBag.SystemVersion = (string)HttpContext.Session.GetString("SystemVersion");
 
@@ -61,7 +61,7 @@ namespace SuperTransp.Controllers
 						PublicTransportGroupIdModifiedDate = DateTime.Now
 					};
 
-					ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 					int? stateId = HttpContext.Session.GetInt32("StateId");
 					int supervisorsGroupId = 3;
@@ -74,6 +74,7 @@ namespace SuperTransp.Controllers
 							{
 								ViewBag.States = new SelectList(_geography.GetAllStates(), "StateId", "StateName");
 								ViewBag.Union = new SelectList(_union.GetAll(), "UnionId", "UnionName");
+								ViewBag.IsTotalAccess = _security.IsTotalAccess(1);
 							}
 							else
 							{
@@ -142,7 +143,7 @@ namespace SuperTransp.Controllers
 				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 				int? stateId = HttpContext.Session.GetInt32("StateId");
 				int supervisorsGroupId = 3;
-				ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 
 				if (securityGroupId.HasValue)
 				{
@@ -208,7 +209,7 @@ namespace SuperTransp.Controllers
 				{
 					List<PublicTransportGroupViewModel> model = new();
 
-					ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 					int? stateId = HttpContext.Session.GetInt32("StateId");
 

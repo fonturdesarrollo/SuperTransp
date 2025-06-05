@@ -30,7 +30,7 @@ namespace SuperTransp.Controllers
 		{
 			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("FullName")) && HttpContext.Session.GetInt32("SecurityGroupId") != null)
 			{
-				ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 				ViewBag.SecurityGroupId = (int)HttpContext.Session.GetInt32("SecurityGroupId");
 
 				return View();
@@ -47,7 +47,7 @@ namespace SuperTransp.Controllers
 				{
 					List<PublicTransportGroupViewModel> model = new();
 
-					ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 					int? stateId = HttpContext.Session.GetInt32("StateId");
 
@@ -97,7 +97,7 @@ namespace SuperTransp.Controllers
 							ModeName = modeName
 						};
 
-						ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+						ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 						ViewBag.DriverWithVehicle = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
 						ViewBag.WorkingVehicle = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
 						ViewBag.InPerson = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
@@ -200,7 +200,7 @@ namespace SuperTransp.Controllers
 						model.ModeId = modeId;
 						model.ModeName = modeName;
 
-						ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+						ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 						ViewBag.DriverWithVehicle = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
 						ViewBag.WorkingVehicle = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
 						ViewBag.InPerson = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
@@ -751,7 +751,7 @@ namespace SuperTransp.Controllers
 				{
 					List<PublicTransportGroupViewModel> model = new();
 
-					ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 					int? stateId = HttpContext.Session.GetInt32("StateId");
 
@@ -802,7 +802,7 @@ namespace SuperTransp.Controllers
 							SecurityUserId = (int)HttpContext.Session.GetInt32("SecurityUserId")
 						};
 
-						ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+						ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 
 						return View(model);
 					}
@@ -879,7 +879,7 @@ namespace SuperTransp.Controllers
 				{
 					List<SupervisionSummaryViewModel> model = new();
 
-					ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 					int? stateId = HttpContext.Session.GetInt32("StateId");
 

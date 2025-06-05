@@ -29,6 +29,7 @@ namespace SuperTransp.Models
 		public int SecurityAccessTypeId { get; set; }
 		public string? SecurityAccessTypeName { get; set; }
 		public string? SecurityModuleDescription { get; set; }
+		public string? SecurityGroupDescription { get; set; }
 	}
 
 	public class SecurityGroupModel

@@ -31,6 +31,8 @@ namespace SuperTransp.Controllers
 			HttpContext.Session.Remove("DeviceIP");
 			HttpContext.Session.Remove("LoginAttempts");
 			HttpContext.Session.Remove("SystemVersion");
+			HttpContext.Session.Remove("SecurityGroupName");
+			HttpContext.Session.Remove("SecurityGroupDescription");
 
 			return View();
 		}
@@ -63,13 +65,15 @@ namespace SuperTransp.Controllers
 					if (validUser != null && validUser.SecurityUserId != 0)
 					{
 						HttpContext.Session.SetInt32("SecurityUserId", validUser.SecurityUserId);
-						HttpContext.Session.SetString("FullName", validUser.FullName);
+						HttpContext.Session.SetString("FullName", $"{validUser.FullName}");
 						HttpContext.Session.SetString("UserLogin", validUser.Login);
 						HttpContext.Session.SetInt32("SecurityGroupId", validUser.SecurityGroupId);
 						HttpContext.Session.SetInt32("StateId", validUser.StateId);
 						HttpContext.Session.SetString("StateName", validUser.StateName);
 						HttpContext.Session.SetString("DeviceIP", HttpContext.Connection.RemoteIpAddress?.ToString());
 						HttpContext.Session.SetString("SystemVersion", "1.0 r1");
+						HttpContext.Session.SetString("SecurityGroupName", validUser.SecurityGroupName);
+						HttpContext.Session.SetString("SecurityGroupDescription", validUser.SecurityGroupDescription);
 
 						return RedirectToAction("Index", "Home");
 					}
@@ -339,23 +343,23 @@ namespace SuperTransp.Controllers
 			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 			{
 				string? securityUpdatingUserId = paramValue3;
-				var registeredUserIdNumber = _security.RegisteredUser(paramValue1, "SecurityUserDocumentIdNumber");
+				var registeredUserIdNumber = 0;// _security.RegisteredUser(paramValue1, "SecurityUserDocumentIdNumber");
 				var registeredUserLogin = _security.RegisteredUser(paramValue2, "Login");
 
-				if(!string.IsNullOrEmpty(securityUpdatingUserId))
-				{
-					if (int.Parse(securityUpdatingUserId) != registeredUserIdNumber)
-					{
-						return Json("El usuario " + paramValue1 + " ya está registrado.");
-					}
-				}
-				else
-				{
-					if(registeredUserIdNumber != 0)
-					{
-						return Json("El usuario " + paramValue1 + " ya está registrado.");
-					}
-				}				
+				//if(!string.IsNullOrEmpty(securityUpdatingUserId))
+				//{
+				//	if (int.Parse(securityUpdatingUserId) != registeredUserIdNumber)
+				//	{
+				//		return Json("El usuario " + paramValue1 + " ya está registrado.");
+				//	}
+				//}
+				//else
+				//{
+				//	if(registeredUserIdNumber != 0)
+				//	{
+				//		return Json("El usuario " + paramValue1 + " ya está registrado.");
+				//	}
+				//}				
 
 				if(!string.IsNullOrEmpty(securityUpdatingUserId))
 				{

@@ -28,7 +28,7 @@ namespace SuperTransp.Controllers
 
 		public IActionResult AddDesignation()
 		{
-			ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+			ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 
 			return View();
 		}
@@ -61,7 +61,7 @@ namespace SuperTransp.Controllers
 		{
 			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 			{
-				ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 				int? stateId = HttpContext.Session.GetInt32("StateId");
 
@@ -120,7 +120,7 @@ namespace SuperTransp.Controllers
 		{
 			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 			{
-				ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 
 				ViewBag.Years = new SelectList(_commonData.GetYears(), "YearId", "YearName");

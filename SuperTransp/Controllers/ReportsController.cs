@@ -22,7 +22,7 @@ namespace SuperTransp.Controllers
 		{
 			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("FullName")) && HttpContext.Session.GetInt32("SecurityGroupId") != null)
 			{
-				ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 				ViewBag.SecurityGroupId = (int)HttpContext.Session.GetInt32("SecurityGroupId");
 
 				return View();
@@ -39,7 +39,7 @@ namespace SuperTransp.Controllers
 				{
 					List<PublicTransportGroupViewModel> model = new();
 
-					ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 					int? stateId = HttpContext.Session.GetInt32("StateId");
 
@@ -72,7 +72,7 @@ namespace SuperTransp.Controllers
 				{
 					List<PublicTransportGroupViewModel> model = new();
 
-					ViewBag.EmployeeName = HttpContext.Session?.GetString("FullName");
+					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 					int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
 					int? stateId = HttpContext.Session?.GetInt32("StateId");
 

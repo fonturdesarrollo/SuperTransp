@@ -42,10 +42,13 @@ namespace SuperTransp.Core
 					}
 
 					SecurityUserViewModel user = new();
-					SqlCommand cmd = new("SELECT  dbo.SecurityUser.SecurityUserId, dbo.SecurityUser.SecurityUserDocumentIdNumber, dbo.SecurityUser.Login, dbo.SecurityUser.Password, dbo.SecurityUser.FullName, dbo.SecurityUser.SecurityGroupId," +
-					" dbo.SecurityUser.SecurityStatusId, dbo.State.StateId, dbo.State.StateName, dbo.SecurityUser.SecurityUserDateAdded " +
-					" FROM  dbo.SecurityUser INNER JOIN  dbo.State ON dbo.SecurityUser.StateId = dbo.State.StateId" +
+					SqlCommand cmd = new("SELECT dbo.SecurityUser.SecurityUserId, dbo.SecurityUser.SecurityUserDocumentIdNumber, dbo.SecurityUser.Login, dbo.SecurityUser.Password, " +
+					" dbo.SecurityUser.FullName, dbo.SecurityUser.SecurityGroupId, " +
+					" dbo.SecurityUser.SecurityStatusId, dbo.State.StateId, dbo.State.StateName, dbo.SecurityUser.SecurityUserDateAdded, dbo.SecurityGroup.SecurityGroupName, dbo.SecurityGroup.SecurityGroupDescription" +
+					" FROM  dbo.SecurityUser INNER JOIN  dbo.State ON dbo.SecurityUser.StateId = dbo.State.StateId " +
+					" INNER JOIN  dbo.SecurityGroup ON dbo.SecurityUser.SecurityGroupId = dbo.SecurityGroup.SecurityGroupId " +
 					" WHERE  (dbo.SecurityUser.Login = @Login) AND (dbo.SecurityUser.Password = @Password)", sqlConnection);
+
 					cmd.Parameters.AddWithValue("@Login", login);
 					cmd.Parameters.AddWithValue("@Password", password);
 
@@ -60,6 +63,8 @@ namespace SuperTransp.Core
 							user.SecurityGroupId = (int)dr["SecurityGroupId"];
 							user.StateId = (int)dr["StateId"];
 							user.StateName = (string)dr["StateName"];
+							user.SecurityGroupName = (string)dr["SecurityGroupName"];
+							user.SecurityGroupDescription = (string)dr["SecurityGroupDescription"];
 						}
 					}
 

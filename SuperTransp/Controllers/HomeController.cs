@@ -22,7 +22,7 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
-					ViewBag.EmployeeName = (string)HttpContext.Session.GetString("FullName");
+					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")}";
 					ViewBag.SecurityGroupId = (int)HttpContext.Session.GetInt32("SecurityGroupId");
 
 					if (ViewBag.SecurityGroupId != 1)

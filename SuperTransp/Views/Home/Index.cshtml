@@ -43,7 +43,7 @@
 		<div id="main">
 			<div class="inner">
 				<header>
-					<h1>Hola @ViewBag.EmployeeName bienvenid@@ al sistema supervisión de unidades de transporte público, selecciona que deseas hacer:</h1>
+					<h1>Hola @ViewBag.EmployeeName bienvenid@@ al Sistema Supervisión de Unidades de Transporte Público, selecciona que deseas hacer:</h1>
 				</header>
 				<section class="tiles">
 					@{
@@ -82,7 +82,7 @@
 									<span class="image">
 										<img src="~/images/image4.jpg" alt="" />
 									</span>
-									@Html.ActionLink("Consultas", "Index", "Reports")
+									@Html.ActionLink("Reportes/Consultas", "Index", "Reports")
 								</article>
 							}
 							if (ViewBag.SecurityGroupId == 1 || item.SecurityModuleId == 5)

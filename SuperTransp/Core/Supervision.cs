@@ -143,7 +143,7 @@ namespace SuperTransp.Core
 					}
 
 					List<PublicTransportGroupViewModel> ptg = new();
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE StateId = @StateId", sqlConnection);
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE StateId = @StateId AND Partners = TotalDrivers", sqlConnection);
 					cmd.Parameters.AddWithValue("@StateId", stateId);
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
