@@ -715,14 +715,28 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@SupervisionSummaryId", supervisionSummaryId);
 
 						using (SqlDataReader dr = cmd.ExecuteReader())
-						{
-							while (dr.Read())
+						{						
+							if(dr.Read())
+							{
+								while (dr.Read())
+								{
+									SupervisionSummaryPictures picture = new SupervisionSummaryPictures
+									{
+										SupervisionSummaryPictureId = (int)dr["SupervisionSummaryPictureId"],
+										SupervisionSummaryPictureUrl = dr["SupervisionSummaryPictureUrl"] as string ?? "",
+										SupervisionSummaryId = (int)dr["SupervisionSummaryId"]
+									};
+
+									images.Add(picture);
+								}
+							}
+							else
 							{
 								SupervisionSummaryPictures picture = new SupervisionSummaryPictures
 								{
-									SupervisionSummaryPictureId = (int)dr["SupervisionSummaryPictureId"],
-									SupervisionSummaryPictureUrl = (string)dr["SupervisionSummaryPictureUrl"],
-									SupervisionSummaryId = (int)dr["SupervisionSummaryId"]
+									SupervisionSummaryPictureId = 0,
+									SupervisionSummaryPictureUrl = string.Empty,
+									SupervisionSummaryId = 0
 								};
 
 								images.Add(picture);
