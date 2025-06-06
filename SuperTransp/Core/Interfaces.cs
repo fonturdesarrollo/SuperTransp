@@ -127,6 +127,7 @@ namespace SuperTransp.Core
 			public List<CommonDataViewModel> GetOilLitters();
 			public List<CommonDataViewModel> GetFailureType();
 			public int AddOrEditMakeModel(CommonDataViewModel model);
+			public CommonDataViewModel GetCommonDataValueByName(string commonDataName);
 		}
 	}
 }

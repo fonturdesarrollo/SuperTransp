@@ -384,5 +384,39 @@ namespace SuperTransp.Core
 				throw new Exception("Error al añadir o editar la marca del vehículo", ex);
 			}
 		}
+
+		public CommonDataViewModel GetCommonDataValueByName(string commonDataName)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					CommonDataViewModel cd = new();
+					SqlCommand cmd = new("SELECT * FROM CommonData WHERE CommonDataName = @CommonDataName", sqlConnection);
+					cmd.Parameters.AddWithValue("@CommonDataName", commonDataName);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							cd.CommonDataId = (int)dr["CommonDataId"];
+							cd.CommonDataName = (string)dr["CommonDataName"];
+							cd.CommonDataValue = (string)dr["CommonDataValue"];
+						}
+					}
+
+					return cd;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener la data comun {ex.Message}", ex);
+			}
+		}
 	}
 }

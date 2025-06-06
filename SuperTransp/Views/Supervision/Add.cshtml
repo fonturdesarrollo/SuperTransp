@@ -420,15 +420,15 @@
 					message = "Debe colocar la placa";
 				}
 
-				if ($("#Plate").val() != "" && !firstInvalidField) {
-					const regexPlate = /^(?:[A-Z]{3}\d{3}|[A-Z]{2}\d{3}[A-Z]{2}|[A-Z]{2}\d{1}[A-Z]{1}\d{2}[A-Z]{1}|[0-9]{2}[A-Z]{2}[0-9]{1}[A-Z]{2}|[0-9]{2}[A-Z]{1}[0-9]{1}[A-Z]{1}[0-9]{1}[A-Z]{1}|[0-9]{2}[A-Z]{1}[0-9]{2}[A-Z]{2}|[0-9]{2}[A-Z]{2}[0-9]{2}[A-Z]{1}|[0-9]{3}[A-Z]{1}[0-9]{1}[A-Z]{1}[0-9]{1}|[0-9]{3}[A-Z]{2}[0-9]{1}[A-Z]{1}|[0-9]{4}[A-Z]{1}[0-9]{1}[A-Z]{1}|[0-9]{1}[A-Z]{1}[0-9]{1}[A-Z]{1}[0-9]{1}[A-Z]{2}|[0-9]{1}[A-Z]{1}[0-9]{1}[A-Z]{1}[0-9]{2}[A-Z]{1}|[0-9]{1}[A-Z]{1}[0-9]{3}[A-Z]{2}|[A-Z]{2}\d{4}|[A-Z]{3}\d{2}[A-Z]|[A-Z]{2}\d{4}|[0-9][A-Z][0-9][A-Z][0-9]{3})$/;
-					const plateValue = $("#Plate").val();
+				// if ($("#Plate").val() != "" && !firstInvalidField) {
+				// 	const regexPlate = /^(?:[A-Z]{3}\d{3}|[A-Z]{2}\d{3}[A-Z]{2}|[A-Z]{2}\d{1}[A-Z]{1}\d{2}[A-Z]{1}|[0-9]{2}[A-Z]{2}[0-9]{1}[A-Z]{2}|[0-9]{2}[A-Z]{1}[0-9]{1}[A-Z]{1}[0-9]{1}[A-Z]{1}|[0-9]{2}[A-Z]{1}[0-9]{2}[A-Z]{2}|[0-9]{2}[A-Z]{2}[0-9]{2}[A-Z]{1}|[0-9]{3}[A-Z]{1}[0-9]{1}[A-Z]{1}[0-9]{1}|[0-9]{3}[A-Z]{2}[0-9]{1}[A-Z]{1}|[0-9]{4}[A-Z]{1}[0-9]{1}[A-Z]{1}|[0-9]{1}[A-Z]{1}[0-9]{1}[A-Z]{1}[0-9]{1}[A-Z]{2}|[0-9]{1}[A-Z]{1}[0-9]{1}[A-Z]{1}[0-9]{2}[A-Z]{1}|[0-9]{1}[A-Z]{1}[0-9]{3}[A-Z]{2}|[A-Z]{2}\d{4}|[A-Z]{3}\d{2}[A-Z]|[A-Z]{2}\d{4}|[0-9][A-Z][0-9][A-Z][0-9]{3})$/;
+				// 	const plateValue = $("#Plate").val();
 
-					if (!regexPlate.test(plateValue)) {
-						firstInvalidField = "#Plate";
-						message = "La placa debe tener un formato válido";
-					}
-				}
+				// 	if (!regexPlate.test(plateValue)) {
+				// 		firstInvalidField = "#Plate";
+				// 		message = "La placa debe tener un formato válido";
+				// 	}
+				// }
 
 				if ($("#Years").val() == "" && !firstInvalidField) {
 					firstInvalidField = "#Years";

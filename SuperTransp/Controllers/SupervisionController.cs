@@ -735,7 +735,21 @@ namespace SuperTransp.Controllers
 					{
 						return Json($"El número de placa {paramValue2} ya está asignado al transportista {existingPlate.FirstOrDefault().DriverFullName} línea {existingPlate.FirstOrDefault().PTGCompleteName} estado {existingPlate.FirstOrDefault().StateName.ToUpper()}.");
 					}					
-				}				
+				}
+
+				var plateRule = _commonData.GetCommonDataValueByName("ValidPlateRule");
+
+				if (plateRule != null) 
+				{
+					string regexPlatePattern = plateRule.CommonDataValue;
+
+					Regex regexPlate = new Regex(regexPlatePattern);
+
+					if (!regexPlate.IsMatch(paramValue2))
+					{
+						return Json($"El número de placa {paramValue2} debe tener un formato válido.");
+					}
+				}
 
 				return Json("OK");
 			}

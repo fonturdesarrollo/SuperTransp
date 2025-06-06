@@ -29,5 +29,8 @@
 		public string? MotorOilName { get; set; }
 		public int FailureTypeId { get; set; }
 		public string? FailureTypeName { get; set; }
+		public int CommonDataId { get; set; }
+		public string? CommonDataName { get; set; }
+		public string? CommonDataValue { get; set; }
 	}
 }
