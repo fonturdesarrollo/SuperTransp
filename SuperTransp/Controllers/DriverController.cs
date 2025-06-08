@@ -254,6 +254,11 @@ namespace SuperTransp.Controllers
 					return Json($"La línea tiene cupo solo para {ptgPartners.Partners} transportista(s) no puede agregar mas.");
 				}
 
+				if(paramValue4 > ptgPartners.Partners)
+				{
+					return Json($"La línea tiene cupo solo para {ptgPartners.Partners} transportista(s) no puede agregar un número de socio {paramValue4}.");
+				}
+
 				return Json("OK");
 			}
 
@@ -276,7 +281,14 @@ namespace SuperTransp.Controllers
 						{
 							return Json($"El número de socio {paramValue4} ya está registrado a la línea.");
 						}
-					}					
+					}
+				}
+
+				var ptgPartners = _publicTransportGroup.GetPublicTransportGroupById(paramValue2);
+
+				if (paramValue4 > ptgPartners.Partners)
+				{
+					return Json($"La línea tiene cupo solo para {ptgPartners.Partners} transportista(s) no puede agregar un número de socio {paramValue4}.");
 				}
 
 				return Json("OK");
