@@ -356,9 +356,15 @@
 				$('#modalVehicleNumberOfBatteries').text($(this).data('vehicle-number-batteries'));
 				$('#modalVehicleFailureTypeName').text($(this).data('vehicle-failure-type-name'));
 
-				var url = $(this).data('vehicle-image-url') + "?timestamp=" + new Date().getTime();
-				$("#vehicleImage").attr("src", url);
-				$("#image-link").attr("href", url);
+				var baseUrl = $(this).data('vehicle-image-url');
+
+				if (baseUrl && baseUrl.trim() !== "") { 
+					var url = baseUrl + "?timestamp=" + new Date().getTime();
+					$("#vehicleImage").attr("src", url).show();
+					$("#image-link").attr("href", url);
+				} else {
+					$("#vehicleImage").hide();
+				}
 
 				if($(this).data('fingerprint-trouble') == "True"){
 					$('#modalDriverFingerprintTrouble').text('Sí')

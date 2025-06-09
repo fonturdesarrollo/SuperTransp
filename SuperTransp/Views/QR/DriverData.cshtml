@@ -109,12 +109,15 @@
 											<strong>Observaciones:</strong>
 											@Model.Remarks
 										</div>
-									}
-									<div class="col-12">
-										<strong>Foto supervisión:</strong>
-										<br />
-										<img src="@Model.VehicleImageUrl" alt="Imagen del vehículo" class="img-fluid" />
-									</div>
+									}			
+									if (!string.IsNullOrEmpty(Model.VehicleImageUrl))
+									{
+										<div class="col-12">
+											<strong>Foto supervisión:</strong>
+											<br />
+											<img src="@Model.VehicleImageUrl" alt="Imagen del vehículo" class="img-fluid" />
+										</div>
+									}									
 								}
 							}
 							else
