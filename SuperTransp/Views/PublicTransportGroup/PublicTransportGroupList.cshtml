@@ -6,7 +6,7 @@
 <html>
 
 <head>
-	<title>Modificar - Seleccionar Línea</title>
+	<title>Modificar - Seleccionar Organización</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 	<link rel="stylesheet" href="~/assets/css/main.css" />
@@ -31,7 +31,7 @@
 					<br />
 					<span>@ViewBag.EmployeeName</span>
 					<br />
-					<span>Modificar líneas de transporte</span>
+					<span>Modificar organización de transporte</span>
 				</a>
 			</div>
 
@@ -48,7 +48,7 @@
 			<h2>Menu</h2>
 			<ul>
 				<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
-				<li>@Html.ActionLink("Agregar línea", "Add", "PublicTransportGroup")</li>
+				<li>@Html.ActionLink("Agregar organización", "Add", "PublicTransportGroup")</li>
 				<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 			</ul>
 		</nav>
@@ -57,7 +57,7 @@
 			<div class="inner">
 				<!-- Form -->
 				<section>
-					<h4 style="color:#4cbece">Líneas Registradas</h4>
+					<h4 style="color:#4cbece">Organizaciones Registradas</h4>
 					<br />
 					<table id="publicTransportGroupListDetail" class="table table-striped table-bordered dt-responsive nowrap" style="width:100%">
 						<thead>
@@ -65,7 +65,7 @@
 								<th>Nombre</th>
 								<th>Tipo</th>
 								<th>Rif</th>
-								<th>Socios Línea</th>
+								<th>Socios Organización</th>
 								<th>Socios Cargados</th>
 								<th>Estado</th>
 							</tr>

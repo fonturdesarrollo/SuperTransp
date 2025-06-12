@@ -4,7 +4,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-	<title>SuperTransp - Inicio</title>
+	<title>Inicio</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 	<link rel="stylesheet" href="~/assets/css/main.css" />
@@ -43,7 +43,7 @@
 		<div id="main">
 			<div class="inner">
 				<header>
-					<h1>Hola @ViewBag.EmployeeName bienvenid@@ al Sistema Supervisión de Unidades de Transporte Público, selecciona que deseas hacer:</h1>
+					<h1>Hola @ViewBag.EmployeeName bienvenid@@ al Sistema Supervisión de Organizaciones de Transporte Público, selecciona que deseas hacer:</h1>
 				</header>
 				<section class="tiles">
 					@{
@@ -55,7 +55,7 @@
 									<span class="image">
 										<img src="~/images/image7.jpg" alt="" />
 									</span>
-									@Html.ActionLink("Líneas de Transporte", "Index", "PublicTransportGroup")
+									@Html.ActionLink("Organizaciones de Transporte", "Index", "PublicTransportGroup")
 								</article>
 							}
 							if (ViewBag.SecurityGroupId == 1 || item.SecurityModuleId == 2)
@@ -64,7 +64,7 @@
 									<span class="image">
 										<img src="~/images/image8.jpg" alt="" />
 									</span>
-									@Html.ActionLink("Transportistas", "Index", "Driver")
+									@Html.ActionLink("Socios/Transportistas", "Index", "Driver")
 								</article>
 							}
 							if (ViewBag.SecurityGroupId == 1 || item.SecurityModuleId == 3)

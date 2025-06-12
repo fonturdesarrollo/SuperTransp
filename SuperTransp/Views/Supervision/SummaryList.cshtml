@@ -76,8 +76,8 @@
 									<td>
 										@ptg.PTGCompleteName
 									</td>
-									<td>@ptg.SupervisionDate.ToShortDateString()</td>
 									<td>@ptg.StateName</td>
+									<td>@ptg.SupervisionDate.ToShortDateString()</td>
 									<td id="@ptg.SupervisionSummaryId">
 										@Html.ActionLink("Seleccionar", "EditSummary", "Supervision", new { supervisionSummaryId = ptg.SupervisionSummaryId}, new { @id = "btnEdit" })
 									</td>

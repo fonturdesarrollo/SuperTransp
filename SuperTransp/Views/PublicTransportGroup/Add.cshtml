@@ -5,7 +5,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-	<title>Agregar Línea de Transporte</title>
+	<title>Agregar Organización de Transporte</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 	<link rel="stylesheet" href="~/assets/css/main.css" />
@@ -57,8 +57,8 @@
 				<h2>Menu</h2>
 				<ul>
 					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
-					<li>@Html.ActionLink("Modificar línea", "PublicTransportGroupList", "PublicTransportGroup")</li>
-					<li>@Html.ActionLink("Agregar transportistas a línea", "PublicTransportGroupList", "Driver")</li>
+					<li>@Html.ActionLink("Modificar organización", "PublicTransportGroupList", "PublicTransportGroup")</li>
+					<li>@Html.ActionLink("Agregar socios a organización", "PublicTransportGroupList", "Driver")</li>
 					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 				</ul>
 			</nav>
@@ -68,7 +68,7 @@
 				<div class="inner">
 					<!-- Form -->
 					<section>
-						<h1 style="color:#4cbece">Agregar línea de transporte</h1>
+						<h1 style="color:#4cbece">Agregar organización de transporte</h1>
 						<br />
 						<div class="row gtr-uniform">
 							<div class="col-6">
@@ -78,12 +78,12 @@
 								<span asp-validation-for="PublicTransportGroupRif" class="text-danger"></span>
 							</div>
 							<div class="col-6 col-12-xsmall">
-								<strong>Tipo de Línea:</strong>
+								<strong>Tipo de organización:</strong>
 								@Html.DropDownListFor(t => t.DesignationId, (SelectList)ViewBag.Designation, "-- Seleccione --", new { @class = "form-control" })
 							</div>
 							<div class="col-12">
 								<strong>Nombre:</strong>
-								@Html.TextBoxFor(x => x.PublicTransportGroupName, new { placeholder = "Nombre de la línea de transporte", maxlength = "100" })
+								@Html.TextBoxFor(x => x.PublicTransportGroupName, new { placeholder = "Nombre de la organización de transporte", maxlength = "100" })
 								<span asp-validation-for="PublicTransportGroupName" class="text-danger"></span>
 							</div>
 							<div class="col-6 col-12-xsmall">
@@ -279,7 +279,7 @@
 
 			if ($("#PublicTransportGroupName").val() == "" && !firstInvalidField) {
 				firstInvalidField = "#PublicTransportGroupName";
-				message = "Debe colocar el nombre de la línea";
+				message = "Debe colocar el nombre de la organización";
 			} else {
 				const fullName = $("#PublicTransportGroupName").val().trim();
 				const regex = /^[a-zA-ZñÑ0-9\s]{5,}$/;

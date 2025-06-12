@@ -71,8 +71,8 @@
 				<h2>Menu</h2>
 				<ul>
 					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
-					<li>@Html.ActionLink("Seleccionar línea para modificar resumen", "SummaryList", "Supervision")</li>
-					<li>@Html.ActionLink("Seleccionar línea para hacer resumen", "PublicTransportGroupList", "Supervision")</li>
+					<li>@Html.ActionLink("Seleccionar organización para modificar resumen", "SummaryList", "Supervision")</li>
+					<li>@Html.ActionLink("Seleccionar organización para hacer resumen", "PublicTransportGroupList", "Supervision")</li>
 					<li>@Html.ActionLink("Supervisar unidades de transporte", "PublicTransportGroupDriverList", "Supervision")</li>
 					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 				</ul>
@@ -84,7 +84,7 @@
 					<!-- Form -->
 					<section>
 						<h1 style="color:#4cbece">Modificar Resumen de Supervisión</h1>
-						<label>Linea: @Model.PTGCompleteName</label>
+						<label>Organización: @Model.PTGCompleteName</label>
 						<br />
 						<br />
 						<br />

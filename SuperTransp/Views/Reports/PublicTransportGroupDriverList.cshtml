@@ -77,7 +77,7 @@
 			<h2>Menu</h2>
 			<ul>
 				<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
-				<li>@Html.ActionLink("Líneas", "PublicTransportGroupList", "Reports")</li>
+				<li>@Html.ActionLink("Organizaciones", "PublicTransportGroupList", "Reports")</li>
 				<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 			</ul>
 		</nav>
@@ -170,11 +170,11 @@
 					<button type="button" class="close" data-dismiss="modal">&times;</button>
 				</div>
 				<div class="modal-body">
-					<p><strong>Transportista:</strong> <span id="modalDriver"></span></p>
+					<p><strong>Nombre:</strong> <span id="modalDriver"></span></p>
 					<p><strong># Socio:</strong> <span id="modalPartner"></span></p>
 					<p><strong>¿Tiene vehículo:</strong> <span id="modalDriverWithVehicle"></span></p>
 					<div class="modal-vehicle-data">
-						<p><strong>¿Transportista presente?:</strong> <span id="modalDriverInPerson"></span></p>
+						<p><strong>¿Socio presente?:</strong> <span id="modalDriverInPerson"></span></p>
 						<p><strong>¿Vehículo en funcionamiento?:</strong> <span id="modalDriverWithWorkingVehicle"></span></p>
 						<p><strong>Placa:</strong> <span id="modalVehiclePlate"></span></p>
 						<p><strong>Año:</strong> <span id="modalVehicleYear"></span></p>
