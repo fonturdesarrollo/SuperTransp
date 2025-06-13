@@ -30,6 +30,11 @@ namespace SuperTransp.Controllers
 		{
 			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("FullName")) && HttpContext.Session.GetInt32("SecurityGroupId") != null)
 			{
+				if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 3))
+				{
+					return RedirectToAction("Login", "Security");
+				}
+
 				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 				ViewBag.SecurityGroupId = (int)HttpContext.Session.GetInt32("SecurityGroupId");
 
@@ -45,15 +50,21 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 3))
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
 					List<PublicTransportGroupViewModel> model = new();
 
 					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 					int? stateId = HttpContext.Session.GetInt32("StateId");
+					int? userId = HttpContext.Session.GetInt32("SecurityUserId");
 
 					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
 					{
-						model = _supervision.GetDriverPublicTransportGroupByStateId((int)stateId);
+						model = _supervision.GetDriverPublicTransportGroupByStateId((int)stateId);					
 					}
 					else
 					{
@@ -77,10 +88,21 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 3))
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
 					int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
+					int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
 					
 					if (securityGroupId != null && _security.GroupHasAccessToModule((int)securityGroupId, 3) || securityGroupId == 1)
 					{
+						if(!_supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId))
+						{
+							return RedirectToAction("PublicTransportGroupDriverList");
+						}
+
 						var model = new SupervisionViewModel
 						{
 							PublicTransportGroupId = publicTransportGroupId,
@@ -91,7 +113,7 @@ namespace SuperTransp.Controllers
 							PublicTransportGroupRif = publicTransportGroupRif,
 							DriverIdentityDocument = driverIdentityDocument,
 							StateName = stateName,
-							SecurityUserId = (int)HttpContext.Session.GetInt32("SecurityUserId"),
+							SecurityUserId = (int)securityUserId,
 							SupervisionId = supervisionId,
 							ModeId = modeId,
 							ModeName = modeName
@@ -144,6 +166,11 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
 				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 3))
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
 					int supervisionId = 0;
 
 					if (!model.DriverWithVehicle)
@@ -181,10 +208,21 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 3))
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
 					int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
+					int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
 
 					if(securityGroupId != null && _security.GroupHasAccessToModule((int)securityGroupId,3) || securityGroupId == 1)
 					{
+						if (!_supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId))
+						{
+							return RedirectToAction("PublicTransportGroupDriverList");
+						}
+
 						var model = _supervision.GetByPublicTransportGroupIdAndDriverIdAndPartnerNumberStateId(publicTransportGroupId, driverId, partnerNumber, (int)stateId);
 
 						model.PublicTransportGroupId = publicTransportGroupId;
@@ -247,6 +285,11 @@ namespace SuperTransp.Controllers
 		[HttpPost]
 		public IActionResult Edit(SupervisionSummaryViewModel model)
 		{
+			if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 3))
+			{
+				return RedirectToAction("Login", "Security");
+			}
+
 			return View(model);
 		}
 
@@ -763,6 +806,11 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 3))
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
 					List<PublicTransportGroupViewModel> model = new();
 
 					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
@@ -795,6 +843,18 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 3))
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
+					int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
+
+					if (!_supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId))
+					{
+						return RedirectToAction("PublicTransportGroupList");
+					}
+
 					var ptg = _publicTransportGroup.GetPublicTransportGroupById(publicTransportGroupId);
 					
 					if (ptg != null) 
@@ -840,6 +900,11 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
 				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 3))
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
 					int supervisionSummaryId = 0;
 
 					model.Pictures = await SupervisionSummaryPictureUrlAsync(model.StateName, model.PublicTransportGroupRif);
@@ -860,10 +925,22 @@ namespace SuperTransp.Controllers
 			}
 		}
 
-		public IActionResult EditSummary(int supervisionSummaryId)
+		public IActionResult EditSummary(int supervisionSummaryId, int publicTransportGroupId)
 		{
 			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 			{
+				if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 3))
+				{
+					return RedirectToAction("Login", "Security");
+				}
+
+				int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
+
+				if (!_supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId))
+				{
+					return RedirectToAction("SummaryList");
+				}
+
 				var model = _supervision.GetSupervisionSummaryById(supervisionSummaryId);
 
 				return View(model);
@@ -877,6 +954,11 @@ namespace SuperTransp.Controllers
 		{
 			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
 			{
+				if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 3))
+				{
+					return RedirectToAction("Login", "Security");
+				}
+
 				_supervision.AddOrEditSummary(model);
 
 				return RedirectToAction("EditSummary", new { supervisionSummaryId = model.SupervisionSummaryId });
@@ -891,6 +973,11 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 3))
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
 					List<SupervisionSummaryViewModel> model = new();
 
 					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
@@ -915,6 +1002,16 @@ namespace SuperTransp.Controllers
 			{
 				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
 			}
+		}
+
+		[HttpGet]
+		public JsonResult CheckPermission(int publicTransportGroupId)
+		{
+			int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
+
+			bool hasPermission = _supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId);
+
+			return Json(new { hasPermission });
 		}
 	}
 }

@@ -273,6 +273,8 @@ namespace SuperTransp.Core
 								TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"],
 								PublicTransportGroupGUID = (string)dr["PublicTransportGroupGUID"],
 								SupervisionSummaryId = (int)dr["SupervisionSummaryId"],
+								UserFullName = (string)dr["UserFullName"],
+								SecurityUserId = (int)dr["SecurityUserId"],
 							});
 						}
 					}

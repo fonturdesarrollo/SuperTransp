@@ -65,8 +65,9 @@
 							<tr>
 								<th>Línea</th>
 								<th>Estado</th>
+								<th>Supervisor</th>
 								<th>Fecha Supervisión</th>
-								<th>Seleccionar</th>
+@* 								<th>Seleccionar</th> *@
 							</tr>
 						</thead>
 						<tbody>
@@ -74,13 +75,17 @@
 							{
 								<tr>
 									<td>
-										@ptg.PTGCompleteName
+										@Html.ActionLink(@ptg.PTGCompleteName, "EditSummary", "Supervision",
+										new { supervisionSummaryId = ptg.SupervisionSummaryId, publicTransportGroupId = ptg.PublicTransportGroupId },
+										new { @class = "action-link", data_group_id = ptg.PublicTransportGroupId })
 									</td>
+
 									<td>@ptg.StateName</td>
+									<td>@ptg.UserFullName</td>
 									<td>@ptg.SupervisionDate.ToShortDateString()</td>
-									<td id="@ptg.SupervisionSummaryId">
+@* 									<td id="@ptg.SupervisionSummaryId">
 										@Html.ActionLink("Seleccionar", "EditSummary", "Supervision", new { supervisionSummaryId = ptg.SupervisionSummaryId}, new { @id = "btnEdit" })
-									</td>
+									</td> *@
 								</tr>
 							}
 						</tbody>
@@ -111,6 +116,30 @@
 	<script type="text/javascript">
 
 		$(document).ready(function () {
+
+			$(".action-link").on("click", function (event) {
+				event.preventDefault();
+
+				var url = $(this).attr("href");
+				var controllerUrl = '@Url.Action("CheckPermission", "Supervision")';
+				var publicTransportGroupId = $(this).data("group-id");
+
+				$.ajax({
+					url: controllerUrl,
+					type: "GET",
+					data: { publicTransportGroupId: publicTransportGroupId },
+					success: function (response) {
+						if (response.hasPermission) {
+							window.location.href = url;
+						} else {
+							alert("Esta organización está siendo supervisada por otro supervisor.");
+						}
+					},
+					error: function () {
+						alert("Error al validar permisos.");
+					}
+				});
+			});
 
 			$('#inventory').DataTable({
 				"language": {

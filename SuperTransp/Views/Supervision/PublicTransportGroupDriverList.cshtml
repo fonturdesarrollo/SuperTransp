@@ -90,7 +90,7 @@
 				<section>
 					<h4 style="color:#4cbece"> Seleccione una Organización</h4>
 					<br />
-					<table id="inventory" class="table table-striped table-bordered dt-responsive nowrap" style="width:100%">
+					<table id="inventory" class="table table-striped table-bordered dt-responsive dt-nowrap">
 						<thead>
 							<tr>
 								<th>Nombre Organización</th>
@@ -99,6 +99,7 @@
 								<th>Nombre Socio</th>
 								<th># Socio</th>
 								<th>Estado</th>
+								<th>Supervisor</th>
 								<th>Estatus</th>
 							</tr>
 						</thead>
@@ -135,8 +136,7 @@
 												modeName = ptg.ModeName,
 												stateId = ptg.StateId,
 											},
-											new { style = $"color: {statusColorPTG};" 
-											}																																				
+											new { @class = "action-link", style = $"color: {statusColorPTG};", data_group_id = ptg.PublicTransportGroupId }
 										)
 									</td>
 									<td>
@@ -158,7 +158,7 @@
 												modeName = ptg.ModeName,
 												stateId = ptg.StateId,
 											},
-											new { style = $"color: {statusColorPTG};" }	
+											new { @class = "action-link", style = $"color: {statusColorPTG};", data_group_id = ptg.PublicTransportGroupId }
 									)
 									</td>
 									<td>
@@ -180,7 +180,7 @@
 												modeName = ptg.ModeName,
 												stateId = ptg.StateId,
 											},
-											new { style = $"color: {statusColorDriver};" }	
+											new { @class = "action-link", style = $"color: {statusColorDriver};", data_group_id = ptg.PublicTransportGroupId }
 										)										
 									</td>
 									<td>
@@ -202,13 +202,14 @@
 												modeName = ptg.ModeName,
 												stateId = ptg.StateId,
 											},
-											new { style = $"color: {statusColorDriver};" }	
+											new { @class = "action-link", style = $"color: {statusColorDriver};", data_group_id = ptg.PublicTransportGroupId }
 										)																			
 									</td>
 									<td>
 										@ptg.PartnerNumber
 									</td>
 									<td>@ptg.StateName</td>
+									<td>@ptg.UserFullName</td>
 									<td>
 										@ptg.SupervisionStatusName
 										@{
@@ -313,6 +314,30 @@
 	<script type="text/javascript">
 
 		$(document).ready(function () {
+
+			$(".action-link").on("click", function (event) {
+				event.preventDefault();
+
+				var url = $(this).attr("href");
+				var controllerUrl = '@Url.Action("CheckPermission", "Supervision")';
+				var publicTransportGroupId = $(this).data("group-id");
+
+				$.ajax({
+					url: controllerUrl,
+					type: "GET",
+					data: { publicTransportGroupId: publicTransportGroupId },	
+					success: function (response) {
+						if (response.hasPermission) {
+							window.location.href = url;
+						} else {
+							alert("Esta organización está siendo supervisada por otro supervisor.");
+						}
+					},
+					error: function () {
+						alert("Error al validar permisos.");
+					}
+				});
+			});
 
 			$(document).on('click touchstart', '.view-info', function () {
 				$('#modalName').text($(this).data('name'));

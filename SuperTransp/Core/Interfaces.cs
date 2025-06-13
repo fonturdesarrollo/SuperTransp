@@ -37,6 +37,8 @@ namespace SuperTransp.Core
 			public bool IsInactiveLogin(string login);
 			public string GeneratePublicKey();
 			public bool ValidateKey(string key, byte[] sign);
+			public List<SecurityLogbookModel> GetLogbookByStateName(string userState);
+			public List<SecurityLogbookModel> GetLogbookAll();
 		}
 		public interface IGeography
 		{
@@ -108,6 +110,7 @@ namespace SuperTransp.Core
 			public List<SupervisionSummaryViewModel> GetAllSupervisionSummary();
 			public List<SupervisionSummaryViewModel> GetSupervisionSummaryByStateId(int stateId);
 			public SupervisionSummaryViewModel GetSupervisionSummaryById(int supervisionSummaryId);
+			public bool IsUserSupervisingPublicTransportGroup(int securityUserId, int publicTransportGroupId);
 		}
 
 		public interface ICommonData

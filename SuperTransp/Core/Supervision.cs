@@ -73,7 +73,18 @@ namespace SuperTransp.Core
 
 						if(driver != null)
 						{
-							_security.AddLogbook(model.SupervisionId, false, $"supervisión transportista codigo {model.DriverId} nombre {driver.DriverFullName} cedula {driver.DriverIdentityDocument} socio con vehículo {model.DriverWithVehicle.ToSpanishYesNo().ToLower()} vehículo en funcionamiento {model.WorkingVehicle.ToSpanishYesNo().ToLower()} socio presente {model.InPerson.ToSpanishYesNo().ToLower()} " +
+							var ptg = GetDriverPublicTransportGroupByPtgId(model.PublicTransportGroupId);
+							
+							var ptgFullName = string.Empty;
+							var ptgRif = string.Empty;
+
+							if (ptg != null) 
+							{
+								ptgFullName = ptg.FirstOrDefault().PTGCompleteName;
+								ptgRif = ptg.FirstOrDefault().PublicTransportGroupRif;
+							}
+
+							_security.AddLogbook(model.SupervisionId, false, $"supervisión transportista codigo {model.DriverId} nombre {driver.DriverFullName} cedula {driver.DriverIdentityDocument} organización {ptgFullName} RIF {ptgRif} socio con vehículo {model.DriverWithVehicle.ToSpanishYesNo().ToLower()} vehículo en funcionamiento {model.WorkingVehicle.ToSpanishYesNo().ToLower()} socio presente {model.InPerson.ToSpanishYesNo().ToLower()} " +
 								$"placa {model.Plate} id del vehiculo {model.VehicleDataId} año vehículo {model.Year} marca vehículo {model.Make} modelo vehículo {model.ModeName} pasajeros {model.Passengers} litros de combustible {model.TankCapacity} litros de aceite {model.Liters} problemas con la huella {model.FingerprintTrouble.ToSpanishYesNo().ToLower()} observaciones {model.Remarks} foto vehículo {model.VehicleImageUrl}");
 						}
 					}
@@ -117,7 +128,18 @@ namespace SuperTransp.Core
 
 						if(driver != null)
 						{
-							_security.AddLogbook(model.SupervisionId, false, $"supervisión de socio sin vehículo, código {model.DriverId} nombre {driver.DriverFullName} cedula {model.DriverIdentityDocument} ");
+							var ptg = GetDriverPublicTransportGroupByPtgId(model.PublicTransportGroupId);
+
+							var ptgFullName = string.Empty;
+							var ptgRif = string.Empty;
+
+							if (ptg != null)
+							{
+								ptgFullName = ptg.FirstOrDefault().PTGCompleteName;
+								ptgRif = ptg.FirstOrDefault().PublicTransportGroupRif;
+							}
+
+							_security.AddLogbook(model.SupervisionId, false, $"supervisión de socio sin vehículo, código {model.DriverId} nombre {driver.DriverFullName} cedula {model.DriverIdentityDocument} organización {ptgFullName} RIF {ptgRif} ");
 						}						
 					}
 				}
@@ -197,6 +219,7 @@ namespace SuperTransp.Core
 								VehicleImageUrl = (string)dr["VehicleImageUrl"],
 								FingerprintTrouble = (bool)dr["FingerprintTrouble"],
 								Remarks = (string)dr["Remarks"],
+								UserFullName = (string)dr["UserFullName"],
 							});
 						}
 					}
@@ -276,6 +299,8 @@ namespace SuperTransp.Core
 								VehicleImageUrl = (string)dr["VehicleImageUrl"],
 								FingerprintTrouble = (bool)dr["FingerprintTrouble"],
 								Remarks = (string)dr["Remarks"],
+								UserFullName = (string)dr["UserFullName"],
+								SecurityUserId = (int)dr["SecurityUserId"],
 							});
 						}
 					}
@@ -504,6 +529,8 @@ namespace SuperTransp.Core
 								VehicleImageUrl = (string)dr["VehicleImageUrl"],
 								FingerprintTrouble = (bool)dr["FingerprintTrouble"],
 								Remarks = (string)dr["Remarks"],
+								UserFullName = (string)dr["UserFullName"],
+								SecurityUserId = (int)dr["SecurityUserId"],
 							});
 						}
 					}
@@ -661,6 +688,7 @@ namespace SuperTransp.Core
 								SupervisionAddress = (string)dr["SupervisionAddress"],
 								SupervisionSummaryRemarks = (string)dr["SupervisionSummaryRemarks"],
 								UserFullName = (string)dr["UserFullName"],
+								SecurityUserId = (int)dr["SecurityUserId"],
 							});
 						}
 					}
@@ -715,36 +743,35 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@SupervisionSummaryId", supervisionSummaryId);
 
 						using (SqlDataReader dr = cmd.ExecuteReader())
-						{						
-							if(dr.Read())
-							{
-								while (dr.Read())
-								{
-									SupervisionSummaryPictures picture = new SupervisionSummaryPictures
-									{
-										SupervisionSummaryPictureId = (int)dr["SupervisionSummaryPictureId"],
-										SupervisionSummaryPictureUrl = dr["SupervisionSummaryPictureUrl"] as string ?? "",
-										SupervisionSummaryId = (int)dr["SupervisionSummaryId"]
-									};
-
-									images.Add(picture);
-								}
-							}
-							else
+						{
+							while (dr.Read())
 							{
 								SupervisionSummaryPictures picture = new SupervisionSummaryPictures
 								{
-									SupervisionSummaryPictureId = 0,
-									SupervisionSummaryPictureUrl = string.Empty,
-									SupervisionSummaryId = 0
+									SupervisionSummaryPictureId = (int)dr["SupervisionSummaryPictureId"],
+									SupervisionSummaryPictureUrl = dr["SupervisionSummaryPictureUrl"] as string ?? "",
+									SupervisionSummaryId = (int)dr["SupervisionSummaryId"]
 								};
 
 								images.Add(picture);
-							}
+							}		
 						}
 
 						if (images.Any())
 						{
+							summary.Pictures = images;
+						}
+						else
+						{
+							SupervisionSummaryPictures picture = new SupervisionSummaryPictures
+							{
+								SupervisionSummaryPictureId = 0,
+								SupervisionSummaryPictureUrl = string.Empty,
+								SupervisionSummaryId = 0
+							};
+
+							images.Add(picture);
+
 							summary.Pictures = images;
 						}
 					}
@@ -800,6 +827,28 @@ namespace SuperTransp.Core
 			{
 				throw new Exception($"Error al obtener todos los resumenes de supervision {ex.Message}", ex);
 			}
+		}
+
+		public bool IsUserSupervisingPublicTransportGroup(int securityUserId, int publicTransportGroupId)
+		{
+			var pTGs = GetDriverPublicTransportGroupByPtgId(publicTransportGroupId);
+			var isSupervised = pTGs.Where(x => x.SupervisionStatusName == "SUPERVISADO");
+
+			if(isSupervised.Any())
+			{
+				var supervisor = isSupervised.Where(z => z.SecurityUserId == securityUserId);
+				
+				if(supervisor.Any())
+				{
+					return true;
+				}
+			}
+			else
+			{
+				return true;
+			}
+
+			return false;
 		}
 	}
 }

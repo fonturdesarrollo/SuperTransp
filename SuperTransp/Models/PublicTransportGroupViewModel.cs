@@ -64,5 +64,7 @@ namespace SuperTransp.Models
 		public int? Partners { get; set; }
 		public string? PublicTransportGroupGUID { get; set; }
 		public int? SupervisionSummaryId { get; set; }
+		public  string? UserFullName { get; set; }
+		public  int? SecurityUserId { get; set; }
 	}
 }

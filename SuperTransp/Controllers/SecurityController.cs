@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using SuperTransp.Models;
 using System.Net.NetworkInformation;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using static SuperTransp.Core.Interfaces;
 
@@ -128,6 +129,11 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 8))
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
 					var model = new SecurityUserViewModel
 					{
 						SecurityUserDocumentIdNumber = null
@@ -199,6 +205,11 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
 				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 8))
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
 					model.Password = _security.Encrypt(model.Password);
 
 					int securityUserId = _security.AddOrEditUser(model);
@@ -224,6 +235,11 @@ namespace SuperTransp.Controllers
 		{
 			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 			{
+				if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 9))
+				{
+					return RedirectToAction("Login", "Security");
+				}
+
 				var model = _security.GetUserById(securityUserId);
 				int ? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 				int? stateId = HttpContext.Session.GetInt32("StateId");
@@ -285,6 +301,11 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
 				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 9))
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
 					var currentPassword = _security.GetUserById(model.SecurityUserId);
 					model.Password = currentPassword.Password;
 
@@ -310,6 +331,11 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 9))
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
 					List<SecurityUserViewModel> model = _security.GetAllUsers();
 
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
@@ -343,23 +369,8 @@ namespace SuperTransp.Controllers
 			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 			{
 				string? securityUpdatingUserId = paramValue3;
-				var registeredUserIdNumber = 0;// _security.RegisteredUser(paramValue1, "SecurityUserDocumentIdNumber");
-				var registeredUserLogin = _security.RegisteredUser(paramValue2, "Login");
-
-				//if(!string.IsNullOrEmpty(securityUpdatingUserId))
-				//{
-				//	if (int.Parse(securityUpdatingUserId) != registeredUserIdNumber)
-				//	{
-				//		return Json("El usuario " + paramValue1 + " ya está registrado.");
-				//	}
-				//}
-				//else
-				//{
-				//	if(registeredUserIdNumber != 0)
-				//	{
-				//		return Json("El usuario " + paramValue1 + " ya está registrado.");
-				//	}
-				//}				
+				var registeredUserIdNumber = 0;
+				var registeredUserLogin = _security.RegisteredUser(paramValue2, "Login");			
 
 				if(!string.IsNullOrEmpty(securityUpdatingUserId))
 				{
@@ -388,6 +399,11 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1)
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
 					var model = new SecurityGroupModel
 					{
 
@@ -412,6 +428,11 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
 				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1)
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
 					int securityGroupId = _security.AddOrEditGroup(model);
 
 					if (securityGroupId > 0)
@@ -432,6 +453,11 @@ namespace SuperTransp.Controllers
 		{
 			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 			{
+				if (HttpContext.Session.GetInt32("SecurityGroupId") != 1)
+				{
+					return RedirectToAction("Login", "Security");
+				}
+
 				var model = _security.GetGroupById(securityGroupId);
 
 				return View(model);
@@ -447,6 +473,11 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
 				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1)
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
 					_security.AddOrEditGroup(model);
 
 					return RedirectToAction("EditGroup", new { securityGroupId = model.SecurityGroupId });
@@ -467,6 +498,11 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1)
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
 					List<SecurityGroupModel> model = _security.GetAllGroups();
 
 					return View(model);
@@ -486,6 +522,11 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1)
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
 					var model = new SecurityModuleModel();
 					{
 
@@ -510,6 +551,11 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
 				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1)
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
 					int securityModuleId = _security.AddOrEditModule(model);
 
 					if (securityModuleId > 0)
@@ -530,6 +576,11 @@ namespace SuperTransp.Controllers
 		{
 			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 			{
+				if (HttpContext.Session.GetInt32("SecurityGroupId") != 1)
+				{
+					return RedirectToAction("Login", "Security");
+				}
+
 				var model = _security.GetModuleById(securityModuleId);
 
 				return View(model);
@@ -563,6 +614,11 @@ namespace SuperTransp.Controllers
 		{
 			try
 			{
+				if (HttpContext.Session.GetInt32("SecurityGroupId") != 1)
+				{
+					return RedirectToAction("Login", "Security");
+				}
+
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
 					List<SecurityModuleModel> model = _security.GetAllModules();
@@ -582,9 +638,13 @@ namespace SuperTransp.Controllers
 		{
 			try
 			{
+				if (HttpContext.Session.GetInt32("SecurityGroupId") != 1)
+				{
+					return RedirectToAction("Login", "Security");
+				}
+
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
-
 					SecurityGroupModuleModel model = new()
 					{
 
@@ -599,7 +659,6 @@ namespace SuperTransp.Controllers
 					return View(model);
 				}
 			}
-
 			catch (Exception)
 			{
 
@@ -614,6 +673,11 @@ namespace SuperTransp.Controllers
 		{
 			try
 			{
+				if (HttpContext.Session.GetInt32("SecurityGroupId") != 1)
+				{
+					return RedirectToAction("Login", "Security");
+				}
+
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
 				{
 					int securityGroupModuleId = _security.AddOrEditGroupModules(model);
@@ -634,6 +698,11 @@ namespace SuperTransp.Controllers
 		{
 			try
 			{
+				if (HttpContext.Session.GetInt32("SecurityGroupId") != 1)
+				{
+					return RedirectToAction("Login", "Security");
+				}
+
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
 				{
 					int securityGroupModule = _security.DeleteGroupModules(securityGroupModuleId);
@@ -717,6 +786,47 @@ namespace SuperTransp.Controllers
 			}
 
 			return Json("ERROR");
+		}
+
+		public IActionResult Logbook()
+		{
+			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+			{
+				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+				string? stateName = HttpContext.Session.GetString("StateName");
+				int? stateId = HttpContext.Session.GetInt32("StateId");
+
+				List<SecurityLogbookModel> model = new List<SecurityLogbookModel>();
+
+				if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 18))
+				{
+					return RedirectToAction("Login", "Security");
+				}
+
+				if (securityGroupId.HasValue)
+				{
+					if (securityGroupId != 1)
+					{
+						if (!_security.GroupHasAccessToModule((int)securityGroupId, 6))
+						{
+							model = _security.GetLogbookByStateName(stateName);
+						}
+						else
+						{
+							model = _security.GetLogbookAll();
+						}						
+					}
+					else
+					{
+						model = _security.GetLogbookAll();
+					}
+				}
+					
+				return View(model);
+			}
+
+			return RedirectToAction("Login", "Security");
 		}
 	}
 }

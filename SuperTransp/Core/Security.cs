@@ -941,6 +941,73 @@ namespace SuperTransp.Core
 			}
 		}
 
+		public List<SecurityLogbookModel> GetLogbookByStateName(string userState)
+		{
+			using (SqlConnection sqlConnection = GetConnection())
+			{
+				if (sqlConnection.State == ConnectionState.Closed)
+				{
+					sqlConnection.Open();
+				}
+
+				List<SecurityLogbookModel> logbook = new();
+				SqlCommand cmd = new("SELECT * FROM SecurityLogbook WHERE UserState = @UserState ORDER BY SecurityLogbookId DESC", sqlConnection);
+				cmd.Parameters.AddWithValue("@UserState", userState);
+
+				using (SqlDataReader dr = cmd.ExecuteReader())
+				{
+					while (dr.Read())
+					{
+						logbook.Add(new SecurityLogbookModel
+						{
+							SecurityLogbookId = (int)dr["SecurityLogbookId"],
+							SecurityLogbookDate = (DateTime)dr["SecurityLogbookDate"],
+							DeviceIP = (string)dr["DeviceIP"],
+							UserFullName = (string)dr["UserFullName"],
+							UserLogin = (string)dr["UserLogin"],
+							UserState = (string)dr["UserState"],
+							ActionDescription = (string)dr["ActionDescription"],
+						});
+					}
+				}
+
+				return logbook.ToList();
+			}
+		}
+
+		public List<SecurityLogbookModel> GetLogbookAll()
+		{
+			using (SqlConnection sqlConnection = GetConnection())
+			{
+				if (sqlConnection.State == ConnectionState.Closed)
+				{
+					sqlConnection.Open();
+				}
+
+				List<SecurityLogbookModel> logbook = new();
+				SqlCommand cmd = new("SELECT * FROM SecurityLogbook ORDER BY SecurityLogbookId DESC", sqlConnection);
+
+				using (SqlDataReader dr = cmd.ExecuteReader())
+				{
+					while (dr.Read())
+					{
+						logbook.Add(new SecurityLogbookModel
+						{
+							SecurityLogbookId = (int)dr["SecurityLogbookId"],
+							SecurityLogbookDate = (DateTime)dr["SecurityLogbookDate"],
+							DeviceIP = (string)dr["DeviceIP"],
+							UserFullName = (string)dr["UserFullName"],
+							UserLogin = (string)dr["UserLogin"],
+							UserState = (string)dr["UserState"],
+							ActionDescription = (string)dr["ActionDescription"],
+						});
+					}
+				}
+
+				return logbook.ToList();
+			}
+		}
+
 		public string GeneratePublicKey()
 		{
 			byte[] byteArray = new byte[6];

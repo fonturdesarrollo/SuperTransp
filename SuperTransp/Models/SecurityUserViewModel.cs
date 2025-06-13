@@ -72,4 +72,16 @@ namespace SuperTransp.Models
 		public int SecurityAccessTypeId { get; set; }
 		public string? SecurityAccessTypeName { get; set; }
 	}
+
+	public class SecurityLogbookModel
+	{
+		public int SecurityLogbookId { get; set; }
+		public DateTime SecurityLogbookDate { get; set; }
+		public string? DeviceIP { get; set; }
+		public string? UserFullName { get; set; }
+		public string? SecurityModuleName { get; set; }
+		public string? UserLogin { get; set; }
+		public string? UserState { get; set; }
+		public string? ActionDescription { get; set; }
+	}
 }

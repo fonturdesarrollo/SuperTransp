@@ -28,6 +28,11 @@ namespace SuperTransp.Controllers
 		{
 			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("FullName")) && HttpContext.Session.GetInt32("SecurityGroupId") != null)
 			{
+				if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 2))
+				{
+					return RedirectToAction("Login", "Security");
+				}
+
 				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 				ViewBag.SecurityGroupId = (int)HttpContext.Session.GetInt32("SecurityGroupId");
 
@@ -43,6 +48,11 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 2))
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
 					List<PublicTransportGroupViewModel> model = new();
 
 					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
@@ -78,6 +88,11 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 2))
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 
 					var model = new DriverViewModel
@@ -118,6 +133,11 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
 				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 2))
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
 					int driverId = _driver.AddOrEdit(model);
 
 					if (driverId > 0)
@@ -141,6 +161,11 @@ namespace SuperTransp.Controllers
 		{
 			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 			{
+				if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 2))
+				{
+					return RedirectToAction("Login", "Security");
+				}
+
 				var model = _driver.GetByDriverPublicTransportGroupId(driverPublicTransportGroupId);
 				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 
@@ -167,6 +192,11 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
 				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 2))
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
 					_driver.AddOrEdit(model);
 
 					TempData["SuccessMessage"] = "Datos actualizados correctamente";
@@ -188,6 +218,11 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session?.GetString("SecurityUserId")) && ModelState.IsValid)
 				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 2))
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
 					var result = _driver.Delete(driverId);
 
 					if (result)
