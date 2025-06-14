@@ -96,8 +96,8 @@
 								<th>Nombre Organización</th>
 								<th>Rif</th>	
 								<th>Nombre Socio</th>
-								<th>Cédula</th>
 								<th># Socio</th>
+								<th>Cédula</th>
 								<th>Estado</th>
 								<th>Supervisor</th>
 								<th>Estatus</th>
@@ -184,6 +184,9 @@
 										)																			
 									</td>
 									<td>
+										@ptg.PartnerNumber
+									</td>
+									<td>
 										@* Cedula *@
 										@Html.ActionLink(@ptg.DriverIdentityDocument.ToString(), addEdit, "Supervision",
 											new
@@ -204,9 +207,6 @@
 											},
 											new { @class = "action-link", style = $"color: {statusColorDriver};", data_group_id = ptg.PublicTransportGroupId }
 										)										
-									</td>
-									<td>
-										@ptg.PartnerNumber
 									</td>
 									<td>@ptg.StateName</td>
 									<td>@ptg.UserFullName</td>
