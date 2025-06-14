@@ -40,7 +40,7 @@ namespace SuperTransp.Models
 		public string? SupervisionStatusName { get; set; }
 		public int TotalDrivers { get; set; }
 		public int TotalSupervisedDrivers { get; set; }
-		public int Year { get; set; }
+		public int? Year { get; set; }
 		public string? Make { get; set; }
 		public string? Model { get; set; }
 		public string? RimName { get; set; }

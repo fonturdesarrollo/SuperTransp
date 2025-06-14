@@ -255,8 +255,8 @@ namespace SuperTransp.Controllers
 						ViewBag.FailureType = new SelectList(_commonData.GetFailureType(), "FailureTypeId", "FailureTypeName");
 						ViewBag.FingerprintProblem = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
 
-						ViewBag.Makes = new SelectList(_commonData.GetMakesByYear(model.Year).ToList(), "Make", "Make");
-						ViewBag.VehicleModel = new SelectList(_commonData.GetModelsByYearAndMake(model.Year, model.Make).ToList(), "VehicleDataId", "ModelName");
+						ViewBag.Makes = new SelectList(_commonData.GetMakesByYear((int)model.Year).ToList(), "Make", "Make");
+						ViewBag.VehicleModel = new SelectList(_commonData.GetModelsByYearAndMake((int)model.Year, model.Make).ToList(), "VehicleDataId", "ModelName");
 
 
 						if (securityGroupId != 1)

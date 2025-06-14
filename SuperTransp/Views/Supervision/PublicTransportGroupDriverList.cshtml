@@ -94,9 +94,9 @@
 						<thead>
 							<tr>
 								<th>Nombre Organización</th>
-								<th>Rif</th>								
-								<th>Cédula</th>
+								<th>Rif</th>	
 								<th>Nombre Socio</th>
+								<th>Cédula</th>
 								<th># Socio</th>
 								<th>Estado</th>
 								<th>Supervisor</th>
@@ -162,28 +162,6 @@
 									)
 									</td>
 									<td>
-										@* Cedula *@
-										@Html.ActionLink(@ptg.DriverIdentityDocument.ToString(), addEdit, "Supervision",
-											new
-											{
-												publicTransportGroupId = ptg.PublicTransportGroupId,
-												pTGCompleteName = ptg.PTGCompleteName,
-												driverFullName = ptg.DriverFullName,
-												partnerNumber = ptg.PartnerNumber,
-												publicTransportGroupRif = ptg.PublicTransportGroupRif,
-												driverIdentityDocument = ptg.DriverIdentityDocument,
-												stateName = ptg.StateName,
-												supervisionStatus = ptg.SupervisionStatus,
-												driverId = ptg.DriverId,
-												supervisionId = ptg.SupervisionId,
-												modeId = ptg.ModeId,
-												modeName = ptg.ModeName,
-												stateId = ptg.StateId,
-											},
-											new { @class = "action-link", style = $"color: {statusColorDriver};", data_group_id = ptg.PublicTransportGroupId }
-										)										
-									</td>
-									<td>
 										@* Nombre Transportista *@
 										@Html.ActionLink(@ptg.DriverFullName, addEdit, "Supervision",
 											new
@@ -204,6 +182,28 @@
 											},
 											new { @class = "action-link", style = $"color: {statusColorDriver};", data_group_id = ptg.PublicTransportGroupId }
 										)																			
+									</td>
+									<td>
+										@* Cedula *@
+										@Html.ActionLink(@ptg.DriverIdentityDocument.ToString(), addEdit, "Supervision",
+											new
+											{
+												publicTransportGroupId = ptg.PublicTransportGroupId,
+												pTGCompleteName = ptg.PTGCompleteName,
+												driverFullName = ptg.DriverFullName,
+												partnerNumber = ptg.PartnerNumber,
+												publicTransportGroupRif = ptg.PublicTransportGroupRif,
+												driverIdentityDocument = ptg.DriverIdentityDocument,
+												stateName = ptg.StateName,
+												supervisionStatus = ptg.SupervisionStatus,
+												driverId = ptg.DriverId,
+												supervisionId = ptg.SupervisionId,
+												modeId = ptg.ModeId,
+												modeName = ptg.ModeName,
+												stateId = ptg.StateId,
+											},
+											new { @class = "action-link", style = $"color: {statusColorDriver};", data_group_id = ptg.PublicTransportGroupId }
+										)										
 									</td>
 									<td>
 										@ptg.PartnerNumber
