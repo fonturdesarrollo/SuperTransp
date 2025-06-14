@@ -132,7 +132,7 @@ namespace SuperTransp.Core
 					}
 
 					List<PublicTransportGroupViewModel> ptg = new();
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail", sqlConnection);
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail WHERE TotalSupervisedDrivers = Partners AND SupervisionSummaryId = 0", sqlConnection);
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
 					{

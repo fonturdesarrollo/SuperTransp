@@ -645,7 +645,26 @@ namespace SuperTransp.Core
 							}
 						}
 
-					}
+						var ptg = GetDriverPublicTransportGroupByPtgId(model.PublicTransportGroupId);
+
+						var ptgFullName = string.Empty;
+						var ptgRif = string.Empty;
+						var files = 0;
+
+						if (ptg != null)
+						{
+							ptgFullName = ptg.FirstOrDefault().PTGCompleteName;
+							ptgRif = ptg.FirstOrDefault().PublicTransportGroupRif;
+						}
+
+						if(model.Pictures != null && model.Pictures.Any())
+						{
+							files = model.Pictures.Count;
+						}						
+
+						_security.AddLogbook(model.SupervisionSummaryId, false, $"resumen de supervisión organización {ptgFullName} RIF {ptgRif} " +
+							$" fecha {model.SupervisionDate.ToShortDateString()} dirección {model.SupervisionAddress} observaciones {model.SupervisionSummaryRemarks} cantidad de fotos o archivos {files}");
+					}				
 				}
 
 				return summaryId;

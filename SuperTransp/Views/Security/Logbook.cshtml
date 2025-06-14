@@ -13,9 +13,6 @@
 	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
 	<link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
 
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js"></script>
-	<script src="https://cdn.datatables.net/plug-ins/2.0.8/sorting/datetime-moment.js"></script>
-
 	@*DataTable************************************************************************@
 	<link rel="stylesheet" href="~/datatable/css/bootstrap.css" />
 	<link rel="stylesheet" href="~/datatable/css/dataTables.bootstrap4.min.css" />
@@ -110,6 +107,37 @@
 	<script type="text/javascript">
 
 		$(document).ready(function () {
+			jQuery.extend(jQuery.fn.dataTableExt.oSort, {
+				"date-time-dd-mm-yyyy-pre": function (a) {
+					if (a === null || a === '') {
+						return 0;
+					}
+
+					var parts = a.split(' '); // "DD/MM/YYYY HH:mm:ss" -> ["DD/MM/YYYY", "HH:mm:ss"]
+					var dateParts = parts[0].split('/'); // "DD/MM/YYYY" -> ["DD", "MM", "YYYY"]
+					var timeParts = parts[1].split(':'); // "HH:mm:ss" -> ["HH", "mm", "ss"]
+
+					// Convierte las partes a números enteros
+					var year = parseInt(dateParts[2], 10);
+					var month = parseInt(dateParts[1], 10) - 1; // Meses son 0-indexados en JavaScript (Enero=0, Diciembre=11)
+					var day = parseInt(dateParts[0], 10);
+					var hour = parseInt(timeParts[0], 10);
+					var minute = parseInt(timeParts[1], 10);
+					var second = parseInt(timeParts[2], 10);
+
+					// Crea un objeto Date y devuelve su valor numérico (timestamp en milisegundos)
+					return new Date(year, month, day, hour, minute, second).getTime();
+				},
+
+				// Funciones de comparación ascendente y descendente (estándar para números)
+				"date-time-dd-mm-yyyy-asc": function (a, b) {
+					return ((a < b) ? -1 : ((a > b) ? 1 : 0));
+				},
+
+				"date-time-dd-mm-yyyy-desc": function (a, b) {
+					return ((a < b) ? 1 : ((a > b) ? -1 : 0));
+				}
+			});
 
 			$('#publicTransportGroupListDetail').DataTable({
 				stateSave: true,
@@ -132,19 +160,20 @@
 						"sNext":    "Siguiente",
 						"sPrevious": "Anterior"
 					},
-					"columns": [
-						{ "type": "moment-datetime", "format": "DD/MM/YYYY HH:mm:ss" },
-						null,
-						null,
-						null, 
-						null,
-						null, 
-					],
 					"oAria": {
 						"sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
 						"sSortDescending": ": Activar para ordenar la columna de manera descendente"
 					}
-				}
+				},
+				// Usa "aoColumns" para aplicar el tipo de ordenación personalizado "sType"
+				"aoColumns": [
+					{ "sType": "date-time-dd-mm-yyyy" }, // Aplica el tipo de ordenación definido a la primera columna (índice 0)
+					null, // Columna "IP Dispositivo" (sin tipo de ordenación especial)
+					null, // Columna "Nombre Completo"
+					null, // Columna "Nombre de Usuario"
+					null, // Columna "Estado"
+					null  // Columna "Acción"
+				]
 			});
 		});
 	</script>
