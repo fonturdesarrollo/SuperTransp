@@ -950,13 +950,31 @@ namespace SuperTransp.Controllers
 		}
 
 		[HttpPost]
-		public IActionResult EditSummary(SupervisionSummaryViewModel model)
+		public IActionResult EditSummary(IFormCollection form, SupervisionSummaryViewModel model)
 		{
 			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
 			{
 				if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 3))
 				{
 					return RedirectToAction("Login", "Security");
+				}
+
+				List<SupervisionSummaryPictures> pictures = new List<SupervisionSummaryPictures>();
+
+				foreach (var key in form.Keys)
+				{
+					if (key.StartsWith("Pictures["))
+					{
+						foreach (var value in form[key])
+						{
+							pictures.Add(new SupervisionSummaryPictures { SupervisionSummaryPictureUrl = value });
+						}
+					}
+				}
+
+				if (pictures.Any())
+				{
+					model.Pictures.AddRange(pictures);
 				}
 
 				_supervision.AddOrEditSummary(model);

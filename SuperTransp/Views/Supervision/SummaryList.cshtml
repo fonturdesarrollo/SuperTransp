@@ -60,14 +60,13 @@
 				<section>
 					<h4 style="color:#4cbece"> Resumenes Registrados</h4>
 					<br />
-					<table id="inventory" class="table table-striped table-bordered dt-responsive nowrap" style="width:100%">
+					<table id="inventory" class="table table-striped table-bordered dt-responsive dt-nowrap">
 						<thead>
 							<tr>
 								<th>Línea</th>
 								<th>Estado</th>
 								<th>Supervisor</th>
 								<th>Fecha Supervisión</th>
-@* 								<th>Seleccionar</th> *@
 							</tr>
 						</thead>
 						<tbody>
@@ -79,13 +78,9 @@
 										new { supervisionSummaryId = ptg.SupervisionSummaryId, publicTransportGroupId = ptg.PublicTransportGroupId },
 										new { @class = "action-link", data_group_id = ptg.PublicTransportGroupId })
 									</td>
-
 									<td>@ptg.StateName</td>
 									<td>@ptg.UserFullName</td>
 									<td>@ptg.SupervisionDate.ToShortDateString()</td>
-@* 									<td id="@ptg.SupervisionSummaryId">
-										@Html.ActionLink("Seleccionar", "EditSummary", "Supervision", new { supervisionSummaryId = ptg.SupervisionSummaryId}, new { @id = "btnEdit" })
-									</td> *@
 								</tr>
 							}
 						</tbody>

@@ -98,6 +98,10 @@
 								@Html.HiddenFor(x => x.SecurityUserId)
 								@Html.HiddenFor(x => x.StateName)
 								@Html.TextBox("SupervisionDate", Model.SupervisionDate.ToString("dd/MM/yyyy"), new { maxlength = "20" })
+								@for (int i = 0; i < Model.Pictures.Count; i++)
+								{
+									<input type="hidden" name="Pictures[@i]" value="@Model.Pictures[i]" />
+								}
 							</div>
 							<div class="col-12">
 								<br />
