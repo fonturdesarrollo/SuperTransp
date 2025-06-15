@@ -804,6 +804,35 @@ namespace SuperTransp.Core
 			}
 		}
 
+		public bool IsSupervisionSummaryDoneByPtgId(int publicTransportGroupId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SupervisionSummaryViewModel summary = new();
+					List<SupervisionSummaryPictures> images = new List<SupervisionSummaryPictures>();
+
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_SupervisionSummaryDetail WHERE PublicTransportGroupId = @PublicTransportGroupId", sqlConnection);
+					cmd.Parameters.AddWithValue("@PublicTransportGroupId", publicTransportGroupId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						return dr.HasRows;
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener los transportistas {ex.Message}", ex);
+			}
+		}
+
 		public List<SupervisionSummaryViewModel> GetAllSupervisionSummary()
 		{
 			try

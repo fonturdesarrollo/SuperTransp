@@ -13,7 +13,7 @@ namespace SuperTransp.Core
     public class Security : ISecurity
     {
         private readonly IConfiguration _configuration;
-		private static readonly string Key = "supertranspPasswordKey*-";
+		private string Key = string.Empty;
 		private readonly IHttpContextAccessor _httpContextAccessor;
 		private const string allowedCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 		private static RSA rsa = RSA.Create();
@@ -22,6 +22,7 @@ namespace SuperTransp.Core
         {
             this._configuration = configuration;
 			this._httpContextAccessor = httpContextAccessor;
+			this.Key = _configuration["Cryptography:Key"];
 		}
 
 		private SqlConnection GetConnection()

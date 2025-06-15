@@ -325,12 +325,12 @@
 				$.ajax({
 					url: controllerUrl,
 					type: "GET",
-					data: { publicTransportGroupId: publicTransportGroupId },	
+					data: { publicTransportGroupId: publicTransportGroupId },
 					success: function (response) {
 						if (response.hasPermission) {
 							window.location.href = url;
 						} else {
-							alert("Esta organización está siendo supervisada por otro supervisor.");
+							alert(response.message);
 						}
 					},
 					error: function () {

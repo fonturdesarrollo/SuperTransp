@@ -43,6 +43,7 @@
 <body class="is-preload">
 	@using (Html.BeginForm("Add", "Supervision", FormMethod.Post))
 	{
+		@Html.AntiForgeryToken()
 		<!-- Wrapper -->
 		<div id="wrapper">
 
@@ -298,6 +299,10 @@
 			dictDefaultMessage: "Arrastra las imagenes aquí o haga clic para agregarlas.",
 			addRemoveLinks: true,
 			maxFiles: 1,
+
+			headers: {
+				"RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val()
+			},
 
 			params: {
 				stateName: stateName,

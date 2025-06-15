@@ -110,6 +110,7 @@ namespace SuperTransp.Core
 			public List<SupervisionSummaryViewModel> GetAllSupervisionSummary();
 			public List<SupervisionSummaryViewModel> GetSupervisionSummaryByStateId(int stateId);
 			public SupervisionSummaryViewModel GetSupervisionSummaryById(int supervisionSummaryId);
+			public bool IsSupervisionSummaryDoneByPtgId(int publicTransportGroupId);
 			public bool IsUserSupervisingPublicTransportGroup(int securityUserId, int publicTransportGroupId);
 		}
 

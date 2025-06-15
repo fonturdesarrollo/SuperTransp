@@ -23,6 +23,7 @@
 <body class="is-preload">
 	@using (Html.BeginForm("EditUser", "Security", FormMethod.Post))
 	{
+		@Html.AntiForgeryToken()
 		<!-- Wrapper -->
 		<div id="wrapper">
 

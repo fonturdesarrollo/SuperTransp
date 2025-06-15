@@ -35,6 +35,7 @@
 <body class="is-preload">
 	@using (Html.BeginForm("AddUnion", "CommonData", FormMethod.Post))
 	{
+		@Html.AntiForgeryToken()
 		<!-- Wrapper -->
 		<div id="wrapper">
 
