@@ -1,5 +1,6 @@
-using SuperTransp.Core;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc;
+using SuperTransp.Core;
 using static SuperTransp.Core.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,7 +19,10 @@ builder.Services.AddSession(options =>
 
 // Add services to the container.
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+	options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+});
 builder.Services.AddTransient<ISecurity, Security>();
 builder.Services.AddTransient<IGeography, Geography>();
 builder.Services.AddTransient<IPublicTransportGroup, PublicTransportGroup>();

@@ -116,7 +116,7 @@
 				event.preventDefault();
 
 				var url = $(this).attr("href");
-				var controllerUrl = '@Url.Action("CheckPermission", "Supervision")';
+				var controllerUrl = '@Url.Action("CheckPermissionSummary", "Supervision")';
 				var publicTransportGroupId = $(this).data("group-id");
 
 				$.ajax({
@@ -127,7 +127,7 @@
 						if (response.hasPermission) {
 							window.location.href = url;
 						} else {
-							alert("Esta organización está siendo supervisada por otro supervisor.");
+							alert(response.message);
 						}
 					},
 					error: function () {

@@ -103,6 +103,11 @@ namespace SuperTransp.Controllers
 							return RedirectToAction("PublicTransportGroupDriverList");
 						}
 
+						if (_supervision.IsSupervisionSummaryDoneByPtgId(publicTransportGroupId))
+						{
+							return RedirectToAction("PublicTransportGroupDriverList");
+						}
+
 						var model = new SupervisionViewModel
 						{
 							PublicTransportGroupId = publicTransportGroupId,
@@ -219,6 +224,11 @@ namespace SuperTransp.Controllers
 					if(securityGroupId != null && _security.GroupHasAccessToModule((int)securityGroupId,3) || securityGroupId == 1)
 					{
 						if (!_supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId))
+						{
+							return RedirectToAction("PublicTransportGroupDriverList");
+						}
+
+						if (_supervision.IsSupervisionSummaryDoneByPtgId(publicTransportGroupId))
 						{
 							return RedirectToAction("PublicTransportGroupDriverList");
 						}
@@ -1026,10 +1036,41 @@ namespace SuperTransp.Controllers
 		public JsonResult CheckPermission(int publicTransportGroupId)
 		{
 			int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
+			bool hasPermission = true;
+			bool summaryDone = false;
 
-			bool hasPermission = _supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId);
+			hasPermission = _supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId);
 
-			return Json(new { hasPermission });
+			if (!hasPermission)
+			{
+				return Json(new { hasPermission, message = "Esta organización está siendo supervisada por otro supervisor." });
+			}
+
+			summaryDone = _supervision.IsSupervisionSummaryDoneByPtgId(publicTransportGroupId);
+
+			if (summaryDone)
+			{
+				hasPermission = false;
+				return Json(new { hasPermission, message = "Esta organización tiene realizado el resumen de supervisión, no pueden modificarse sus unidades." });
+			}
+
+			return Json(new { hasPermission, message = "" });
+		}
+
+		[HttpGet]
+		public JsonResult CheckPermissionSummary(int publicTransportGroupId)
+		{
+			int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
+			bool hasPermission = true;
+
+			hasPermission = _supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId);
+
+			if (!hasPermission)
+			{
+				return Json(new { hasPermission, message = "Esta organización está siendo supervisada por otro supervisor." });
+			}
+
+			return Json(new { hasPermission, message = "" });
 		}
 	}
 }

@@ -37,6 +37,7 @@
 <body class="is-preload">
 	@using (Html.BeginForm("EditSummary", "Supervision", FormMethod.Post))
 	{
+		@Html.AntiForgeryToken()
 		<!-- Wrapper -->
 		<div id="wrapper">
 

@@ -33,6 +33,7 @@
 <body class="is-preload">
 	@using (Html.BeginForm("Edit", "PublicTransportGroup", FormMethod.Post))
 	{
+		@Html.AntiForgeryToken()
 		<!-- Wrapper -->
 		<div id="wrapper">
 
@@ -118,7 +119,7 @@
 							</div>
 							<div class="col-6">
 								<strong>Cédula Representante:</strong>
-								@Html.TextBoxFor(x => x.RepresentativeIdentityDocument, new { placeholder = "Cédula Representante", maxlength = "10" })
+								@Html.TextBoxFor(x => x.RepresentativeIdentityDocument, new { placeholder = "Cédula Representante", maxlength = "8" })
 								<span asp-validation-for="RepresentativeIdentityDocument" class="text-danger"></span>
 							</div>
 							<div class="col-6">
@@ -128,7 +129,7 @@
 							</div>
 							<div class="col-6">
 								<strong>Teléfono Representante:</strong>
-								@Html.TextBoxFor(x => x.RepresentativePhone, new { placeholder = "Teléfono del Representante", maxlength = "20" })
+								@Html.TextBoxFor(x => x.RepresentativePhone, new { placeholder = "Teléfono del Representante", maxlength = "11" })
 								<span asp-validation-for="RepresentativePhone" class="text-danger"></span>
 							</div>
 							<div class="col-6">
@@ -468,6 +469,9 @@
 				$.ajax({
 					url: generateQRUrl,
 					type: "POST",
+					headers: {
+						"RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val()
+					},
 					contentType: "application/json",
 					data: JSON.stringify({ ptgGUID: ptgGUID }),
 					success: function (response) {

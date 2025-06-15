@@ -16,6 +16,7 @@
 <body class="is-preload">
 	@using (Html.BeginForm("AddModule", "Security", FormMethod.Post))
 	{
+		@Html.AntiForgeryToken()
 		<!-- Wrapper -->
 		<div id="wrapper">
 

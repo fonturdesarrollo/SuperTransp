@@ -57,6 +57,7 @@
 <body class="is-preload">
 	@using (Html.BeginForm("Add", "Driver", FormMethod.Post))
 	{
+		@Html.AntiForgeryToken()
 		<!-- Wrapper -->
 		<div id="wrapper">
 
@@ -421,6 +422,9 @@
 			$.ajax({
 				url: generateQRUrl,
 				type: "POST",
+				headers: {
+					"RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val()
+				},
 				contentType: "application/json",
 				data: JSON.stringify({ ptgGUID: ptgGUID }),
 				dataType: "json",
@@ -454,6 +458,9 @@
 			$.ajax({
 				url: checkExistingUrl,
 				type: 'POST',
+				headers: {
+					"RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val()
+				},
 				data: { driverIdentityDocument: value },
 				success: function (response) {
 				if (response && response.driverFullName && response.driverPhone) {

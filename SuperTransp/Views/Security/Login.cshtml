@@ -18,6 +18,8 @@
 
 @using(Html.BeginForm("Login", "Security", FormMethod.Post))
 {
+	@Html.AntiForgeryToken()
+
 	<div id="wrapper">
 
 		<!-- Nav -->
