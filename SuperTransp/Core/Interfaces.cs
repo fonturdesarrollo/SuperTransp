@@ -80,6 +80,7 @@ namespace SuperTransp.Core
 			public List<PublicTransportGroupViewModel> GetAll();
 			public List<PublicTransportGroupViewModel> GetAllByStateId(int stateId);
 			public List<PublicTransportGroupViewModel> GetAllBySupervisedDriversAndStateIdAndNotSummaryAdded(int stateId);
+			public List<PublicTransportGroupViewModel> GetAllBySupervisedDriversAndNotSummaryAdded();
 			public PublicTransportGroupViewModel GetByGUIDId(string guidId);
 		}
 		public interface IDriver

@@ -173,6 +173,7 @@ namespace SuperTransp.Controllers
 						{
 							ViewBag.States = new SelectList(_geography.GetAllStates(), "StateId", "StateName");
 							ViewBag.Union = new SelectList(_union.GetAll(), "UnionId", "UnionName");
+							ViewBag.IsTotalAccess = _security.IsTotalAccess(1);
 						}
 						else
 						{

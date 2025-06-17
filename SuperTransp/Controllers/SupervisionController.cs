@@ -833,7 +833,7 @@ namespace SuperTransp.Controllers
 					}
 					else
 					{
-						model = _publicTransportGroup.GetAll();
+						model = _publicTransportGroup.GetAllBySupervisedDriversAndNotSummaryAdded();
 					}
 
 					return View(model);

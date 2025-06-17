@@ -132,7 +132,7 @@ namespace SuperTransp.Core
 					}
 
 					List<PublicTransportGroupViewModel> ptg = new();
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail WHERE TotalSupervisedDrivers = Partners AND SupervisionSummaryId = 0", sqlConnection);
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail", sqlConnection);
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
 					{
@@ -244,6 +244,64 @@ namespace SuperTransp.Core
 					List<PublicTransportGroupViewModel> ptg = new();
 					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail WHERE StateId = @StateId AND TotalSupervisedDrivers = Partners AND SupervisionSummaryId = 0", sqlConnection);
 					cmd.Parameters.AddWithValue("@StateId", stateId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							ptg.Add(new PublicTransportGroupViewModel
+							{
+								PublicTransportGroupId = (int)dr["PublicTransportGroupId"],
+								PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"],
+								DesignationId = (int)dr["DesignationId"],
+								PublicTransportGroupName = (string)dr["PublicTransportGroupName"],
+								PTGCompleteName = (string)dr["PTGCompleteName"],
+								ModeId = (int)dr["ModeId"],
+								UnionId = (int)dr["UnionId"],
+								MunicipalityId = (int)dr["MunicipalityId"],
+								StateId = (int)dr["StateId"],
+								RepresentativeIdentityDocument = (int)dr["RepresentativeIdentityDocument"],
+								RepresentativeName = (string)dr["RepresentativeName"],
+								RepresentativePhone = (string)dr["RepresentativePhone"],
+								DesignationName = (string)dr["DesignationName"],
+								StateName = (string)dr["StateName"],
+								MunicipalityName = (string)dr["MunicipalityName"],
+								ModeName = (string)dr["ModeName"],
+								UnionName = (string)dr["UnionName"],
+								Partners = (int)dr["Partners"],
+								TotalDrivers = (int)dr["TotalDrivers"],
+								TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"],
+								PublicTransportGroupGUID = (string)dr["PublicTransportGroupGUID"],
+								SupervisionSummaryId = (int)dr["SupervisionSummaryId"],
+								UserFullName = (string)dr["UserFullName"],
+								SecurityUserId = (int)dr["SecurityUserId"],
+							});
+						}
+					}
+
+					return ptg.ToList();
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener todas las líneas {ex.Message}", ex);
+			}
+		}
+
+		public List<PublicTransportGroupViewModel> GetAllBySupervisedDriversAndNotSummaryAdded()
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<PublicTransportGroupViewModel> ptg = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail WHERE TotalSupervisedDrivers = Partners AND SupervisionSummaryId = 0", sqlConnection);
+
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
 					{
