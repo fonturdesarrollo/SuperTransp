@@ -5,7 +5,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-	<title>Agregar Tipo de Línea</title>
+	<title>Agregar Entidad Legal</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 	<link rel="stylesheet" href="~/assets/css/main.css" />
@@ -26,7 +26,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-	<title>Agregar tipo de Línea</title>
+	<title>Agregar entidad legal</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 	<link rel="stylesheet" href="~/assets/css/main.css" />
@@ -81,12 +81,12 @@
 				<div class="inner">
 					<!-- Form -->
 					<section>
-						<h1 style="color:#4cbece">Agregar tipo de Línea</h1>
+						<h1 style="color:#4cbece">Agregar entidad legal</h1>
 						<br />
 						<div class="row gtr-uniform">
 							<div class="col-12">
 								<strong>Nombre:</strong>
-								@Html.TextBoxFor(x => x.DesignationName, new { placeholder = "Nombre tipo de Línea", tabindex = "0", maxlength = "50" })
+								@Html.TextBoxFor(x => x.DesignationName, new { placeholder = "Nombre entidad legal", tabindex = "0", maxlength = "50" })
 								<span asp-validation-for="DesignationName" class="text-danger"></span>
 							</div>
 

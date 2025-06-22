@@ -105,7 +105,10 @@ namespace SuperTransp.Controllers
 
 						if (_supervision.IsSupervisionSummaryDoneByPtgId(publicTransportGroupId))
 						{
-							return RedirectToAction("PublicTransportGroupDriverList");
+							if (!_security.GroupHasAccessToModule((int)securityGroupId, 19))
+							{
+								return RedirectToAction("PublicTransportGroupDriverList");
+							}
 						}
 
 						var model = new SupervisionViewModel
@@ -230,7 +233,10 @@ namespace SuperTransp.Controllers
 
 						if (_supervision.IsSupervisionSummaryDoneByPtgId(publicTransportGroupId))
 						{
-							return RedirectToAction("PublicTransportGroupDriverList");
+							if (!_security.GroupHasAccessToModule((int)securityGroupId, 19))
+							{
+								return RedirectToAction("PublicTransportGroupDriverList");
+							}
 						}
 
 						var model = _supervision.GetByPublicTransportGroupIdAndDriverIdAndPartnerNumberStateId(publicTransportGroupId, driverId, partnerNumber, (int)stateId);
@@ -1036,6 +1042,7 @@ namespace SuperTransp.Controllers
 		public JsonResult CheckPermission(int publicTransportGroupId)
 		{
 			int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
+			int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 			bool hasPermission = true;
 			bool summaryDone = false;
 
@@ -1050,8 +1057,11 @@ namespace SuperTransp.Controllers
 
 			if (summaryDone)
 			{
-				hasPermission = false;
-				return Json(new { hasPermission, message = "Esta organización tiene realizado el resumen de supervisión, no pueden modificarse sus unidades." });
+				if(!_security.GroupHasAccessToModule((int)securityGroupId, 19))
+				{
+					hasPermission = false;
+					return Json(new { hasPermission, message = "Esta organización tiene realizado el resumen de supervisión, no pueden modificarse sus unidades." });
+				}
 			}
 
 			return Json(new { hasPermission, message = "" });
