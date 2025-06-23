@@ -133,6 +133,7 @@ namespace SuperTransp.Core
 			public List<CommonDataViewModel> GetFailureType();
 			public int AddOrEditMakeModel(CommonDataViewModel model);
 			public CommonDataViewModel GetCommonDataValueByName(string commonDataName);
+			public List<CommonDataViewModel> GetSex();
 		}
 	}
 }

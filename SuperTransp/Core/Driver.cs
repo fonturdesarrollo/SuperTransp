@@ -47,10 +47,12 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@DriverPhone", model.DriverPhone);
 						cmd.Parameters.AddWithValue("@PublicTransportGroupId", model.PublicTransportGroupId);
 						cmd.Parameters.AddWithValue("@DriverModifiedDate", DateTime.Now);
+						cmd.Parameters.AddWithValue("@SexId", model.SexId);
+						cmd.Parameters.AddWithValue("@Birthdate", model.Birthdate);
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
 
-						_security.AddLogbook(model.DriverId, false, $"transportista cedula {model.DriverIdentityDocument} nombre {model.DriverFullName.ToUpper().Trim()} socio n° {model.PartnerNumber} telefono {model.DriverPhone} linea Id {model.PublicTransportGroupId}");
+						_security.AddLogbook(model.DriverId, false, $"transportista cedula {model.DriverIdentityDocument} nombre {model.DriverFullName.ToUpper().Trim()} socio n° {model.PartnerNumber} telefono {model.DriverPhone} linea Id {model.PublicTransportGroupId} sexo {model.SexId} fecha de nacimiento {model.Birthdate}");
 					}
 				}
 
@@ -92,6 +94,9 @@ namespace SuperTransp.Core
 								PTGCompleteName = (string)dr["PTGCompleteName"],
 								DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"],
 								PublicTransportGroupGUID = (string)dr["PublicTransportGroupGUID"],
+								SexId = (int)dr["SexId"],
+								SexName = (string)dr["SexName"],
+								Birthdate = (DateTime)dr["Birthdate"],
 							});
 						}
 					}
@@ -132,6 +137,9 @@ namespace SuperTransp.Core
 							driver.DriverPhone = (string)dr["DriverPhone"];
 							driver.PTGCompleteName = (string)dr["PTGCompleteName"];
 							driver.DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"];
+							driver.SexId = (int)dr["SexId"];
+							driver.SexName = (string)dr["SexName"];
+							driver.Birthdate = (DateTime)dr["Birthdate"];
 						}
 					}
 
@@ -171,6 +179,9 @@ namespace SuperTransp.Core
 							driver.DriverPhone = (string)dr["DriverPhone"];
 							driver.PTGCompleteName = (string)dr["PTGCompleteName"];
 							driver.DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"];
+							driver.SexId = (int)dr["SexId"];
+							driver.SexName = (string)dr["SexName"];
+							driver.Birthdate = (DateTime)dr["Birthdate"];
 							break;
 						}
 					}
@@ -211,6 +222,9 @@ namespace SuperTransp.Core
 							driver.DriverPhone = (string)dr["DriverPhone"];
 							driver.PTGCompleteName = (string)dr["PTGCompleteName"];
 							driver.DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"];
+							driver.SexId = (int)dr["SexId"];
+							driver.SexName = (string)dr["SexName"];
+							driver.Birthdate = (DateTime)dr["Birthdate"];
 						}
 					}
 

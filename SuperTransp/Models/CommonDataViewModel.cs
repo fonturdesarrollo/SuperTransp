@@ -32,5 +32,7 @@
 		public int CommonDataId { get; set; }
 		public string? CommonDataName { get; set; }
 		public string? CommonDataValue { get; set; }
+		public int SexId { get; set; }
+		public string? SexName { get; set; }
 	}
 }
