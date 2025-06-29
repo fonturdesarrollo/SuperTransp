@@ -66,5 +66,6 @@ namespace SuperTransp.Models
 		public int? SupervisionSummaryId { get; set; }
 		public  string? UserFullName { get; set; }
 		public  int? SecurityUserId { get; set; }
+		public List<SupervisionPictures>? Pictures { get; set; }
 	}
 }

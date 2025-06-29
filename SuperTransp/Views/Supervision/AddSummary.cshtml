@@ -223,11 +223,11 @@
 			url: saveFilesUrl,
 			autoProcessQueue: true,
 			paramName: "file",
-			maxFilesize: 20,
-			acceptedFiles: ".jpg,.png,.pdf",
+			maxFilesize: 10,
+			acceptedFiles: ".jpg,.png,.gif,.pdf",
 			dictDefaultMessage: "Arrastra las imágenes aquí o haga clic para agregarlas.",
 			addRemoveLinks: true,
-
+			maxFiles: 50,
 			headers: {
 				"RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val()
 			},

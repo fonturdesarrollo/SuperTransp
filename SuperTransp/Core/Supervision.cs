@@ -2,6 +2,7 @@
 using SuperTransp.Extensions;
 using SuperTransp.Models;
 using System.Data;
+using System.Reflection;
 using static SuperTransp.Core.Interfaces;
 
 namespace SuperTransp.Core
@@ -69,23 +70,46 @@ namespace SuperTransp.Core
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
 
+						// Add pictures process
+						if(model.Pictures != null && model.Pictures.Any())
+						{
+							DeletePicturesByPTGIdAndPartnerNumber(model.PublicTransportGroupId, model.PartnerNumber);
+
+							cmd = new("SuperTransp_SupervisionPicturesAddOrEdit", sqlConnection)
+							{
+								CommandType = System.Data.CommandType.StoredProcedure
+							};
+
+							foreach (var picture in model.Pictures)
+							{
+								cmd.Parameters.Clear();
+
+								cmd.Parameters.AddWithValue("@SupervisionPictureId", 0);
+								cmd.Parameters.AddWithValue("@PublicTransportGroupId", model.PublicTransportGroupId);
+								cmd.Parameters.AddWithValue("@PartnerNumber", model.PartnerNumber);
+								cmd.Parameters.AddWithValue("@VehicleImageUrl", picture.VehicleImageUrl);
+
+								cmd.ExecuteScalar();
+							}
+						}
+
 						var driver = _driver.GetById(model.DriverId);
 
-						if(driver != null)
+						if (driver != null)
 						{
 							var ptg = GetDriverPublicTransportGroupByPtgId(model.PublicTransportGroupId);
-							
+
 							var ptgFullName = string.Empty;
 							var ptgRif = string.Empty;
 
-							if (ptg != null) 
+							if (ptg != null)
 							{
 								ptgFullName = ptg.FirstOrDefault().PTGCompleteName;
 								ptgRif = ptg.FirstOrDefault().PublicTransportGroupRif;
 							}
 
 							_security.AddLogbook(model.SupervisionId, false, $"supervisión transportista codigo {model.DriverId} nombre {driver.DriverFullName} cedula {driver.DriverIdentityDocument} organización {ptgFullName} RIF {ptgRif} socio con vehículo {model.DriverWithVehicle.ToSpanishYesNo().ToLower()} vehículo en funcionamiento {model.WorkingVehicle.ToSpanishYesNo().ToLower()} socio presente {model.InPerson.ToSpanishYesNo().ToLower()} " +
-								$"placa {model.Plate} id del vehiculo {model.VehicleDataId} año vehículo {model.Year} marca vehículo {model.Make} modelo vehículo {model.ModeName} pasajeros {model.Passengers} litros de combustible {model.TankCapacity} litros de aceite {model.Liters} problemas con la huella {model.FingerprintTrouble.ToSpanishYesNo().ToLower()} observaciones {model.Remarks} foto vehículo {model.VehicleImageUrl}");
+								$"placa {model.Plate} id del vehiculo {model.VehicleDataId} año vehículo {model.Year} marca vehículo {model.Make} modelo vehículo {model.ModeName} pasajeros {model.Passengers} litros de combustible {model.TankCapacity} litros de aceite {model.Liters} problemas con la huella {model.FingerprintTrouble.ToSpanishYesNo().ToLower()} observaciones {model.Remarks} cantidad de imagenes vehiculo {model.Pictures?.Count()}");
 						}
 					}
 				}
@@ -152,6 +176,24 @@ namespace SuperTransp.Core
 			}
 		}
 
+		public bool DeletePicturesByPTGIdAndPartnerNumber(int publicTransportGroupId, int partnerNumber)
+		{
+			using (SqlConnection sqlConnection = GetConnection())
+			{
+				if (sqlConnection.State == ConnectionState.Closed)
+				{
+					sqlConnection.Open();
+				}
+
+				SqlCommand cmd = new("DELETE FROM SupervisionPicture WHERE PublicTransportGroupId = @PublicTransportGroupId AND PartnerNumber = @PartnerNumber", sqlConnection);
+				cmd.Parameters.AddWithValue("@PublicTransportGroupId", publicTransportGroupId);
+				cmd.Parameters.AddWithValue("@PartnerNumber", partnerNumber);
+
+				int rowsAffected = cmd.ExecuteNonQuery();
+
+				return true;				
+			}
+		}
 
 		public List<PublicTransportGroupViewModel> GetDriverPublicTransportGroupByStateId(int stateId)
 		{
@@ -220,6 +262,7 @@ namespace SuperTransp.Core
 								FingerprintTrouble = (bool)dr["FingerprintTrouble"],
 								Remarks = (string)dr["Remarks"],
 								UserFullName = (string)dr["UserFullName"],
+								Pictures = GetPicturesByPTGIdAndPartnerNumber((int)dr["PublicTransportGroupId"], (int)dr["PartnerNumber"]),
 							});
 						}
 					}
@@ -301,6 +344,7 @@ namespace SuperTransp.Core
 								Remarks = (string)dr["Remarks"],
 								UserFullName = (string)dr["UserFullName"],
 								SecurityUserId = (int)dr["SecurityUserId"],
+								Pictures = GetPicturesByPTGIdAndPartnerNumber((int)dr["PublicTransportGroupId"], (int)dr["PartnerNumber"])
 							});
 						}
 					}
@@ -378,6 +422,7 @@ namespace SuperTransp.Core
 							supervision.VehicleDataId = (int)dr["VehicleDataId"];
 							supervision.SupervisionStatus = (bool)dr["SupervisionStatus"];
 							supervision.SupervisionDateAdded = (DateTime)dr["SupervisionDateAdded"];
+							supervision.Pictures = GetPicturesByPTGIdAndPartnerNumber(publicTransportGroupId, partnerNumber);
 						}
 					}
 
@@ -452,6 +497,7 @@ namespace SuperTransp.Core
 							supervision.VehicleDataId = (int)dr["VehicleDataId"];
 							supervision.SupervisionStatus = (bool)dr["SupervisionStatus"];
 							supervision.SupervisionDateAdded = (DateTime)dr["SupervisionDateAdded"];
+							supervision.Pictures = GetPicturesByPTGIdAndPartnerNumber((int)dr["PublicTransportGroupId"], (int)dr["PartnerNumber"]);
 						}
 					}
 
@@ -541,6 +587,46 @@ namespace SuperTransp.Core
 			catch (Exception ex)
 			{
 				throw new Exception($"Error al obtener todas las líneas {ex.Message}", ex);
+			}
+		}
+
+		public List<SupervisionPictures> GetPicturesByPTGIdAndPartnerNumber(int publicTransportGroupId, int partnerNumber)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<SupervisionPictures> pictures = new();
+					SqlCommand cmd = new("SELECT * FROM SupervisionPicture WHERE PublicTransportGroupId = @PublicTransportGroupId AND PartnerNumber = @PartnerNumber", sqlConnection);
+					cmd.Parameters.AddWithValue("@PublicTransportGroupId", publicTransportGroupId);
+					cmd.Parameters.AddWithValue("@PartnerNumber", partnerNumber);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							pictures.Add(new SupervisionPictures
+							{
+								SupervisionPictureId = (int)dr["SupervisionPictureId"],
+								PublicTransportGroupId = (int)dr["PublicTransportGroupId"],
+								PartnerNumber = (int)dr["PartnerNumber"],
+								VehicleImageUrl = (string)dr["VehicleImageUrl"],	
+								SupervisionPictureDateAdded = (DateTime)dr["SupervisionPictureDateAdded"],
+							});
+						}
+					}
+
+					return pictures.ToList();
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener las imagenes de los vehiculos {ex.Message}", ex);
 			}
 		}
 

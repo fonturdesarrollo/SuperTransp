@@ -231,7 +231,7 @@
 														data-vehicle-battery-name="@ptg.BatteryName"
 														data-vehicle-number-batteries="@ptg.NumberOfBatteries"
 														data-vehicle-failure-type-name="@ptg.FailureTypeName"
-														data-vehicle-image-url="@ptg.VehicleImageUrl"
+														data-vehicle-image-url='@Html.Raw(Json.Serialize(ptg.Pictures.Select(p => p.VehicleImageUrl)))'
 														data-fingerprint-trouble="@ptg.FingerprintTrouble"
 														data-remarks="@ptg.Remarks"										
 														data-status="@ptg.SupervisionStatusName">
@@ -283,10 +283,9 @@
 					</div>
 				</div>
 				<div class="modal-image">
-					<div class="modal-footer" style="display:flex; justify-content:center;align-items:center;height:300px">
-						<a id="image-link" target="_blank">
-							<img id="vehicleImage" style="width: 250px; height: 200px;" />
-						</a>
+					<div class="modal-footer" style="display:flex; justify-content:center;align-items:center;height:200px">
+						<strong>Imágenes:</strong>
+						<div id="thumbnail-container" style="display: flex; flex-wrap: wrap; justify-content: center;"></div>
 					</div>
 				</div>
 			</div>
@@ -381,15 +380,37 @@
 				$('#modalVehicleNumberOfBatteries').text($(this).data('vehicle-number-batteries'));
 				$('#modalVehicleFailureTypeName').text($(this).data('vehicle-failure-type-name'));
 
-				var baseUrl = $(this).data('vehicle-image-url');
+				const rawList = this.dataset.vehicleImageUrl;
+				const urls = rawList ? JSON.parse(rawList) : [];
 
-				if (baseUrl && baseUrl.trim() !== "") { 
-					var url = baseUrl + "?timestamp=" + new Date().getTime();
-					$("#vehicleImage").attr("src", url).show();
-					$("#image-link").attr("href", url);
-				} else {
-					$("#vehicleImage").hide();
-				}
+				const container = document.getElementById("thumbnail-container");
+				container.innerHTML = "";
+
+				urls.forEach(url => {
+					if (!url) return;
+
+					const element = document.createElement("div");
+					element.style.display = "inline-block";
+					element.style.margin = "6px";
+
+					if (/\.(jpe?g|png|gif|bmp|webp)$/i.test(url)) {
+						const img = document.createElement("img");
+						img.src = url;
+						img.style.width = "100px";
+						img.style.border = "1px solid #ccc";
+						img.style.borderRadius = "4px";
+						element.appendChild(img);
+					} else if (/\.pdf$/i.test(url)) {
+						const icon = document.createElement("img");
+						icon.src = "/images/pdf-icon.png";
+						icon.style.width = "100px";
+						icon.title = url.split("/").pop();
+						element.appendChild(icon);
+					}
+
+					element.addEventListener("click", () => window.open(url, "_blank"));
+					container.appendChild(element);
+				});
 
 				if($(this).data('fingerprint-trouble') == "True"){
 					$('#modalDriverFingerprintTrouble').text('Sí')
@@ -401,6 +422,7 @@
 
 				$('#modalStatus').text($(this).data('status'));
 				$('#infoModal').modal('show');
+
 			});
 
 			$('.close-modal, .close').on('click', function () {

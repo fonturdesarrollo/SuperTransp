@@ -43,6 +43,7 @@
 				<section>
 					<h1 style="color:#4cbece">Socio</h1>
 					<br />
+					@Html.HiddenFor(x => x.Pictures)
 					<div class="row gtr-uniform">
 						<div class="col-6">
 							<strong>RIF:</strong>
@@ -109,15 +110,12 @@
 											<strong>Observaciones:</strong>
 											@Model.Remarks
 										</div>
-									}			
-									if (!string.IsNullOrEmpty(Model.VehicleImageUrl))
-									{
-										<div class="col-12">
-											<strong>Foto supervisión:</strong>
-											<br />
-											<img src="@Model.VehicleImageUrl" alt="Imagen del vehículo" class="img-fluid" />
-										</div>
-									}									
+									}
+									<div class="col-12">
+										<strong>Imágenes:</strong>
+										<br />
+										<div id="thumbnail-container"></div>
+									</div>																
 								}
 							}
 							else
@@ -140,3 +138,47 @@
 	</div>
 </body>
 </html>
+<script type="text/javascript">
+	const fileUrls = @Html.Raw(Json.Serialize(Model.Pictures.Select(p => p.VehicleImageUrl)));
+	const container = document.getElementById('thumbnail-container');
+
+	function isImage(url) {
+		return /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(url);
+	}
+
+	function getFileName(url) {
+		return url.split('/').pop();
+	}
+
+	fileUrls.forEach(url => {
+		const element = document.createElement('div');
+		element.style.display = 'inline-block';
+		element.style.margin = '5px';
+		element.style.cursor = 'pointer';
+
+		if (isImage(url)) {
+			const img = document.createElement('img');
+			img.src = url;
+			img.alt = 'Thumbnail';
+			img.style.width = '100px';
+			img.style.height = 'auto';
+
+			element.appendChild(img);
+		} else if (/\.pdf$/i.test(url)) {
+			const pdfIcon = document.createElement('img');
+			pdfIcon.src = '@Url.Content("~/images/pdf-icon.png")';
+			pdfIcon.alt = 'PDF';
+			pdfIcon.style.width = '100px';
+			pdfIcon.style.height = 'auto';
+			pdfIcon.title = getFileName(url);
+
+			element.appendChild(pdfIcon);
+		}
+
+		element.addEventListener('click', () => {
+			window.open(url, '_blank');
+		});
+
+		container.appendChild(element);
+	});
+</script>

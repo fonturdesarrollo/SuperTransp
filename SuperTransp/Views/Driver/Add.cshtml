@@ -12,6 +12,10 @@
 	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
     <link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
 
+	@* Air DatePicker ******************************************************************************* *@
+    <link href="~/plugins/airdatepicker/air-datepicker.min.css" rel="stylesheet" />
+	@* *************************************************************************************************** *@
+
 	@* Iconos QR *@
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
 
@@ -51,6 +55,11 @@
 
 		.modal {
 			z-index: 1050 !important;
+		}
+
+		.readonly-style {
+			pointer-events: none;
+			background-color: #eee;
 		}
 	</style>
 </head>
@@ -120,6 +129,14 @@
 							<div class="col-6 col-12-xsmall">
 								<strong>Nombre:</strong>
 								@Html.TextBoxFor(x => x.DriverFullName, new { placeholder = "Nombre del transportista", tabindex = "0", maxlength = "20" })
+							</div>
+							<div class="col-6">
+								<strong>Sexo:</strong>
+								@Html.DropDownListFor(t => t.SexId, (SelectList)ViewBag.Sex, "-- Seleccione --", new { @class = "form-control" })
+							</div>
+							<div class="col-6">
+								<strong>Fecha de nacimiento:</strong>
+								@Html.TextBox("Birthdate", Model.Birthdate.ToString("dd/MM/yyyy"), new { maxlength = "20" })
 							</div>
 							<div class="col-6">
 								<strong>Número de Socio:</strong>
@@ -237,6 +254,10 @@
 	<script src="~/assets/js/util.js"></script>
 	<script src="~/assets/js/main.js"></script>
 
+	@* Air DatePicker ******************************************************************************* *@
+    <script src="~/plugins/airdatepicker/air-datepicker.min.js"></script>
+	@* *********************************************************************************************** *@
+
 	@*DataTable*******************************************@
 	<script src="~/datatable/js/jquery-3.5.1.js"></script>
 	<script src="~/datatable/js/jquery.dataTables.min.js"></script>
@@ -250,8 +271,40 @@
 
 	<script type="text/javascript">
 
+		document.addEventListener("DOMContentLoaded", function() {
+			new AirDatepicker('#Birthdate', {
+				dateFormat: 'dd/MM/yyyy',
+				locale: {
+					days: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+					daysShort: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+					daysMin: ['D', 'L', 'M', 'Mi', 'J', 'V', 'S'],
+					months: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+					monthsShort: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+					today: 'Hoy',
+					clear: 'Borrar',
+					dateFormat: 'dd/MM/yyyy',
+					firstDay: 1
+				},
+				autoClose: true,
+				minDate: new Date(1920, 0, 1),
+				maxDate: new Date(2030, 11, 31)
+			});
+		});
+
+		document.addEventListener("DOMContentLoaded", function() {
+			var input = document.getElementById("Birthdate");
+
+			input.addEventListener("change", function() {
+				var regex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/[0-9]{4}$/;
+				if (!regex.test(this.value)) {
+					alert("Formato de fecha inválido, debe ser DD/MM/YYYY.");
+					this.value = "";
+				}
+			});
+		});
+
 		function confirmDeletion(url) {
-			const userConfirmed = confirm("¿Está seguro de que desea eliminar este registro?");
+			const userConfirmed = confirm("¿Está seguro de que desea eliminar este registro?, de tenerla cargada, se borran los datos de la supervisión (vehículos e imágenes)");
 			if (userConfirmed) {
 				window.location.href = url;
 			}
@@ -352,6 +405,10 @@
 				}
 			}
 
+			if ($("#SexId").val() == ""  &&  !firstInvalidField) {
+				firstInvalidField = "#SexId";
+				message = "Debe indicar el sexo";
+			}
 
 			if ($("#PartnerNumber").val() != "" &&  $("#PartnerNumber").val() == "0" && !firstInvalidField) {
 				firstInvalidField = "#PartnerNumber";
@@ -376,6 +433,7 @@
 					message = "Debe colocar un número de télefono válido";
 				}
 			}
+
 
 			if (firstInvalidField) {
 				showAlert(message, firstInvalidField);
@@ -466,6 +524,10 @@
 				if (response && response.driverFullName && response.driverPhone) {
 					$("#DriverFullName").val(response.driverFullName);
 					$("#DriverPhone").val(response.driverPhone);
+					$("#SexId").val(response.driverSexId);
+
+					$("#SexId").addClass("readonly-style");
+					$("#SexId").on("click", e => e.preventDefault());
 
 					$("#DriverFullName").prop("readonly", true);
 					$("#DriverPhone").prop("readonly", true);

@@ -13,6 +13,10 @@
 	<link rel="stylesheet" href="~/datatable/css/bootstrap.css" />
 	<link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
 
+	@* Air DatePicker ******************************************************************************* *@
+	<link href="~/plugins/airdatepicker/air-datepicker.min.css" rel="stylesheet" />
+	@* *************************************************************************************************** *@
+
 	<style>
 		.is-invalid {
 			border: 2px solid red;
@@ -89,6 +93,14 @@
 								@Html.TextBoxFor(x => x.DriverFullName, new { placeholder = "Nombre del transportista", tabindex = "0", maxlength = "20" })
 							</div>
 							<div class="col-6">
+								<strong>Sexo:</strong>
+								@Html.DropDownListFor(t => t.SexId, (SelectList)ViewBag.Sex, "-- Seleccione --", new { @class = "form-control" })
+							</div>
+							<div class="col-6">
+								<strong>Fecha de nacimiento:</strong>
+								@Html.TextBox("Birthdate", Model.Birthdate.ToString("dd/MM/yyyy"), new { maxlength = "20" })
+							</div>
+							<div class="col-6">
 								<strong>Número de Socio:</strong>
 								@Html.TextBoxFor(x => x.PartnerNumber, new { placeholder = "Número de socio", maxlength = "3" })
 								<span asp-validation-for="PartnerNumber" class="text-danger"></span>
@@ -124,7 +136,43 @@
 		await Html.RenderPartialAsync("_ValidationScriptsPartial");
 	}
 
+	@* Air DatePicker ******************************************************************************* *@
+	<script src="~/plugins/airdatepicker/air-datepicker.min.js"></script>
+	@* *********************************************************************************************** *@
+
 	<script type="text/javascript">
+
+		document.addEventListener("DOMContentLoaded", function() {
+			new AirDatepicker('#Birthdate', {
+				dateFormat: 'dd/MM/yyyy',
+				locale: {
+					days: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+					daysShort: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+					daysMin: ['D', 'L', 'M', 'Mi', 'J', 'V', 'S'],
+					months: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+					monthsShort: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+					today: 'Hoy',
+					clear: 'Borrar',
+					dateFormat: 'dd/MM/yyyy',
+					firstDay: 1
+				},
+				autoClose: true,
+				minDate: new Date(2000, 0, 1),
+				maxDate: new Date(2050, 11, 31)
+			});
+		});
+
+		document.addEventListener("DOMContentLoaded", function() {
+			var input = document.getElementById("Birthdate");
+
+			input.addEventListener("change", function() {
+				var regex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/[0-9]{4}$/;
+				if (!regex.test(this.value)) {
+					alert("Formato de fecha inválido, debe ser DD/MM/YYYY.");
+					this.value = "";
+				}
+			});
+		});
 
 		document.addEventListener("DOMContentLoaded", function () {
 			function handleInput(selector, transformFunction) {
@@ -211,6 +259,11 @@
 			if ($("#DriverFullName").val() == "" && !firstInvalidField) {
 				firstInvalidField = "#DriverFullName";
 				message = "Debe colocar el nombre del transportista";
+			}
+
+			if ($("#SexId").val() == ""  &&  !firstInvalidField) {
+				firstInvalidField = "#SexId";
+				message = "Debe indicar el sexo";
 			}
 
 			if ($("#PartnerNumber").val() != "" &&  $("#PartnerNumber").val() == "0" && !firstInvalidField) {

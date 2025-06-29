@@ -919,12 +919,14 @@ namespace SuperTransp.Core
 					var userLogin = _httpContextAccessor.HttpContext?.Session.GetString("UserLogin");
 					var userState = _httpContextAccessor.HttpContext?.Session.GetString("StateName");
 					var deviceIP = _httpContextAccessor.HttpContext?.Session.GetString("DeviceIP");
+					var userId = _httpContextAccessor.HttpContext?.Session.GetInt32("SecurityUserId");
 
 					if (isDeleteAction)
 					{
 						addEditDelete = "Eliminó";
 					}					
 
+					cmd.Parameters.AddWithValue("@SecurityUserId", userId);
 					cmd.Parameters.AddWithValue("@DeviceIP", deviceIP);
 					cmd.Parameters.AddWithValue("@UserFullName", userFullName);
 					cmd.Parameters.AddWithValue("@UserLogin", userLogin);
@@ -976,6 +978,38 @@ namespace SuperTransp.Core
 			}
 		}
 
+		public List<SecurityLogbookModel> GetLogbookAllExceptAdmin()
+		{
+			using (SqlConnection sqlConnection = GetConnection())
+			{
+				if (sqlConnection.State == ConnectionState.Closed)
+				{
+					sqlConnection.Open();
+				}
+
+				List<SecurityLogbookModel> logbook = new();
+				SqlCommand cmd = new("SELECT * FROM SecurityLogbook WHERE SecurityUserId <> 1 ORDER BY SecurityLogbookId DESC", sqlConnection);
+
+				using (SqlDataReader dr = cmd.ExecuteReader())
+				{
+					while (dr.Read())
+					{
+						logbook.Add(new SecurityLogbookModel
+						{
+							SecurityLogbookId = (int)dr["SecurityLogbookId"],
+							SecurityLogbookDate = (DateTime)dr["SecurityLogbookDate"],
+							DeviceIP = (string)dr["DeviceIP"],
+							UserFullName = (string)dr["UserFullName"],
+							UserLogin = (string)dr["UserLogin"],
+							UserState = (string)dr["UserState"],
+							ActionDescription = (string)dr["ActionDescription"],
+						});
+					}
+				}
+
+				return logbook.ToList();
+			}
+		}
 		public List<SecurityLogbookModel> GetLogbookAll()
 		{
 			using (SqlConnection sqlConnection = GetConnection())

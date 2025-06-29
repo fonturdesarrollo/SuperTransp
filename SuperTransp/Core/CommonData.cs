@@ -418,5 +418,39 @@ namespace SuperTransp.Core
 				throw new Exception($"Error al obtener la data comun {ex.Message}", ex);
 			}
 		}
+		public List<CommonDataViewModel> GetSex()
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<CommonDataViewModel> sex = new();
+					SqlCommand cmd = new("SELECT * FROM Sex ORDER BY SexId", sqlConnection);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							sex.Add(new CommonDataViewModel
+							{
+								SexId = (int)dr["SexId"],
+								SexName = (string)dr["SexName"],
+							});
+						}
+					}
+
+					return sex.ToList();
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener los tipos de sexo {ex.Message}", ex);
+			}
+		}
 	}
 }

@@ -15,14 +15,16 @@ namespace SuperTransp.Controllers
 		private IPublicTransportGroup _publicTransportGroup;
 		private IDriver _driver;
 		private IConfiguration _configuration;
+		private ICommonData _commonData;
 
-		public DriverController(IDriver driver, IPublicTransportGroup publicTransportGroup, ISecurity security, IGeography geography, IConfiguration configuration)
+		public DriverController(IDriver driver, IPublicTransportGroup publicTransportGroup, ISecurity security, IGeography geography, IConfiguration configuration, ICommonData commonData)
 		{
 			_driver = driver;
 			_publicTransportGroup = publicTransportGroup;
 			_security = security;
 			_geography = geography;
 			_configuration = configuration;
+			_commonData = commonData;
 		}
 		public IActionResult Index()
 		{
@@ -99,7 +101,8 @@ namespace SuperTransp.Controllers
 					{
 						PublicTransportGroupId = publicTransportGroupId,
 						PTGCompleteName = pTGCompleteName,
-						DriverModifiedDate = DateTime.Now
+						DriverModifiedDate = DateTime.Now,
+						Birthdate = DateTime.Now.AddYears(-20)
 					};
 
 					ViewBag.Drivers = _driver.GetByPublicTransportGroupId(publicTransportGroupId);
@@ -113,7 +116,9 @@ namespace SuperTransp.Controllers
 					{
 						ViewBag.IsTotalAccess = true;
 					}
-					
+
+					ViewBag.Sex = new SelectList(_commonData.GetSex(), "SexId", "SexName");
+
 					return View(model);
 				}
 
@@ -179,6 +184,8 @@ namespace SuperTransp.Controllers
 				{
 					ViewBag.IsTotalAccess = true;
 				}
+
+				ViewBag.Sex = new SelectList(_commonData.GetSex(), "SexId", "SexName");
 
 				return View(model);
 			}
@@ -265,7 +272,7 @@ namespace SuperTransp.Controllers
 
 				if (driver != null)
 				{
-					return Json(new { driverFullName = driver.DriverFullName, driverPhone = driver.DriverPhone });
+					return Json(new { driverFullName = driver.DriverFullName, driverPhone = driver.DriverPhone, driverSexId = driver.SexId });
 				}
 			}
 

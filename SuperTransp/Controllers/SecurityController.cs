@@ -814,7 +814,7 @@ namespace SuperTransp.Controllers
 						}
 						else
 						{
-							model = _security.GetLogbookAll();
+							model = _security.GetLogbookAllExceptAdmin();
 						}						
 					}
 					else
