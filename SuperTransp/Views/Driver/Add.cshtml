@@ -56,6 +56,11 @@
 		.modal {
 			z-index: 1050 !important;
 		}
+
+		.readonly-style {
+			pointer-events: none;
+			background-color: #eee;
+		}
 	</style>
 </head>
 <body class="is-preload">
@@ -299,7 +304,7 @@
 		});
 
 		function confirmDeletion(url) {
-			const userConfirmed = confirm("¿Está seguro de que desea eliminar este registro?");
+			const userConfirmed = confirm("¿Está seguro de que desea eliminar este registro?, de tenerla cargada, se borran los datos de la supervisión (vehículos e imágenes)");
 			if (userConfirmed) {
 				window.location.href = url;
 			}
@@ -520,7 +525,9 @@
 					$("#DriverFullName").val(response.driverFullName);
 					$("#DriverPhone").val(response.driverPhone);
 					$("#SexId").val(response.driverSexId);
-					$("#SexId").prop("disabled", true);
+
+					$("#SexId").addClass("readonly-style");
+					$("#SexId").on("click", e => e.preventDefault());
 
 					$("#DriverFullName").prop("readonly", true);
 					$("#DriverPhone").prop("readonly", true);

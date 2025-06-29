@@ -48,5 +48,16 @@ namespace SuperTransp.Models
 		public string? FuelTypeName { get; set; }
 		public string? BatteryName { get; set; }
 		public string? FailureTypeName { get; set; }
+		public List<SupervisionPictures>? Pictures { get; set; }
+	}
+
+	public class SupervisionPictures
+	{
+		[Key]
+		public int SupervisionPictureId { get; set; }
+		public int PublicTransportGroupId { get; set; }
+		public int PartnerNumber { get; set; }
+		public string? VehicleImageUrl { get; set; }
+		public DateTime SupervisionPictureDateAdded { get; set; }
 	}
 }

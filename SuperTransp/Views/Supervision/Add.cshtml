@@ -212,10 +212,10 @@
 								</div>
 								<div class="col-12">
 									<br />
-									<strong>Cargar imágen:</strong>
+									<strong>Cargar imágenes:</strong>
 									<div id="myDropzone" class="dropzone dz-clickable">
 										<div class="dz-message">
-											Arrastre la imágen aquí o haga clic para subirla.
+											Haga clic aquí para subir las imágenes
 										</div>
 									</div>
 								</div>
@@ -226,12 +226,16 @@
 											if(ViewBag.IsTotalAccess)
 											{
 												<li><button type="submit" id="saveRequest" class="primary">Agregar supervisión</button></li>
+												<li style="margin-left:auto;">
+													<button id="btnDeleteImages" type="button" class="primary">
+														Eliminar imágenes de la lista
+													</button>
+												</li>
 											}
 										}
 									</ul>
 								</div>
 							</div>
-
 						</div>
 					</section>
 				</div>
@@ -273,11 +277,12 @@
 			url: saveFilesUrl,
 			autoProcessQueue: true,
 			paramName: "file",
-			maxFilesize: 20,
-			acceptedFiles: ".jpg,.png",
-			dictDefaultMessage: "Arrastra las imagenes aquí o haga clic para agregarlas.",
+			maxFilesize: 10,
+			acceptedFiles: ".jpg,.png,.gif",
+			dictDefaultMessage: "Arrastra las imágenes aquí o haga clic para agregarlas.",
 			addRemoveLinks: true,
-			maxFiles: 1,
+			maxFiles: 4,
+			addRemoveLinks: false,
 
 			headers: {
 				"RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val()
@@ -287,16 +292,16 @@
 				stateName: stateName,
 				driverIdentityDocument: driverIdentityDocument,
 				partnerNumber: partnerNumber,
-				publicTransportGroupRif : publicTransportGroupRif
+				publicTransportGroupRif: publicTransportGroupRif,
 			},
 
 			init: function () {
-				this.on("maxfilesexceeded", function (file) {
-					alert("Solo puedes agregar un archivo.");
-					this.removeFile(file);
-				});
-
 				this.on("addedfile", function (file) {
+					if (this.files.length > 4) {
+						this.removeFile(file);
+						alert("Solo se pueden subir hasta 4 imágenes.");
+						return;
+					}
 					console.log("Archivo agregado:", file);
 				});
 
@@ -304,12 +309,50 @@
 					console.log("Archivo eliminado:", file);
 				});
 
-				this.on("success", function (file, response) {
-					alert("Imagen cargada correctamente.");
+				this.on("queuecomplete", function () {
+					let uploadedFiles = this.getAcceptedFiles().filter(f => f.status === Dropzone.SUCCESS);
+					if (uploadedFiles.length > 0 && uploadedFiles.length <= 4) {
+						alert("Todas las imágenes han sido cargadas correctamente.");
+					}
 				});
 
 				this.on("error", function (file, errorMessage) {
 					alert("Hubo un error al subir la imagen: " + errorMessage);
+				});
+			}
+		});
+
+		$("#btnDeleteImages").on("click", function () {
+			if (confirm("¿Está seguro de que desea eliminar todas las imágenes?")) {
+				var stateName = document.querySelector('[name="StateName"]').value;
+				var partnerNumber = '@Model.PartnerNumber';
+				var publicTransportGroupRif = '@Model.PublicTransportGroupRif';
+				var publicTransportGroupId = '@Model.PublicTransportGroupId';
+				const validUrl = '@Url.Action("DeleteAllSupervisionPictures", "Supervision")';
+
+				$.ajax({
+					url: validUrl,
+					type: "POST",
+					headers: {
+						'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+					},
+
+					data: {
+						stateName: stateName,
+						publicTransportGroupRif: publicTransportGroupRif,
+						partnerNumber: partnerNumber,
+						publicTransportGroupId: publicTransportGroupId,
+					},
+					success: function () {
+						alert("Las imágenes fueron eliminadas correctamente.");
+
+						if (Dropzone.instances.length > 0) {
+							Dropzone.instances[0].removeAllFiles(true); 
+						}
+					},
+					error: function () {
+						alert("Ocurrió un error al intentar eliminar las imágenes.");
+					}
 				});
 			}
 		});
@@ -371,8 +414,6 @@
 			handleSaveRequest(event);
 		});
 
-
-
 		$("form").on("submit", function (e) {
 			e.preventDefault();
 
@@ -397,6 +438,9 @@
 		function isOkToSave() {
 			let firstInvalidField = null;
 			let message = "";
+
+			const dzInstance = Dropzone.forElement("#myDropzone");
+			const uploaded = dzInstance.getAcceptedFiles().filter(f => f.status === Dropzone.SUCCESS);
 
 			if ($("#DriverWithVehicle").val() == "" && $("#DriverWithVehicle").val() != "False" && !firstInvalidField) {
 				firstInvalidField = "#DriverWithVehicle";
@@ -493,6 +537,23 @@
 				if ($("#FailureTypeId").val() == "" && !firstInvalidField) {
 					firstInvalidField = "#FailureTypeId";
 					message = "Debe seleccionar si tiene o no alguna falla";
+				}
+
+				if(uploaded.length > 0){
+					var modeId = $("#ModeId").val();
+
+					if(modeId === "4"){
+						if (uploaded.length < 2 || uploaded.length > 2  && !firstInvalidField) {
+							firstInvalidField = "#myDropzone";
+							message = "Debe agregar 2 imágenes para poder actualizar";
+						}
+					}
+					else{
+						if (uploaded.length < 4 || uploaded.length > 4 && !firstInvalidField) {
+							firstInvalidField = "#myDropzone";
+							message = "Debe agregar 4 imágenes para poder actualizar";
+						}
+					}				
 				}
 
 				if (firstInvalidField) {

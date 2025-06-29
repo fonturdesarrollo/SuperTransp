@@ -111,6 +111,7 @@
 								@Html.HiddenFor(x => x.PartnerNumber)
 								@Html.HiddenFor(x => x.PublicTransportGroupRif)
 								@Html.HiddenFor(x => x.ModeId)
+								@Html.HiddenFor(x => x.Pictures)
 								@Html.DropDownListFor(t => t.DriverWithVehicle, (SelectList)ViewBag.DriverWithVehicle, "-- Seleccione --", new { @class = "form-control" })
 							</div>
 							<div class="row" id="additionalFields" style="visibility: hidden; opacity: 0; height: 0; overflow: hidden; transition: opacity 0.3s ease-in-out;">
@@ -135,7 +136,6 @@
 									<br />
 									<strong>Año:</strong>
 									@Html.DropDownListFor(t => t.Year, (SelectList)ViewBag.Years, "-- Seleccione --", new { @class = "form-control" })
-									@* @Html.DropDownList("Years", (IEnumerable<SelectListItem>)ViewBag.Years, "Seleccione", new { @class = "form-control" }) *@
 								</div>
 								<div class="col-6">
 									<br />
@@ -208,36 +208,28 @@
 										})
 								</div>
 								<div class="col-12">
-									<br />
-									@{
-										if (!string.IsNullOrEmpty(Model.VehicleImageUrl))
-										{
-											<strong>Vehículo:</strong>
-											<div id="thumbnail-container"></div>
-										}
-									}
+									<br />							
+									<strong>Imágenes:</strong>
+									<div id="thumbnail-container"></div>																			
 								</div>
 								<div class="col-12">
 									<br />
-									<strong>Cargar imágen:</strong>
+									<strong>Cargar imágenes:</strong>
 									<div id="myDropzone" class="dropzone dz-clickable">
-										<div class="dz-message">
-											@{
-												if(!string.IsNullOrEmpty(Model.VehicleImageUrl))
-												{
-													<span>
-														Sí desea cambiar la imagen actual arrastre una nueva imágen aquí o haga clic para subirla.
-													</span>
-												}
-												else
-												{
-													<span>
-														Arrastre la imágen aquí o haga clic para subirla.
-													</span>
-												}
+										@{
+											if(Model.Pictures != null && Model.Pictures.Any())
+											{
+												<div class="dz-message">
+													Si desea sustituir las imágenes actuales haga clic aquí para subirlas
+												</div>
 											}
-											
-										</div>
+											else
+											{
+												<div class="dz-message">
+													Haga clic aquí para subir las imágenes
+												</div>
+											}
+										}
 									</div>
 								</div>
 								<div class="col-12">
@@ -247,6 +239,11 @@
 											if(ViewBag.IsTotalAccess)
 											{
 												<li><button type="submit" id="saveRequest" class="primary">Actualizar registros</button></li>
+												<li style="margin-left:auto;">
+													<button id="btnDeleteImages" type="button" class="primary">
+														Eliminar imágenes de la lista
+													</button>
+												</li>
 											}
 										}
 									</ul>
@@ -294,11 +291,12 @@
 			url: saveFilesUrl,
 			autoProcessQueue: true,
 			paramName: "file",
-			maxFilesize: 20,
-			acceptedFiles: ".jpg,.png",
-			dictDefaultMessage: "Arrastra las imagenes aquí o haga clic para agregarlas.",
+			maxFilesize: 10,
+			acceptedFiles: ".jpg,.png,.gif",
+			dictDefaultMessage: "Arrastra las imágenes aquí o haga clic para agregarlas.",
 			addRemoveLinks: true,
-			maxFiles: 1,
+			maxFiles: 4,
+			addRemoveLinks: false,
 
 			headers: {
 				"RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val()
@@ -308,16 +306,16 @@
 				stateName: stateName,
 				driverIdentityDocument: driverIdentityDocument,
 				partnerNumber: partnerNumber,
-				publicTransportGroupRif : publicTransportGroupRif
+				publicTransportGroupRif: publicTransportGroupRif,
 			},
 
 			init: function () {
-				this.on("maxfilesexceeded", function (file) {
-					alert("Solo puedes agregar un archivo.");
-					this.removeFile(file);
-				});
-
 				this.on("addedfile", function (file) {
+					if (this.files.length > 4) {
+						this.removeFile(file);
+						alert("Solo se pueden subir hasta 4 imágenes.");
+						return;
+					}
 					console.log("Archivo agregado:", file);
 				});
 
@@ -325,8 +323,11 @@
 					console.log("Archivo eliminado:", file);
 				});
 
-				this.on("success", function (file, response) {
-					alert("Imagen cargada correctamente.");
+				this.on("queuecomplete", function () {
+					let uploadedFiles = this.getAcceptedFiles().filter(f => f.status === Dropzone.SUCCESS);
+					if (uploadedFiles.length > 0 && uploadedFiles.length <= 4) {
+						alert("Todas las imágenes han sido cargadas correctamente.");
+					}
 				});
 
 				this.on("error", function (file, errorMessage) {
@@ -335,25 +336,83 @@
 			}
 		});
 
-	
-		const imageUrl = '@Model.VehicleImageUrl';
+		$("#btnDeleteImages").on("click", function () {
+			if (confirm("¿Está seguro de que desea eliminar todas las imágenes?")) {
+				var stateName = document.querySelector('[name="StateName"]').value;
+				var partnerNumber = '@Model.PartnerNumber';
+				var publicTransportGroupRif = '@Model.PublicTransportGroupRif';
+				var publicTransportGroupId = '@Model.PublicTransportGroupId';
+				const validUrl = '@Url.Action("DeleteAllSupervisionPictures", "Supervision")';
+
+				$.ajax({
+					url: validUrl,
+					type: "POST",
+					headers: {
+						'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+					},
+
+					data: {
+						stateName: stateName,
+						publicTransportGroupRif: publicTransportGroupRif,
+						partnerNumber: partnerNumber,
+						publicTransportGroupId: publicTransportGroupId,
+					},
+					success: function () {
+						alert("Las imágenes fueron eliminadas correctamente.");
+
+						if (Dropzone.instances.length > 0) {
+							Dropzone.instances[0].removeAllFiles(true); 
+						}
+					},
+					error: function () {
+						alert("Ocurrió un error al intentar eliminar las imágenes.");
+					}
+				});
+			}
+		});
+
+		const fileUrls = @Html.Raw(Json.Serialize(Model.Pictures.Select(p => p.VehicleImageUrl)));
 		const container = document.getElementById('thumbnail-container');
 
-		if (imageUrl && imageUrl.trim() !== "") {
-			const anchor = document.createElement('a');
-			anchor.href = imageUrl;
-			anchor.target = "_blank";
+		function isImage(url) {
+			return /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(url);
+		}
 
-			const img = document.createElement('img');
-			img.src = imageUrl;
-			img.alt = 'Thumbnail';
-			img.style.width = '100px';
-			img.style.height = 'auto';
-			img.style.margin = '5px';
+		function getFileName(url) {
+			return url.split('/').pop();
+		}
 
-			anchor.appendChild(img);
-			container.appendChild(anchor);
-		}	
+		fileUrls.forEach(url => {
+			const element = document.createElement('div');
+			element.style.display = 'inline-block';
+			element.style.margin = '5px';
+			element.style.cursor = 'pointer';
+
+			if (isImage(url)) {
+				const img = document.createElement('img');
+				img.src = url;
+				img.alt = 'Thumbnail';
+				img.style.width = '100px';
+				img.style.height = 'auto';
+
+				element.appendChild(img);
+			} else if (/\.pdf$/i.test(url)) {
+				const pdfIcon = document.createElement('img');
+				pdfIcon.src = '@Url.Content("~/images/pdf-icon.png")';
+				pdfIcon.alt = 'PDF';
+				pdfIcon.style.width = '100px';
+				pdfIcon.style.height = 'auto';
+				pdfIcon.title = getFileName(url);
+
+				element.appendChild(pdfIcon);
+			}
+
+			element.addEventListener('click', () => {
+				window.open(url, '_blank');
+			});
+
+			container.appendChild(element);
+		});	
 
 		document.addEventListener("DOMContentLoaded", function () {
 			function handleInput(selector, transformFunction) {
@@ -412,8 +471,6 @@
 			handleSaveRequest(event);
 		});
 
-
-
 		$("form").on("submit", function (e) {
 			e.preventDefault();
 
@@ -438,6 +495,8 @@
 		function isOkToSave() {
 			let firstInvalidField = null;
 			let message = "";
+			const dzInstance = Dropzone.forElement("#myDropzone");
+			const uploaded = dzInstance.getAcceptedFiles().filter(f => f.status === Dropzone.SUCCESS);
 
 			if ($("#DriverWithVehicle").val() == "" && $("#DriverWithVehicle").val() != "False" && !firstInvalidField) {
 				firstInvalidField = "#DriverWithVehicle";
@@ -465,16 +524,6 @@
 					firstInvalidField = "#Plate";
 					message = "Debe colocar la placa";
 				}
-
-				// if ($("#Plate").val() != "" && !firstInvalidField) {
-				// 	const regexPlate = /^(?:[A-Z]{3}\d{3}|[A-Z]{2}\d{3}[A-Z]{2}|[A-Z]{2}\d{1}[A-Z]{1}\d{2}[A-Z]{1}|[0-9]{2}[A-Z]{2}[0-9]{1}[A-Z]{2}|[0-9]{2}[A-Z]{1}[0-9]{1}[A-Z]{1}[0-9]{1}[A-Z]{1}|[0-9]{2}[A-Z]{1}[0-9]{2}[A-Z]{2}|[0-9]{2}[A-Z]{2}[0-9]{2}[A-Z]{1}|[0-9]{3}[A-Z]{1}[0-9]{1}[A-Z]{1}[0-9]{1}|[0-9]{3}[A-Z]{2}[0-9]{1}[A-Z]{1}|[0-9]{4}[A-Z]{1}[0-9]{1}[A-Z]{1}|[0-9]{1}[A-Z]{1}[0-9]{1}[A-Z]{1}[0-9]{1}[A-Z]{2}|[0-9]{1}[A-Z]{1}[0-9]{1}[A-Z]{1}[0-9]{2}[A-Z]{1}|[0-9]{1}[A-Z]{1}[0-9]{3}[A-Z]{2}|[A-Z]{2}\d{4}|[A-Z]{3}\d{2}[A-Z]|[A-Z]{2}\d{4}|[0-9][A-Z][0-9][A-Z][0-9]{3})$/;
-				// 	const plateValue = $("#Plate").val();
-
-				// 	if (!regexPlate.test(plateValue)) {
-				// 		firstInvalidField = "#Plate";
-				// 		message = "La placa debe tener un formato válido";
-				// 	}
-				// }
 
 				if ($("#Years").val() == "" && !firstInvalidField) {
 					firstInvalidField = "#Years";
@@ -546,6 +595,28 @@
 					message = "Debe seleccionar si tiene o no alguna falla";
 				}
 
+				@inject Microsoft.AspNetCore.Mvc.Rendering.IJsonHelper Json
+
+				const pictures = @Json.Serialize(Model.Pictures);
+				var currentTotalPictures = pictures.length;
+
+				if(uploaded.length > 0){
+					var modeId = $("#ModeId").val();
+
+					if(modeId === "4"){
+						if (uploaded.length < 2 || uploaded.length > 2  && !firstInvalidField) {
+							firstInvalidField = "#myDropzone";
+							message = "Debe agregar 2 imágenes para poder actualizar";
+						}
+					}
+					else{
+						if (uploaded.length < 4 || uploaded.length > 4 && !firstInvalidField) {
+							firstInvalidField = "#myDropzone";
+							message = "Debe agregar 4 imágenes para poder actualizar";
+						}
+					}			
+				}
+
 				if (firstInvalidField) {
 					showAlert(message, firstInvalidField);
 					return false;
@@ -580,29 +651,6 @@
 			}
 		}
 
-		function setTransportTypeDefaultValues(modeId){
-			switch (modeId) {
-			  case "3":
-				$('#Passengers').val("4");
-				$('#Wheels').val("4");
-				$('#FuelTypeId').val("1");
-				$('#BatteryId').val("1");
-				$('#TankCapacity').val("50");
-				$('#NumberOfBatteries').val("1");
-				$('#Liters').val("4");
-				break;
-			  case "4":
-				$('#Passengers').val("2");
-				$('#Wheels').val("2");
-				$('#FuelTypeId').val("1");
-				$('#BatteryId').val("9");
-				$('#TankCapacity').val("10");
-				$('#NumberOfBatteries').val("1");
-				$('#Liters').val("1");
-				break;
-			}
-		}
-
 		$(document).ready(function () {
 			setTimeout(function(){
 				$("#successMessage").fadeOut("slow");
@@ -619,8 +667,6 @@
 				const sanitizedValue = value.replace(/[^a-zA-Z\s]/g, '');
 				$(this).val(sanitizedValue); 
 			});
-
-			//setTransportTypeDefaultValues($("#ModeId").val())
 
 			if($('#DriverWithVehicle').val() == "True"){
 				$('#additionalFields').css({ visibility: 'visible', opacity: '1', height: 'auto', overflow: 'visible' });

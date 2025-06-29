@@ -253,18 +253,33 @@ namespace SuperTransp.Core
 
 				int rowsAffected = cmd.ExecuteNonQuery();
 
-				if(rowsAffected > 0)
-				{				
+				if (rowsAffected > 0)
+				{
 					if (driver != null)
 					{
 						_security.AddLogbook(driverId, true, $"transportista cedula {driver.DriverIdentityDocument} nombre {driver.DriverFullName.ToUpper().Trim()} socio n° {driver.PartnerNumber} telefono {driver.DriverPhone} linea {driver.PTGCompleteName}");
-					}					
-
-					return true;
+					}
 				}
-			}
 
-			return false;
+				//Cascade deletions
+
+				cmd.Parameters.Clear();
+
+				cmd = new("DELETE FROM Supervision WHERE DriverId = @DriverId", sqlConnection);
+				cmd.Parameters.AddWithValue("@DriverId", driverId);
+
+				rowsAffected = cmd.ExecuteNonQuery();
+
+				cmd.Parameters.Clear();
+
+				cmd = new("DELETE FROM SupervisionPicture WHERE PublicTransportGroupId = @PublicTransportGroupId AND PartnerNumber = @PartnerNumber", sqlConnection);
+				cmd.Parameters.AddWithValue("@PublicTransportGroupId", driver.PublicTransportGroupId);
+				cmd.Parameters.AddWithValue("@PartnerNumber", driver.PartnerNumber);
+
+				rowsAffected = cmd.ExecuteNonQuery();
+
+				return true;
+			}
 		}
 
 		public bool RegisteredDocumentId(int driverIdentityDocument, int publicTransportGroupId)
