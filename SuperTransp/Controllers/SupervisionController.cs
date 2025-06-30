@@ -594,33 +594,32 @@ namespace SuperTransp.Controllers
 				using (StreamReader reader = new StreamReader(listFilesResponse.GetResponseStream()))
 				{
 					string fileName;
-					//var test = await IsExistingFile(ftpSubFolderPath, originalFileName);
 
-						while ((fileName = reader.ReadLine()) != null)
+					while ((fileName = reader.ReadLine()) != null)
+					{
+						// Construir la ruta de cada archivo dentro de Temp
+						var filePath = Path.Combine(ftpSubFolderPath, fileName).Replace("\\", "/");
+
+						FtpWebRequest deleteFileRequest = (FtpWebRequest)WebRequest.Create(filePath);
+						deleteFileRequest.Method = WebRequestMethods.Ftp.DeleteFile;
+						deleteFileRequest.Credentials = new NetworkCredential(ftpUsername, ftpPassword);
+
+						try
 						{
-							// Construir la ruta de cada archivo dentro de Temp
-							var filePath = Path.Combine(ftpSubFolderPath, fileName).Replace("\\", "/");
-
-							FtpWebRequest deleteFileRequest = (FtpWebRequest)WebRequest.Create(filePath);
-							deleteFileRequest.Method = WebRequestMethods.Ftp.DeleteFile;
-							deleteFileRequest.Credentials = new NetworkCredential(ftpUsername, ftpPassword);
-
-							try
+							using (var deleteFileResponse = (FtpWebResponse)await deleteFileRequest.GetResponseAsync())
 							{
-								using (var deleteFileResponse = (FtpWebResponse)await deleteFileRequest.GetResponseAsync())
-								{
-									Console.WriteLine($"Archivo eliminado: {fileName}");
-								}
-							}
-							catch (WebException ex)
-							{
-								var response = (FtpWebResponse)ex.Response;
-								if (response.StatusCode != FtpStatusCode.ActionNotTakenFileUnavailable)
-								{
-									throw;
-								}
+								Console.WriteLine($"Archivo eliminado: {fileName}");
 							}
 						}
+						catch (WebException ex)
+						{
+							var response = (FtpWebResponse)ex.Response;
+							if (response.StatusCode != FtpStatusCode.ActionNotTakenFileUnavailable)
+							{
+								throw;
+							}
+						}
+					}
 				}
 			}
 			catch (WebException ex)
@@ -703,54 +702,10 @@ namespace SuperTransp.Controllers
 					}
 				}
 
-				//_supervision.DeleteSupervisionVehiclePicturesByPTGIdAndPartnerNumber(1, 1);
-
 				return Json("OK");
 			}
 
 			return Json("ERROR");
-		}
-
-		private async Task<bool> IsExistingFile(string ftpSubFolderPath, string fileName)
-		{
-			List<string> files = new List<string>();
-			FtpWebRequest request = (FtpWebRequest)WebRequest.Create(ftpSubFolderPath);
-			request.Method = WebRequestMethods.Ftp.ListDirectory;
-			request.Credentials = new NetworkCredential(string.Empty, string.Empty);
-
-			try
-			{
-				using (FtpWebResponse response = (FtpWebResponse)await request.GetResponseAsync())
-				using (Stream responseStream = response.GetResponseStream())
-				using (StreamReader reader = new StreamReader(responseStream))
-				{
-					string line = await reader.ReadLineAsync();
-
-					while (line != null)
-					{
-						files.Add(line);
-						line = await reader.ReadLineAsync();
-					}
-				}
-			}
-			catch (WebException ex)
-			{
-				var ftpResponse = (FtpWebResponse)ex.Response;
-				Console.WriteLine($"Error al listar archivos: {ftpResponse.StatusDescription}");
-			}
-
-			if(files.Any())
-			{
-				foreach (var item in files)
-				{
-					if(item.Contains(fileName))
-					{
-						return true;
-					}
-				}
-			}
-
-			return true;
 		}
 
 		private async Task<List<SupervisionPictures>> SupervisionPictureUrl(string stateName, string publicTransportGroupRif, int driverIdentityDocument, int partnerNumber)

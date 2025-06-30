@@ -121,7 +121,7 @@
 								<span asp-validation-for="RepresentativePhone" class="text-danger"></span>
 							</div>
 							<div class="col-6">
-								<strong>Cantidad de Socios:</strong>
+								<strong>Cupos:</strong>
 								@Html.TextBoxFor(x => x.Partners, new { placeholder = "Cantidad de Socios", maxlength = "3" })
 								<span asp-validation-for="Partners" class="text-danger"></span>
 							</div>
@@ -358,12 +358,12 @@
 
 			if ($("#Partners").val() == "" && !firstInvalidField) {
 				firstInvalidField = "#Partners";
-				message = "Debe colocar la cantidad de socios";
+				message = "Debe colocar los cupos";
 			}
 
 			if ($("#Partners").val() == "0" && !firstInvalidField) {
 				firstInvalidField = "#Partners";
-				message = "La cantidad de socios no puede ser cero";
+				message = "Los cupos no pueden ser cero";
 			}
 
 			if (firstInvalidField) {

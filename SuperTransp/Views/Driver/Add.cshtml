@@ -116,6 +116,8 @@
 						<h1 style="color:#4cbece">Agregar socio</h1>
 						<label>Organización: @Model.PTGCompleteName</label>
 						<br />
+						<label>Cupos: @ViewBag.Partners</label>
+						<br />
 						<br />
 						<br />
 						<div class="row gtr-uniform">
@@ -531,10 +533,10 @@
 
 					$("#DriverFullName").prop("readonly", true);
 					$("#DriverPhone").prop("readonly", true);
-
 					$("#PartnerNumber").focus();
-				} else {
-
+				} 
+				else {
+					$('#SexId').removeClass('readonly-style');
 					$("#DriverFullName").prop("readonly", false);
 					$("#DriverPhone").prop("readonly", false);
 

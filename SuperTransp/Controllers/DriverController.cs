@@ -96,7 +96,7 @@ namespace SuperTransp.Controllers
 					}
 
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
-
+					var ptg = _publicTransportGroup.GetPublicTransportGroupById(publicTransportGroupId);
 					var model = new DriverViewModel
 					{
 						PublicTransportGroupId = publicTransportGroupId,
@@ -106,6 +106,7 @@ namespace SuperTransp.Controllers
 					};
 
 					ViewBag.Drivers = _driver.GetByPublicTransportGroupId(publicTransportGroupId);
+					ViewBag.Partners = ptg.Partners;
 					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 
 					if (securityGroupId != 1)
@@ -172,9 +173,11 @@ namespace SuperTransp.Controllers
 				}
 
 				var model = _driver.GetByDriverPublicTransportGroupId(driverPublicTransportGroupId);
+				var ptg = _publicTransportGroup.GetPublicTransportGroupById(model.PublicTransportGroupId);
 				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 
 				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+				ViewBag.Partners = ptg.Partners;
 
 				if (securityGroupId != 1)
 				{
