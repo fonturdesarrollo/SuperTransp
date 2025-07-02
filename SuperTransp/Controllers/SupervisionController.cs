@@ -37,7 +37,7 @@ namespace SuperTransp.Controllers
 					return RedirectToAction("Login", "Security");
 				}
 
-				//return RedirectToAction("Error", "Home", new { errorMessage = "Este modulo se encuentra actualmente en mantenimiento" });
+				return RedirectToAction("Error", "Home", new { errorMessage = "Este modulo se encuentra actualmente en mantenimiento" });
 
 				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 				ViewBag.SecurityGroupId = (int)HttpContext.Session.GetInt32("SecurityGroupId");

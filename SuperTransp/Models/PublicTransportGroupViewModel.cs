@@ -67,5 +67,11 @@ namespace SuperTransp.Models
 		public  string? UserFullName { get; set; }
 		public  int? SecurityUserId { get; set; }
 		public List<SupervisionPictures>? Pictures { get; set; }
+		public int TotalWorkingVehicles { get; set; }
+		public int TotalNotWorkingVehicles { get; set; }
+		public int TotalWithVehicle { get; set; }
+		public int TotalWithoutVehicle { get; set; }
+		public int TotalDriverInPerson { get; set; }
+		public int TotalDriverNotInPerson { get; set; }
 	}
 }

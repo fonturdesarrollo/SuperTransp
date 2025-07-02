@@ -138,5 +138,13 @@ namespace SuperTransp.Core
 			public CommonDataViewModel GetCommonDataValueByName(string commonDataName);
 			public List<CommonDataViewModel> GetSex();
 		}
+
+		public interface IReport
+		{
+			public List<PublicTransportGroupViewModel> GetAllSupervisedVehiclesStatistics();
+			public List<PublicTransportGroupViewModel> GetAllSupervisedVehiclesStatisticsByStateId(int stateId);
+			public List<PublicTransportGroupViewModel> GetAllSupervisedDriversStatisticsInEstate();
+			public List<PublicTransportGroupViewModel> GetAllSupervisedDriversStatisticsInEstateByStateId(int stateId);
+		}
 	}
 }
