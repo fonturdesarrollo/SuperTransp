@@ -52,7 +52,16 @@ namespace SuperTransp.Core
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
 
-						_security.AddLogbook(model.DriverId, false, $"transportista cedula {model.DriverIdentityDocument} nombre {model.DriverFullName.ToUpper().Trim()} socio n° {model.PartnerNumber} telefono {model.DriverPhone} linea Id {model.PublicTransportGroupId} sexo {model.SexId} fecha de nacimiento {model.Birthdate}");
+						var ptg = GetByPublicTransportGroupId(model.PublicTransportGroupId);
+
+						string? ptgName = string.Empty;
+
+						if (ptg != null && ptg.Any())
+						{
+							ptgName = ptg.FirstOrDefault().PTGCompleteName;
+						}
+
+						_security.AddLogbook(model.DriverId, false, $"transportista cedula {model.DriverIdentityDocument} nombre {model.DriverFullName.ToUpper().Trim()} socio n° {model.PartnerNumber} telefono {model.DriverPhone} nombre organización {ptgName} código organización {model.PublicTransportGroupId} sexo {model.SexId} fecha de nacimiento {model.Birthdate}");
 					}
 				}
 

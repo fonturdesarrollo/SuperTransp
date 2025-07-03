@@ -17,12 +17,14 @@ namespace SuperTransp.Core
 		private readonly IHttpContextAccessor _httpContextAccessor;
 		private const string allowedCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 		private static RSA rsa = RSA.Create();
+		private readonly ClientInfoService _clientInfoService;
 
-		public Security(IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
-        {
-            this._configuration = configuration;
+		public Security(IConfiguration configuration, IHttpContextAccessor httpContextAccessor, ClientInfoService clientInfoService)
+		{
+			this._configuration = configuration;
 			this._httpContextAccessor = httpContextAccessor;
 			this.Key = _configuration["Cryptography:Key"];
+			_clientInfoService = clientInfoService;
 		}
 
 		private SqlConnection GetConnection()
@@ -915,6 +917,7 @@ namespace SuperTransp.Core
 						CommandType = System.Data.CommandType.StoredProcedure
 					};
 
+					var client = _clientInfoService.GetClientDetails();
 					var userFullName = _httpContextAccessor.HttpContext?.Session.GetString("FullName");
 					var userLogin = _httpContextAccessor.HttpContext?.Session.GetString("UserLogin");
 					var userState = _httpContextAccessor.HttpContext?.Session.GetString("StateName");
@@ -928,6 +931,9 @@ namespace SuperTransp.Core
 
 					cmd.Parameters.AddWithValue("@SecurityUserId", userId);
 					cmd.Parameters.AddWithValue("@DeviceIP", deviceIP);
+					cmd.Parameters.AddWithValue("@DeviceType", client.DeviceType);
+					cmd.Parameters.AddWithValue("@DeviceBrowser", client.Browser);
+					cmd.Parameters.AddWithValue("@DeviceOperatingSystem", client.OperatingSystem);
 					cmd.Parameters.AddWithValue("@UserFullName", userFullName);
 					cmd.Parameters.AddWithValue("@UserLogin", userLogin);
 					cmd.Parameters.AddWithValue("@UserState", userState);
@@ -966,6 +972,9 @@ namespace SuperTransp.Core
 							SecurityLogbookId = (int)dr["SecurityLogbookId"],
 							SecurityLogbookDate = (DateTime)dr["SecurityLogbookDate"],
 							DeviceIP = (string)dr["DeviceIP"],
+							DeviceType = dr["DeviceType"] != null ? (string)dr["DeviceType"] : "NO DISPONIBLE",
+							DeviceOperatingSystem = dr["DeviceOperatingSystem"] != null ? (string)dr["DeviceOperatingSystem"] : "NO DISPONIBLE",
+							DeviceBrowser = dr["DeviceBrowser"] != null ? (string)dr["DeviceBrowser"] : "NO DISPONIBLE",
 							UserFullName = (string)dr["UserFullName"],
 							UserLogin = (string)dr["UserLogin"],
 							UserState = (string)dr["UserState"],
@@ -999,6 +1008,9 @@ namespace SuperTransp.Core
 							SecurityLogbookId = (int)dr["SecurityLogbookId"],
 							SecurityLogbookDate = (DateTime)dr["SecurityLogbookDate"],
 							DeviceIP = (string)dr["DeviceIP"],
+							DeviceType = dr["DeviceType"] != null ? (string)dr["DeviceType"] : "NO DISPONIBLE",
+							DeviceOperatingSystem = dr["DeviceOperatingSystem"] != null ? (string)dr["DeviceOperatingSystem"] : "NO DISPONIBLE",
+							DeviceBrowser = dr["DeviceBrowser"] != null ? (string)dr["DeviceBrowser"] : "NO DISPONIBLE",
 							UserFullName = (string)dr["UserFullName"],
 							UserLogin = (string)dr["UserLogin"],
 							UserState = (string)dr["UserState"],
@@ -1031,6 +1043,9 @@ namespace SuperTransp.Core
 							SecurityLogbookId = (int)dr["SecurityLogbookId"],
 							SecurityLogbookDate = (DateTime)dr["SecurityLogbookDate"],
 							DeviceIP = (string)dr["DeviceIP"],
+							DeviceType = dr["DeviceType"] != null ? (string)dr["DeviceType"] : "NO DISPONIBLE",
+							DeviceOperatingSystem = dr["DeviceOperatingSystem"] != null ? (string)dr["DeviceOperatingSystem"] : "NO DISPONIBLE",
+							DeviceBrowser = dr["DeviceBrowser"] != null ? (string)dr["DeviceBrowser"] : "NO DISPONIBLE",
 							UserFullName = (string)dr["UserFullName"],
 							UserLogin = (string)dr["UserLogin"],
 							UserState = (string)dr["UserState"],

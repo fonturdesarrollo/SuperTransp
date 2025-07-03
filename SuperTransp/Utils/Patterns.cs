@@ -1,0 +1,42 @@
+﻿namespace SuperTransp.Utils
+{
+	public class Patterns
+	{
+		public static readonly List<string> PTGPatterns = new()
+		{
+			"ASOCIACION CIVIL COOPERATIVA",
+			"ASOCIACION UNION CONDUCTORES",
+			"LINEA DE TRANSPORTE",
+			"ASOCIACION DE CONDUCTORES",
+			"ASOCIACION CIVIL LINEA",
+			"ASOCIACION CIVIL",
+			"UNION DE CONDUCTORES",
+			"ASOCIACION COOPERATIVA",
+			"ASOCIACION CIVIL LINEA DE TRANSPORTE",
+			"ASOCIACION COOPERATIVA DE TRANSPORTE",
+			"LINEA",
+			"ASOCIACION CIVIL UNION DE CONDUCTORES",
+			"TRANSPORTE INDEPENDIENTE MIXTO",
+			"SOCIEDAD CIVIL UNION DE CONDUCTORES",
+			"SOCIEDAD CIVIL LINEA",
+			"TAXIS",
+			"TAXI",
+			"MOTO TAXI",
+			"MOTO TAXIS",
+			"AC",
+			"A.C.",
+			"UC",
+			"U.C.",
+			"U.C",
+			"S.C.",
+			"S.C",
+			"SC",
+			"ASOC",
+			"UNION",
+			"ASO",
+			"COOP",
+			"COOPÉRATIVA",
+			"LINEA",
+		};
+	}
+}

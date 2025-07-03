@@ -1,4 +1,5 @@
-﻿@model SuperTransp.Models.PublicTransportGroupViewModel
+﻿@using SuperTransp.Utils
+@model SuperTransp.Models.PublicTransportGroupViewModel
 @{
 	Layout = "";
 }
@@ -12,6 +13,10 @@
 	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
 	<link rel="stylesheet" href="~/datatable/css/bootstrap.css" />
 	<link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
+
+	<script>
+		const patterns = @Html.Raw(Json.Serialize(Patterns.PTGPatterns));
+	</script>
 
 	<style>
 		.is-invalid {
@@ -78,7 +83,7 @@
 								@Html.TextBoxFor(x => x.PublicTransportGroupRif, new { placeholder = "RIF", tabindex = "0", maxlength = "10" })
 								<span asp-validation-for="PublicTransportGroupRif" class="text-danger"></span>
 							</div>
-							<div class="col-6 col-12-xsmall">
+							<div class="col-12">
 								<strong>Entidad legal:</strong>
 								@Html.DropDownListFor(t => t.DesignationId, (SelectList)ViewBag.Designation, "-- Seleccione --", new { @class = "form-control" })
 							</div>
@@ -187,10 +192,18 @@
 
 		document.addEventListener("DOMContentLoaded", function () {
 			function handleInput(selector, transformFunction) {
-				var inputElement = document.querySelector(selector);
+				const inputElement = document.querySelector(selector);
 				if (inputElement) {
 					inputElement.addEventListener("input", function () {
-						inputElement.value = transformFunction(inputElement.value);
+						const start = inputElement.selectionStart;
+						const end = inputElement.selectionEnd;
+
+						const transformed = transformFunction(inputElement.value);
+
+						if (inputElement.value !== transformed) {
+							inputElement.value = transformed;
+							inputElement.setSelectionRange(start, end);
+						}
 					});
 				}
 			}
@@ -275,7 +288,7 @@
 
 			if ($("#DesignationId").val() == "" && !firstInvalidField) {
 				firstInvalidField = "#DesignationId";
-				message = "Debe seleccionar la nomenclatura";
+				message = "Debe seleccionar la entidad legal";
 			}
 
 			if ($("#PublicTransportGroupName").val() == "" && !firstInvalidField) {
@@ -290,6 +303,15 @@
 						firstInvalidField = "#PublicTransportGroupName";
 					}
 					message = "El nombre debe contener solo letras, números y espacios, y al menos 5 caracteres.";
+				}
+
+				const input = document.querySelector("[name='PublicTransportGroupName']").value.trim().toUpperCase();
+
+				const isMatch = patterns.some(prefijo => input.startsWith(prefijo));
+
+				if (isMatch) {
+					firstInvalidField = "#PublicTransportGroupName";
+					message = "Debe debe seleccionar de la lista la entidad legal, no la coloque en el nombre de la organización.";
 				}
 			}
 

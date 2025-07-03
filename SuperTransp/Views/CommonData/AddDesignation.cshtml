@@ -86,7 +86,7 @@
 						<div class="row gtr-uniform">
 							<div class="col-12">
 								<strong>Nombre:</strong>
-								@Html.TextBoxFor(x => x.DesignationName, new { placeholder = "Nombre entidad legal", tabindex = "0", maxlength = "50" })
+								@Html.TextBoxFor(x => x.DesignationName, new { placeholder = "Nombre entidad legal", tabindex = "0", maxlength = "150" })
 								<span asp-validation-for="DesignationName" class="text-danger"></span>
 							</div>
 
@@ -118,7 +118,14 @@
 				var inputElement = document.querySelector(selector);
 				if (inputElement) {
 					inputElement.addEventListener("input", function () {
-						inputElement.value = transformFunction(inputElement.value);
+						const start = inputElement.selectionStart;
+						const end = inputElement.selectionEnd;
+
+						const transformed = transformFunction(inputElement.value);
+
+						inputElement.value = transformed;
+
+						inputElement.setSelectionRange(start, end);
 					});
 				}
 			}

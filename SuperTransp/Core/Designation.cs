@@ -50,7 +50,7 @@ namespace SuperTransp.Core
 			}
 			catch (Exception ex)
 			{
-				throw new Exception("Error al añadir o editar el tipo de línea", ex);
+				throw new Exception("Error al añadir o editar la entidad legal", ex);
 			}
 		}
 
