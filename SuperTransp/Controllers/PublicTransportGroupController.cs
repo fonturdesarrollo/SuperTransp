@@ -131,13 +131,18 @@ namespace SuperTransp.Controllers
 						return RedirectToAction("Login", "Security");
 					}
 
-					int publicTransportGroupId = _publicTransportGroup.AddOrEdit(model);
+					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 
-					if (publicTransportGroupId > 0)
+					if (_security.IsTotalAccess(1) || securityGroupId == 1)
 					{
-						TempData["SuccessMessage"] = "Datos actualizados correctamente";
+						int publicTransportGroupId = _publicTransportGroup.AddOrEdit(model);
 
-						return RedirectToAction("Add");
+						if (publicTransportGroupId > 0)
+						{
+							TempData["SuccessMessage"] = "Datos actualizados correctamente";
+
+							return RedirectToAction("Add");
+						}
 					}
 				}
 
@@ -214,9 +219,16 @@ namespace SuperTransp.Controllers
 						return RedirectToAction("Login", "Security");
 					}
 
-					_publicTransportGroup.AddOrEdit(model);
+					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 
-					return RedirectToAction("PublicTransportGroupList");
+					if (_security.IsTotalAccess(1) || securityGroupId == 1)
+					{
+						_publicTransportGroup.AddOrEdit(model);
+					}
+
+					TempData["SuccessMessage"] = "Datos actualizados correctamente";
+
+					return RedirectToAction("Edit", new { publicTransportGroupId = model.PublicTransportGroupId});
 				}
 
 				return RedirectToAction("Login", "Security");

@@ -26,6 +26,9 @@
 	</style>
 </head>
 <body class="is-preload">
+	@{
+		bool isTotalAccess = ViewBag.IsTotalAccess != null && ViewBag.IsTotalAccess is bool && ViewBag.IsTotalAccess == true;
+	}
 	@using (Html.BeginForm("Add", "PublicTransportGroup", FormMethod.Post))
 	{
 		@Html.AntiForgeryToken()
@@ -265,6 +268,12 @@
 		function isOkToSave() {
 			let firstInvalidField = null;
 			let message = "";
+			const isTotalAccess = @isTotalAccess.ToString().ToLower();
+
+			if(!isTotalAccess){
+				showAlert("No tiene permiso de modificar registros.", firstInvalidField);
+				return false;
+			}
 
 			if ($("#PublicTransportGroupRif").val() != "" && !firstInvalidField) {
 				const rifValue = $("#PublicTransportGroupRif").val();

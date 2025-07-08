@@ -10,6 +10,7 @@ namespace SuperTransp.Core
 			public SecurityUserViewModel GetValidUser(string login, string password);
 			public List<SecurityUserViewModel> GetAllUsers();
 			public List<SecurityUserViewModel> GetAllUsersByStateId(int stateId);
+			public List<SecurityUserViewModel> GetAllUsersByGroupId(int securityGroupId);
 			public SecurityUserViewModel GetUserById(int securityUserId);
 			public bool GroupHasAccessToModule(int securityGroupId, int securityModuleId);
 			public List<SecurityGroupModel> GetAllGroups();

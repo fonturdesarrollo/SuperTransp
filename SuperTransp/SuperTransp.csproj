@@ -7,11 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="wwwroot\assets\css\main.css" />
-    <Content Remove="wwwroot\images\cintillo.jpg" />
     <Content Remove="wwwroot\images\image9.jpg" />
     <Content Remove="wwwroot\images\splash2-o.jpg" />
-    <Content Remove="wwwroot\images\splash2.jpg" />
   </ItemGroup>
 
   <ItemGroup>

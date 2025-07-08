@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using SuperTransp.Models;
+using System.Diagnostics.SymbolStore;
 using System.Net.NetworkInformation;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -141,7 +142,6 @@ namespace SuperTransp.Controllers
 
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 					int? stateId = HttpContext.Session.GetInt32("StateId");
-					int supervisorsGroupId = 3;
 
 					if (securityGroupId.HasValue)
 					{
@@ -159,22 +159,7 @@ namespace SuperTransp.Controllers
 								}
 							}
 
-							if (_security.GroupHasAccessToModule((int)securityGroupId, 7))
-							{
-								ViewBag.Groups = new SelectList(_security.GetAllGroups(), "SecurityGroupId", "SecurityGroupName");
-							}
-							else
-							{
-								//Coordinadores group
-								if (securityGroupId == 2)
-								{
-									ViewBag.Groups = new SelectList(_security.GetGroupById((int)supervisorsGroupId), "SecurityGroupId", "SecurityGroupName");
-								}
-								else
-								{
-									ViewBag.Groups = new SelectList(_security.GetAllGroups(), "SecurityGroupId", "SecurityGroupName");
-								}
-							}
+							ViewBag.Groups = new SelectList(_security.GetGroupById((int)securityGroupId), "SecurityGroupId", "SecurityGroupName");
 						}
 						else
 						{
@@ -261,22 +246,7 @@ namespace SuperTransp.Controllers
 							}
 						}
 
-						if (_security.GroupHasAccessToModule((int)securityGroupId, 7))
-						{
-							ViewBag.Groups = new SelectList(_security.GetAllGroups(), "SecurityGroupId", "SecurityGroupName");
-						}
-						else
-						{
-							//Coordinadores group
-							if (securityGroupId == 2)
-							{
-								ViewBag.Groups = new SelectList(_security.GetGroupById((int)supervisorsGroupId), "SecurityGroupId", "SecurityGroupName");
-							}
-							else
-							{
-								ViewBag.Groups = new SelectList(_security.GetGroupById((int)securityGroupId), "SecurityGroupId", "SecurityGroupName");
-							}
-						}
+						ViewBag.Groups = new SelectList(_security.GetGroupById((int)securityGroupId), "SecurityGroupId", "SecurityGroupName");						
 					}
 					else
 					{
@@ -336,21 +306,16 @@ namespace SuperTransp.Controllers
 						return RedirectToAction("Login", "Security");
 					}
 
-					List<SecurityUserViewModel> model = _security.GetAllUsers();
-
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 					int? stateId = HttpContext.Session.GetInt32("StateId");
 
-					if (securityGroupId != 1)
-					{ 						
-						if(securityGroupId == 2) //Coordinadores
-						{
-							model = model.Where(x => x.SecurityGroupId != 1 && x.SecurityGroupId != 4 && x.StateId == stateId).ToList();
-						}
-						else if(securityGroupId == 4) // Gerentes
-						{
-							model = model.Where(x => x.SecurityGroupId != 1 && x.StateId == stateId).ToList();
-						}
+					List<SecurityUserViewModel> model = _security.GetAllUsersByGroupId((int)securityGroupId);
+
+					if (!_security.GroupHasAccessToModule((int)securityGroupId, 6) && securityGroupId != 1)
+					{
+						var modelByState = model.Where(x => x.StateId == stateId).ToList();
+
+						return View(modelByState);
 					}
 
 					return View(model);

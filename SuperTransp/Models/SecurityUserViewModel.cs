@@ -88,6 +88,13 @@ namespace SuperTransp.Models
 		public string? DeviceType { get; set; }
 	}
 
+	public class SecurityGroupAccessToGroup
+	{
+		public int SecurityGroupAccessToGroupId { get; set; }
+		public int SecurityGroupId { get; set; }	
+		public int SecurityGroupAccessId { get; set; }	
+	}
+
 	public class ClientDetails
 	{
 		public string? Browser { get; set; }

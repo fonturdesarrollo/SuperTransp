@@ -144,13 +144,19 @@ namespace SuperTransp.Controllers
 						return RedirectToAction("Login", "Security");
 					}
 
-					int driverId = _driver.AddOrEdit(model);
+					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 
-					if (driverId > 0)
+					if (_security.IsTotalAccess(2) || securityGroupId == 1)
 					{
-						TempData["SuccessMessage"] = "Datos actualizados correctamente";
 
-						return RedirectToAction("Add", new { publicTransportGroupId = model.PublicTransportGroupId, pTGCompleteName = model.PTGCompleteName });
+						int driverId = _driver.AddOrEdit(model);
+
+						if (driverId > 0)
+						{
+							TempData["SuccessMessage"] = "Datos actualizados correctamente";
+
+							return RedirectToAction("Add", new { publicTransportGroupId = model.PublicTransportGroupId, pTGCompleteName = model.PTGCompleteName });
+						}
 					}
 				}
 
@@ -207,11 +213,16 @@ namespace SuperTransp.Controllers
 						return RedirectToAction("Login", "Security");
 					}
 
-					_driver.AddOrEdit(model);
+					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 
-					TempData["SuccessMessage"] = "Datos actualizados correctamente";
+					if (_security.IsTotalAccess(2) || securityGroupId == 1)
+					{
+						_driver.AddOrEdit(model);
 
-					return RedirectToAction("Add", new { publicTransportGroupId = model.PublicTransportGroupId, pTGCompleteName = model.PTGCompleteName });
+						TempData["SuccessMessage"] = "Datos actualizados correctamente";
+
+						return RedirectToAction("Add", new { publicTransportGroupId = model.PublicTransportGroupId, pTGCompleteName = model.PTGCompleteName });
+					}
 				}
 
 				return RedirectToAction("Login", "Security");

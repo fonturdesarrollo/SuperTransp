@@ -41,6 +41,9 @@
 	</style>
 </head>
 <body class="is-preload">
+	@{
+		bool isTotalAccess = ViewBag.IsTotalAccess != null && ViewBag.IsTotalAccess is bool && ViewBag.IsTotalAccess == true;
+	}
 	@using (Html.BeginForm("Add", "Supervision", FormMethod.Post))
 	{
 		@Html.AntiForgeryToken()
@@ -213,7 +216,9 @@
 								<div class="col-12">
 									<br />
 									<strong>Cargar imágenes:</strong>
-									<div id="myDropzone" class="dropzone dz-clickable">
+									<div id="myDropzone"
+										 class="dropzone @(isTotalAccess ? "dz-clickable" : "dz-disabled")"
+										 style="@(isTotalAccess ? "" : "pointer-events:none; opacity:0.6;")">
 										<div class="dz-message">
 											Haga clic aquí para subir las imágenes
 										</div>
@@ -554,6 +559,9 @@
 							message = "Debe agregar 4 imágenes para poder actualizar";
 						}
 					}				
+				}else{
+					firstInvalidField = "#myDropzone";
+					message = "Debe agregar imágenes del vehículo para poder actualizar";
 				}
 
 				if (firstInvalidField) {
@@ -618,6 +626,13 @@
 				$("#successMessage").fadeOut("slow");
 			}, 2500);
 
+			$('#Plate').on('keydown', function (e) {
+				if (e.key === "Enter") {
+					e.preventDefault();
+					return false;
+				}
+			});
+
 			$('#Plate').on('input', function() {
 				const value = $(this).val();
 				const sanitizedValue = value.replace(/[^a-zA-Z0-9\s]/g, '');
@@ -633,17 +648,23 @@
 			setTransportTypeDefaultValues($("#ModeId").val())
 
 			$('#DriverWithVehicle').change(function (event) {
-						var test = $(this).val();
+				const isTotalAccess = @isTotalAccess.ToString().ToLower();
+
 				if ($(this).val() === "True") {
 					$('#additionalFields').css({ visibility: 'visible', opacity: '1', height: 'auto', overflow: 'visible' });
 					$('#InPerson').val("");
 				} else if($(this).val() === "False") {
 					$('#additionalFields').css({ opacity: '0', visibility: 'hidden', height: '0', overflow: 'hidden' });
 					$('#InPerson').val("1");
-					if (confirm("¿Está seguro de que desea actualizar los registros?")) {
-						$(this).closest("form")[0].submit();
+
+					if (!isTotalAccess) {
+						alert("No tiene permiso de modificar registros.");
 					} else {
-						$('#DriverWithVehicle').val("");
+						if (confirm("¿Está seguro de que desea actualizar los registros?")) {
+							$(this).closest("form")[0].submit();
+						} else {
+							$('#DriverWithVehicle').val("");
+						}
 					}
 				}
 			});

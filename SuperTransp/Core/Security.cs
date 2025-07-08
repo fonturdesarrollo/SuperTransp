@@ -266,8 +266,7 @@ namespace SuperTransp.Core
 				}
 
 				List<SecurityGroupModel> group = new();
-				SqlCommand cmd = new("SELECT * FROM SecurityGroup WHERE SecurityGroupId = @GroupId", sqlConnection);
-				cmd.Parameters.AddWithValue("@GroupId", groupId);
+				SqlCommand cmd = new("SELECT * FROM SecurityGroup", sqlConnection);
 
 				using (SqlDataReader dr = cmd.ExecuteReader())
 				{
@@ -280,6 +279,15 @@ namespace SuperTransp.Core
 							SecurityGroupDescription = (string)dr["SecurityGroupDescription"]
 						});
 					}
+				}
+
+				if (group?.Any() == true)
+				{
+					var groupIds = GetGroupAccessToGroupByGroupId(groupId)
+									.Select(g => g.SecurityGroupAccessId)
+									.ToHashSet();
+
+					return group.Where(u => groupIds.Contains(u.SecurityGroupId)).ToList();
 				}
 
 				return group.ToList();
@@ -469,6 +477,105 @@ namespace SuperTransp.Core
 			catch (Exception ex)
 			{
 				throw new Exception("Error al obtener todos los usuarios", ex);
+			}
+		}
+
+		public List<SecurityUserViewModel> GetAllUsersByGroupId(int securityGroupId)
+		{
+			try
+			{
+				if(securityGroupId == 1)
+				{
+					return GetAllUsers();
+				}
+
+				List<SecurityUserViewModel> users = new();
+
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SqlCommand cmd = new("SELECT * FROM Security_GetAllUsers", sqlConnection);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							users.Add(new SecurityUserViewModel
+							{
+								SecurityUserDocumentIdNumber = (int)dr["SecurityUserDocumentIdNumber"],
+								Login = (string)dr["Login"],
+								Password = (string)dr["Password"],
+								FullName = (string)dr["FullName"],
+								StateName = (string)dr["StateName"],
+								SecurityGroupName = (string)dr["SecurityGroupName"],
+								SecurityStatusName = (string)dr["SecurityStatusName"],
+								SecurityStatusId = (int)dr["SecurityStatusId"],
+								SecurityUserId = (int)dr["SecurityUserId"],
+								SecurityGroupId = (int)dr["SecurityGroupId"],
+								StateId = (int)dr["StateId"],
+							});
+						}
+					}
+
+					users.ToList();
+
+					if (users?.Any() == true)
+					{
+						var groupIds = GetGroupAccessToGroupByGroupId(securityGroupId)
+										.Select(g => g.SecurityGroupAccessId)
+										.ToHashSet();
+
+						return users.Where(u => groupIds.Contains(u.SecurityGroupId)).ToList();
+					}
+				}
+
+				return users;
+
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Error al obtener todos los usuarios", ex);
+			}
+		}
+
+		private List<SecurityGroupAccessToGroup> GetGroupAccessToGroupByGroupId(int securityGroupId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<SecurityGroupAccessToGroup> group = new();
+					SqlCommand cmd = new("SELECT * FROM SecurityGroupAccessToGroup WHERE SecurityGroupId = @SecurityGroupId", sqlConnection);
+					cmd.Parameters.AddWithValue("@SecurityGroupId", securityGroupId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							group.Add(new SecurityGroupAccessToGroup
+							{
+								SecurityGroupAccessToGroupId = (int)dr["SecurityGroupAccessToGroupId"],
+								SecurityGroupId = (int)dr["SecurityGroupId"],
+								SecurityGroupAccessId = (int)dr["SecurityGroupAccessId"],
+							});
+						}
+					}
+
+					return group.ToList();
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Error al obtener todos los grupo permisos por grupo", ex);
 			}
 		}
 

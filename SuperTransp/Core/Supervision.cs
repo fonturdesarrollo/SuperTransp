@@ -577,6 +577,7 @@ namespace SuperTransp.Core
 								Remarks = (string)dr["Remarks"],
 								UserFullName = (string)dr["UserFullName"],
 								SecurityUserId = (int)dr["SecurityUserId"],
+								Pictures = GetPicturesByPTGIdAndPartnerNumber((int)dr["PublicTransportGroupId"], (int)dr["PartnerNumber"]),
 							});
 						}
 					}
@@ -641,31 +642,34 @@ namespace SuperTransp.Core
 
 				List<PublicTransportGroupViewModel> existingPlate = new();
 
-				SqlCommand cmd = new("SELECT  dbo.Supervision.Plate, dbo.Driver.DriverIdentityDocument, dbo.Driver.DriverFullName, dbo.PublicTransportGroup.PublicTransportGroupRif, dbo.Designation.DesignationName + ' ' + dbo.PublicTransportGroup.PublicTransportGroupName AS PTGCompleteName, dbo.State.StateName, dbo.Driver.DriverId " +
-					"FROM  dbo.Supervision INNER JOIN  dbo.Driver ON dbo.Supervision.DriverId = dbo.Driver.DriverId " +
-					"INNER JOIN dbo.DriverPublicTransportGroup ON dbo.Driver.DriverId = dbo.DriverPublicTransportGroup.DriverId " +
-					"INNER JOIN dbo.PublicTransportGroup ON dbo.DriverPublicTransportGroup.PublicTransportGroupId = dbo.PublicTransportGroup.PublicTransportGroupId " +
-					"INNER JOIN dbo.Designation ON dbo.PublicTransportGroup.DesignationId = dbo.Designation.DesignationId " +
-					"INNER JOIN  dbo.Municipality ON dbo.PublicTransportGroup.MunicipalityId = dbo.Municipality.MunicipalityId " +
-					"INNER JOIN dbo.State ON dbo.Municipality.StateId = dbo.State.StateId " +
-					"WHERE (dbo.Supervision.Plate = @Plate)", sqlConnection);
-
-				cmd.Parameters.AddWithValue("@Plate", plate);
-
-				using (SqlDataReader dr = cmd.ExecuteReader())
+				if(!string.IsNullOrEmpty(plate))
 				{
-					while (dr.Read())
+					SqlCommand cmd = new("SELECT  dbo.Supervision.Plate, dbo.Driver.DriverIdentityDocument, dbo.Driver.DriverFullName, dbo.PublicTransportGroup.PublicTransportGroupRif, dbo.Designation.DesignationName + ' ' + dbo.PublicTransportGroup.PublicTransportGroupName AS PTGCompleteName, dbo.State.StateName, dbo.Driver.DriverId " +
+						"FROM  dbo.Supervision INNER JOIN  dbo.Driver ON dbo.Supervision.DriverId = dbo.Driver.DriverId " +
+						"INNER JOIN dbo.DriverPublicTransportGroup ON dbo.Driver.DriverId = dbo.DriverPublicTransportGroup.DriverId " +
+						"INNER JOIN dbo.PublicTransportGroup ON dbo.DriverPublicTransportGroup.PublicTransportGroupId = dbo.PublicTransportGroup.PublicTransportGroupId " +
+						"INNER JOIN dbo.Designation ON dbo.PublicTransportGroup.DesignationId = dbo.Designation.DesignationId " +
+						"INNER JOIN  dbo.Municipality ON dbo.PublicTransportGroup.MunicipalityId = dbo.Municipality.MunicipalityId " +
+						"INNER JOIN dbo.State ON dbo.Municipality.StateId = dbo.State.StateId " +
+						"WHERE (dbo.Supervision.Plate = @Plate)", sqlConnection);
+
+					cmd.Parameters.AddWithValue("@Plate", plate);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
 					{
-						existingPlate.Add(new PublicTransportGroupViewModel
+						while (dr.Read())
 						{
-							Plate = (string)dr["Plate"],
-							DriverId = (int)dr["DriverId"],
-							DriverIdentityDocument = (int)dr["DriverIdentityDocument"],
-							DriverFullName = (string)dr["DriverFullName"],
-							PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"],
-							PTGCompleteName = (string)dr["PTGCompleteName"],
-							StateName = (string)dr["StateName"],
-						});
+							existingPlate.Add(new PublicTransportGroupViewModel
+							{
+								Plate = (string)dr["Plate"],
+								DriverId = (int)dr["DriverId"],
+								DriverIdentityDocument = (int)dr["DriverIdentityDocument"],
+								DriverFullName = (string)dr["DriverFullName"],
+								PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"],
+								PTGCompleteName = (string)dr["PTGCompleteName"],
+								StateName = (string)dr["StateName"],
+							});
+						}
 					}
 				}
 
