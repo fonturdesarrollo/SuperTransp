@@ -8,14 +8,10 @@
         ChartId = $"chart{index}",
         StateName = item.StateName,
         Data = new[] {
-        item.TotalSupervisedDrivers,
-        item.TotalWorkingVehicles, 
-        item.TotalNotWorkingVehicles,
-        item.TotalWithVehicle,
-        item.TotalWithoutVehicle,
-        item.TotalDriverInPerson,
-        item.TotalDriverNotInPerson 
-    }
+            item.TotalPTGInState,
+            item.TotaPartnersByPTG,
+            item.TotalAddedPartners,
+        }
     });
 }
 
@@ -23,7 +19,7 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>Estadísticas de vehículos supervisados por estado</title>
+    <title>Estadísticas de organizaciones por estado</title>    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
@@ -37,7 +33,7 @@
         h2 {
             text-align: center;
             color: #2c3e50;
-            margin-bottom: 30px;
+            margin-bottom: 10px;
         }
 
         h3 {
@@ -101,7 +97,8 @@
         }
 
         @@media screen and (max-width: 768px) {
-            .responsive-header {
+            .responsive-header
+            {
                 flex-direction: column;
                 align-items: center;
             }
@@ -116,21 +113,21 @@
     <div class="responsive-header">
         <img src="~/images/Logo.png" alt="Logo" class="logo-img" />
         <div class="header-text">
-            <h2>Estadísticas de vehículos supervisados por estado</h2>
+            <h2>Estadísticas de organizaciones por estado</h2>
             <h3>
                 @{
-                    int totalWorking = 0;
-                    int totalNotWorking = 0;
+                    int totalPTG = 0;
+                    int totalPartners = 0;
 
                     if (Model != null && Model.Any())
                     {
-                        totalWorking = Model.Sum(x => x.TotalWorkingVehicles);
-                        totalNotWorking = Model.Sum(x => x.TotalNotWorkingVehicles);
+                        totalPTG = Model.Sum(x => x.TotalPTGInState);
+                        totalPartners = Model.Sum(x => x.TotalAddedPartners);
                     }
                 }
-                Total global vehículos operativos: @totalWorking.ToString("N0", new System.Globalization.CultureInfo("de-DE"))
+                Total global organizaciones: @totalPTG.ToString("N0", new System.Globalization.CultureInfo("de-DE"))
                 <br />
-                Total global vehículos inoperativos: @totalNotWorking.ToString("N0", new System.Globalization.CultureInfo("de-DE"))
+                Total global socios: @totalPartners.ToString("N0", new System.Globalization.CultureInfo("de-DE"))
             </h3>
         </div>
     </div>
@@ -140,23 +137,15 @@
         const chartItems = @Html.Raw(JsonSerializer.Serialize(chartItems));
 
         const labels = [
-            'Supervisados',
-            'Operativos',
-            'No Operativos',
-            'Con Vehículo',
-            'Sin Vehículo',
-            'Presentes',    
-            'Ausentes'
+            'Organizaciones Cargadas',
+            'Socios Totales',
+            'Socios Cargados',
         ];
 
         const colors = [
             '#4CAF50',
             '#2196F3',
-            '#FF9800',
-            '#9C27B0',
-            '#E91E63',
-            '#00BCD4',
-            '#FFC107'
+            '#FF9800'
         ];
 
         chartItems.forEach(item => {

@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="wwwroot\images\image9.jpg" />
     <Content Remove="wwwroot\images\splash2-o.jpg" />
   </ItemGroup>
 

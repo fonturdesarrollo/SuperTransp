@@ -230,6 +230,97 @@ namespace SuperTransp.Core
 			}
 		}
 
+		public List<PublicTransportGroupViewModel> GetAllStatisticsByStateId(int stateId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<PublicTransportGroupViewModel> ptg = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupStatisticsInState WHERE StateId = @StateId", sqlConnection);
+					cmd.Parameters.AddWithValue("@StateId", stateId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							ptg.Add(new PublicTransportGroupViewModel
+							{
+								StateId = (int)dr["StateId"],
+								StateName = (string)dr["StateName"],
+								TotalPTGInState = (int)dr["TotalPTGInState"],
+								TotaPartnersByPTG = (int)dr["TotaPartnersByPTG"],
+								TotalAddedPartners = (int)dr["TotalAddedPartners"],
+							});
+						}
+					}
+
+					if(ptg != null &&  ptg.Any())
+					{
+						return ptg.OrderBy(st => st.StateName).ToList();
+					}
+					else
+					{
+						return ptg.ToList();
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener todas las organizaciones {ex.Message}", ex);
+			}
+		}
+
+		public List<PublicTransportGroupViewModel> GetAllStatistics()
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<PublicTransportGroupViewModel> ptg = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupStatisticsInState", sqlConnection);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							ptg.Add(new PublicTransportGroupViewModel
+							{
+								StateId = (int)dr["StateId"],
+								StateName = (string)dr["StateName"],
+								TotalPTGInState = (int)dr["TotalPTGInState"],
+								TotaPartnersByPTG = (int)dr["TotaPartnersByPTG"],
+								TotalAddedPartners = (int)dr["TotalAddedPartners"],
+							});
+						}
+					}
+
+					if (ptg != null && ptg.Any())
+					{
+						return ptg.OrderBy(st => st.StateName).ToList();
+					}
+					else
+					{
+						return ptg.ToList();
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener todas las organizaciones {ex.Message}", ex);
+			}
+		}
+
 		public List<PublicTransportGroupViewModel> GetAllBySupervisedDriversAndStateIdAndNotSummaryAdded(int stateId)
 		{
 			try

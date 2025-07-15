@@ -199,7 +199,10 @@
 			});
 
 			handleInput("[name='DriverFullName']", function (value) {
-				return value.toUpperCase();
+				return value
+					.normalize("NFD")
+					.replace(/[\u0300-\u036f]/g, "")
+					.toUpperCase();
 			});
 
 			handleInput("[name='PartnerNumber']", function (value) {

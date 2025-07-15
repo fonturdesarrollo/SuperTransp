@@ -73,5 +73,8 @@ namespace SuperTransp.Models
 		public int TotalWithoutVehicle { get; set; }
 		public int TotalDriverInPerson { get; set; }
 		public int TotalDriverNotInPerson { get; set; }
+		public int TotalPTGInState { get; set; }
+		public int TotaPartnersByPTG { get; set; }
+		public int TotalAddedPartners { get; set; }
 	}
 }
