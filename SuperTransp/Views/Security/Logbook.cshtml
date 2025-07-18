@@ -52,6 +52,7 @@
 				<li>@Html.ActionLink("Organizaciones con socios supervisados", "PublicTransportGroupSupervisedDriversStatistics", "Reports")</li>
 				<li>@Html.ActionLink("Gráficos Organizaciones por estado", "PublicTransportGroupStatisticsInState", "Reports")</li>
 				<li>@Html.ActionLink("Gráficos vehículos supervisados por estado", "SupervisedDriversStatisticsInEstate", "Reports")</li>
+				<li>@Html.ActionLink("Reportes/Consultas", "Index", "Reports")</li>
 				<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 			</ul>
 		</nav>
@@ -119,10 +120,13 @@
 	<script type="text/javascript">
 
 		$(document).ready(function () {
+			let tableKey = 'DataTables_publicTransportGroupListDetail_/Security/Logbook';
+			let tableStateExists = localStorage.getItem(tableKey);
 
 			$('#publicTransportGroupListDetail').DataTable({
 				stateSave: true,
-				"language": {
+				order: tableStateExists ? [] : [[0, 'desc']],
+				language: {
 					"sProcessing":    "Procesando...",
 					"sLengthMenu":    "Mostrar _MENU_ registros",
 					"sZeroRecords":   "No se encontraron resultados",
@@ -130,15 +134,12 @@
 					"sInfo":          "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
 					"sInfoEmpty":     "Mostrando registros del 0 al 0 de un total de 0 registros",
 					"sInfoFiltered":  "(filtrado de un total de _MAX_ registros)",
-					"sInfoPostFix":   "",
 					"sSearch":        "Buscar:",
-					"sUrl":           "",
-					"sInfoThousands":  ",",
 					"sLoadingRecords": "Cargando...",
 					"oPaginate": {
 						"sFirst":    "Primero",
-						"sLast":    "Último",
-						"sNext":    "Siguiente",
+						"sLast":     "Último",
+						"sNext":     "Siguiente",
 						"sPrevious": "Anterior"
 					},
 					"oAria": {

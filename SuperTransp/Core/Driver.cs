@@ -24,8 +24,35 @@ namespace SuperTransp.Core
 		public int AddOrEdit(DriverViewModel model)
 		{
 			int result = 0;
+			int? beforeDriverIdentityDocument = 0;
+			string? beforeDriverFullName = string.Empty;
+			int? beforePartnerNumber = 0;
+			string? beforeDriverPhone = string.Empty;
+			string? beforeSexName = string.Empty;
+			string? beforePTGName = string.Empty;
+			DateTime beforeBirthdate = DateTime.Now;
+			DriverViewModel driverValues = new DriverViewModel();
+			bool isEditing = false;
+
 			try
 			{
+				if(model.DriverId > 0)
+				{
+					driverValues = GetById(model.DriverId);
+
+					if (driverValues != null) 
+					{
+						isEditing = true;
+						beforeDriverIdentityDocument = driverValues.DriverIdentityDocument;
+						beforeDriverFullName = driverValues.DriverFullName;
+						beforePartnerNumber = driverValues.PartnerNumber;
+						beforeDriverPhone = driverValues.DriverPhone;
+						beforeSexName= driverValues.SexName;
+						beforeBirthdate = driverValues.Birthdate;
+						beforePTGName = driverValues.PTGCompleteName;
+					}
+				}
+
 				using (SqlConnection sqlConnection = GetConnection())
 				{
 					if (sqlConnection.State == ConnectionState.Closed)
@@ -52,16 +79,43 @@ namespace SuperTransp.Core
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
 
-						var ptg = GetByPublicTransportGroupId(model.PublicTransportGroupId);
-
-						string? ptgName = string.Empty;
-
-						if (ptg != null && ptg.Any())
+						if(!isEditing)
 						{
-							ptgName = ptg.FirstOrDefault().PTGCompleteName;
-						}
+							driverValues = GetById(result);
 
-						_security.AddLogbook(model.DriverId, false, $"transportista cedula {model.DriverIdentityDocument} nombre {model.DriverFullName.ToUpper().Trim()} socio n° {model.PartnerNumber} telefono {model.DriverPhone} nombre organización {ptgName} código organización {model.PublicTransportGroupId} sexo {model.SexId} fecha de nacimiento {model.Birthdate}");
+							_security.AddLogbook(model.DriverId, false, 
+								$" Socio ->" +
+								$" cedula: {model.DriverIdentityDocument} -" +
+								$" nombre: {model.DriverFullName.ToUpper().Trim()} -" +
+								$" socio n°: {model.PartnerNumber} -" +
+								$" telefono: {model.DriverPhone} -" +
+								$" organización: {driverValues.PTGCompleteName} -" +
+								$" sexo: {driverValues.SexName} -" +
+								$" fecha de nacimiento: {model.Birthdate.ToString("dd/MM/yyyy")}");
+						}
+						else
+						{
+							driverValues = GetById(model.DriverId);
+
+							_security.AddLogbook(model.DriverId, false,
+								$" Socio ->" +
+								$" ANTES: [" +
+								$" cedula: {beforeDriverIdentityDocument} -" +
+								$" nombre: {beforeDriverFullName} -" +
+								$" socio n°: {beforePartnerNumber} -" +
+								$" telefono: {beforeDriverPhone} -" +
+								$" organización: {beforePTGName} -" +
+								$" sexo: {beforeSexName} -" +
+								$" fecha de nacimiento {beforeBirthdate.ToString("dd/MM/yyyy")}]" +
+								$" DESPUES: [" +
+								$" cedula: {driverValues.DriverIdentityDocument} -" +
+								$" nombre: {driverValues.DriverFullName} -" +
+								$" socio n°: {driverValues.PartnerNumber} -" +
+								$" telefono: {driverValues.DriverPhone} -" +
+								$" organización: {driverValues.PTGCompleteName} -" +
+								$" sexo: {driverValues.SexName} -" +
+								$" fecha de nacimiento: {driverValues.Birthdate.ToString("dd/MM/yyyy")}]");
+						}						
 					}
 				}
 

@@ -93,23 +93,31 @@ namespace SuperTransp.Core
 							}
 						}
 
-						var driver = _driver.GetById(model.DriverId);
+						var supervisionData = GetById(result);
 
-						if (driver != null)
-						{
-							var ptg = GetDriverPublicTransportGroupByPtgId(model.PublicTransportGroupId);
-
-							var ptgFullName = string.Empty;
-							var ptgRif = string.Empty;
-
-							if (ptg != null)
-							{
-								ptgFullName = ptg.FirstOrDefault().PTGCompleteName;
-								ptgRif = ptg.FirstOrDefault().PublicTransportGroupRif;
-							}
-
-							_security.AddLogbook(model.SupervisionId, false, $"supervisión transportista codigo {model.DriverId} nombre {driver.DriverFullName} cedula {driver.DriverIdentityDocument} organización {ptgFullName} RIF {ptgRif} socio con vehículo {model.DriverWithVehicle.ToSpanishYesNo().ToLower()} vehículo en funcionamiento {model.WorkingVehicle.ToSpanishYesNo().ToLower()} socio presente {model.InPerson.ToSpanishYesNo().ToLower()} " +
-								$"placa {model.Plate} id del vehiculo {model.VehicleDataId} año vehículo {model.Year} marca vehículo {model.Make} modelo vehículo {model.ModeName} pasajeros {model.Passengers} litros de combustible {model.TankCapacity} litros de aceite {model.Liters} problemas con la huella {model.FingerprintTrouble.ToSpanishYesNo().ToLower()} observaciones {model.Remarks} cantidad de imagenes vehiculo {model.Pictures?.Count()}");
+						if (supervisionData != null)
+						{			
+							_security.AddLogbook(model.SupervisionId, false, 
+								$" Supervisión ->" +
+								$" codigo socio: {supervisionData.DriverId} -" +
+								$" nombre: {supervisionData.DriverFullName} -" +
+								$" cedula: {supervisionData.DriverIdentityDocument} -" +
+								$" organización: {supervisionData.PTGCompleteName} -" +
+								$" RIF: {supervisionData.PublicTransportGroupRif} -" +
+								$" socio con vehículo: {supervisionData.DriverWithVehicle.ToSpanishYesNo().ToLower()} -" +
+								$" vehículo en funcionamiento: {supervisionData.WorkingVehicle.ToSpanishYesNo().ToLower()} -" +
+								$" tipo de falla: {supervisionData.FailureTypeName} -" +
+								$" socio presente: {supervisionData.InPerson.ToSpanishYesNo().ToLower()} -" +
+								$" placa: {supervisionData.Plate} -" +
+								$" año vehículo: {supervisionData.Year} -" +
+								$" marca vehículo: {supervisionData.Make} -" +
+								$" modelo vehículo: {supervisionData.Model} -" +
+								$" pasajeros: {supervisionData.Passengers} -" +
+								$" litros de combustible: {supervisionData.TankCapacity} -" +
+								$" litros de aceite: {supervisionData.Liters} -" +
+								$" problemas con la huella: {supervisionData.FingerprintTrouble.ToSpanishYesNo().ToLower()} -" +
+								$" observaciones: {supervisionData.Remarks} -" +
+								$" cantidad de imagenes vehiculo: {supervisionData.Pictures?.Count()}");
 						}
 					}
 				}
@@ -163,7 +171,13 @@ namespace SuperTransp.Core
 								ptgRif = ptg.FirstOrDefault().PublicTransportGroupRif;
 							}
 
-							_security.AddLogbook(model.SupervisionId, false, $"supervisión de socio sin vehículo, código {model.DriverId} nombre {driver.DriverFullName} cedula {model.DriverIdentityDocument} organización {ptgFullName} RIF {ptgRif} ");
+							_security.AddLogbook(model.SupervisionId, false, 
+								$"supervisión de socio sin vehículo," +
+								$" código: {model.DriverId} -" +
+								$" nombre: {driver.DriverFullName} -" +
+								$" cedula: {model.DriverIdentityDocument} -" +
+								$" organización: {ptgFullName} -" +
+								$" RIF: {ptgRif}");
 						}						
 					}
 				}
@@ -355,6 +369,72 @@ namespace SuperTransp.Core
 			catch (Exception ex)
 			{
 				throw new Exception($"Error al obtener transportistas {ex.Message}", ex);
+			}
+		}
+
+		public SupervisionViewModel GetById(int supervisionId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SupervisionViewModel supervision = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE SupervisionId = @SupervisionId", sqlConnection);
+					cmd.Parameters.AddWithValue("@SupervisionId", supervisionId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							supervision.PublicTransportGroupId = (int)dr["PublicTransportGroupId"];
+							supervision.PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"];
+							supervision.PTGCompleteName = (string)dr["PTGCompleteName"];
+							supervision.ModeId = (int)dr["ModeId"];
+							supervision.StateName = (string)dr["StateName"];
+							supervision.DriverId = (int)dr["DriverId"];
+							supervision.DriverFullName = (string)dr["DriverFullName"];
+							supervision.DriverIdentityDocument = (int)dr["DriverIdentityDocument"];
+							supervision.PartnerNumber = (int)dr["PartnerNumber"];
+							supervision.SupervisionStatusName = (string)dr["SupervisionStatusText"];
+							supervision.TotalDrivers = (int)dr["TotalDrivers"];
+							supervision.TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"];
+							supervision.SupervisionId = (int)dr["SupervisionId"];
+							supervision.DriverWithVehicle = (bool)dr["DriverWithVehicle"];
+							supervision.WorkingVehicle = (bool)dr["WorkingVehicle"];
+							supervision.InPerson = (bool)dr["InPerson"];
+							supervision.Plate = (string)dr["Plate"];
+							supervision.Year = (int)dr["Year"];
+							supervision.Make = (string)dr["Make"];
+							supervision.Model = (string)dr["Model"];
+							supervision.Passengers = (int)dr["Passengers"];
+							supervision.RimName = (string)dr["RimName"];
+							supervision.Wheels = (int)dr["Wheels"];
+							supervision.MotorOilName = (string)dr["MotorOilName"];
+							supervision.Liters = (int)dr["Liters"];
+							supervision.FuelTypeName = (string)dr["FuelTypeName"];
+							supervision.TankCapacity = (int)dr["TankCapacity"];
+							supervision.BatteryName = (string)dr["BatteryName"];
+							supervision.NumberOfBatteries = (int)dr["NumberOfBatteries"];
+							supervision.FailureTypeName = (string)dr["FailureTypeName"];
+							supervision.VehicleImageUrl = (string)dr["VehicleImageUrl"];
+							supervision.FingerprintTrouble = (bool)dr["FingerprintTrouble"];
+							supervision.Remarks = (string)dr["Remarks"];
+							supervision.SecurityUserId = (int)dr["SecurityUserId"];
+							supervision.Pictures = GetPicturesByPTGIdAndPartnerNumber((int)dr["PublicTransportGroupId"], (int)dr["PartnerNumber"]);
+						}
+					}
+
+					return supervision;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener los datos de la supervisión {ex.Message}", ex);
 			}
 		}
 

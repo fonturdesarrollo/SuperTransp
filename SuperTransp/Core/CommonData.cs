@@ -51,6 +51,40 @@ namespace SuperTransp.Core
 
 			return passengers;
 		}
+
+		public CommonDataViewModel GetVehicleDataById(int? vehicleDataId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					CommonDataViewModel vData = new();
+					SqlCommand cmd = new("SELECT * FROM VehicleData WHERE VehicleDataId = @VehicleDataId", sqlConnection);
+					cmd.Parameters.AddWithValue("@VehicleDataId", vehicleDataId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							vData.YearId = (int)dr["Year"];
+							vData.Make = (string)dr["Make"];
+							vData.ModelName = (string)dr["Model"];
+						}
+					}
+
+					return vData;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener los datos del vehiculo, año, marca modelo {ex.Message}", ex);
+			}
+		}
 		public List<CommonDataViewModel> GetMakesByYear(int year)
 		{
 			try

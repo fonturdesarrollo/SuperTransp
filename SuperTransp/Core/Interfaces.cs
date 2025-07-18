@@ -105,6 +105,7 @@ namespace SuperTransp.Core
 		{
 			public int AddOrEdit(SupervisionViewModel model);
 			public int AddSimple(SupervisionViewModel model);
+			public SupervisionViewModel GetById(int supervisionId);
 			public SupervisionViewModel GetByPublicTransportGroupIdAndDriverIdAndPartnerNumberStateId(int publicTransportGroupId, int driverId, int partnerNumber, int stateId);
 			public SupervisionViewModel GetByPublicTransportGroupGUIDAndPartnerNumber(string publicTransportGroupGUID, int partnerNumber);
 			public List<PublicTransportGroupViewModel> GetDriverPublicTransportGroupByStateId(int stateId);
@@ -127,6 +128,7 @@ namespace SuperTransp.Core
 			public List<CommonDataViewModel> GetYears();
 			public List<CommonDataViewModel> GetMakesByYear(int year);
 			public List<CommonDataViewModel> GetModelsByYearAndMake(int year, string make);
+			public CommonDataViewModel GetVehicleDataById(int? vehicleDataId);
 			public List<CommonDataViewModel> GetPassengers();
 			public List<CommonDataViewModel> GetRims();
 			public List<CommonDataViewModel> GetWheels();

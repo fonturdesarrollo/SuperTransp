@@ -1090,7 +1090,7 @@ namespace SuperTransp.Core
 					}
 				}
 
-				return logbook.ToList();
+				return logbook.OrderByDescending(id=> id.SecurityLogbookId).ToList();
 			}
 		}
 
@@ -1126,7 +1126,7 @@ namespace SuperTransp.Core
 					}
 				}
 
-				return logbook.ToList();
+				return logbook.OrderByDescending(id => id.SecurityLogbookId).ToList();
 			}
 		}
 		public List<SecurityLogbookModel> GetLogbookAll()
@@ -1161,7 +1161,7 @@ namespace SuperTransp.Core
 					}
 				}
 
-				return logbook.ToList();
+				return logbook.OrderByDescending(id => id.SecurityLogbookId).ToList();
 			}
 		}
 
