@@ -33,6 +33,14 @@
 			z-index: 1050 !important;
 		}
 	</style>
+	<!-- jQuery UI CSS -->
+	<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css" />
+
+	<!-- jQuery -->
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+	<!-- jQuery UI -->
+	<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 </head>
 <body class="is-preload">
 	@{
@@ -102,7 +110,9 @@
 							</div>
 							<div class="col-12">
 								<strong>Entidad legal:</strong>
-								@Html.DropDownListFor(t => t.DesignationId, (SelectList)ViewBag.Designation, "-- Seleccione --", new { @class = "form-control" })
+								@* @Html.DropDownListFor(t => t.DesignationId, (SelectList)ViewBag.Designation, "-- Seleccione --", new { @class = "form-control" }) *@
+								@Html.TextBox("DesignationName", null, new { @class = "form-control", @id = "designationInput", placeholder = "-- Seleccione o escriba para buscar --" })
+								@Html.HiddenFor(t => t.DesignationId)
 							</div>
 							<div class="col-12">
 								<strong>Nombre:</strong>
@@ -179,7 +189,6 @@
 	</div>
 
 	<!-- Scripts -->
-	<script src="~/assets/js/jquery.min.js"></script>
 	<script src="~/assets/js/browser.min.js"></script>
 	<script src="~/assets/js/breakpoints.min.js"></script>
 	<script src="~/assets/js/util.js"></script>
@@ -304,129 +313,86 @@
 			let message = "";
 			const isTotalAccess = @isTotalAccess.ToString().ToLower();
 
-			if(!isTotalAccess){
-				showAlert("No tiene permiso de modificar registros.", firstInvalidField);
+			if (!isTotalAccess) {
+				showAlert("No tiene permiso de modificar registros.", null);
 				return false;
 			}
 
-			if ($("#PublicTransportGroupRif").val() != "" && !firstInvalidField) {
-				const rifValue = $("#PublicTransportGroupRif").val();
-
-				const containsJ = rifValue.includes("J");
-				const numberCount = rifValue.replace(/\D/g, "").length;
-
-				if (containsJ && numberCount < 9) {
-					firstInvalidField = "#PublicTransportGroupRif";
-					message = "Debe colocar un RIF válido";
-				} else {
-
-					message = "Debe colocar el RIF";
-				}
-			}
-
-			if ($("#PublicTransportGroupRif").val() == "" && !firstInvalidField) {
+			const rifValue = $("#PublicTransportGroupRif").val();
+			if (!rifValue && !firstInvalidField) {
 				firstInvalidField = "#PublicTransportGroupRif";
 				message = "Debe colocar el RIF";
+			} else if (rifValue.includes("J") && rifValue.replace(/\D/g, "").length < 9 && !firstInvalidField) {
+				firstInvalidField = "#PublicTransportGroupRif";
+				message = "Debe colocar un RIF válido";
 			}
 
-			if ($("#DesignationId").val() == "" && !firstInvalidField) {
-				firstInvalidField = "#DesignationId";
-				message = "Debe seleccionar la entidad legal";
+			const typedName = $("#designationInput").val();
+			const matchedItem = window.designations.find(item => item.label === typedName);
+			if (!matchedItem && !firstInvalidField) {
+				firstInvalidField = "#designationInput";
+				message = "Debe seleccionar una entidad legal válida de la lista.";
 			}
 
-			if ($("#PublicTransportGroupName").val() == "" && !firstInvalidField) {
+			const orgName = $("#PublicTransportGroupName").val().trim();
+			if (!orgName && !firstInvalidField) {
 				firstInvalidField = "#PublicTransportGroupName";
 				message = "Debe colocar el nombre de la organización";
 			} else {
-				const fullName = $("#PublicTransportGroupName").val().trim();
 				const regex = /^[a-zA-ZñÑ0-9\s]{5,}$/;
-
-				if (!regex.test(fullName)) {
-					if (!firstInvalidField) {
-						firstInvalidField = "#PublicTransportGroupName";
-					}
-					message = "El nombre debe contener solo letras, números y espacios, y al menos 5 caracteres.";
-				};
-
-				const input = document.querySelector("[name='PublicTransportGroupName']").value.trim().toUpperCase();
-
-				const isMatch = patterns.some(prefijo => input.startsWith(prefijo));
-
-				if (isMatch) {
+				if (!regex.test(orgName) && !firstInvalidField) {
 					firstInvalidField = "#PublicTransportGroupName";
-					message = "Debe debe seleccionar de la lista la entidad legal, no la coloque en el nombre de la organización.";
+					message = "El nombre debe contener solo letras, números y espacios, y al menos 5 caracteres.";
+			 }
+				const inputUpper = orgName.toUpperCase();
+				if (patterns.some(pref => inputUpper.startsWith(pref)) && !firstInvalidField) {
+					firstInvalidField = "#PublicTransportGroupName";
+					message = "Seleccione la entidad legal desde la lista, no la escriba en el nombre.";
 				}
 			}
 
-			if ($("#ModeId").val() == "" && !firstInvalidField) {
-				firstInvalidField = "#ModeId";
-				message = "Debe seleccionar la modalidad";
-			}
+			const requiredDropdowns = [
+				{ id: "#ModeId", msg: "Debe seleccionar la modalidad" },
+				{ id: "#UnionId", msg: "Debe seleccionar el gremio o sindicato" },
+				{ id: "#StateId", msg: "Debe seleccionar el estado" },
+				{ id: "#MunicipalityId", msg: "Debe seleccionar el municipio" }
+			];
 
-			if ($("#UnionId").val() == "" && !firstInvalidField) {
-				firstInvalidField = "#UnionId";
-				message = "Debe seleccionar el gremio o sindicato";
-			}
-
-			if ($("#StateId").val() == "" && !firstInvalidField) {
-				firstInvalidField = "#StateId";
-				message = "Debe seleccionar el estado";
-			}
-
-			if ($("#MunicipalityId").val() == "" && !firstInvalidField) {
-				firstInvalidField = "#MunicipalityId";
-				message = "Debe seleccionar el municipio";
-			}
-
-			if (!firstInvalidField) {
-				const identityValue = $("#RepresentativeIdentityDocument").val();
-
-				if (identityValue == "" || identityValue.length < 7) {
-					firstInvalidField = "#RepresentativeIdentityDocument";
-					message = "Debe colocar un número de cédula válido";
+			for (const field of requiredDropdowns) {
+				if ($(field.id).val() === "" && !firstInvalidField) {
+					firstInvalidField = field.id;
+					message = field.msg;
 				}
 			}
 
-			if ($("#RepresentativeIdentityDocument").val() == "" && !firstInvalidField) {
+			const identityDoc = $("#RepresentativeIdentityDocument").val();
+			if ((!identityDoc || identityDoc.length < 7) && !firstInvalidField) {
 				firstInvalidField = "#RepresentativeIdentityDocument";
-				message = "Debe colocar el número de cédula del representante";
+				message = "Debe colocar un número de cédula válido";
 			}
 
-			if ($("#RepresentativeName").val() == "" && !firstInvalidField) {
+			const repName = $("#RepresentativeName").val().trim();
+			if (!repName && !firstInvalidField) {
 				firstInvalidField = "#RepresentativeName";
 				message = "Debe colocar el nombre del representante";
 			} else {
-				const fullName = $("#RepresentativeName").val().trim();
-				const regex = /^[a-zA-Z\s]{5,}$/;
-
-				if (!regex.test(fullName)) {
-					if (!firstInvalidField) {
-						firstInvalidField = "#RepresentativeName";
-					}
+				if (!/^[a-zA-Z\s]{5,}$/.test(repName) && !firstInvalidField) {
+					firstInvalidField = "#RepresentativeName";
 					message = "El nombre debe contener solo letras y espacios, y al menos 5 caracteres.";
 				}
 			}
 
-			if (!firstInvalidField) {
-				const identityValue = $("#RepresentativePhone").val();
-
-				if (identityValue == "" || identityValue.length < 11) {
-					firstInvalidField = "#RepresentativePhone";
-					message = "Debe colocar un número de télefono válido";
-				}
-			}
-
-			if ($("#RepresentativePhone").val() == "" && !firstInvalidField) {
+			const phone = $("#RepresentativePhone").val();
+			if ((!phone || phone.length < 11) && !firstInvalidField) {
 				firstInvalidField = "#RepresentativePhone";
-				message = "Debe colocar el número de teléfono del representante";
+				message = "Debe colocar un número de teléfono válido";
 			}
 
-			if ($("#Partners").val() == "" && !firstInvalidField) {
+			const partners = $("#Partners").val();
+			if (partners === "" && !firstInvalidField) {
 				firstInvalidField = "#Partners";
 				message = "Debe colocar el cupo";
-			}
-
-			if ($("#Partners").val() == "0" && !firstInvalidField) {
+			} else if (partners === "0" && !firstInvalidField) {
 				firstInvalidField = "#Partners";
 				message = "El cupo no puede ser cero";
 			}
@@ -441,8 +407,20 @@
 
 		function showAlert(message, selector) {
 			alert(message);
-			highlightErrorField(selector);
-			$(selector).focus();
+
+			if (selector) {
+				const $field = $(selector);
+				$field.addClass("is-invalid");
+
+				$field.on("input", function () {
+					$(this).removeClass("is-invalid");
+				});
+
+				setTimeout(() => {
+					$field[0].scrollIntoView({ behavior: "smooth", block: "center" });
+					$field.focus();
+				}, 100);
+			}
 		}
 
 		function highlightErrorField(selector) {
@@ -518,6 +496,37 @@
 					},
 					error: function () {
 						alert("Error al generar el código QR.");
+					}
+				});
+			});
+
+			$(function () {
+				window.designations = [];
+				@foreach (var item in (SelectList)ViewBag.Designation)
+				{
+					@:window.designations.push({label: "@Html.Raw(item.Text)", value: "@item.Value" });
+				}
+
+				$("#designationInput").autocomplete({
+					source: window.designations,
+					minLength: 0,
+					autoFocus: true,
+					select: function (event, ui) {
+						$("#designationInput").val(ui.item.label);
+						$("#DesignationId").val(ui.item.value);
+						return false;
+					}
+				});
+
+				$("#designationInput").on("focus click", function () {
+					$(this).autocomplete("search", "");
+				});
+
+				$("#designationInput").on("input", function () {
+					const typed = $(this).val();
+					const match = window.designations.find(item => item.label === typed);
+					if (!match) {
+						$("#DesignationId").val("");
 					}
 				});
 			});
