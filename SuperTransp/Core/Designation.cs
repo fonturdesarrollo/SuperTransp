@@ -85,7 +85,7 @@ namespace SuperTransp.Core
 			}
 			catch (Exception ex)
 			{
-				throw new Exception("Error al obtener las nomenclaturas", ex);
+				throw new Exception("Error al obtener la entidad legal", ex);
 			}
 
 			return designations;

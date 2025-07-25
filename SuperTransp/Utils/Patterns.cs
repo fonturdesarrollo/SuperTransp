@@ -38,7 +38,6 @@
 			"UNION",
 			"ASO",
 			"COOP",
-			"COOPÉRATIVA",
 			"COOPERATIVA",
 			"LINEA",
 			"RUTA COMUNAL",

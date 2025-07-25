@@ -95,7 +95,7 @@ namespace SuperTransp.Core
 							ptgValues = GetPublicTransportGroupById(result);
 
 							_security.AddLogbook(model.PublicTransportGroupId, false,
-								$" Organización ->" +
+								$" Organizacion ->" +
 								$" RIF: {model.PublicTransportGroupRif} -" +
 								$" nombre: {ptgValues.PublicTransportGroupName} -" +
 								$" modalidad: {ptgValues.ModeName} -" +
@@ -110,7 +110,7 @@ namespace SuperTransp.Core
 							ptgValues = GetPublicTransportGroupById(model.PublicTransportGroupId);
 
 							_security.AddLogbook(model.PublicTransportGroupId, false,
-								$" Organización ->" +
+								$" Organizacion ->" +
 								$" ANTES [" +
 								$" RIF: {beforeRif} -" +
 								$" nombre: {beforePTGName} -" +

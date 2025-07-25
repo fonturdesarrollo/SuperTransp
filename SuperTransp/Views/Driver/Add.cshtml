@@ -131,7 +131,7 @@
 							</div>
 							<div class="col-6 col-12-xsmall">
 								<strong>Nombre:</strong>
-								@Html.TextBoxFor(x => x.DriverFullName, new { placeholder = "Nombre del transportista", tabindex = "0", maxlength = "20" })
+								@Html.TextBoxFor(x => x.DriverFullName, new { placeholder = "Nombre del socio", tabindex = "0", maxlength = "20" })
 							</div>
 							<div class="col-6">
 								<strong>Sexo:</strong>
@@ -267,6 +267,7 @@
 	<script src="~/datatable/js/dataTables.bootstrap4.js"></script>
 	<script src="~/datatable/js/dataTables.responsive.min.js"></script>
 	<script src="~/datatable/js/responsive.bootstrap4.min.js"></script>
+	<script src="~/js/common.js" asp-append-version="true"></script>
 
 	@{
 		await Html.RenderPartialAsync("_ValidationScriptsPartial");
@@ -335,12 +336,7 @@
 				return value.replace(/[^0-9]/g, "");
 			});
 
-			handleInput("[name='DriverFullName']", function (value) {
-				return value
-					.normalize("NFD")
-					.replace(/[\u0300-\u036f]/g, "")
-					.toUpperCase();
-			});
+			handleInput("[name='DriverFullName']", sanitizeInputValue);
 
 			handleInput("[name='PartnerNumber']", function (value) {
 				return value.replace(/[^0-9]/g, "");
@@ -409,7 +405,7 @@
 				message = "Debe colocar el nombre del transportista";
 			} else {
 				const driverFullName = $("#DriverFullName").val().trim();
-				const regex = /^[a-zA-Z\s]{5,}$/;
+				const regex = /^[a-zA-ZñÑ\s]{5,}$/;
 
 				if (!regex.test(driverFullName)) {
 					if (!firstInvalidField) {
@@ -517,13 +513,7 @@
 				let inputValue = $(this).val();
 				llamarControlador(inputValue);
 			}
-		});
-			
-		$('#DriverFullName').on('input', function() {
-			const value = $(this).val();
-			const sanitizedValue = value.replace(/[^a-zA-Z\s]/g, '');
-			$(this).val(sanitizedValue); 
-		});
+		});	
 
 		function llamarControlador(value) {
 			var checkExistingUrl = '@Url.Action("GetDriverDataByIdDocument", "Driver")';
@@ -572,6 +562,7 @@
 		}
 
 		$('#inventory').DataTable({
+			stateSave: true,
 			"language": {
 				"sProcessing":    "Procesando...",
 				"sLengthMenu":    "Mostrar _MENU_ registros",

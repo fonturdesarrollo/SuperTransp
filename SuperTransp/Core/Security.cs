@@ -1008,7 +1008,7 @@ namespace SuperTransp.Core
 		public int AddLogbook(int processId, bool isDeleteAction, string actionDescription)
 		{
 			int result = 0;
-			string addEditDelete = processId == 0 ? "Agregó" : "Modificó";
+			string addEditDelete = processId == 0 ? "Agrego" : "Modifico";
 
 			try
 			{
@@ -1033,7 +1033,7 @@ namespace SuperTransp.Core
 
 					if (isDeleteAction)
 					{
-						addEditDelete = "Eliminó";
+						addEditDelete = "Elimino";
 					}					
 
 					cmd.Parameters.AddWithValue("@SecurityUserId", userId);

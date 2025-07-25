@@ -7,6 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="wwwroot\uploads\**" />
+    <Content Remove="wwwroot\uploads\**" />
+    <EmbeddedResource Remove="wwwroot\uploads\**" />
+    <None Remove="wwwroot\uploads\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Remove="wwwroot\images\splash2-o.jpg" />
   </ItemGroup>
 
@@ -44,8 +51,5 @@
   <None Update="appsettings.json">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </None>
-</ItemGroup>
-<ItemGroup>
-  <Folder Include="wwwroot\uploads\" />
 </ItemGroup>  
 </Project>

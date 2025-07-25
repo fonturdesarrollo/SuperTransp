@@ -135,6 +135,8 @@
 	<script src="~/assets/js/breakpoints.min.js"></script>
 	<script src="~/assets/js/util.js"></script>
 	<script src="~/assets/js/main.js"></script>
+	<script src="~/js/common.js" asp-append-version="true"></script>
+
 	@{
 		await Html.RenderPartialAsync("_ValidationScriptsPartial");
 	}
@@ -199,12 +201,7 @@
 				return value.replace(/[^0-9]/g, "");
 			});
 
-			handleInput("[name='DriverFullName']", function (value) {
-				return value
-					.normalize("NFD")
-					.replace(/[\u0300-\u036f]/g, "")
-					.toUpperCase();
-			});
+			handleInput("[name='DriverFullName']", sanitizeInputValue);
 
 			handleInput("[name='PartnerNumber']", function (value) {
 				return value.replace(/[^0-9]/g, "");
@@ -273,6 +270,16 @@
 			if ($("#DriverFullName").val() == "" && !firstInvalidField) {
 				firstInvalidField = "#DriverFullName";
 				message = "Debe colocar el nombre del transportista";
+			} else {
+				const driverFullName = $("#DriverFullName").val().trim();
+				const regex = /^[a-zA-ZñÑ\s]{5,}$/;
+
+				if (!regex.test(driverFullName)) {
+					if (!firstInvalidField) {
+						firstInvalidField = "#DriverFullName";
+					}
+					message = "El nombre debe contener solo letras y espacios, y al menos 5 caracteres.";
+				}
 			}
 
 			if ($("#SexId").val() == ""  &&  !firstInvalidField) {
@@ -341,12 +348,6 @@
 			setTimeout(function(){
 				$("#successMessage").fadeOut("slow");
 			}, 2500);
-
-			$('#DriverFullName').on('input', function() {
-				const value = $(this).val();
-				const sanitizedValue = value.replace(/[^a-zA-Z\s]/g, '');
-				$(this).val(sanitizedValue);
-			});
 		});
 	</script>
 </body>

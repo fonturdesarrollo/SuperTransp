@@ -183,5 +183,27 @@ namespace SuperTransp.Controllers
 				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
 			}
 		}
+
+		public JsonResult CheckExistingValues(string paramValue1)
+		{
+			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+			{
+				var designations = _designation.GetAll();
+
+				if(designations != null && designations.Any())
+				{
+					var checkDesignation = designations.Where(d => d.DesignationName == paramValue1);
+
+					if (checkDesignation.Any())
+					{
+						return Json($"La entidad legal {paramValue1} ya existe no puede agregar otra igual.");
+					}
+				}
+
+				return Json("OK");
+			}
+
+			return Json("ERROR");
+		}
 	}
 }

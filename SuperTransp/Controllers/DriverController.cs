@@ -148,7 +148,6 @@ namespace SuperTransp.Controllers
 
 					if (_security.IsTotalAccess(2) || securityGroupId == 1)
 					{
-
 						int driverId = _driver.AddOrEdit(model);
 
 						if (driverId > 0)
