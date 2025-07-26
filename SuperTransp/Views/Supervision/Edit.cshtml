@@ -41,6 +41,9 @@
 	</style>
 </head>
 <body class="is-preload">
+	@{
+		bool isTotalAccess = ViewBag.IsTotalAccess != null && ViewBag.IsTotalAccess is bool && ViewBag.IsTotalAccess == true;
+	}
 	@using (Html.BeginForm("Add", "Supervision", FormMethod.Post))
 	{
 		@Html.AntiForgeryToken()
@@ -78,9 +81,10 @@
 				<h2>Menu</h2>
 				<ul>
 					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
-					<li>@Html.ActionLink("Seleccionar organización", "PublicTransportGroupDriverList", "Supervision")</li>
+					<li>@Html.ActionLink("Seleccionar organización", "PublicTransportGroupDriverList", "Supervision", new { ptgRifName = Model.PublicTransportGroupRif }, null)</li>
 					<li>@Html.ActionLink("Agregar resumen de supervisión", "PublicTransportGroupList", "Supervision")</li>
 					<li>@Html.ActionLink("Modificar resumen de supervisión", "SummaryList", "Supervision")</li>
+					<li>@Html.ActionLink("Supervisión", "Index", "Supervision")</li>
 					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 				</ul>
 			</nav>
@@ -215,9 +219,11 @@
 								<div class="col-12">
 									<br />
 									<strong>Cargar imágenes:</strong>
-									<div id="myDropzone" class="dropzone dz-clickable">
+									<div id="myDropzone"
+										 class="dropzone @(isTotalAccess ? "dz-clickable" : "dz-disabled")"
+										 style="@(isTotalAccess ? "" : "pointer-events:none; opacity:0.6;")">
 										@{
-											if(Model.Pictures != null && Model.Pictures.Any())
+											if (Model.Pictures != null && Model.Pictures.Any())
 											{
 												<div class="dz-message">
 													Si desea sustituir las imágenes actuales haga clic aquí para subirlas
@@ -292,7 +298,7 @@
 			autoProcessQueue: true,
 			paramName: "file",
 			maxFilesize: 10,
-			acceptedFiles: ".jpg,.png,.gif",
+			acceptedFiles: ".jpg,.jpeg,.png,.gif,.webp",
 			dictDefaultMessage: "Arrastra las imágenes aquí o haga clic para agregarlas.",
 			addRemoveLinks: true,
 			maxFiles: 4,
@@ -599,22 +605,19 @@
 
 				const pictures = @Json.Serialize(Model.Pictures);
 				var currentTotalPictures = pictures.length;
+				var modeId = $("#ModeId").val();
 
 				if(uploaded.length > 0){
-					var modeId = $("#ModeId").val();
-
-					if(modeId === "4"){
-						if (uploaded.length < 2 || uploaded.length > 2  && !firstInvalidField) {
-							firstInvalidField = "#myDropzone";
-							message = "Debe agregar 2 imágenes para poder actualizar";
-						}
+					message = validateMode(modeId, uploaded, currentTotalPictures);
+					firstInvalidField = message == "" ? "": firstInvalidField = "#myDropzone"
+					}else{
+					if(currentTotalPictures == 0){
+						firstInvalidField = "#myDropzone";
+						message = "Debe agregar imágenes del vehículo para poder actualizar";
+					}else{
+						message = validateMode(modeId, uploaded, currentTotalPictures);
+						firstInvalidField = message == "" ? "": firstInvalidField = "#myDropzone"
 					}
-					else{
-						if (uploaded.length < 4 || uploaded.length > 4 && !firstInvalidField) {
-							firstInvalidField = "#myDropzone";
-							message = "Debe agregar 4 imágenes para poder actualizar";
-						}
-					}			
 				}
 
 				if (firstInvalidField) {
@@ -624,6 +627,43 @@
 			}
 
 			return true;
+		}
+
+		function validateMode(modeId, uploaded, currentTotalPictures){
+			var message = "";
+
+			if(modeId === "4"){
+				if(currentTotalPictures != 2 || uploaded.length  > 0){
+					if (uploaded.length < 2 || uploaded.length > 2) {
+						var staticMessage ="El vehículo que está actualizando es una moto y requiere de 2 imágenes para poder ser actualizado, actualmente tiene ";
+						var quantityMessage ="";
+
+						if(uploaded.length > 2){
+							quantityMessage = currentTotalPictures + ", haga clic en el recuadro: Cargar imágenes, y agregue 2 imágenes (las actuales serán sustituidas)"
+						}else if(uploaded.length < 2){
+							quantityMessage = currentTotalPictures + ", haga clic en el recuadro: Cargar imágenes, y agregue 2 imágenes (las actuales serán sustituidas)."
+						}
+
+						message = staticMessage + quantityMessage;
+					}
+				}
+			}
+			else{
+				if(currentTotalPictures != 4 || uploaded.length  > 0){
+					if (uploaded.length < 4 || uploaded.length > 4) {
+						var staticMessage ="El vehículo que está actualizando requiere de 4 imágenes para poder ser actualizado, actualmente tiene ";
+						var quantityMessage ="";
+
+						if(uploaded.length < 4){
+							quantityMessage = currentTotalPictures + ", haga clic en el recuadro: Cargar imágenes, y agregue 4 imágenes (las actuales serán sustituidas)."
+						}
+
+						message = staticMessage + quantityMessage;
+					}
+				}
+			}
+
+			return message;
 		}
 
 		function showAlert(message, selector) {
@@ -656,6 +696,13 @@
 				$("#successMessage").fadeOut("slow");
 			}, 2500);
 
+			$('#Plate').on('keydown', function (e) {
+				if (e.key === "Enter") {
+					e.preventDefault();
+					return false;
+				}
+			});
+
 			$('#Plate').on('input', function() {
 				const value = $(this).val();
 				const sanitizedValue = value.replace(/[^a-zA-Z0-9\s]/g, '');
@@ -673,16 +720,22 @@
 			}
 
 			$('#DriverWithVehicle').change(function (event) {
+				const isTotalAccess = @isTotalAccess.ToString().ToLower();
+
 				if ($(this).val() === "True") {
 					$('#additionalFields').css({ visibility: 'visible', opacity: '1', height: 'auto', overflow: 'visible' });
 
 				} else if($(this).val() === "False") {
 					$('#additionalFields').css({ opacity: '0', visibility: 'hidden', height: '0', overflow: 'hidden' });
 
-					if (confirm("¿Está seguro de que desea actualizar los registros?")) {
-						$(this).closest("form")[0].submit();
+					if (!isTotalAccess) {
+						alert("No tiene permiso de modificar registros.");
 					} else {
-						$('#DriverWithVehicle').val("");
+						if (confirm("¿Está seguro de que desea actualizar los registros?")) {
+							$(this).closest("form")[0].submit();
+						} else {
+							$('#DriverWithVehicle').val("");
+						}
 					}
 				}
 			});

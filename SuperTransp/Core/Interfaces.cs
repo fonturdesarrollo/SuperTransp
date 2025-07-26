@@ -10,6 +10,7 @@ namespace SuperTransp.Core
 			public SecurityUserViewModel GetValidUser(string login, string password);
 			public List<SecurityUserViewModel> GetAllUsers();
 			public List<SecurityUserViewModel> GetAllUsersByStateId(int stateId);
+			public List<SecurityUserViewModel> GetAllUsersByGroupId(int securityGroupId);
 			public SecurityUserViewModel GetUserById(int securityUserId);
 			public bool GroupHasAccessToModule(int securityGroupId, int securityModuleId);
 			public List<SecurityGroupModel> GetAllGroups();
@@ -80,6 +81,8 @@ namespace SuperTransp.Core
 			public string? RegisteredRif(string publicTransportGroupRif);
 			public List<PublicTransportGroupViewModel> GetAll();
 			public List<PublicTransportGroupViewModel> GetAllByStateId(int stateId);
+			public List<PublicTransportGroupViewModel> GetAllStatisticsByStateId(int stateId);
+			public List<PublicTransportGroupViewModel> GetAllStatistics();
 			public List<PublicTransportGroupViewModel> GetAllBySupervisedDriversAndStateIdAndNotSummaryAdded(int stateId);
 			public List<PublicTransportGroupViewModel> GetAllBySupervisedDriversAndNotSummaryAdded();
 			public PublicTransportGroupViewModel GetByGUIDId(string guidId);
@@ -102,11 +105,12 @@ namespace SuperTransp.Core
 		{
 			public int AddOrEdit(SupervisionViewModel model);
 			public int AddSimple(SupervisionViewModel model);
+			public SupervisionViewModel GetById(int supervisionId);
 			public SupervisionViewModel GetByPublicTransportGroupIdAndDriverIdAndPartnerNumberStateId(int publicTransportGroupId, int driverId, int partnerNumber, int stateId);
 			public SupervisionViewModel GetByPublicTransportGroupGUIDAndPartnerNumber(string publicTransportGroupGUID, int partnerNumber);
-			public List<PublicTransportGroupViewModel> GetDriverPublicTransportGroupByStateId(int stateId);
+			public List<PublicTransportGroupViewModel> GetDriverPublicTransportGroupByStateIdAndPTGRif(int stateId, string ptgRif);
 			public List<PublicTransportGroupViewModel> GetDriverPublicTransportGroupByPtgId(int publicTransportGroupId);
-			public List<PublicTransportGroupViewModel> GetAllDriverPublicTransportGroup();
+			public List<PublicTransportGroupViewModel> GetAllDriverPublicTransportGroup(string ptgRif);
 			public List<PublicTransportGroupViewModel> RegisteredPlate(string plate);
 			public int AddOrEditSummary(SupervisionSummaryViewModel model);
 			public List<SupervisionSummaryViewModel> GetAllSupervisionSummary();
@@ -124,6 +128,7 @@ namespace SuperTransp.Core
 			public List<CommonDataViewModel> GetYears();
 			public List<CommonDataViewModel> GetMakesByYear(int year);
 			public List<CommonDataViewModel> GetModelsByYearAndMake(int year, string make);
+			public CommonDataViewModel GetVehicleDataById(int? vehicleDataId);
 			public List<CommonDataViewModel> GetPassengers();
 			public List<CommonDataViewModel> GetRims();
 			public List<CommonDataViewModel> GetWheels();
@@ -137,6 +142,14 @@ namespace SuperTransp.Core
 			public int AddOrEditMakeModel(CommonDataViewModel model);
 			public CommonDataViewModel GetCommonDataValueByName(string commonDataName);
 			public List<CommonDataViewModel> GetSex();
+		}
+
+		public interface IReport
+		{
+			public List<PublicTransportGroupViewModel> GetAllSupervisedVehiclesStatistics();
+			public List<PublicTransportGroupViewModel> GetAllSupervisedVehiclesStatisticsByStateId(int stateId);
+			public List<PublicTransportGroupViewModel> GetAllSupervisedDriversStatisticsInEstate();
+			public List<PublicTransportGroupViewModel> GetAllSupervisedDriversStatisticsInEstateByStateId(int stateId);
 		}
 	}
 }

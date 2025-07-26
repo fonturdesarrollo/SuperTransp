@@ -32,6 +32,9 @@ builder.Services.AddTransient<IUnion, Union>();
 builder.Services.AddTransient<IDriver, Driver>();
 builder.Services.AddTransient<ISupervision, Supervision>();
 builder.Services.AddTransient<ICommonData, CommonData>();
+builder.Services.AddTransient<IReport, Reports>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ClientInfoService>();
 
 var app = builder.Build();
 

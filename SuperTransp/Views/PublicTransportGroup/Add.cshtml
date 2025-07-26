@@ -1,4 +1,5 @@
-﻿@model SuperTransp.Models.PublicTransportGroupViewModel
+﻿@using SuperTransp.Utils
+@model SuperTransp.Models.PublicTransportGroupViewModel
 @{
 	Layout = "";
 }
@@ -13,14 +14,36 @@
 	<link rel="stylesheet" href="~/datatable/css/bootstrap.css" />
 	<link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
 
+	<script>
+		const patterns = @Html.Raw(Json.Serialize(ViewBag.DesignationList));
+	</script>
+
 	<style>
 		.is-invalid {
 			border: 2px solid red;
 			background-color: #ffe6e6;
 		}
+
+		.ui-autocomplete {
+			max-height: 200px;
+			overflow-y: auto;
+			overflow-x: hidden;
+			z-index: 10000 !important;
+		}
 	</style>
+	<!-- jQuery UI CSS -->
+	<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css" />
+
+	<!-- jQuery -->
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+	<!-- jQuery UI -->
+	<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 </head>
 <body class="is-preload">
+	@{
+		bool isTotalAccess = ViewBag.IsTotalAccess != null && ViewBag.IsTotalAccess is bool && ViewBag.IsTotalAccess == true;
+	}
 	@using (Html.BeginForm("Add", "PublicTransportGroup", FormMethod.Post))
 	{
 		@Html.AntiForgeryToken()
@@ -60,6 +83,7 @@
 					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
 					<li>@Html.ActionLink("Modificar organización", "PublicTransportGroupList", "PublicTransportGroup")</li>
 					<li>@Html.ActionLink("Agregar socios a organización", "PublicTransportGroupList", "Driver")</li>
+					<li>@Html.ActionLink("Organizaciones de transporte", "Index", "PublicTransportGroup")</li>
 					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 				</ul>
 			</nav>
@@ -78,9 +102,11 @@
 								@Html.TextBoxFor(x => x.PublicTransportGroupRif, new { placeholder = "RIF", tabindex = "0", maxlength = "10" })
 								<span asp-validation-for="PublicTransportGroupRif" class="text-danger"></span>
 							</div>
-							<div class="col-6 col-12-xsmall">
+							<div class="col-12">
 								<strong>Entidad legal:</strong>
-								@Html.DropDownListFor(t => t.DesignationId, (SelectList)ViewBag.Designation, "-- Seleccione --", new { @class = "form-control" })
+								@* @Html.DropDownListFor(t => t.DesignationId, (SelectList)ViewBag.Designation, "-- Seleccione --", new { @class = "form-control" }) *@
+								@Html.TextBox("DesignationName", null, new { @class = "form-control", @id = "designationInput", placeholder = "-- Seleccione o escriba para buscar --" })
+								@Html.HiddenFor(t => t.DesignationId)
 							</div>
 							<div class="col-12">
 								<strong>Nombre:</strong>
@@ -121,7 +147,7 @@
 								<span asp-validation-for="RepresentativePhone" class="text-danger"></span>
 							</div>
 							<div class="col-6">
-								<strong>Cantidad de Socios:</strong>
+								<strong>Cupo:</strong>
 								@Html.TextBoxFor(x => x.Partners, new { placeholder = "Cantidad de Socios", maxlength = "3" })
 								<span asp-validation-for="Partners" class="text-danger"></span>
 							</div>
@@ -139,20 +165,14 @@
 					</section>
 				</div>
 			</div>
-			<!-- Footer -->
-@* 			<footer id="footer">
-				<div class="inner">
-					<label style="text-align:right">&copy; Sistema para la Supervisión de Unidades de Transporte</label>
-				</div>
-			</footer> *@
 		</div>
 	}
 	<!-- Scripts -->
-	<script src="~/assets/js/jquery.min.js"></script>
 	<script src="~/assets/js/browser.min.js"></script>
 	<script src="~/assets/js/breakpoints.min.js"></script>
 	<script src="~/assets/js/util.js"></script>
 	<script src="~/assets/js/main.js"></script>
+	<script src="~/js/common.js" asp-append-version="true"></script>
 	@{
 		await Html.RenderPartialAsync("_ValidationScriptsPartial");
 	}
@@ -187,21 +207,24 @@
 
 		document.addEventListener("DOMContentLoaded", function () {
 			function handleInput(selector, transformFunction) {
-				var inputElement = document.querySelector(selector);
+				const inputElement = document.querySelector(selector);
 				if (inputElement) {
 					inputElement.addEventListener("input", function () {
-						inputElement.value = transformFunction(inputElement.value);
+						const start = inputElement.selectionStart;
+						const end = inputElement.selectionEnd;
+
+						const transformed = transformFunction(inputElement.value);
+
+						if (inputElement.value !== transformed) {
+							inputElement.value = transformed;
+							inputElement.setSelectionRange(start, end);
+						}
 					});
 				}
 			}
 
-			handleInput("[name='PublicTransportGroupName']", function (value) {
-				return value.toUpperCase();
-			});
-
-			handleInput("[name='RepresentativeName']", function (value) {
-				return value.toUpperCase();
-			});
+			handleInput("[name='PublicTransportGroupName']", sanitizeInputValue);
+			handleInput("[name='RepresentativeName']", sanitizeInputValue);
 
 			handleInput("[name='RepresentativeIdentityDocument']", function (value) {
 				return value.replace(/[^0-9]/g, "");
@@ -252,118 +275,91 @@
 		function isOkToSave() {
 			let firstInvalidField = null;
 			let message = "";
+			const isTotalAccess = @isTotalAccess.ToString().ToLower();
 
-			if ($("#PublicTransportGroupRif").val() != "" && !firstInvalidField) {
-				const rifValue = $("#PublicTransportGroupRif").val();
-
-				const containsJ = rifValue.includes("J");
-				const numberCount = rifValue.replace(/\D/g, "").length;
-
-				if (containsJ && numberCount < 9) {
-					firstInvalidField = "#PublicTransportGroupRif";
-					message = "Debe colocar un RIF válido";
-				} else {
-
-					message = "Debe colocar el RIF";
-				}
+			if (!isTotalAccess) {
+				showAlert("No tiene permiso de modificar registros.", null);
+				return false;
 			}
 
-			if ($("#PublicTransportGroupRif").val() == "" && !firstInvalidField) {
+			const rifValue = $("#PublicTransportGroupRif").val();
+			if (!rifValue && !firstInvalidField) {
 				firstInvalidField = "#PublicTransportGroupRif";
 				message = "Debe colocar el RIF";
+			} else if (rifValue.includes("J") && rifValue.replace(/\D/g, "").length < 9 && !firstInvalidField) {
+				firstInvalidField = "#PublicTransportGroupRif";
+				message = "Debe colocar un RIF válido";
 			}
 
-			if ($("#DesignationId").val() == "" && !firstInvalidField) {
-				firstInvalidField = "#DesignationId";
-				message = "Debe seleccionar la nomenclatura";
+			const typedName = $("#designationInput").val();
+			const matchedItem = window.designations.find(item => item.label === typedName);
+			if (!matchedItem && !firstInvalidField) {
+				firstInvalidField = "#designationInput";
+				message = "Debe seleccionar una entidad legal válida de la lista.";
 			}
 
-			if ($("#PublicTransportGroupName").val() == "" && !firstInvalidField) {
+			const orgName = $("#PublicTransportGroupName").val().trim();
+			if (!orgName && !firstInvalidField) {
 				firstInvalidField = "#PublicTransportGroupName";
 				message = "Debe colocar el nombre de la organización";
 			} else {
-				const fullName = $("#PublicTransportGroupName").val().trim();
 				const regex = /^[a-zA-ZñÑ0-9\s]{5,}$/;
-
-				if (!regex.test(fullName)) {
-					if (!firstInvalidField) {
-						firstInvalidField = "#PublicTransportGroupName";
-					}
+				if (!regex.test(orgName) && !firstInvalidField) {
+					firstInvalidField = "#PublicTransportGroupName";
 					message = "El nombre debe contener solo letras, números y espacios, y al menos 5 caracteres.";
+			 }
+				const inputUpper = orgName.toUpperCase();
+				if (patterns.some(pref => inputUpper.startsWith(pref)) && !firstInvalidField) {
+					firstInvalidField = "#PublicTransportGroupName";
+					message = "Seleccione la entidad legal desde la lista, no la escriba en el nombre.";
 				}
 			}
 
-			if ($("#ModeId").val() == "" && !firstInvalidField) {
-				firstInvalidField = "#ModeId";
-				message = "Debe seleccionar la modalidad";
-			}
+			const requiredDropdowns = [
+				{ id: "#ModeId", msg: "Debe seleccionar la modalidad" },
+				{ id: "#UnionId", msg: "Debe seleccionar el gremio o sindicato" },
+				{ id: "#StateId", msg: "Debe seleccionar el estado" },
+				{ id: "#MunicipalityId", msg: "Debe seleccionar el municipio" }
+			];
 
-			if ($("#UnionId").val() == "" && !firstInvalidField) {
-				firstInvalidField = "#UnionId";
-				message = "Debe seleccionar el gremio o sindicato";
-			}
-
-			if ($("#StateId").val() == "" && !firstInvalidField) {
-				firstInvalidField = "#StateId";
-				message = "Debe seleccionar el estado";
-			}
-
-			if ($("#MunicipalityId").val() == "" && !firstInvalidField) {
-				firstInvalidField = "#MunicipalityId";
-				message = "Debe seleccionar el municipio";
-			}
-
-			if (!firstInvalidField) {
-				const identityValue = $("#RepresentativeIdentityDocument").val();
-
-				if (identityValue == "" || identityValue.length < 7) {
-					firstInvalidField = "#RepresentativeIdentityDocument";
-					message = "Debe colocar un número de cédula válido";
+			for (const field of requiredDropdowns) {
+				if ($(field.id).val() === "" && !firstInvalidField) {
+					firstInvalidField = field.id;
+					message = field.msg;
 				}
 			}
 
-			if ($("#RepresentativeIdentityDocument").val() == "" && !firstInvalidField) {
+			const identityDoc = $("#RepresentativeIdentityDocument").val();
+			if ((!identityDoc || identityDoc.length < 7) && !firstInvalidField) {
 				firstInvalidField = "#RepresentativeIdentityDocument";
-				message = "Debe colocar el número de cédula del representante";
+				message = "Debe colocar un número de cédula válido";
 			}
 
-			if ($("#RepresentativeName").val() == "" && !firstInvalidField) {
+			const repName = $("#RepresentativeName").val().trim();
+			if (!repName && !firstInvalidField) {
 				firstInvalidField = "#RepresentativeName";
 				message = "Debe colocar el nombre del representante";
 			} else {
-				const fullName = $("#RepresentativeName").val().trim();
-				const regex = /^[a-zA-Z\s]{5,}$/;
-
-				if (!regex.test(fullName)) {
-					if (!firstInvalidField) {
-						firstInvalidField = "#RepresentativeName";
-					}
+				const regex = /^[a-zA-ZñÑ\s]{5,}$/;
+				if (!regex.test(repName) && !firstInvalidField) {
+					firstInvalidField = "#RepresentativeName";
 					message = "El nombre debe contener solo letras y espacios, y al menos 5 caracteres.";
 				}
 			}
 
-			if (!firstInvalidField) {
-				const identityValue = $("#RepresentativePhone").val();
-
-				if (identityValue == "" || identityValue.length < 11) {
-					firstInvalidField = "#RepresentativePhone";
-					message = "Debe colocar un número de télefono válido";
-				}
-			}
-
-			if ($("#RepresentativePhone").val() == "" && !firstInvalidField) {
+			const phone = $("#RepresentativePhone").val();
+			if ((!phone || phone.length < 11) && !firstInvalidField) {
 				firstInvalidField = "#RepresentativePhone";
-				message = "Debe colocar el número de teléfono del representante";
+				message = "Debe colocar un número de teléfono válido";
 			}
 
-			if ($("#Partners").val() == "" && !firstInvalidField) {
+			const partners = $("#Partners").val();
+			if (partners === "" && !firstInvalidField) {
 				firstInvalidField = "#Partners";
-				message = "Debe colocar la cantidad de socios";
-			}
-
-			if ($("#Partners").val() == "0" && !firstInvalidField) {
+				message = "Debe colocar el cupo";
+			} else if (partners === "0" && !firstInvalidField) {
 				firstInvalidField = "#Partners";
-				message = "La cantidad de socios no puede ser cero";
+				message = "El cupo no puede ser cero";
 			}
 
 			if (firstInvalidField) {
@@ -376,8 +372,20 @@
 
 		function showAlert(message, selector) {
 			alert(message);
-			highlightErrorField(selector);
-			$(selector).focus();
+
+			if (selector) {
+				const $field = $(selector);
+				$field.addClass("is-invalid");
+
+				$field.on("input", function () {
+					$(this).removeClass("is-invalid");
+				});
+
+				setTimeout(() => {
+					$field[0].scrollIntoView({ behavior: "smooth", block: "center" });
+					$field.focus();
+				}, 100);
+			}
 		}
 
 		function highlightErrorField(selector) {
@@ -388,7 +396,6 @@
 
 			$(selector)[0].scrollIntoView({ behavior: "smooth", block: "center" });
 		}
-
 
 		function showMsg(hasCurrentJob) {
 			if (hasCurrentJob != "OK") {
@@ -406,18 +413,6 @@
 				$("#successMessage").fadeOut("slow");
 			}, 2500);
 
-			$('#PublicTransportGroupName').on('input', function() {
-				const value = $(this).val();
-				const sanitizedValue = value.replace(/[^a-zA-ZñÑ0-9\s]/g, '');
-				$(this).val(sanitizedValue);
-			});
-
-			$('#RepresentativeName').on('input', function() {
-				const value = $(this).val();
-				const sanitizedValue = value.replace(/[^a-zA-Z\s]/g, '');
-				$(this).val(sanitizedValue);
-			});
-
 			$('#StateId').change(function () {
 				var stateId = $(this).val();
 				var getMunicipalityUrl = '@Url.Action("GetMunicipality", "PublicTransportGroup")';
@@ -434,6 +429,37 @@
 						});
 					});
 				}
+			});
+
+			$(function () {
+				window.designations = [];
+				@foreach (var item in (SelectList)ViewBag.Designation)
+				{
+					@:window.designations.push({label: "@Html.Raw(item.Text)", value: "@item.Value" });
+				}
+
+				$("#designationInput").autocomplete({
+					source: window.designations,
+					minLength: 0,
+					autoFocus: true,
+					select: function (event, ui) {
+						$("#designationInput").val(ui.item.label);
+						$("#DesignationId").val(ui.item.value);
+						return false;
+					}
+				});
+
+				$("#designationInput").on("focus click", function () {
+					$(this).autocomplete("search", "");
+				});
+
+				$("#designationInput").on("input", function () {
+					const typed = $(this).val();
+					const match = window.designations.find(item => item.label === typed);
+					if (!match) {
+						$("#DesignationId").val("");
+					}
+				});
 			});
 		});
 	</script>

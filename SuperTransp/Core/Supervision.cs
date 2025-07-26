@@ -93,23 +93,31 @@ namespace SuperTransp.Core
 							}
 						}
 
-						var driver = _driver.GetById(model.DriverId);
+						var supervisionData = GetById(result);
 
-						if (driver != null)
-						{
-							var ptg = GetDriverPublicTransportGroupByPtgId(model.PublicTransportGroupId);
-
-							var ptgFullName = string.Empty;
-							var ptgRif = string.Empty;
-
-							if (ptg != null)
-							{
-								ptgFullName = ptg.FirstOrDefault().PTGCompleteName;
-								ptgRif = ptg.FirstOrDefault().PublicTransportGroupRif;
-							}
-
-							_security.AddLogbook(model.SupervisionId, false, $"supervisión transportista codigo {model.DriverId} nombre {driver.DriverFullName} cedula {driver.DriverIdentityDocument} organización {ptgFullName} RIF {ptgRif} socio con vehículo {model.DriverWithVehicle.ToSpanishYesNo().ToLower()} vehículo en funcionamiento {model.WorkingVehicle.ToSpanishYesNo().ToLower()} socio presente {model.InPerson.ToSpanishYesNo().ToLower()} " +
-								$"placa {model.Plate} id del vehiculo {model.VehicleDataId} año vehículo {model.Year} marca vehículo {model.Make} modelo vehículo {model.ModeName} pasajeros {model.Passengers} litros de combustible {model.TankCapacity} litros de aceite {model.Liters} problemas con la huella {model.FingerprintTrouble.ToSpanishYesNo().ToLower()} observaciones {model.Remarks} cantidad de imagenes vehiculo {model.Pictures?.Count()}");
+						if (supervisionData != null)
+						{			
+							_security.AddLogbook(model.SupervisionId, false, 
+								$" Supervisión ->" +
+								$" codigo socio: {supervisionData.DriverId} -" +
+								$" nombre: {supervisionData.DriverFullName} -" +
+								$" cedula: {supervisionData.DriverIdentityDocument} -" +
+								$" organización: {supervisionData.PTGCompleteName} -" +
+								$" RIF: {supervisionData.PublicTransportGroupRif} -" +
+								$" socio con vehículo: {supervisionData.DriverWithVehicle.ToSpanishYesNo().ToLower()} -" +
+								$" vehículo en funcionamiento: {supervisionData.WorkingVehicle.ToSpanishYesNo().ToLower()} -" +
+								$" tipo de falla: {supervisionData.FailureTypeName} -" +
+								$" socio presente: {supervisionData.InPerson.ToSpanishYesNo().ToLower()} -" +
+								$" placa: {supervisionData.Plate} -" +
+								$" año vehículo: {supervisionData.Year} -" +
+								$" marca vehículo: {supervisionData.Make} -" +
+								$" modelo vehículo: {supervisionData.Model} -" +
+								$" pasajeros: {supervisionData.Passengers} -" +
+								$" litros de combustible: {supervisionData.TankCapacity} -" +
+								$" litros de aceite: {supervisionData.Liters} -" +
+								$" problemas con la huella: {supervisionData.FingerprintTrouble.ToSpanishYesNo().ToLower()} -" +
+								$" observaciones: {supervisionData.Remarks} -" +
+								$" cantidad de imagenes vehiculo: {supervisionData.Pictures?.Count()}");
 						}
 					}
 				}
@@ -163,7 +171,13 @@ namespace SuperTransp.Core
 								ptgRif = ptg.FirstOrDefault().PublicTransportGroupRif;
 							}
 
-							_security.AddLogbook(model.SupervisionId, false, $"supervisión de socio sin vehículo, código {model.DriverId} nombre {driver.DriverFullName} cedula {model.DriverIdentityDocument} organización {ptgFullName} RIF {ptgRif} ");
+							_security.AddLogbook(model.SupervisionId, false, 
+								$"supervisión de socio sin vehículo," +
+								$" código: {model.DriverId} -" +
+								$" nombre: {driver.DriverFullName} -" +
+								$" cedula: {model.DriverIdentityDocument} -" +
+								$" organización: {ptgFullName} -" +
+								$" RIF: {ptgRif}");
 						}						
 					}
 				}
@@ -195,7 +209,7 @@ namespace SuperTransp.Core
 			}
 		}
 
-		public List<PublicTransportGroupViewModel> GetDriverPublicTransportGroupByStateId(int stateId)
+		public List<PublicTransportGroupViewModel> GetDriverPublicTransportGroupByStateIdAndPTGRif(int stateId, string ptgRif)
 		{
 			try
 			{
@@ -207,8 +221,9 @@ namespace SuperTransp.Core
 					}
 
 					List<PublicTransportGroupViewModel> ptg = new();
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE StateId = @StateId AND Partners = TotalDrivers", sqlConnection);
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE StateId = @StateId AND PublicTransportGroupRif = @PublicTransportGroupRif AND Partners = TotalDrivers", sqlConnection);
 					cmd.Parameters.AddWithValue("@StateId", stateId);
+					cmd.Parameters.AddWithValue("@PublicTransportGroupRif", ptgRif);
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
 					{
@@ -355,6 +370,72 @@ namespace SuperTransp.Core
 			catch (Exception ex)
 			{
 				throw new Exception($"Error al obtener transportistas {ex.Message}", ex);
+			}
+		}
+
+		public SupervisionViewModel GetById(int supervisionId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SupervisionViewModel supervision = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE SupervisionId = @SupervisionId", sqlConnection);
+					cmd.Parameters.AddWithValue("@SupervisionId", supervisionId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							supervision.PublicTransportGroupId = (int)dr["PublicTransportGroupId"];
+							supervision.PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"];
+							supervision.PTGCompleteName = (string)dr["PTGCompleteName"];
+							supervision.ModeId = (int)dr["ModeId"];
+							supervision.StateName = (string)dr["StateName"];
+							supervision.DriverId = (int)dr["DriverId"];
+							supervision.DriverFullName = (string)dr["DriverFullName"];
+							supervision.DriverIdentityDocument = (int)dr["DriverIdentityDocument"];
+							supervision.PartnerNumber = (int)dr["PartnerNumber"];
+							supervision.SupervisionStatusName = (string)dr["SupervisionStatusText"];
+							supervision.TotalDrivers = (int)dr["TotalDrivers"];
+							supervision.TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"];
+							supervision.SupervisionId = (int)dr["SupervisionId"];
+							supervision.DriverWithVehicle = (bool)dr["DriverWithVehicle"];
+							supervision.WorkingVehicle = (bool)dr["WorkingVehicle"];
+							supervision.InPerson = (bool)dr["InPerson"];
+							supervision.Plate = (string)dr["Plate"];
+							supervision.Year = (int)dr["Year"];
+							supervision.Make = (string)dr["Make"];
+							supervision.Model = (string)dr["Model"];
+							supervision.Passengers = (int)dr["Passengers"];
+							supervision.RimName = (string)dr["RimName"];
+							supervision.Wheels = (int)dr["Wheels"];
+							supervision.MotorOilName = (string)dr["MotorOilName"];
+							supervision.Liters = (int)dr["Liters"];
+							supervision.FuelTypeName = (string)dr["FuelTypeName"];
+							supervision.TankCapacity = (int)dr["TankCapacity"];
+							supervision.BatteryName = (string)dr["BatteryName"];
+							supervision.NumberOfBatteries = (int)dr["NumberOfBatteries"];
+							supervision.FailureTypeName = (string)dr["FailureTypeName"];
+							supervision.VehicleImageUrl = (string)dr["VehicleImageUrl"];
+							supervision.FingerprintTrouble = (bool)dr["FingerprintTrouble"];
+							supervision.Remarks = (string)dr["Remarks"];
+							supervision.SecurityUserId = (int)dr["SecurityUserId"];
+							supervision.Pictures = GetPicturesByPTGIdAndPartnerNumber((int)dr["PublicTransportGroupId"], (int)dr["PartnerNumber"]);
+						}
+					}
+
+					return supervision;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener los datos de la supervisión {ex.Message}", ex);
 			}
 		}
 
@@ -510,7 +591,7 @@ namespace SuperTransp.Core
 			}
 		}
 
-		public List<PublicTransportGroupViewModel> GetAllDriverPublicTransportGroup()
+		public List<PublicTransportGroupViewModel> GetAllDriverPublicTransportGroup(string ptgRif)
 		{
 			try
 			{
@@ -522,7 +603,8 @@ namespace SuperTransp.Core
 					}
 
 					List<PublicTransportGroupViewModel> ptg = new();
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail ORDER BY StateName, PTGCompleteName, PartnerNumber", sqlConnection);
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE PublicTransportGroupRif = @PublicTransportGroupRif ORDER BY StateName, PTGCompleteName, PartnerNumber", sqlConnection);
+					cmd.Parameters.AddWithValue("@PublicTransportGroupRif", ptgRif);
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
 					{
@@ -577,6 +659,7 @@ namespace SuperTransp.Core
 								Remarks = (string)dr["Remarks"],
 								UserFullName = (string)dr["UserFullName"],
 								SecurityUserId = (int)dr["SecurityUserId"],
+								Pictures = GetPicturesByPTGIdAndPartnerNumber((int)dr["PublicTransportGroupId"], (int)dr["PartnerNumber"]),
 							});
 						}
 					}
@@ -641,31 +724,34 @@ namespace SuperTransp.Core
 
 				List<PublicTransportGroupViewModel> existingPlate = new();
 
-				SqlCommand cmd = new("SELECT  dbo.Supervision.Plate, dbo.Driver.DriverIdentityDocument, dbo.Driver.DriverFullName, dbo.PublicTransportGroup.PublicTransportGroupRif, dbo.Designation.DesignationName + ' ' + dbo.PublicTransportGroup.PublicTransportGroupName AS PTGCompleteName, dbo.State.StateName, dbo.Driver.DriverId " +
-					"FROM  dbo.Supervision INNER JOIN  dbo.Driver ON dbo.Supervision.DriverId = dbo.Driver.DriverId " +
-					"INNER JOIN dbo.DriverPublicTransportGroup ON dbo.Driver.DriverId = dbo.DriverPublicTransportGroup.DriverId " +
-					"INNER JOIN dbo.PublicTransportGroup ON dbo.DriverPublicTransportGroup.PublicTransportGroupId = dbo.PublicTransportGroup.PublicTransportGroupId " +
-					"INNER JOIN dbo.Designation ON dbo.PublicTransportGroup.DesignationId = dbo.Designation.DesignationId " +
-					"INNER JOIN  dbo.Municipality ON dbo.PublicTransportGroup.MunicipalityId = dbo.Municipality.MunicipalityId " +
-					"INNER JOIN dbo.State ON dbo.Municipality.StateId = dbo.State.StateId " +
-					"WHERE (dbo.Supervision.Plate = @Plate)", sqlConnection);
-
-				cmd.Parameters.AddWithValue("@Plate", plate);
-
-				using (SqlDataReader dr = cmd.ExecuteReader())
+				if(!string.IsNullOrEmpty(plate))
 				{
-					while (dr.Read())
+					SqlCommand cmd = new("SELECT  dbo.Supervision.Plate, dbo.Driver.DriverIdentityDocument, dbo.Driver.DriverFullName, dbo.PublicTransportGroup.PublicTransportGroupRif, dbo.Designation.DesignationName + ' ' + dbo.PublicTransportGroup.PublicTransportGroupName AS PTGCompleteName, dbo.State.StateName, dbo.Driver.DriverId " +
+						"FROM  dbo.Supervision INNER JOIN  dbo.Driver ON dbo.Supervision.DriverId = dbo.Driver.DriverId " +
+						"INNER JOIN dbo.DriverPublicTransportGroup ON dbo.Driver.DriverId = dbo.DriverPublicTransportGroup.DriverId " +
+						"INNER JOIN dbo.PublicTransportGroup ON dbo.DriverPublicTransportGroup.PublicTransportGroupId = dbo.PublicTransportGroup.PublicTransportGroupId " +
+						"INNER JOIN dbo.Designation ON dbo.PublicTransportGroup.DesignationId = dbo.Designation.DesignationId " +
+						"INNER JOIN  dbo.Municipality ON dbo.PublicTransportGroup.MunicipalityId = dbo.Municipality.MunicipalityId " +
+						"INNER JOIN dbo.State ON dbo.Municipality.StateId = dbo.State.StateId " +
+						"WHERE (dbo.Supervision.Plate = @Plate)", sqlConnection);
+
+					cmd.Parameters.AddWithValue("@Plate", plate);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
 					{
-						existingPlate.Add(new PublicTransportGroupViewModel
+						while (dr.Read())
 						{
-							Plate = (string)dr["Plate"],
-							DriverId = (int)dr["DriverId"],
-							DriverIdentityDocument = (int)dr["DriverIdentityDocument"],
-							DriverFullName = (string)dr["DriverFullName"],
-							PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"],
-							PTGCompleteName = (string)dr["PTGCompleteName"],
-							StateName = (string)dr["StateName"],
-						});
+							existingPlate.Add(new PublicTransportGroupViewModel
+							{
+								Plate = (string)dr["Plate"],
+								DriverId = (int)dr["DriverId"],
+								DriverIdentityDocument = (int)dr["DriverIdentityDocument"],
+								DriverFullName = (string)dr["DriverFullName"],
+								PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"],
+								PTGCompleteName = (string)dr["PTGCompleteName"],
+								StateName = (string)dr["StateName"],
+							});
+						}
 					}
 				}
 

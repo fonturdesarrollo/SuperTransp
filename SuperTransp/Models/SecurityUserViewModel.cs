@@ -83,5 +83,22 @@ namespace SuperTransp.Models
 		public string? UserLogin { get; set; }
 		public string? UserState { get; set; }
 		public string? ActionDescription { get; set; }
+		public string? DeviceBrowser { get; set; }
+		public string? DeviceOperatingSystem { get; set; }
+		public string? DeviceType { get; set; }
+	}
+
+	public class SecurityGroupAccessToGroup
+	{
+		public int SecurityGroupAccessToGroupId { get; set; }
+		public int SecurityGroupId { get; set; }	
+		public int SecurityGroupAccessId { get; set; }	
+	}
+
+	public class ClientDetails
+	{
+		public string? Browser { get; set; }
+		public string? OperatingSystem { get; set; }
+		public string? DeviceType { get; set; }
 	}
 }

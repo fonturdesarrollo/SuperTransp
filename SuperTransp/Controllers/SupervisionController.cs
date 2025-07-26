@@ -37,8 +37,6 @@ namespace SuperTransp.Controllers
 					return RedirectToAction("Login", "Security");
 				}
 
-				//return RedirectToAction("Error", "Home", new { errorMessage = "Este modulo se encuentra actualmente en mantenimiento" });
-
 				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 				ViewBag.SecurityGroupId = (int)HttpContext.Session.GetInt32("SecurityGroupId");
 
@@ -48,7 +46,7 @@ namespace SuperTransp.Controllers
 			return RedirectToAction("Login", "Security");
 		}
 
-		public IActionResult PublicTransportGroupDriverList()
+		public IActionResult PublicTransportGroupDriverList(string ptgRifName)
 		{
 			try
 			{
@@ -68,11 +66,17 @@ namespace SuperTransp.Controllers
 
 					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
 					{
-							model = _supervision.GetDriverPublicTransportGroupByStateId((int)stateId);					
+						model = _supervision.GetDriverPublicTransportGroupByStateIdAndPTGRif((int)stateId, ptgRifName);					
 					}
 					else
 					{
-						model = _supervision.GetAllDriverPublicTransportGroup();
+						model = _supervision.GetAllDriverPublicTransportGroup(ptgRifName);
+					}
+
+					if(!model.Any())
+					{
+						TempData["SuccessMessage"] = $"No existe una organización con el RIF {ptgRifName}";
+						return RedirectToAction("Index");
 					}
 
 					return View(model);
@@ -189,45 +193,54 @@ namespace SuperTransp.Controllers
 						return RedirectToAction("Login", "Security");
 					}
 
-					int supervisionId = 0;
+					int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
+					int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
 
-					if (!model.DriverWithVehicle)
+					if(securityGroupId != null && _security.GroupHasAccessToModule((int)securityGroupId,3) || securityGroupId == 1)
 					{
-						supervisionId = _supervision.AddSimple(model);	
-					}
-					else
-					{
-						model.Remarks = string.IsNullOrEmpty(model.Remarks) ? string.Empty : model.Remarks;
-						model.VehicleImageUrl = string.IsNullOrEmpty(model.VehicleImageUrl) ? string.Empty : model.VehicleImageUrl;
-						model.SupervisionStatus = true;
-						model.FailureTypeId = model.WorkingVehicle ? 1 : model.FailureTypeId;
-						var imageUrl = await SupervisionPictureUrl(model.StateName, model.PublicTransportGroupRif, model.DriverIdentityDocument, model.PartnerNumber);
-
-						if(imageUrl != null && imageUrl.Any())
+						if(_security.IsTotalAccess(3) || securityGroupId == 1)
 						{
-							List<SupervisionPictures> pictures = new();
-							foreach (var item in imageUrl)
+							int supervisionId = 0;
+
+							if (!model.DriverWithVehicle)
 							{
-								pictures.Add(new SupervisionPictures
+								supervisionId = _supervision.AddSimple(model);
+							}
+							else
+							{
+								model.Remarks = string.IsNullOrEmpty(model.Remarks) ? string.Empty : model.Remarks;
+								model.VehicleImageUrl = string.IsNullOrEmpty(model.VehicleImageUrl) ? string.Empty : model.VehicleImageUrl;
+								model.SupervisionStatus = true;
+								model.FailureTypeId = model.WorkingVehicle ? 1 : model.FailureTypeId;
+								var imageUrl = await SupervisionPictureUrl(model.StateName, model.PublicTransportGroupRif, model.DriverIdentityDocument, model.PartnerNumber);
+
+								if (imageUrl != null && imageUrl.Any())
 								{
-									SupervisionPictureId = 0,
-									PublicTransportGroupId = model.PublicTransportGroupId,
-									PartnerNumber = model.PartnerNumber,
-									VehicleImageUrl = item.VehicleImageUrl,
-									SupervisionPictureDateAdded = DateTime.Now,
-								});
+									List<SupervisionPictures> pictures = new();
+									foreach (var item in imageUrl)
+									{
+										pictures.Add(new SupervisionPictures
+										{
+											SupervisionPictureId = 0,
+											PublicTransportGroupId = model.PublicTransportGroupId,
+											PartnerNumber = model.PartnerNumber,
+											VehicleImageUrl = item.VehicleImageUrl,
+											SupervisionPictureDateAdded = DateTime.Now,
+										});
+									}
+
+									model.Pictures?.Clear();
+									model.Pictures = pictures;
+								}
+
+								supervisionId = _supervision.AddOrEdit(model);
 							}
 
-							model.Pictures?.Clear();
-							model.Pictures = pictures;
-						}						
-
-						supervisionId = _supervision.AddOrEdit(model);
-					}
-
-					if (supervisionId > 0)
-					{
-						return RedirectToAction("PublicTransportGroupDriverList");
+							if (supervisionId > 0)
+							{
+								return RedirectToAction("PublicTransportGroupDriverList", new { ptgRifName = model.PublicTransportGroupRif });
+							}
+						}
 					}
 				}
 
@@ -594,33 +607,32 @@ namespace SuperTransp.Controllers
 				using (StreamReader reader = new StreamReader(listFilesResponse.GetResponseStream()))
 				{
 					string fileName;
-					//var test = await IsExistingFile(ftpSubFolderPath, originalFileName);
 
-						while ((fileName = reader.ReadLine()) != null)
+					while ((fileName = reader.ReadLine()) != null)
+					{
+						// Construir la ruta de cada archivo dentro de Temp
+						var filePath = Path.Combine(ftpSubFolderPath, fileName).Replace("\\", "/");
+
+						FtpWebRequest deleteFileRequest = (FtpWebRequest)WebRequest.Create(filePath);
+						deleteFileRequest.Method = WebRequestMethods.Ftp.DeleteFile;
+						deleteFileRequest.Credentials = new NetworkCredential(ftpUsername, ftpPassword);
+
+						try
 						{
-							// Construir la ruta de cada archivo dentro de Temp
-							var filePath = Path.Combine(ftpSubFolderPath, fileName).Replace("\\", "/");
-
-							FtpWebRequest deleteFileRequest = (FtpWebRequest)WebRequest.Create(filePath);
-							deleteFileRequest.Method = WebRequestMethods.Ftp.DeleteFile;
-							deleteFileRequest.Credentials = new NetworkCredential(ftpUsername, ftpPassword);
-
-							try
+							using (var deleteFileResponse = (FtpWebResponse)await deleteFileRequest.GetResponseAsync())
 							{
-								using (var deleteFileResponse = (FtpWebResponse)await deleteFileRequest.GetResponseAsync())
-								{
-									Console.WriteLine($"Archivo eliminado: {fileName}");
-								}
-							}
-							catch (WebException ex)
-							{
-								var response = (FtpWebResponse)ex.Response;
-								if (response.StatusCode != FtpStatusCode.ActionNotTakenFileUnavailable)
-								{
-									throw;
-								}
+								Console.WriteLine($"Archivo eliminado: {fileName}");
 							}
 						}
+						catch (WebException ex)
+						{
+							var response = (FtpWebResponse)ex.Response;
+							if (response.StatusCode != FtpStatusCode.ActionNotTakenFileUnavailable)
+							{
+								throw;
+							}
+						}
+					}
 				}
 			}
 			catch (WebException ex)
@@ -703,54 +715,10 @@ namespace SuperTransp.Controllers
 					}
 				}
 
-				//_supervision.DeleteSupervisionVehiclePicturesByPTGIdAndPartnerNumber(1, 1);
-
 				return Json("OK");
 			}
 
 			return Json("ERROR");
-		}
-
-		private async Task<bool> IsExistingFile(string ftpSubFolderPath, string fileName)
-		{
-			List<string> files = new List<string>();
-			FtpWebRequest request = (FtpWebRequest)WebRequest.Create(ftpSubFolderPath);
-			request.Method = WebRequestMethods.Ftp.ListDirectory;
-			request.Credentials = new NetworkCredential(string.Empty, string.Empty);
-
-			try
-			{
-				using (FtpWebResponse response = (FtpWebResponse)await request.GetResponseAsync())
-				using (Stream responseStream = response.GetResponseStream())
-				using (StreamReader reader = new StreamReader(responseStream))
-				{
-					string line = await reader.ReadLineAsync();
-
-					while (line != null)
-					{
-						files.Add(line);
-						line = await reader.ReadLineAsync();
-					}
-				}
-			}
-			catch (WebException ex)
-			{
-				var ftpResponse = (FtpWebResponse)ex.Response;
-				Console.WriteLine($"Error al listar archivos: {ftpResponse.StatusDescription}");
-			}
-
-			if(files.Any())
-			{
-				foreach (var item in files)
-				{
-					if(item.Contains(fileName))
-					{
-						return true;
-					}
-				}
-			}
-
-			return true;
 		}
 
 		private async Task<List<SupervisionPictures>> SupervisionPictureUrl(string stateName, string publicTransportGroupRif, int driverIdentityDocument, int partnerNumber)
@@ -957,30 +925,33 @@ namespace SuperTransp.Controllers
 		{
 			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 			{
-				var existingPlate = _supervision.RegisteredPlate(paramValue2);
-				if (existingPlate.Any())
+				if(!string.IsNullOrEmpty(paramValue2))
 				{
-					if(!existingPlate.Where(x=> x.DriverId == paramValue1).Any())
+					var existingPlate = _supervision.RegisteredPlate(paramValue2);
+					if (existingPlate.Any())
 					{
-						return Json($"El número de placa {paramValue2} ya está asignado al transportista {existingPlate.FirstOrDefault().DriverFullName} línea {existingPlate.FirstOrDefault().PTGCompleteName} estado {existingPlate.FirstOrDefault().StateName.ToUpper()}.");
-					}					
-				}
-
-				var plateRule = _commonData.GetCommonDataValueByName("ValidPlateRule");
-
-				if (plateRule != null) 
-				{
-					string regexPlatePattern = plateRule.CommonDataValue;
-
-					Regex regexPlate = new Regex(regexPlatePattern);
-
-					if (!regexPlate.IsMatch(paramValue2))
-					{
-						return Json($"El número de placa {paramValue2} debe tener un formato válido.");
+						if (!existingPlate.Where(x => x.DriverId == paramValue1).Any())
+						{
+							return Json($"El número de placa {paramValue2} ya está asignado al transportista {existingPlate.FirstOrDefault().DriverFullName} línea {existingPlate.FirstOrDefault().PTGCompleteName} estado {existingPlate.FirstOrDefault().StateName.ToUpper()}.");
+						}
 					}
-				}
 
-				return Json("OK");
+					var plateRule = _commonData.GetCommonDataValueByName("ValidPlateRule");
+
+					if (plateRule != null)
+					{
+						string regexPlatePattern = plateRule.CommonDataValue;
+
+						Regex regexPlate = new Regex(regexPlatePattern);
+
+						if (!regexPlate.IsMatch(paramValue2))
+						{
+							return Json($"El número de placa {paramValue2} debe tener un formato válido.");
+						}
+					}
+
+					return Json("OK");
+				}
 			}
 
 			return Json("ERROR");
@@ -1035,6 +1006,7 @@ namespace SuperTransp.Controllers
 					}
 
 					int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
+					int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
 
 					if (!_supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId))
 					{
@@ -1064,6 +1036,16 @@ namespace SuperTransp.Controllers
 
 						ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 
+						if (securityGroupId != 1)
+						{
+							ViewBag.IsTotalAccess = _security.IsTotalAccess(3);
+						}
+						else
+						{
+
+							ViewBag.IsTotalAccess = true;
+						}
+
 						return View(model);
 					}
 
@@ -1086,20 +1068,25 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
 				{
+					int supervisionSummaryId = 0;
+					int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
+					int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
+
 					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 3))
 					{
 						return RedirectToAction("Login", "Security");
 					}
 
-					int supervisionSummaryId = 0;
-
-					model.Pictures = await SupervisionSummaryPictureUrlAsync(model.StateName, model.PublicTransportGroupRif);
-
-					supervisionSummaryId = _supervision.AddOrEditSummary(model);
-
-					if (supervisionSummaryId > 0)
+					if (_security.IsTotalAccess(3) || securityGroupId == 1)
 					{
-						return RedirectToAction("SummaryList");
+						model.Pictures = await SupervisionSummaryPictureUrlAsync(model.StateName, model.PublicTransportGroupRif);
+
+						supervisionSummaryId = _supervision.AddOrEditSummary(model);
+
+						if (supervisionSummaryId > 0)
+						{
+							return RedirectToAction("SummaryList");
+						}
 					}
 				}
 
@@ -1121,6 +1108,7 @@ namespace SuperTransp.Controllers
 				}
 
 				int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
+				int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
 
 				if (!_supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId))
 				{
@@ -1128,6 +1116,16 @@ namespace SuperTransp.Controllers
 				}
 
 				var model = _supervision.GetSupervisionSummaryById(supervisionSummaryId);
+
+				if (securityGroupId != 1)
+				{
+					ViewBag.IsTotalAccess = _security.IsTotalAccess(3);
+				}
+				else
+				{
+
+					ViewBag.IsTotalAccess = true;
+				}
 
 				return View(model);
 			}
@@ -1145,27 +1143,38 @@ namespace SuperTransp.Controllers
 					return RedirectToAction("Login", "Security");
 				}
 
-				List<SupervisionSummaryPictures> pictures = new List<SupervisionSummaryPictures>();
+				int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
+				int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
 
-				foreach (var key in form.Keys)
+				if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 3))
 				{
-					if (key.StartsWith("Pictures["))
+					return RedirectToAction("Login", "Security");
+				}
+
+				if (_security.IsTotalAccess(3) || securityGroupId == 1)
+				{
+					List<SupervisionSummaryPictures> pictures = new List<SupervisionSummaryPictures>();
+
+					foreach (var key in form.Keys)
 					{
-						foreach (var value in form[key])
+						if (key.StartsWith("Pictures["))
 						{
-							pictures.Add(new SupervisionSummaryPictures { SupervisionSummaryPictureUrl = value });
+							foreach (var value in form[key])
+							{
+								pictures.Add(new SupervisionSummaryPictures { SupervisionSummaryPictureUrl = value });
+							}
 						}
 					}
+
+					if (pictures.Any())
+					{
+						model.Pictures.AddRange(pictures);
+					}
+
+					_supervision.AddOrEditSummary(model);
+
+					return RedirectToAction("EditSummary", new { supervisionSummaryId = model.SupervisionSummaryId });
 				}
-
-				if (pictures.Any())
-				{
-					model.Pictures.AddRange(pictures);
-				}
-
-				_supervision.AddOrEditSummary(model);
-
-				return RedirectToAction("EditSummary", new { supervisionSummaryId = model.SupervisionSummaryId });
 			}
 
 			return RedirectToAction("Login", "Security");

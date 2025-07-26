@@ -1,4 +1,5 @@
 ﻿using Microsoft.Data.SqlClient;
+using Microsoft.IdentityModel.Abstractions;
 using SuperTransp.Controllers;
 using SuperTransp.Models;
 using System.Data;
@@ -10,11 +11,13 @@ namespace SuperTransp.Core
 	{
 		private readonly IConfiguration _configuration;
 		private readonly ISecurity _security;
+		private readonly IDesignation _designation;
 
-		public PublicTransportGroup(IConfiguration configuration, ISecurity security)
+		public PublicTransportGroup(IConfiguration configuration, ISecurity security, IDesignation designation)
 		{
 			this._configuration = configuration;
 			this._security = security;
+			_designation = designation;
 		}
 
 		private SqlConnection GetConnection()
@@ -25,8 +28,39 @@ namespace SuperTransp.Core
 		public int AddOrEdit(PublicTransportGroupViewModel model)
 		{
 			int result = 0;
+			string? beforePTGName = string.Empty;
+			string? beforeRif = string.Empty;
+			int? beforePartners = 0;
+			int? beforeRepresentativeIdentityDocument = 0;
+			string? beforeRepresentativeName = string.Empty;
+			string? beforeRepresentativePhone = string.Empty;
+			int? beforeDesignationId = 0;
+			string? beforeModeName = string.Empty;
+			string? beforeDesignationName = string.Empty;
+			string? beforeUnionName = string.Empty;
+			PublicTransportGroupViewModel ptgValues = new PublicTransportGroupViewModel();
+			bool isEditing = false;
+
 			try
 			{
+				if(model.PublicTransportGroupId > 0)
+				{
+					ptgValues = GetPublicTransportGroupById(model.PublicTransportGroupId);
+
+					if (ptgValues != null)
+					{
+						isEditing = true;
+						beforePTGName = ptgValues.PublicTransportGroupName;
+						beforeRif = ptgValues.PublicTransportGroupRif;
+						beforePartners = ptgValues.Partners;
+						beforeRepresentativeIdentityDocument = ptgValues.RepresentativeIdentityDocument;
+						beforeRepresentativeName = ptgValues.RepresentativeName;
+						beforeModeName = ptgValues.ModeName;
+						beforeDesignationName = ptgValues.DesignationName;
+						beforeUnionName = ptgValues.UnionName;
+					}
+				}		
+
 				using (SqlConnection sqlConnection = GetConnection())
 				{
 					if (sqlConnection.State == ConnectionState.Closed)
@@ -56,7 +90,46 @@ namespace SuperTransp.Core
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
 
-						_security.AddLogbook(model.PublicTransportGroupId, false, $"linea de transporte RIF {model.PublicTransportGroupRif} nombre {model.PublicTransportGroupName} cantidad socios: {model.Partners} representante {model.RepresentativeName} cedula representante {model.RepresentativeIdentityDocument}");											
+						if (!isEditing)
+						{
+							ptgValues = GetPublicTransportGroupById(result);
+
+							_security.AddLogbook(model.PublicTransportGroupId, false,
+								$" Organizacion ->" +
+								$" RIF: {model.PublicTransportGroupRif} -" +
+								$" nombre: {ptgValues.PublicTransportGroupName} -" +
+								$" modalidad: {ptgValues.ModeName} -" +
+								$" entidad legal: {ptgValues.DesignationName} -" +
+								$" cantidad socios: {ptgValues.Partners} -" +
+								$" representante: {ptgValues.RepresentativeName} -" +
+								$" cedula representante: {ptgValues.RepresentativeIdentityDocument} -" +
+								$" gremio: {ptgValues.UnionName}");
+						}
+						else
+						{
+							ptgValues = GetPublicTransportGroupById(model.PublicTransportGroupId);
+
+							_security.AddLogbook(model.PublicTransportGroupId, false,
+								$" Organizacion ->" +
+								$" ANTES [" +
+								$" RIF: {beforeRif} -" +
+								$" nombre: {beforePTGName} -" +
+								$" modalidad: {beforeModeName} -" +
+								$" entidad legal: {beforeDesignationName} -" +
+								$" cantidad socios: {beforePartners} -" +
+								$" representante: {beforeRepresentativeName} -" +
+								$" cedula representante: {beforeRepresentativeIdentityDocument} -" +
+								$" gremio: {beforeUnionName}]" +
+								$" DESPUES [" +
+								$" RIF: {model.PublicTransportGroupRif} -" +
+								$" nombre: {ptgValues.PublicTransportGroupName} -" +
+								$" modalidad: {ptgValues.ModeName} -" +
+								$" entidad legal: {ptgValues.DesignationName} -" +
+								$" cantidad socios: {model.Partners} -" +
+								$" representante: {model.RepresentativeName} -" +
+								$" cedula representante: {model.RepresentativeIdentityDocument} -" +
+								$" gremio: {ptgValues.UnionName}]");
+						}
 					}
 				}
 
@@ -93,7 +166,9 @@ namespace SuperTransp.Core
 							publicTransportGroup.PublicTransportGroupName = (string)dr["PublicTransportGroupName"];
 							publicTransportGroup.PTGCompleteName = (string)dr["PTGCompleteName"];
 							publicTransportGroup.ModeId = (int)dr["ModeId"];
+							publicTransportGroup.ModeName = (string)dr["ModeName"];
 							publicTransportGroup.UnionId = (int)dr["UnionId"];
+							publicTransportGroup.UnionName = (string)dr["UnionName"];
 							publicTransportGroup.StateId = (int)dr["StateId"];
 							publicTransportGroup.MunicipalityId = (int)dr["MunicipalityId"];
 							publicTransportGroup.RepresentativeIdentityDocument = (int)dr["RepresentativeIdentityDocument"];
@@ -103,6 +178,7 @@ namespace SuperTransp.Core
 							publicTransportGroup.Partners = (int)dr["Partners"];
 							publicTransportGroup.PublicTransportGroupGUID = (string)dr["PublicTransportGroupGUID"];
 							publicTransportGroup.SupervisionSummaryId = (int)dr["SupervisionSummaryId"];
+							publicTransportGroup.DesignationName = (string)dr["DesignationName"];
 
 							if (dr["PublicTransportGroupIdModifiedDate"] != DBNull.Value)
 							{
@@ -227,6 +303,97 @@ namespace SuperTransp.Core
 			catch (Exception ex)
 			{
 				throw new Exception($"Error al obtener todas las líneas {ex.Message}", ex);
+			}
+		}
+
+		public List<PublicTransportGroupViewModel> GetAllStatisticsByStateId(int stateId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<PublicTransportGroupViewModel> ptg = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupStatisticsInState WHERE StateId = @StateId", sqlConnection);
+					cmd.Parameters.AddWithValue("@StateId", stateId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							ptg.Add(new PublicTransportGroupViewModel
+							{
+								StateId = (int)dr["StateId"],
+								StateName = (string)dr["StateName"],
+								TotalPTGInState = (int)dr["TotalPTGInState"],
+								TotaPartnersByPTG = (int)dr["TotaPartnersByPTG"],
+								TotalAddedPartners = (int)dr["TotalAddedPartners"],
+							});
+						}
+					}
+
+					if(ptg != null &&  ptg.Any())
+					{
+						return ptg.OrderBy(st => st.StateName).ToList();
+					}
+					else
+					{
+						return ptg.ToList();
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener todas las organizaciones {ex.Message}", ex);
+			}
+		}
+
+		public List<PublicTransportGroupViewModel> GetAllStatistics()
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<PublicTransportGroupViewModel> ptg = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupStatisticsInState", sqlConnection);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							ptg.Add(new PublicTransportGroupViewModel
+							{
+								StateId = (int)dr["StateId"],
+								StateName = (string)dr["StateName"],
+								TotalPTGInState = (int)dr["TotalPTGInState"],
+								TotaPartnersByPTG = (int)dr["TotaPartnersByPTG"],
+								TotalAddedPartners = (int)dr["TotalAddedPartners"],
+							});
+						}
+					}
+
+					if (ptg != null && ptg.Any())
+					{
+						return ptg.OrderBy(st => st.StateName).ToList();
+					}
+					else
+					{
+						return ptg.ToList();
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener todas las organizaciones {ex.Message}", ex);
 			}
 		}
 

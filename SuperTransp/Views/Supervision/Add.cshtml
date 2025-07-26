@@ -41,6 +41,9 @@
 	</style>
 </head>
 <body class="is-preload">
+	@{
+		bool isTotalAccess = ViewBag.IsTotalAccess != null && ViewBag.IsTotalAccess is bool && ViewBag.IsTotalAccess == true;
+	}
 	@using (Html.BeginForm("Add", "Supervision", FormMethod.Post))
 	{
 		@Html.AntiForgeryToken()
@@ -78,9 +81,10 @@
 				<h2>Menu</h2>
 				<ul>
 					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
-					<li>@Html.ActionLink("Seleccionar organización", "PublicTransportGroupDriverList", "Supervision")</li>
+					<li>@Html.ActionLink("Seleccionar organización", "PublicTransportGroupDriverList", "Supervision", new { ptgRifName = Model.PublicTransportGroupRif }, null)</li>
 					<li>@Html.ActionLink("Agregar resumen de supervisión", "PublicTransportGroupList", "Supervision")</li>
 					<li>@Html.ActionLink("Modificar resumen de supervisión", "SummaryList", "Supervision")</li>
+					<li>@Html.ActionLink("Supervisión", "Index", "Supervision")</li>
 					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 				</ul>
 			</nav>
@@ -213,7 +217,9 @@
 								<div class="col-12">
 									<br />
 									<strong>Cargar imágenes:</strong>
-									<div id="myDropzone" class="dropzone dz-clickable">
+									<div id="myDropzone"
+										 class="dropzone @(isTotalAccess ? "dz-clickable" : "dz-disabled")"
+										 style="@(isTotalAccess ? "" : "pointer-events:none; opacity:0.6;")">
 										<div class="dz-message">
 											Haga clic aquí para subir las imágenes
 										</div>
@@ -278,7 +284,7 @@
 			autoProcessQueue: true,
 			paramName: "file",
 			maxFilesize: 10,
-			acceptedFiles: ".jpg,.png,.gif",
+			acceptedFiles: ".jpg,.jpeg,.png,.gif,.webp",
 			dictDefaultMessage: "Arrastra las imágenes aquí o haga clic para agregarlas.",
 			addRemoveLinks: true,
 			maxFiles: 4,
@@ -545,15 +551,34 @@
 					if(modeId === "4"){
 						if (uploaded.length < 2 || uploaded.length > 2  && !firstInvalidField) {
 							firstInvalidField = "#myDropzone";
-							message = "Debe agregar 2 imágenes para poder actualizar";
+							var staticMessage ="El vehículo que está actualizando es una moto, debe agregar 2 imágenes para ese tipo de vehículo, está intentando agregar ";
+							var quantityMessage ="";
+
+							if(uploaded.length > 2){
+								quantityMessage = uploaded.length + ", presione el botón: Eliminar imágenes de la lista, y agregue solo 2"
+							}else if(uploaded.length < 2){
+								quantityMessage = uploaded.length + ", haga clic en el recuadro: Cargar imágenes, y agregue otra."
+							}
+
+							message = staticMessage + quantityMessage;
 						}
 					}
 					else{
 						if (uploaded.length < 4 || uploaded.length > 4 && !firstInvalidField) {
 							firstInvalidField = "#myDropzone";
-							message = "Debe agregar 4 imágenes para poder actualizar";
+							var staticMessage ="El vehículo que está actualizando requiere de 4 imágenes para poder ser actualizado, está agregando solo ";
+							var quantityMessage ="";
+
+							if(uploaded.length < 4){
+								quantityMessage = uploaded.length + ", haga clic en el recuadro: Cargar imágenes, y agregue la(s) restante(s)."
+							}
+
+							message = staticMessage + quantityMessage;
 						}
 					}				
+				}else{
+					firstInvalidField = "#myDropzone";
+					message = "Debe agregar imágenes del vehículo para poder actualizar";
 				}
 
 				if (firstInvalidField) {
@@ -618,6 +643,13 @@
 				$("#successMessage").fadeOut("slow");
 			}, 2500);
 
+			$('#Plate').on('keydown', function (e) {
+				if (e.key === "Enter") {
+					e.preventDefault();
+					return false;
+				}
+			});
+
 			$('#Plate').on('input', function() {
 				const value = $(this).val();
 				const sanitizedValue = value.replace(/[^a-zA-Z0-9\s]/g, '');
@@ -633,17 +665,23 @@
 			setTransportTypeDefaultValues($("#ModeId").val())
 
 			$('#DriverWithVehicle').change(function (event) {
-						var test = $(this).val();
+				const isTotalAccess = @isTotalAccess.ToString().ToLower();
+
 				if ($(this).val() === "True") {
 					$('#additionalFields').css({ visibility: 'visible', opacity: '1', height: 'auto', overflow: 'visible' });
 					$('#InPerson').val("");
 				} else if($(this).val() === "False") {
 					$('#additionalFields').css({ opacity: '0', visibility: 'hidden', height: '0', overflow: 'hidden' });
 					$('#InPerson').val("1");
-					if (confirm("¿Está seguro de que desea actualizar los registros?")) {
-						$(this).closest("form")[0].submit();
+
+					if (!isTotalAccess) {
+						alert("No tiene permiso de modificar registros.");
 					} else {
-						$('#DriverWithVehicle').val("");
+						if (confirm("¿Está seguro de que desea actualizar los registros?")) {
+							$(this).closest("form")[0].submit();
+						} else {
+							$('#DriverWithVehicle').val("");
+						}
 					}
 				}
 			});

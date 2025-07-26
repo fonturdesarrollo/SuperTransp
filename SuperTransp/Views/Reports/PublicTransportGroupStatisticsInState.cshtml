@@ -1,0 +1,214 @@
+﻿@model List<SuperTransp.Models.PublicTransportGroupViewModel>
+@using System.Text.Json
+@{
+    Layout = null;
+
+    var chartItems = Model.Select((item, index) => new
+    {
+        ChartId = $"chart{index}",
+        StateName = item.StateName,
+        Data = new[] {
+            item.TotalPTGInState,
+            item.TotaPartnersByPTG,
+            item.TotalAddedPartners,
+        }
+    });
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Estadísticas de organizaciones por estado</title>    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            padding: 20px;
+            background-color: #f2f4f8;
+        }
+
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        h3 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .chart-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        .chart-card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 20px;
+            width: 320px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .chart-card:hover {
+            transform: scale(1.03);
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .state-name {
+            margin-top: 15px;
+            font-weight: 600;
+            color: #34495e;
+        }
+
+        .responsive-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .logo-img {
+            width: 12vw;
+            max-width: 100px;
+            height: auto;
+        }
+
+        .header-text h2,
+        .header-text h3 {
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        @@media screen and (max-width: 768px) {
+            .responsive-header
+            {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .logo-img {
+                margin-bottom: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="responsive-header">
+        <img src="~/images/Logo.png" alt="Logo" class="logo-img" />
+        <div class="header-text">
+            <h2>Estadísticas de organizaciones por estado</h2>
+            <h3>
+                @{
+                    int totalPTG = 0;
+                    int totalPartners = 0;
+
+                    if (Model != null && Model.Any())
+                    {
+                        totalPTG = Model.Sum(x => x.TotalPTGInState);
+                        totalPartners = Model.Sum(x => x.TotalAddedPartners);
+                    }
+                }
+                Total global organizaciones: @totalPTG.ToString("N0", new System.Globalization.CultureInfo("de-DE"))
+                <br />
+                Total global socios: @totalPartners.ToString("N0", new System.Globalization.CultureInfo("de-DE"))
+            </h3>
+        </div>
+    </div>
+    <div class="chart-container" id="chartContainer"></div>
+
+    <script>
+        const chartItems = @Html.Raw(JsonSerializer.Serialize(chartItems));
+
+        const labels = [
+            'Organizaciones Cargadas',
+            'Socios Totales',
+            'Socios Cargados',
+        ];
+
+        const colors = [
+            '#4CAF50',
+            '#2196F3',
+            '#FF9800'
+        ];
+
+        chartItems.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'chart-card';
+
+            const canvas = document.createElement('canvas');
+            canvas.id = item.ChartId;
+
+            const label = document.createElement('div');
+            label.className = 'state-name';
+            label.innerText = item.StateName;
+
+            card.appendChild(canvas);
+            card.appendChild(label);
+            document.getElementById('chartContainer').appendChild(card);
+
+            new Chart(canvas, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: item.Data,
+                        backgroundColor: colors,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            align: 'start',
+                            labels: {
+                                color: '#555',
+                                font: {
+                                    size: 12
+                                },
+                                boxWidth: 12,
+                                textAlign: 'left'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.formattedValue}`;
+                                }
+                            }
+                        },
+                        datalabels: {
+                            color: '#fff',
+                            font: {
+                                weight: 'bold',
+                                size: 14
+                            },
+                            formatter: function(value) {
+                                return value > 0 ? value : '';
+                            }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        });
+    </script>
+</body>
+</html>

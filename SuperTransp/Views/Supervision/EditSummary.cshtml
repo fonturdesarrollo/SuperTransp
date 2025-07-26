@@ -74,7 +74,7 @@
 					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
 					<li>@Html.ActionLink("Seleccionar organización para modificar resumen", "SummaryList", "Supervision")</li>
 					<li>@Html.ActionLink("Seleccionar organización para hacer resumen", "PublicTransportGroupList", "Supervision")</li>
-					<li>@Html.ActionLink("Supervisar unidades de transporte", "PublicTransportGroupDriverList", "Supervision")</li>
+					<li>@Html.ActionLink("Supervisión", "Index", "Supervision")</li>
 					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 				</ul>
 			</nav>
@@ -140,7 +140,12 @@
 							</div>
 							<div class="col-12">
 								<ul class="actions">
-									<li><button type="submit" id="saveRequest" class="primary">Modificar resumen</button></li>
+									@{
+										if (ViewBag.IsTotalAccess)
+										{
+											<li><button type="submit" id="saveRequest" class="primary">Modificar resumen</button></li>
+										}
+									}									
 								</ul>
 							</div>
 						</div>
@@ -393,6 +398,13 @@
 			setTimeout(function(){
 				$("#successMessage").fadeOut("slow");
 			}, 2500);;
+
+			$('#SupervisionDate').on('keydown', function (e) {
+				if (e.key === "Enter") {
+					e.preventDefault();
+					return false;
+				}
+			});
 
 			$('#SupervisionAddress').on('input', function() {
 				const value = $(this).val();

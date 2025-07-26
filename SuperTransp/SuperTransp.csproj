@@ -7,11 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="wwwroot\assets\css\main.css" />
-    <Content Remove="wwwroot\images\cintillo.jpg" />
-    <Content Remove="wwwroot\images\image9.jpg" />
+    <Compile Remove="wwwroot\uploads\**" />
+    <Content Remove="wwwroot\uploads\**" />
+    <EmbeddedResource Remove="wwwroot\uploads\**" />
+    <None Remove="wwwroot\uploads\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Remove="wwwroot\images\splash2-o.jpg" />
-    <Content Remove="wwwroot\images\splash2.jpg" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,6 +26,7 @@
     <PackageReference Include="QRCoder" Version="1.6.0" />
     <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
     <PackageReference Include="System.Drawing.Common" Version="10.0.0-preview.4.25258.110" />
+    <PackageReference Include="UAParser" Version="3.1.47" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,8 +51,5 @@
   <None Update="appsettings.json">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </None>
-</ItemGroup>
-<ItemGroup>
-  <Folder Include="wwwroot\uploads\" />
 </ItemGroup>  
 </Project>

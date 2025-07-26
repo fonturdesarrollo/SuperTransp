@@ -35,6 +35,10 @@
 	</style>
 </head>
 <body class="is-preload">
+	@{
+		bool isTotalAccess = ViewBag.IsTotalAccess != null && ViewBag.IsTotalAccess is bool && ViewBag.IsTotalAccess == true;
+	}
+
 	@using (Html.BeginForm("AddSummary", "Supervision", FormMethod.Post))
 	{
 		@Html.AntiForgeryToken()
@@ -74,7 +78,7 @@
 					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
 					<li>@Html.ActionLink("Seleccionar Organización para hacer resumen", "PublicTransportGroupList", "Supervision")</li>
 					<li>@Html.ActionLink("Modificar resumen de supervisión", "SummaryList", "Supervision")</li>
-					<li>@Html.ActionLink("Supervisar unidades de transporte", "PublicTransportGroupDriverList", "Supervision")</li>
+					<li>@Html.ActionLink("Supervisión", "Index", "Supervision")</li>
 					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 				</ul>
 			</nav>
@@ -123,15 +127,22 @@
 							<div class="col-12">
 								<br />
 								<strong>Cargar imagenes o PDF:</strong>
-								<div id="myDropzone" class="dropzone dz-clickable">
+								<div id="myDropzone"
+									 class="dropzone @(isTotalAccess ? "dz-clickable" : "dz-disabled")"
+									 style="@(isTotalAccess ? "" : "pointer-events:none; opacity:0.6;")">
 									<div class="dz-message">
-										Arrastre aquí o haga clic para subir los archivos.
+										Haga clic aquí para subir las imágenes o los PDF
 									</div>
 								</div>
 							</div>
 							<div class="col-12">
 								<ul class="actions">
-									<li><button type="submit" id="saveRequest" class="primary">Agregar resumen</button></li>
+									@{
+										if (ViewBag.IsTotalAccess)
+										{
+											<li><button type="submit" id="saveRequest" class="primary">Agregar resumen</button></li>
+										}
+									}									
 								</ul>
 							</div>
 						</div>
@@ -345,6 +356,13 @@
 			setTimeout(function(){
 				$("#successMessage").fadeOut("slow");
 			}, 2500);;
+
+			$('#SupervisionDate').on('keydown', function (e) {
+				if (e.key === "Enter") {
+					e.preventDefault();
+					return false;
+				}
+			});
 
 			$('#SupervisionAddress').on('input', function() {
 				const value = $(this).val();

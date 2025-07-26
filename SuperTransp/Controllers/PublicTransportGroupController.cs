@@ -4,8 +4,10 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using QRCoder;
 using SuperTransp.Core;
 using SuperTransp.Models;
+using SuperTransp.Utils;
 using System;
 using System.Drawing;
+using System.Net;
 using System.Security;
 using System.Text.RegularExpressions;
 using static SuperTransp.Core.Interfaces;
@@ -104,8 +106,11 @@ namespace SuperTransp.Controllers
 						}
 					}
 
-					ViewBag.Designation = new SelectList(_designation.GetAll(), "DesignationId", "DesignationName");
+					List <DesignationViewModel> designations = _designation.GetAll();
+
+					ViewBag.Designation = new SelectList(designations, "DesignationId", "DesignationName");
 					ViewBag.Mode = new SelectList(_mode.GetAll(), "ModeId", "ModeName");
+					ViewBag.DesignationList = Designations(designations);
 
 					return View(model);
 				}
@@ -131,13 +136,18 @@ namespace SuperTransp.Controllers
 						return RedirectToAction("Login", "Security");
 					}
 
-					int publicTransportGroupId = _publicTransportGroup.AddOrEdit(model);
+					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 
-					if (publicTransportGroupId > 0)
+					if (_security.IsTotalAccess(1) || securityGroupId == 1)
 					{
-						TempData["SuccessMessage"] = "Datos actualizados correctamente";
+						int publicTransportGroupId = _publicTransportGroup.AddOrEdit(model);
 
-						return RedirectToAction("Add");
+						if (publicTransportGroupId > 0)
+						{
+							TempData["SuccessMessage"] = "Datos actualizados correctamente";
+
+							return RedirectToAction("Add");
+						}
 					}
 				}
 
@@ -192,9 +202,12 @@ namespace SuperTransp.Controllers
 						ViewBag.IsTotalAccess = true;
 					}
 
-					ViewBag.Municipality = new SelectList(_geography.GetMunicipalityByStateId(model.StateId), "MunicipalityId", "MunicipalityName");
-					ViewBag.Designation = new SelectList(_designation.GetAll(), "DesignationId", "DesignationName");
+					List<DesignationViewModel> designations = _designation.GetAll();
+
+					ViewBag.Designation = new SelectList(designations, "DesignationId", "DesignationName");
+					ViewBag.DesignationList = Designations(designations);
 					ViewBag.Mode = new SelectList(_mode.GetAll(), "ModeId", "ModeName");
+					ViewBag.Municipality = new SelectList(_geography.GetMunicipalityByStateId(model.StateId), "MunicipalityId", "MunicipalityName");
 				}
 
 				return View(model);
@@ -214,9 +227,16 @@ namespace SuperTransp.Controllers
 						return RedirectToAction("Login", "Security");
 					}
 
-					_publicTransportGroup.AddOrEdit(model);
+					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 
-					return RedirectToAction("PublicTransportGroupList");
+					if (_security.IsTotalAccess(1) || securityGroupId == 1)
+					{
+						_publicTransportGroup.AddOrEdit(model);
+					}
+
+					TempData["SuccessMessage"] = "Datos actualizados correctamente";
+
+					return RedirectToAction("Edit", new { publicTransportGroupId = model.PublicTransportGroupId});
 				}
 
 				return RedirectToAction("Login", "Security");
@@ -355,7 +375,25 @@ namespace SuperTransp.Controllers
 				return StatusCode(500, new { success = false, message = $"Error interno al generar el código QR: {ex.Message}" });
 			}
 		}
+
+		private List<string?> Designations(List<DesignationViewModel> designations)
+		{
+			List<string?> designationValues = new List<string?>();
+
+			foreach (var designation in designations)
+			{
+				designationValues.Add(designation.DesignationName);
+			}
+
+			foreach (var pattern in Patterns.PTGPatterns)
+			{
+				designationValues.Add(pattern);
+			}
+
+			return designationValues;
+		}
 	}
+
 
 	public class QRRequest
 	{

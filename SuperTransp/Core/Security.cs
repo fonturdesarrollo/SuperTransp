@@ -17,12 +17,14 @@ namespace SuperTransp.Core
 		private readonly IHttpContextAccessor _httpContextAccessor;
 		private const string allowedCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 		private static RSA rsa = RSA.Create();
+		private readonly ClientInfoService _clientInfoService;
 
-		public Security(IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
-        {
-            this._configuration = configuration;
+		public Security(IConfiguration configuration, IHttpContextAccessor httpContextAccessor, ClientInfoService clientInfoService)
+		{
+			this._configuration = configuration;
 			this._httpContextAccessor = httpContextAccessor;
 			this.Key = _configuration["Cryptography:Key"];
+			_clientInfoService = clientInfoService;
 		}
 
 		private SqlConnection GetConnection()
@@ -264,8 +266,7 @@ namespace SuperTransp.Core
 				}
 
 				List<SecurityGroupModel> group = new();
-				SqlCommand cmd = new("SELECT * FROM SecurityGroup WHERE SecurityGroupId = @GroupId", sqlConnection);
-				cmd.Parameters.AddWithValue("@GroupId", groupId);
+				SqlCommand cmd = new("SELECT * FROM SecurityGroup", sqlConnection);
 
 				using (SqlDataReader dr = cmd.ExecuteReader())
 				{
@@ -278,6 +279,15 @@ namespace SuperTransp.Core
 							SecurityGroupDescription = (string)dr["SecurityGroupDescription"]
 						});
 					}
+				}
+
+				if (group?.Any() == true)
+				{
+					var groupIds = GetGroupAccessToGroupByGroupId(groupId)
+									.Select(g => g.SecurityGroupAccessId)
+									.ToHashSet();
+
+					return group.Where(u => groupIds.Contains(u.SecurityGroupId)).ToList();
 				}
 
 				return group.ToList();
@@ -467,6 +477,105 @@ namespace SuperTransp.Core
 			catch (Exception ex)
 			{
 				throw new Exception("Error al obtener todos los usuarios", ex);
+			}
+		}
+
+		public List<SecurityUserViewModel> GetAllUsersByGroupId(int securityGroupId)
+		{
+			try
+			{
+				if(securityGroupId == 1)
+				{
+					return GetAllUsers();
+				}
+
+				List<SecurityUserViewModel> users = new();
+
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SqlCommand cmd = new("SELECT * FROM Security_GetAllUsers", sqlConnection);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							users.Add(new SecurityUserViewModel
+							{
+								SecurityUserDocumentIdNumber = (int)dr["SecurityUserDocumentIdNumber"],
+								Login = (string)dr["Login"],
+								Password = (string)dr["Password"],
+								FullName = (string)dr["FullName"],
+								StateName = (string)dr["StateName"],
+								SecurityGroupName = (string)dr["SecurityGroupName"],
+								SecurityStatusName = (string)dr["SecurityStatusName"],
+								SecurityStatusId = (int)dr["SecurityStatusId"],
+								SecurityUserId = (int)dr["SecurityUserId"],
+								SecurityGroupId = (int)dr["SecurityGroupId"],
+								StateId = (int)dr["StateId"],
+							});
+						}
+					}
+
+					users.ToList();
+
+					if (users?.Any() == true)
+					{
+						var groupIds = GetGroupAccessToGroupByGroupId(securityGroupId)
+										.Select(g => g.SecurityGroupAccessId)
+										.ToHashSet();
+
+						return users.Where(u => groupIds.Contains(u.SecurityGroupId)).ToList();
+					}
+				}
+
+				return users;
+
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Error al obtener todos los usuarios", ex);
+			}
+		}
+
+		private List<SecurityGroupAccessToGroup> GetGroupAccessToGroupByGroupId(int securityGroupId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<SecurityGroupAccessToGroup> group = new();
+					SqlCommand cmd = new("SELECT * FROM SecurityGroupAccessToGroup WHERE SecurityGroupId = @SecurityGroupId", sqlConnection);
+					cmd.Parameters.AddWithValue("@SecurityGroupId", securityGroupId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							group.Add(new SecurityGroupAccessToGroup
+							{
+								SecurityGroupAccessToGroupId = (int)dr["SecurityGroupAccessToGroupId"],
+								SecurityGroupId = (int)dr["SecurityGroupId"],
+								SecurityGroupAccessId = (int)dr["SecurityGroupAccessId"],
+							});
+						}
+					}
+
+					return group.ToList();
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Error al obtener todos los grupo permisos por grupo", ex);
 			}
 		}
 
@@ -899,7 +1008,7 @@ namespace SuperTransp.Core
 		public int AddLogbook(int processId, bool isDeleteAction, string actionDescription)
 		{
 			int result = 0;
-			string addEditDelete = processId == 0 ? "Agregó" : "Modificó";
+			string addEditDelete = processId == 0 ? "Agrego" : "Modifico";
 
 			try
 			{
@@ -915,6 +1024,7 @@ namespace SuperTransp.Core
 						CommandType = System.Data.CommandType.StoredProcedure
 					};
 
+					var client = _clientInfoService.GetClientDetails();
 					var userFullName = _httpContextAccessor.HttpContext?.Session.GetString("FullName");
 					var userLogin = _httpContextAccessor.HttpContext?.Session.GetString("UserLogin");
 					var userState = _httpContextAccessor.HttpContext?.Session.GetString("StateName");
@@ -923,11 +1033,14 @@ namespace SuperTransp.Core
 
 					if (isDeleteAction)
 					{
-						addEditDelete = "Eliminó";
+						addEditDelete = "Elimino";
 					}					
 
 					cmd.Parameters.AddWithValue("@SecurityUserId", userId);
 					cmd.Parameters.AddWithValue("@DeviceIP", deviceIP);
+					cmd.Parameters.AddWithValue("@DeviceType", client.DeviceType);
+					cmd.Parameters.AddWithValue("@DeviceBrowser", client.Browser);
+					cmd.Parameters.AddWithValue("@DeviceOperatingSystem", client.OperatingSystem);
 					cmd.Parameters.AddWithValue("@UserFullName", userFullName);
 					cmd.Parameters.AddWithValue("@UserLogin", userLogin);
 					cmd.Parameters.AddWithValue("@UserState", userState);
@@ -966,6 +1079,9 @@ namespace SuperTransp.Core
 							SecurityLogbookId = (int)dr["SecurityLogbookId"],
 							SecurityLogbookDate = (DateTime)dr["SecurityLogbookDate"],
 							DeviceIP = (string)dr["DeviceIP"],
+							DeviceType = dr["DeviceType"] != null ? (string)dr["DeviceType"] : "NO DISPONIBLE",
+							DeviceOperatingSystem = dr["DeviceOperatingSystem"] != null ? (string)dr["DeviceOperatingSystem"] : "NO DISPONIBLE",
+							DeviceBrowser = dr["DeviceBrowser"] != null ? (string)dr["DeviceBrowser"] : "NO DISPONIBLE",
 							UserFullName = (string)dr["UserFullName"],
 							UserLogin = (string)dr["UserLogin"],
 							UserState = (string)dr["UserState"],
@@ -974,7 +1090,7 @@ namespace SuperTransp.Core
 					}
 				}
 
-				return logbook.ToList();
+				return logbook.OrderByDescending(id=> id.SecurityLogbookId).ToList();
 			}
 		}
 
@@ -999,6 +1115,9 @@ namespace SuperTransp.Core
 							SecurityLogbookId = (int)dr["SecurityLogbookId"],
 							SecurityLogbookDate = (DateTime)dr["SecurityLogbookDate"],
 							DeviceIP = (string)dr["DeviceIP"],
+							DeviceType = dr["DeviceType"] != null ? (string)dr["DeviceType"] : "NO DISPONIBLE",
+							DeviceOperatingSystem = dr["DeviceOperatingSystem"] != null ? (string)dr["DeviceOperatingSystem"] : "NO DISPONIBLE",
+							DeviceBrowser = dr["DeviceBrowser"] != null ? (string)dr["DeviceBrowser"] : "NO DISPONIBLE",
 							UserFullName = (string)dr["UserFullName"],
 							UserLogin = (string)dr["UserLogin"],
 							UserState = (string)dr["UserState"],
@@ -1007,7 +1126,7 @@ namespace SuperTransp.Core
 					}
 				}
 
-				return logbook.ToList();
+				return logbook.OrderByDescending(id => id.SecurityLogbookId).ToList();
 			}
 		}
 		public List<SecurityLogbookModel> GetLogbookAll()
@@ -1031,6 +1150,9 @@ namespace SuperTransp.Core
 							SecurityLogbookId = (int)dr["SecurityLogbookId"],
 							SecurityLogbookDate = (DateTime)dr["SecurityLogbookDate"],
 							DeviceIP = (string)dr["DeviceIP"],
+							DeviceType = dr["DeviceType"] != null ? (string)dr["DeviceType"] : "NO DISPONIBLE",
+							DeviceOperatingSystem = dr["DeviceOperatingSystem"] != null ? (string)dr["DeviceOperatingSystem"] : "NO DISPONIBLE",
+							DeviceBrowser = dr["DeviceBrowser"] != null ? (string)dr["DeviceBrowser"] : "NO DISPONIBLE",
 							UserFullName = (string)dr["UserFullName"],
 							UserLogin = (string)dr["UserLogin"],
 							UserState = (string)dr["UserState"],
@@ -1039,7 +1161,7 @@ namespace SuperTransp.Core
 					}
 				}
 
-				return logbook.ToList();
+				return logbook.OrderByDescending(id => id.SecurityLogbookId).ToList();
 			}
 		}
 

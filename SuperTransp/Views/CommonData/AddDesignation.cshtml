@@ -86,7 +86,7 @@
 						<div class="row gtr-uniform">
 							<div class="col-12">
 								<strong>Nombre:</strong>
-								@Html.TextBoxFor(x => x.DesignationName, new { placeholder = "Nombre entidad legal", tabindex = "0", maxlength = "50" })
+								@Html.TextBoxFor(x => x.DesignationName, new { placeholder = "Nombre entidad legal", tabindex = "0", maxlength = "150" })
 								<span asp-validation-for="DesignationName" class="text-danger"></span>
 							</div>
 
@@ -107,6 +107,8 @@
 	<script src="~/assets/js/breakpoints.min.js"></script>
 	<script src="~/assets/js/util.js"></script>
 	<script src="~/assets/js/main.js"></script>
+	<script src="~/js/common.js" asp-append-version="true"></script>
+
 	@{
 		await Html.RenderPartialAsync("_ValidationScriptsPartial");
 	}
@@ -118,14 +120,19 @@
 				var inputElement = document.querySelector(selector);
 				if (inputElement) {
 					inputElement.addEventListener("input", function () {
-						inputElement.value = transformFunction(inputElement.value);
+						const start = inputElement.selectionStart;
+						const end = inputElement.selectionEnd;
+
+						const transformed = transformFunction(inputElement.value);
+
+						inputElement.value = transformed;
+
+						inputElement.setSelectionRange(start, end);
 					});
 				}
 			}
 
-			handleInput("[name='DesignationName']", function (value) {
-				return value.toUpperCase();
-			});
+			handleInput("[name='DesignationName']", sanitizeInputValue);
 		});
 
 		$("body").on("click", "#saveRequest", function (event) {
@@ -148,7 +155,7 @@
 
 			if ($("#DesignationName").val() == "" && !firstInvalidField) {
 				firstInvalidField = "#DesignationName";
-				message = "Debe colocar el nombre de tipo de línea";
+				message = "Debe colocar el nombre de la entidad legal";
 			}
 
 			if (firstInvalidField) {
@@ -172,6 +179,35 @@
 			});
 
 			$(selector)[0].scrollIntoView({ behavior: "smooth", block: "center" });
+		}
+
+		$("form").on("submit", function (e) {
+			e.preventDefault();
+
+			if ($(this).valid()) {
+				var paramValue1 = $('#DesignationName').val();
+				var checkExistingUrl = '@Url.Action("CheckExistingValues", "CommonData")';
+				$.ajax({
+					url: checkExistingUrl,
+					data: {
+						paramValue1: paramValue1
+					},
+					success: function (data) {
+						showMsg(data);
+					},
+					cache: false
+				});
+			}
+		});
+
+		function showMsg(hasCurrentJob) {
+			if (hasCurrentJob != "OK") {
+				alert(hasCurrentJob);
+				return false;
+			} else {
+
+				$("form").unbind('submit').submit();
+			}
 		}
 
 		$(document).ready(function () {

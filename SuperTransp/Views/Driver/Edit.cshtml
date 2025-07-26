@@ -65,6 +65,7 @@
 					<li>@Html.ActionLink("Agregar socios a organización", "PublicTransportGroupList", "Driver")</li>
 					<li>@Html.ActionLink("Agregar organización", "Add", "PublicTransportGroup")</li>
 					<li>@Html.ActionLink("Modificar organización", "PublicTransportGroupList", "PublicTransportGroup")</li>
+					<li>@Html.ActionLink("Socios/Transportistas", "Index", "Driver")</li>
 					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 				</ul>
 			</nav>
@@ -76,6 +77,8 @@
 					<section>
 						<h1 style="color:#4cbece">Modificar socio</h1>
 						<label>Organización: @Model.PTGCompleteName</label>
+						<br />
+						<label>Cupo: @ViewBag.Partners</label>
 						<br />
 						<br />
 						<br />
@@ -132,6 +135,8 @@
 	<script src="~/assets/js/breakpoints.min.js"></script>
 	<script src="~/assets/js/util.js"></script>
 	<script src="~/assets/js/main.js"></script>
+	<script src="~/js/common.js" asp-append-version="true"></script>
+
 	@{
 		await Html.RenderPartialAsync("_ValidationScriptsPartial");
 	}
@@ -176,10 +181,18 @@
 
 		document.addEventListener("DOMContentLoaded", function () {
 			function handleInput(selector, transformFunction) {
-				var inputElement = document.querySelector(selector);
+				const inputElement = document.querySelector(selector);
 				if (inputElement) {
 					inputElement.addEventListener("input", function () {
-						inputElement.value = transformFunction(inputElement.value);
+						const start = inputElement.selectionStart;
+						const end = inputElement.selectionEnd;
+
+						const transformed = transformFunction(inputElement.value);
+
+						if (inputElement.value !== transformed) {
+							inputElement.value = transformed;
+							inputElement.setSelectionRange(start, end);
+						}
 					});
 				}
 			}
@@ -188,9 +201,7 @@
 				return value.replace(/[^0-9]/g, "");
 			});
 
-			handleInput("[name='DriverFullName']", function (value) {
-				return value.toUpperCase();
-			});
+			handleInput("[name='DriverFullName']", sanitizeInputValue);
 
 			handleInput("[name='PartnerNumber']", function (value) {
 				return value.replace(/[^0-9]/g, "");
@@ -259,6 +270,16 @@
 			if ($("#DriverFullName").val() == "" && !firstInvalidField) {
 				firstInvalidField = "#DriverFullName";
 				message = "Debe colocar el nombre del transportista";
+			} else {
+				const driverFullName = $("#DriverFullName").val().trim();
+				const regex = /^[a-zA-ZñÑ\s]{5,}$/;
+
+				if (!regex.test(driverFullName)) {
+					if (!firstInvalidField) {
+						firstInvalidField = "#DriverFullName";
+					}
+					message = "El nombre debe contener solo letras y espacios, y al menos 5 caracteres.";
+				}
 			}
 
 			if ($("#SexId").val() == ""  &&  !firstInvalidField) {
@@ -327,12 +348,6 @@
 			setTimeout(function(){
 				$("#successMessage").fadeOut("slow");
 			}, 2500);
-
-			$('#DriverFullName').on('input', function() {
-				const value = $(this).val();
-				const sanitizedValue = value.replace(/[^a-zA-Z\s]/g, '');
-				$(this).val(sanitizedValue);
-			});
 		});
 	</script>
 </body>
