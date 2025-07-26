@@ -46,7 +46,7 @@ namespace SuperTransp.Controllers
 			return RedirectToAction("Login", "Security");
 		}
 
-		public IActionResult PublicTransportGroupDriverList()
+		public IActionResult PublicTransportGroupDriverList(string ptgRifName)
 		{
 			try
 			{
@@ -66,11 +66,17 @@ namespace SuperTransp.Controllers
 
 					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
 					{
-							model = _supervision.GetDriverPublicTransportGroupByStateId((int)stateId);					
+						model = _supervision.GetDriverPublicTransportGroupByStateIdAndPTGRif((int)stateId, ptgRifName);					
 					}
 					else
 					{
-						model = _supervision.GetAllDriverPublicTransportGroup();
+						model = _supervision.GetAllDriverPublicTransportGroup(ptgRifName);
+					}
+
+					if(!model.Any())
+					{
+						TempData["SuccessMessage"] = $"No existe una organización con el RIF {ptgRifName}";
+						return RedirectToAction("Index");
 					}
 
 					return View(model);
@@ -232,7 +238,7 @@ namespace SuperTransp.Controllers
 
 							if (supervisionId > 0)
 							{
-								return RedirectToAction("PublicTransportGroupDriverList");
+								return RedirectToAction("PublicTransportGroupDriverList", new { ptgRifName = model.PublicTransportGroupRif });
 							}
 						}
 					}

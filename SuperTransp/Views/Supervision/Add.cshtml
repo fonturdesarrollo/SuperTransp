@@ -81,7 +81,7 @@
 				<h2>Menu</h2>
 				<ul>
 					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
-					<li>@Html.ActionLink("Seleccionar organización", "PublicTransportGroupDriverList", "Supervision")</li>
+					<li>@Html.ActionLink("Seleccionar organización", "PublicTransportGroupDriverList", "Supervision", new { ptgRifName = Model.PublicTransportGroupRif }, null)</li>
 					<li>@Html.ActionLink("Agregar resumen de supervisión", "PublicTransportGroupList", "Supervision")</li>
 					<li>@Html.ActionLink("Modificar resumen de supervisión", "SummaryList", "Supervision")</li>
 					<li>@Html.ActionLink("Supervisión", "Index", "Supervision")</li>
@@ -551,13 +551,29 @@
 					if(modeId === "4"){
 						if (uploaded.length < 2 || uploaded.length > 2  && !firstInvalidField) {
 							firstInvalidField = "#myDropzone";
-							message = "Debe agregar 2 imágenes para poder actualizar";
+							var staticMessage ="El vehículo que está actualizando es una moto, debe agregar 2 imágenes para ese tipo de vehículo, está intentando agregar ";
+							var quantityMessage ="";
+
+							if(uploaded.length > 2){
+								quantityMessage = uploaded.length + ", presione el botón: Eliminar imágenes de la lista, y agregue solo 2"
+							}else if(uploaded.length < 2){
+								quantityMessage = uploaded.length + ", haga clic en el recuadro: Cargar imágenes, y agregue otra."
+							}
+
+							message = staticMessage + quantityMessage;
 						}
 					}
 					else{
 						if (uploaded.length < 4 || uploaded.length > 4 && !firstInvalidField) {
 							firstInvalidField = "#myDropzone";
-							message = "Debe agregar 4 imágenes para poder actualizar";
+							var staticMessage ="El vehículo que está actualizando requiere de 4 imágenes para poder ser actualizado, está agregando solo ";
+							var quantityMessage ="";
+
+							if(uploaded.length < 4){
+								quantityMessage = uploaded.length + ", haga clic en el recuadro: Cargar imágenes, y agregue la(s) restante(s)."
+							}
+
+							message = staticMessage + quantityMessage;
 						}
 					}				
 				}else{

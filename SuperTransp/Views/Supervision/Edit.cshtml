@@ -81,7 +81,7 @@
 				<h2>Menu</h2>
 				<ul>
 					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
-					<li>@Html.ActionLink("Seleccionar organización", "PublicTransportGroupDriverList", "Supervision")</li>
+					<li>@Html.ActionLink("Seleccionar organización", "PublicTransportGroupDriverList", "Supervision", new { ptgRifName = Model.PublicTransportGroupRif }, null)</li>
 					<li>@Html.ActionLink("Agregar resumen de supervisión", "PublicTransportGroupList", "Supervision")</li>
 					<li>@Html.ActionLink("Modificar resumen de supervisión", "SummaryList", "Supervision")</li>
 					<li>@Html.ActionLink("Supervisión", "Index", "Supervision")</li>
@@ -635,14 +635,30 @@
 			if(modeId === "4"){
 				if(currentTotalPictures != 2 || uploaded.length  > 0){
 					if (uploaded.length < 2 || uploaded.length > 2) {
-						message = "Debe agregar 2 imágenes para poder actualizar";
+						var staticMessage ="El vehículo que está actualizando es una moto y requiere de 2 imágenes para poder ser actualizado, actualmente tiene ";
+						var quantityMessage ="";
+
+						if(uploaded.length > 2){
+							quantityMessage = currentTotalPictures + ", haga clic en el recuadro: Cargar imágenes, y agregue 2 imágenes (las actuales serán sustituidas)"
+						}else if(uploaded.length < 2){
+							quantityMessage = currentTotalPictures + ", haga clic en el recuadro: Cargar imágenes, y agregue 2 imágenes (las actuales serán sustituidas)."
+						}
+
+						message = staticMessage + quantityMessage;
 					}
 				}
 			}
 			else{
 				if(currentTotalPictures != 4 || uploaded.length  > 0){
 					if (uploaded.length < 4 || uploaded.length > 4) {
-						message = "Debe agregar 4 imágenes para poder actualizar";
+						var staticMessage ="El vehículo que está actualizando requiere de 4 imágenes para poder ser actualizado, actualmente tiene ";
+						var quantityMessage ="";
+
+						if(uploaded.length < 4){
+							quantityMessage = currentTotalPictures + ", haga clic en el recuadro: Cargar imágenes, y agregue 4 imágenes (las actuales serán sustituidas)."
+						}
+
+						message = staticMessage + quantityMessage;
 					}
 				}
 			}

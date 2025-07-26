@@ -413,18 +413,6 @@
 				$("#successMessage").fadeOut("slow");
 			}, 2500);
 
-			// $('#PublicTransportGroupName').on('input', function() {
-			// 	const value = $(this).val();
-			// 	const sanitizedValue = value.replace(/[^a-zA-ZñÑ0-9\s]/g, '');
-			// 	$(this).val(sanitizedValue);
-			// });
-
-			// $('#RepresentativeName').on('input', function() {
-			// 	const value = $(this).val();
-			// 	const sanitizedValue = value.replace(/[^a-zA-Z\s]/g, '');
-			// 	$(this).val(sanitizedValue);
-			// });
-
 			$('#StateId').change(function () {
 				var stateId = $(this).val();
 				var getMunicipalityUrl = '@Url.Action("GetMunicipality", "PublicTransportGroup")';

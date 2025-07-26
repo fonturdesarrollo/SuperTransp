@@ -209,7 +209,7 @@ namespace SuperTransp.Core
 			}
 		}
 
-		public List<PublicTransportGroupViewModel> GetDriverPublicTransportGroupByStateId(int stateId)
+		public List<PublicTransportGroupViewModel> GetDriverPublicTransportGroupByStateIdAndPTGRif(int stateId, string ptgRif)
 		{
 			try
 			{
@@ -221,8 +221,9 @@ namespace SuperTransp.Core
 					}
 
 					List<PublicTransportGroupViewModel> ptg = new();
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE StateId = @StateId AND Partners = TotalDrivers", sqlConnection);
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE StateId = @StateId AND PublicTransportGroupRif = @PublicTransportGroupRif AND Partners = TotalDrivers", sqlConnection);
 					cmd.Parameters.AddWithValue("@StateId", stateId);
+					cmd.Parameters.AddWithValue("@PublicTransportGroupRif", ptgRif);
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
 					{
@@ -590,7 +591,7 @@ namespace SuperTransp.Core
 			}
 		}
 
-		public List<PublicTransportGroupViewModel> GetAllDriverPublicTransportGroup()
+		public List<PublicTransportGroupViewModel> GetAllDriverPublicTransportGroup(string ptgRif)
 		{
 			try
 			{
@@ -602,7 +603,8 @@ namespace SuperTransp.Core
 					}
 
 					List<PublicTransportGroupViewModel> ptg = new();
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail ORDER BY StateName, PTGCompleteName, PartnerNumber", sqlConnection);
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE PublicTransportGroupRif = @PublicTransportGroupRif ORDER BY StateName, PTGCompleteName, PartnerNumber", sqlConnection);
+					cmd.Parameters.AddWithValue("@PublicTransportGroupRif", ptgRif);
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
 					{
