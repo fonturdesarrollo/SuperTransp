@@ -58,14 +58,30 @@
 							<div class="col-6 col-12-medium">
 								<h3>Organizaciones de Transporte</h3>
 								<ul>
-									<li>@Html.ActionLink("Organizaciones y Transportistas", "PublicTransportGroupList", "Reports")</li>
-									<li>@Html.ActionLink("Organizaciones con socios supervisados", "PublicTransportGroupSupervisedDriversStatistics", "Reports")</li>
-									<li>@Html.ActionLink("Gráficos Organizaciones por estado", "PublicTransportGroupStatisticsInState", "Reports")</li>
-									<li>@Html.ActionLink("Gráficos vehículos supervisados por estado", "SupervisedDriversStatisticsInEstate", "Reports")</li>
+									@{
+										var modulesInGroup = (IEnumerable<SecurityModuleModel>)ViewBag.ModulesInGroup;
+
+										if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 20))
+										{
+											<li>@Html.ActionLink("Organizaciones y Transportistas", "PublicTransportGroupList", "Reports")</li>
+										}
+										if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 21))
+										{
+											<li>@Html.ActionLink("Organizaciones con socios supervisados", "PublicTransportGroupSupervisedDriversStatistics", "Reports")</li>
+										}
+										if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 22))
+										{
+											<li>@Html.ActionLink("Gráficos Organizaciones por estado", "PublicTransportGroupStatisticsInState", "Reports")</li>
+										}
+										if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 23))
+										{
+											<li>@Html.ActionLink("Gráficos vehículos supervisados por estado", "SupervisedDriversStatisticsInEstate", "Reports")</li>
+										}				
+									}
 								</ul>
 							</div>
 							@{
-								var modulesInGroup = (IEnumerable<SecurityModuleModel>)ViewBag.ModulesInGroup;
+								modulesInGroup = (IEnumerable<SecurityModuleModel>)ViewBag.ModulesInGroup;
 
 								if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 18))
 								{

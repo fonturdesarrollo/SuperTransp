@@ -74,6 +74,8 @@ namespace SuperTransp.Controllers
 					};
 
 					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+					ViewBag.IsTotalAccess = false;
+					ViewBag.IsDeleteAccess = false;
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 					int? stateId = HttpContext.Session.GetInt32("StateId");
 					int supervisorsGroupId = 3;
@@ -86,7 +88,11 @@ namespace SuperTransp.Controllers
 							{
 								ViewBag.States = new SelectList(_geography.GetAllStates(), "StateId", "StateName");
 								ViewBag.Union = new SelectList(_union.GetAll(), "UnionId", "UnionName");
-								ViewBag.IsTotalAccess = _security.IsTotalAccess(1);
+
+								if (_security.IsTotalAccess(1) || _security.IsUpdateAccess(1))
+								{
+									ViewBag.IsTotalAccess = true;
+								}
 							}
 							else
 							{
@@ -94,7 +100,11 @@ namespace SuperTransp.Controllers
 								{
 									ViewBag.States = new SelectList(_geography.GetStateById((int)stateId), "StateId", "StateName");
 									ViewBag.Union = new SelectList(_union.GetByStateId((int)stateId), "UnionId", "UnionName");
-									ViewBag.IsTotalAccess = _security.IsTotalAccess(1);
+
+									if(_security.IsTotalAccess(1) || _security.IsUpdateAccess(1))
+									{
+										ViewBag.IsTotalAccess = true;
+									}
 								}
 							}
 						}
@@ -138,7 +148,7 @@ namespace SuperTransp.Controllers
 
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 
-					if (_security.IsTotalAccess(1) || securityGroupId == 1)
+					if (_security.IsTotalAccess(1) || _security.IsUpdateAccess(1) || securityGroupId == 1)
 					{
 						int publicTransportGroupId = _publicTransportGroup.AddOrEdit(model);
 
@@ -169,6 +179,8 @@ namespace SuperTransp.Controllers
 					return RedirectToAction("Login", "Security");
 				}
 
+				ViewBag.IsTotalAccess = false;
+				ViewBag.IsDeleteAccess = false;
 				var model = _publicTransportGroup.GetPublicTransportGroupById(publicTransportGroupId);
 				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 				int? stateId = HttpContext.Session.GetInt32("StateId");
@@ -183,7 +195,11 @@ namespace SuperTransp.Controllers
 						{
 							ViewBag.States = new SelectList(_geography.GetAllStates(), "StateId", "StateName");
 							ViewBag.Union = new SelectList(_union.GetAll(), "UnionId", "UnionName");
-							ViewBag.IsTotalAccess = _security.IsTotalAccess(1);
+
+							if (_security.IsTotalAccess(1) || _security.IsUpdateAccess(1))
+							{
+								ViewBag.IsTotalAccess = true;
+							}
 						}
 						else
 						{
@@ -191,7 +207,11 @@ namespace SuperTransp.Controllers
 							{
 								ViewBag.States = new SelectList(_geography.GetStateById((int)stateId), "StateId", "StateName");
 								ViewBag.Union = new SelectList(_union.GetByStateId((int)stateId), "UnionId", "UnionName");
-								ViewBag.IsTotalAccess = _security.IsTotalAccess(1);
+
+								if (_security.IsTotalAccess(1) || _security.IsUpdateAccess(1))
+								{
+									ViewBag.IsTotalAccess = true;
+								}
 							}
 						}
 					}
@@ -229,7 +249,7 @@ namespace SuperTransp.Controllers
 
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 
-					if (_security.IsTotalAccess(1) || securityGroupId == 1)
+					if (_security.IsTotalAccess(1) || _security.IsUpdateAccess(1) || securityGroupId == 1)
 					{
 						_publicTransportGroup.AddOrEdit(model);
 					}
@@ -261,6 +281,8 @@ namespace SuperTransp.Controllers
 					List<PublicTransportGroupViewModel> model = new();
 
 					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+					ViewBag.IsTotalAccess = false;
+					ViewBag.IsDeleteAccess = false;
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 					int? stateId = HttpContext.Session.GetInt32("StateId");
 
@@ -273,7 +295,10 @@ namespace SuperTransp.Controllers
 						model = _publicTransportGroup.GetAll();
 					}
 
-					ViewBag.IsTotalAccess = _security.IsTotalAccess(1);
+					if (_security.IsTotalAccess(1) || _security.IsUpdateAccess(1))
+					{
+						ViewBag.IsTotalAccess = true;
+					}
 
 					return View(model);
 				}

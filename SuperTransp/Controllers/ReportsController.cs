@@ -46,7 +46,11 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
-					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 4))
+					int? groupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+					if (groupId is null ||
+						(groupId != 1 && !_security.GroupHasAccessToModule(groupId.Value, 4)) ||
+						(groupId == 1 ? false : !_security.GroupHasAccessToModule(groupId.Value, 20)))
 					{
 						return RedirectToAction("Login", "Security");
 					}
@@ -114,7 +118,11 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
-					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 4))
+					int? groupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+					if (groupId is null ||
+						(groupId != 1 && !_security.GroupHasAccessToModule(groupId.Value, 4)) ||
+						(groupId == 1 ? false : !_security.GroupHasAccessToModule(groupId.Value, 22)))
 					{
 						return RedirectToAction("Login", "Security");
 					}
@@ -151,7 +159,11 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
-					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 4))
+					int? groupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+					if (groupId is null ||
+						(groupId != 1 && !_security.GroupHasAccessToModule(groupId.Value, 4)) ||
+						(groupId == 1 ? false : !_security.GroupHasAccessToModule(groupId.Value, 21)))
 					{
 						return RedirectToAction("Login", "Security");
 					}
@@ -188,7 +200,11 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
-					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 4))
+					int? groupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+					if (groupId is null ||
+						(groupId != 1 && !_security.GroupHasAccessToModule(groupId.Value, 4)) ||
+						(groupId == 1 ? false : !_security.GroupHasAccessToModule(groupId.Value, 23)))
 					{
 						return RedirectToAction("Login", "Security");
 					}

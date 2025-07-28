@@ -592,7 +592,7 @@ namespace SuperTransp.Core
 		}
 
 		public List<PublicTransportGroupViewModel> GetAllDriverPublicTransportGroup(string ptgRif)
-		{
+			{
 			try
 			{
 				using (SqlConnection sqlConnection = GetConnection())

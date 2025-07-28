@@ -75,7 +75,7 @@ namespace SuperTransp.Controllers
 
 					if(!model.Any())
 					{
-						TempData["SuccessMessage"] = $"No existe una organización con el RIF {ptgRifName}";
+						TempData["SuccessMessage"] = $"No existe o no tiene todos los socios cargados la organización con el RIF {ptgRifName}";
 						return RedirectToAction("Index");
 					}
 
@@ -103,7 +103,8 @@ namespace SuperTransp.Controllers
 
 					int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
 					int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
-					
+					ViewBag.IsTotalAccess = false;
+
 					if (securityGroupId != null && _security.GroupHasAccessToModule((int)securityGroupId, 3) || securityGroupId == 1)
 					{
 						if(!_supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId))
@@ -160,7 +161,10 @@ namespace SuperTransp.Controllers
 
 						if (securityGroupId != 1)
 						{
-							ViewBag.IsTotalAccess = _security.IsTotalAccess(3);
+							if(_security.IsTotalAccess(3) || _security.IsUpdateAccess(3))
+							{
+								ViewBag.IsTotalAccess = true;
+							}
 						}
 						else
 						{
@@ -265,8 +269,9 @@ namespace SuperTransp.Controllers
 
 					int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
 					int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
+					ViewBag.IsTotalAccess = false;
 
-					if(securityGroupId != null && _security.GroupHasAccessToModule((int)securityGroupId,3) || securityGroupId == 1)
+					if (securityGroupId != null && _security.GroupHasAccessToModule((int)securityGroupId,3) || securityGroupId == 1)
 					{
 						if (!_supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId))
 						{
@@ -326,7 +331,10 @@ namespace SuperTransp.Controllers
 
 							if (securityGroupId != 1)
 							{
-								ViewBag.IsTotalAccess = _security.IsTotalAccess(3);
+								if (_security.IsTotalAccess(3) || _security.IsUpdateAccess(3))
+								{
+									ViewBag.IsTotalAccess = true;
+								}
 							}
 							else
 							{
@@ -1007,6 +1015,7 @@ namespace SuperTransp.Controllers
 
 					int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
 					int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
+					ViewBag.IsTotalAccess = false;
 
 					if (!_supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId))
 					{
@@ -1038,11 +1047,13 @@ namespace SuperTransp.Controllers
 
 						if (securityGroupId != 1)
 						{
-							ViewBag.IsTotalAccess = _security.IsTotalAccess(3);
+							if(_security.IsTotalAccess(3) || _security.IsUpdateAccess(3))
+							{
+								ViewBag.IsTotalAccess = true;
+							}
 						}
 						else
 						{
-
 							ViewBag.IsTotalAccess = true;
 						}
 
@@ -1109,6 +1120,7 @@ namespace SuperTransp.Controllers
 
 				int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
 				int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
+				ViewBag.IsTotalAccess = false;
 
 				if (!_supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId))
 				{
@@ -1119,7 +1131,10 @@ namespace SuperTransp.Controllers
 
 				if (securityGroupId != 1)
 				{
-					ViewBag.IsTotalAccess = _security.IsTotalAccess(3);
+					if(_security.IsTotalAccess(3) || _security.IsUpdateAccess(3))
+					{
+						ViewBag.IsTotalAccess = true;
+					}
 				}
 				else
 				{

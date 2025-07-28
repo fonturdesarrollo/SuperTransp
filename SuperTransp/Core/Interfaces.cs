@@ -33,6 +33,7 @@ namespace SuperTransp.Core
 			public string? Decrypt(string encryptedText);
 			public int AddLogbook(int processId, bool isDeleteAction, string actionDescription);
 			public bool IsTotalAccess(int securityModuleId);
+			public bool IsUpdateAccess(int securityModuleId);
 			public bool BlockLogin(string login);
 			public bool IsBlockedLogin(string login);
 			public bool IsInactiveLogin(string login);

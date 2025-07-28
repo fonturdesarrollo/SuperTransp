@@ -58,6 +58,8 @@ namespace SuperTransp.Controllers
 					List<PublicTransportGroupViewModel> model = new();
 
 					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+					ViewBag.IsTotalAccess = false;
+					ViewBag.IsDeleteAccess = false;
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 					int? stateId = HttpContext.Session.GetInt32("StateId");
 
@@ -71,7 +73,10 @@ namespace SuperTransp.Controllers
 						ViewBag.IsTotalAccess = true;
 					}
 
-					ViewBag.IsTotalAccess = _security.IsTotalAccess(2);
+					if (_security.IsTotalAccess(2) || _security.IsUpdateAccess(2))
+					{
+						ViewBag.IsTotalAccess = true;
+					}
 
 					return View(model);
 				}
@@ -95,6 +100,8 @@ namespace SuperTransp.Controllers
 						return RedirectToAction("Login", "Security");
 					}
 
+					ViewBag.IsTotalAccess = false;
+					ViewBag.IsDeleteAccess = false;
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 					var ptg = _publicTransportGroup.GetPublicTransportGroupById(publicTransportGroupId);
 					var model = new DriverViewModel
@@ -111,11 +118,20 @@ namespace SuperTransp.Controllers
 
 					if (securityGroupId != 1)
 					{
-						ViewBag.IsTotalAccess = _security.IsTotalAccess(2);
+						if (_security.IsTotalAccess(2) || _security.IsUpdateAccess(2))
+						{
+							ViewBag.IsTotalAccess = true;
+						}
+
+						if (_security.IsTotalAccess(2))
+						{
+							ViewBag.IsDeleteAccess = true;
+						}
 					}
 					else
 					{
 						ViewBag.IsTotalAccess = true;
+						ViewBag.IsDeleteAccess = true;
 					}
 
 					ViewBag.Sex = new SelectList(_commonData.GetSex(), "SexId", "SexName");
@@ -146,7 +162,7 @@ namespace SuperTransp.Controllers
 
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 
-					if (_security.IsTotalAccess(2) || securityGroupId == 1)
+					if (_security.IsTotalAccess(2) || _security.IsUpdateAccess(2) || securityGroupId == 1)
 					{
 						int driverId = _driver.AddOrEdit(model);
 
@@ -177,6 +193,8 @@ namespace SuperTransp.Controllers
 					return RedirectToAction("Login", "Security");
 				}
 
+				ViewBag.IsTotalAccess = false;
+				ViewBag.IsDeleteAccess = false;
 				var model = _driver.GetByDriverPublicTransportGroupId(driverPublicTransportGroupId);
 				var ptg = _publicTransportGroup.GetPublicTransportGroupById(model.PublicTransportGroupId);
 				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
@@ -186,7 +204,10 @@ namespace SuperTransp.Controllers
 
 				if (securityGroupId != 1)
 				{
-					ViewBag.IsTotalAccess = _security.IsTotalAccess(2);
+					if (_security.IsTotalAccess(2) || _security.IsUpdateAccess(2))
+					{
+						ViewBag.IsTotalAccess = true;
+					}
 				}
 				else
 				{
@@ -214,7 +235,7 @@ namespace SuperTransp.Controllers
 
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 
-					if (_security.IsTotalAccess(2) || securityGroupId == 1)
+					if (_security.IsTotalAccess(2) || _security.IsUpdateAccess(2) || securityGroupId == 1)
 					{
 						_driver.AddOrEdit(model);
 
@@ -243,13 +264,16 @@ namespace SuperTransp.Controllers
 						return RedirectToAction("Login", "Security");
 					}
 
-					var result = _driver.Delete(driverId);
-
-					if (result)
+					if (_security.IsTotalAccess(2))
 					{
-						TempData["SuccessMessage"] = "Registro eliminado correctamente";
+						var result = _driver.Delete(driverId);
 
-						return RedirectToAction("Add", new { publicTransportGroupId = publicTransportGroupId, pTGCompleteName = pTGCompleteName });
+						if (result)
+						{
+							TempData["SuccessMessage"] = "Registro eliminado correctamente";
+
+							return RedirectToAction("Add", new { publicTransportGroupId = publicTransportGroupId, pTGCompleteName = pTGCompleteName });
+						}
 					}
 				}
 

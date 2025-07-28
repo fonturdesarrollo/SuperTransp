@@ -764,7 +764,11 @@ namespace SuperTransp.Controllers
 
 				List<SecurityLogbookModel> model = new List<SecurityLogbookModel>();
 
-				if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 18))
+				int? groupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+				if (groupId is null ||
+					(groupId != 1 && !_security.GroupHasAccessToModule(groupId.Value, 4)) ||
+					(groupId == 1 ? false : !_security.GroupHasAccessToModule(groupId.Value, 18)))
 				{
 					return RedirectToAction("Login", "Security");
 				}
