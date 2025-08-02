@@ -50,7 +50,7 @@ namespace SuperTransp.Controllers
 						return RedirectToAction("Login", "Security");
 					}
 
-					int designationId = _designation.AddOrEdit(model);
+					int designationId = _designation.AddOrEdit(model);	
 
 					if (designationId > 0)
 					{

@@ -194,7 +194,7 @@ namespace SuperTransp.Controllers
 						if (_security.GroupHasAccessToModule((int)securityGroupId, 6))
 						{
 							ViewBag.States = new SelectList(_geography.GetAllStates(), "StateId", "StateName");
-							ViewBag.Union = new SelectList(_union.GetAll(), "UnionId", "UnionName");
+							ViewBag.Union = new SelectList(_union.GetByStateId((int)model.StateId), "UnionId", "UnionName");
 
 							if (_security.IsTotalAccess(1) || _security.IsUpdateAccess(1))
 							{
@@ -206,7 +206,7 @@ namespace SuperTransp.Controllers
 							if (stateId.HasValue)
 							{
 								ViewBag.States = new SelectList(_geography.GetStateById((int)stateId), "StateId", "StateName");
-								ViewBag.Union = new SelectList(_union.GetByStateId((int)stateId), "UnionId", "UnionName");
+								ViewBag.Union = new SelectList(_union.GetByStateId((int)model.StateId), "UnionId", "UnionName");
 
 								if (_security.IsTotalAccess(1) || _security.IsUpdateAccess(1))
 								{
@@ -218,7 +218,7 @@ namespace SuperTransp.Controllers
 					else
 					{
 						ViewBag.States = new SelectList(_geography.GetAllStates(), "StateId", "StateName");
-						ViewBag.Union = new SelectList(_union.GetAll(), "UnionId", "UnionName");
+						ViewBag.Union = new SelectList(_union.GetByStateId((int)model.StateId), "UnionId", "UnionName");
 						ViewBag.IsTotalAccess = true;
 					}
 
@@ -318,6 +318,14 @@ namespace SuperTransp.Controllers
 			var municipality = _geography.GetMunicipalityByStateId(stateId).ToList();
 
 			return Json(municipality);
+		}
+
+		[HttpGet]
+		public JsonResult GetUnion(int stateId)
+		{
+			var union = _union.GetByStateId(stateId);
+
+				return Json(union);
 		}
 
 		public JsonResult CheckRifExist(string paramValue1)

@@ -39,9 +39,9 @@ namespace SuperTransp.Core
 			public bool IsInactiveLogin(string login);
 			public string GeneratePublicKey();
 			public bool ValidateKey(string key, byte[] sign);
-			public List<SecurityLogbookModel> GetLogbookByStateName(string userState);
-			public List<SecurityLogbookModel> GetLogbookAllExceptAdmin();
-			public List<SecurityLogbookModel> GetLogbookAll();
+			public List<SecurityLogbookModel> GetLogbookByStateName(string userState, string filterType);
+			public List<SecurityLogbookModel> GetLogbookAllExceptAdminByStateName(string selectStateName, string filterType);
+			public List<SecurityLogbookModel> GetLogbookAllBySelectedStateName(string selectedStateName, string filterType);
 		}
 		public interface IGeography
 		{

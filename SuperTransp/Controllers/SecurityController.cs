@@ -753,9 +753,9 @@ namespace SuperTransp.Controllers
 			return Json("ERROR");
 		}
 
-		public IActionResult Logbook()
+		public IActionResult Logbook(string selectedStateName, string filterType)
 		{
-			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && !string.IsNullOrEmpty(selectedStateName))
 			{
 				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
@@ -779,16 +779,17 @@ namespace SuperTransp.Controllers
 					{
 						if (!_security.GroupHasAccessToModule((int)securityGroupId, 6))
 						{
-							model = _security.GetLogbookByStateName(stateName);
+							model = _security.GetLogbookByStateName(selectedStateName, filterType);
 						}
 						else
 						{
-							model = _security.GetLogbookAllExceptAdmin();
+							model = _security.GetLogbookAllExceptAdminByStateName(selectedStateName, filterType);
 						}						
 					}
 					else
 					{
-						model = _security.GetLogbookAll();
+
+						model = _security.GetLogbookAllBySelectedStateName(selectedStateName, filterType);
 					}
 				}
 					

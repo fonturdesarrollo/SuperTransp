@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using SuperTransp.Core;
 using SuperTransp.Models;
 using static SuperTransp.Core.Interfaces;
@@ -11,13 +12,15 @@ namespace SuperTransp.Controllers
 		private ISecurity _security;
 		private IPublicTransportGroup _publicTransportGroup;
 		private IReport _report;
+		private IGeography _geography;
 
-		public ReportsController(ISupervision supervision, IPublicTransportGroup publicTransportGroup, ISecurity security, IReport report)
+		public ReportsController(ISupervision supervision, IPublicTransportGroup publicTransportGroup, ISecurity security, IReport report, IGeography geography	)
 		{
 			this._security = security;
 			this._supervision = supervision;
 			this._publicTransportGroup = publicTransportGroup;
 			this._report = report;
+			this._geography = geography;
 		}
 
 		public IActionResult Index()
@@ -27,6 +30,36 @@ namespace SuperTransp.Controllers
 				if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 4))
 				{
 					return RedirectToAction("Login", "Security");
+				}
+
+				int? stateId = HttpContext.Session.GetInt32("StateId");
+				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+				if (securityGroupId.HasValue)
+				{
+					if (securityGroupId != 1)
+					{
+						if (_security.GroupHasAccessToModule((int)securityGroupId, 6))
+						{
+							ViewBag.States = new SelectList(_geography.GetAllStates(), "StateName", "StateName");
+						}
+						else
+						{
+							if (stateId.HasValue)
+							{
+								ViewBag.States = new SelectList(_geography.GetStateById((int)stateId), "StateName", "StateName");
+
+								if (_security.IsTotalAccess(1) || _security.IsUpdateAccess(1))
+								{
+									ViewBag.IsTotalAccess = true;
+								}
+							}
+						}
+					}
+					else
+					{
+						ViewBag.States = new SelectList(_geography.GetAllStates(), "StateName", "StateName");
+					}
 				}
 
 				ViewBag.SecurityGroupId = (int)HttpContext.Session.GetInt32("SecurityGroupId");

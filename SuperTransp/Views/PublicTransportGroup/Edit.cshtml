@@ -127,20 +127,24 @@
 								<span asp-validation-for="PublicTransportGroupName" class="text-danger"></span>
 							</div>
 							<div class="col-6 col-12-xsmall">
-								<strong>Modalidad:</strong>
-								@Html.DropDownListFor(t => t.ModeId, (SelectList)ViewBag.Mode, "-- Seleccione la modalidad --", new { @class = "form-control" })
-							</div>
-							<div class="col-6 col-12-xsmall">
-								<strong>Gremio:</strong>
-								@Html.DropDownListFor(t => t.UnionId, (SelectList)ViewBag.Union, "-- Seleccione el gremio --", new { @class = "form-control" })
-							</div>
-							<div class="col-6 col-12-xsmall">
 								<strong>Estado:</strong>
 								@Html.DropDownListFor(t => t.StateId, (SelectList)ViewBag.States, "-- Seleccione el estado --", new { @class = "form-control" })
 							</div>
 							<div class="col-6 col-12-xsmall">
 								<strong>Municipio:</strong>
 								@Html.DropDownListFor(t => t.MunicipalityId, (SelectList)ViewBag.Municipality, "-- Seleccione el municipio --", new { @class = "form-control" })
+							</div>
+							<div class="col-6 col-12-xsmall">
+								<strong>Modalidad:</strong>
+								@Html.DropDownListFor(t => t.ModeId, (SelectList)ViewBag.Mode, "-- Seleccione la modalidad --", new { @class = "form-control" })
+							</div>
+							<div class="col-6 col-12-xsmall">
+								<strong>Gremio o Sindicato:</strong>
+								@* @Html.DropDownListFor(t => t.UnionId, (SelectList)ViewBag.Union, "-- Seleccione --", new { @class = "form-control" }) *@
+								@Html.DropDownListFor(t => t.UnionId, (SelectList)ViewBag.Union, "-- Seleccione el gremio --", new { @class = "form-control" })
+@* 								<select id="UnionId" name="UnionId" class="form-control">
+									<option value="">Seleccione un gremio</option>
+								</select> *@
 							</div>
 							<div class="col-6">
 								<strong>Cédula Representante:</strong>
@@ -349,10 +353,10 @@
 			}
 
 			const requiredDropdowns = [
+				{ id: "#StateId", msg: "Debe seleccionar el estado" },
+				{ id: "#MunicipalityId", msg: "Debe seleccionar el municipio" },
 				{ id: "#ModeId", msg: "Debe seleccionar la modalidad" },
 				{ id: "#UnionId", msg: "Debe seleccionar el gremio o sindicato" },
-				{ id: "#StateId", msg: "Debe seleccionar el estado" },
-				{ id: "#MunicipalityId", msg: "Debe seleccionar el municipio" }
 			];
 
 			for (const field of requiredDropdowns) {
@@ -458,10 +462,14 @@
 			// 	$(this).val(sanitizedValue);
 			// });
 
+
 			$('#StateId').change(function () {
 				var stateId = $(this).val();
 				var getMunicipalityUrl = '@Url.Action("GetMunicipality", "PublicTransportGroup")';
+				var getUnionUrl = '@Url.Action("GetUnion", "PublicTransportGroup")';
+
 				$('#MunicipalityId').empty().append('<option value="">Seleccione un municipio</option>');
+				$('#UnionId').empty().append('<option value="">Seleccione un gremio</option>');
 
 				if (stateId) {
 					$.getJSON(getMunicipalityUrl, { stateId: stateId }, function (data) {
@@ -472,8 +480,34 @@
 							}));
 						});
 					});
+
+					$.getJSON(getUnionUrl, { stateId: stateId }, function (data) {
+						$.each(data, function (index, union) {
+							$('#UnionId').append($('<option>', {
+								value: union.unionId,
+								text: union.unionName
+							}));
+						});
+					});
 				}
-			});	
+			});
+
+			// $('#StateId').change(function () {
+			// 	var stateId = $(this).val();
+			// 	var getMunicipalityUrl = '@Url.Action("GetMunicipality", "PublicTransportGroup")';
+			// 	$('#MunicipalityId').empty().append('<option value="">Seleccione un municipio</option>');
+
+			// 	if (stateId) {
+			// 		$.getJSON(getMunicipalityUrl, { stateId: stateId }, function (data) {
+			// 			$.each(data, function (index, municipality) {
+			// 				$('#MunicipalityId').append($('<option>', {
+			// 					value: municipality.municipalityId,
+			// 					text: municipality.municipalityName
+			// 				}));
+			// 			});
+			// 		});
+			// 	}
+			// });	
 
 			$("#generateQR").click(function () {
 				var ptgGUID = $('#PublicTransportGroupGUID').val();

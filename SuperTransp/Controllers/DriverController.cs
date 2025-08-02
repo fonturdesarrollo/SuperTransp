@@ -306,7 +306,6 @@ namespace SuperTransp.Controllers
 			if (driverIdentityDocument > 0)
 			{
 				var driver = _driver.GetByIdentityDocument(driverIdentityDocument);
-
 				if (driver != null)
 				{
 					return Json(new { driverFullName = driver.DriverFullName, driverPhone = driver.DriverPhone, driverSexId = driver.SexId });

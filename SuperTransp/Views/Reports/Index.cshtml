@@ -11,6 +11,56 @@
 	<link rel="stylesheet" href="~/assets/css/main.css" />
 	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
 	<link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
+
+	<style>
+		.modal {
+			display: none;
+			position: fixed;
+			z-index: 999;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 100%;
+			overflow: auto;
+			background-color: rgba(0,0,0,0.5);
+		}
+
+		.modal-content {
+			background-color: #fff;
+			margin: 10% auto;
+			padding: 20px;
+			border-radius: 8px;
+			width: 50%;
+		}
+
+		.close {
+			color: #aaa;
+			float: right;
+			font-size: 28px;
+			cursor: pointer;
+		}
+
+		.btn-align-right {
+			margin-top: 15px;
+			float: right;
+		}
+
+		.is-invalid {
+			border: 2px solid red;
+			background-color: #ffe6e6;
+		}
+
+		.custom-success {
+			background-color: #b30000; /* rojo intenso */
+			color: #ffffff; /* letras blancas */
+			padding: 15px;
+			border-radius: 5px;
+			margin-top: 10px;
+			text-align: center;
+			font-weight: bold;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+		}
+	</style>
 </head>
 <body class="is-preload">
 	@using (Html.BeginForm("AccesLogin", "Login", FormMethod.Post))
@@ -88,7 +138,7 @@
 									<div class="col-6 col-12-medium">
 										<h3>Auditoría</h3>
 										<ul>
-											<li>@Html.ActionLink("Movimientos", "Logbook", "Security")</li>
+											<li><a href="#" id="openModal">Movimientos</a></li>
 										</ul>
 									</div>
 								}
@@ -106,6 +156,34 @@
 			</footer>
 		</div>
 	}
+
+	<div id="modalForm" class="modal">
+		<div class="modal-content">
+			<span class="close">&times;</span>
+			<h3>Indique el estado</h3>
+			@using (Html.BeginForm("Logbook", "Security", FormMethod.Post))
+			{
+				@Html.AntiForgeryToken()
+				<label for="ptgRifId">Estado</label>
+				@Html.DropDownList("selectedStateName", (SelectList)ViewBag.States, "Seleccione el estado", new { @class = "form-control", id = "StateId" })
+
+				<div class="form-group mt-3">
+					<label class="form-label d-block">Filtro de fecha:</label>
+					<div class="form-check">
+						<input class="form-check-input" type="radio" name="filterType" id="currentMonth" value="currentMonth" checked>
+						<label class="form-check-label" for="currentMonth">Mes actual</label>
+					</div>
+					<div class="form-check">
+						<input class="form-check-input" type="radio" name="filterType" id="twoMonths" value="twoMonths">
+						<label class="form-check-label" for="twoMonths">Mes actual + Mes pasado</label>
+					</div>
+				</div>
+
+				<input type="submit" value="Buscar" id="sendRequest" class="btn-align-right" />
+			}
+		</div>
+	</div>
+
 	<!-- Scripts -->
 	<script src="~/assets/js/jquery.min.js"></script>
 	<script src="~/assets/js/browser.min.js"></script>
@@ -115,5 +193,43 @@
 	@{
 		await Html.RenderPartialAsync("_ValidationScriptsPartial");
 	}
+
+	<script type="text/javascript">
+		$("body").on("click", "#sendRequest", function (event) {
+			event.preventDefault();
+
+			const state = $("#StateId").val();
+
+			if(state == ""){
+				alert("Debe indicar el estado");
+				return false;
+			}
+
+			$(this).closest("form").trigger("submit");
+		});
+
+		$(document).ready(function () {
+			setTimeout(function(){
+				$("#successMessage").fadeOut("slow");
+			}, 2500);
+
+			$("#openModal").click(function (e) {
+				e.preventDefault();
+				$("#modalForm").fadeIn(function () {
+					$("#ptgRifId").focus();
+				});
+			});
+
+			$(".close").click(function () {
+				$("#modalForm").fadeOut();
+			});
+
+			$(window).click(function (e) {
+				if ($(e.target).is("#modalForm")) {
+					$("#modalForm").fadeOut();
+				}
+			});
+		});
+	</script>
 </body>
 </html>

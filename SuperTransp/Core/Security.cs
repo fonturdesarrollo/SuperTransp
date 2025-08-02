@@ -1089,8 +1089,12 @@ namespace SuperTransp.Core
 			}
 		}
 
-		public List<SecurityLogbookModel> GetLogbookByStateName(string userState)
+		public List<SecurityLogbookModel> GetLogbookByStateName(string userState, string filterType)
 		{
+			int currentMonth = DateTime.Now.Month;
+			int currentYear = DateTime.Now.Year;
+			string whereCondition = string.Empty;
+
 			using (SqlConnection sqlConnection = GetConnection())
 			{
 				if (sqlConnection.State == ConnectionState.Closed)
@@ -1098,9 +1102,19 @@ namespace SuperTransp.Core
 					sqlConnection.Open();
 				}
 
+				if (filterType == "currentMonth")
+				{
+					whereCondition = $"WHERE (MONTH(SecurityLogbookDate) = {currentMonth}) AND (YEAR(SecurityLogbookDate) = {currentYear}) AND UserState = '{userState}' ORDER BY SecurityLogbookId DESC";
+				}
+				else
+				{
+					whereCondition = $"WHERE (MONTH(SecurityLogbookDate) = {currentMonth} OR MONTH(SecurityLogbookDate) = {currentMonth - 1}) AND (YEAR(SecurityLogbookDate) = {currentYear}) AND UserState = '{userState}' ORDER BY SecurityLogbookId DESC";
+				}
+
 				List<SecurityLogbookModel> logbook = new();
-				SqlCommand cmd = new("SELECT * FROM SecurityLogbook WHERE UserState = @UserState ORDER BY SecurityLogbookId DESC", sqlConnection);
-				cmd.Parameters.AddWithValue("@UserState", userState);
+				var sql = $"SELECT  SecurityLogbookId, MONTH(SecurityLogbookDate) AS Month, YEAR(SecurityLogbookDate) AS Year, SecurityLogbookDate, DeviceIP, DeviceType, DeviceBrowser, DeviceOperatingSystem, SecurityUserId, UserFullName, UserLogin, UserState, ActionDescription " +
+				$"FROM dbo.SecurityLogbook {whereCondition}";
+				SqlCommand cmd = new(sql, sqlConnection);
 
 				using (SqlDataReader dr = cmd.ExecuteReader())
 				{
@@ -1126,8 +1140,12 @@ namespace SuperTransp.Core
 			}
 		}
 
-		public List<SecurityLogbookModel> GetLogbookAllExceptAdmin()
+		public List<SecurityLogbookModel> GetLogbookAllExceptAdminByStateName(string selectStateName, string filterType)
 		{
+			int currentMonth = DateTime.Now.Month;
+			int currentYear = DateTime.Now.Year;
+			string whereCondition = string.Empty;
+
 			using (SqlConnection sqlConnection = GetConnection())
 			{
 				if (sqlConnection.State == ConnectionState.Closed)
@@ -1135,8 +1153,19 @@ namespace SuperTransp.Core
 					sqlConnection.Open();
 				}
 
+				if (filterType == "currentMonth")
+				{
+					whereCondition = $"WHERE (MONTH(SecurityLogbookDate) = {currentMonth}) AND (YEAR(SecurityLogbookDate) = {currentYear}) AND UserState = '{selectStateName}' AND (SecurityUserId <> 1) ORDER BY SecurityLogbookId DESC";
+				}
+				else
+				{
+					whereCondition = $"WHERE (MONTH(SecurityLogbookDate) = {currentMonth} OR MONTH(SecurityLogbookDate) = {currentMonth - 1}) AND (YEAR(SecurityLogbookDate) = {currentYear}) AND UserState = '{selectStateName}' AND (SecurityUserId <> 1) ORDER BY SecurityLogbookId DESC";
+				}
+
 				List<SecurityLogbookModel> logbook = new();
-				SqlCommand cmd = new("SELECT * FROM SecurityLogbook WHERE SecurityUserId <> 1 ORDER BY SecurityLogbookId DESC", sqlConnection);
+				var sql = $"SELECT  SecurityLogbookId, MONTH(SecurityLogbookDate) AS Month, YEAR(SecurityLogbookDate) AS Year, SecurityLogbookDate, DeviceIP, DeviceType, DeviceBrowser, DeviceOperatingSystem, SecurityUserId, UserFullName, UserLogin, UserState, ActionDescription " +
+				$"FROM dbo.SecurityLogbook {whereCondition}";
+				SqlCommand cmd = new(sql, sqlConnection);
 
 				using (SqlDataReader dr = cmd.ExecuteReader())
 				{
@@ -1161,8 +1190,12 @@ namespace SuperTransp.Core
 				return logbook.OrderByDescending(id => id.SecurityLogbookId).ToList();
 			}
 		}
-		public List<SecurityLogbookModel> GetLogbookAll()
+		public List<SecurityLogbookModel> GetLogbookAllBySelectedStateName(string selectedStateName, string filterType)
 		{
+			int currentMonth = DateTime.Now.Month;
+			int currentYear = DateTime.Now.Year;
+			string whereCondition = string.Empty;
+
 			using (SqlConnection sqlConnection = GetConnection())
 			{
 				if (sqlConnection.State == ConnectionState.Closed)
@@ -1170,8 +1203,19 @@ namespace SuperTransp.Core
 					sqlConnection.Open();
 				}
 
+				if(filterType =="currentMonth")
+				{
+					whereCondition = $"WHERE (MONTH(SecurityLogbookDate) = {currentMonth}) AND (YEAR(SecurityLogbookDate) = {currentYear}) AND UserState = '{selectedStateName}' ORDER BY SecurityLogbookId DESC";
+				}
+				else
+				{
+					whereCondition = $"WHERE (MONTH(SecurityLogbookDate) = {currentMonth} OR MONTH(SecurityLogbookDate) = {currentMonth - 1}) AND (YEAR(SecurityLogbookDate) = {currentYear}) AND UserState = '{selectedStateName}' ORDER BY SecurityLogbookId DESC";
+				}
+
 				List<SecurityLogbookModel> logbook = new();
-				SqlCommand cmd = new("SELECT * FROM SecurityLogbook ORDER BY SecurityLogbookId DESC", sqlConnection);
+				var sql = $"SELECT  SecurityLogbookId, MONTH(SecurityLogbookDate) AS Month, YEAR(SecurityLogbookDate) AS Year, SecurityLogbookDate, DeviceIP, DeviceType, DeviceBrowser, DeviceOperatingSystem, SecurityUserId, UserFullName, UserLogin, UserState, ActionDescription " +
+				$"FROM dbo.SecurityLogbook {whereCondition}";
+				SqlCommand cmd = new(sql, sqlConnection);
 
 				using (SqlDataReader dr = cmd.ExecuteReader())
 				{
