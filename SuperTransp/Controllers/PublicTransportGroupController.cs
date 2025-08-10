@@ -78,7 +78,6 @@ namespace SuperTransp.Controllers
 					ViewBag.IsDeleteAccess = false;
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 					int? stateId = HttpContext.Session.GetInt32("StateId");
-					int supervisorsGroupId = 3;
 
 					if (securityGroupId.HasValue)
 					{
@@ -281,26 +280,8 @@ namespace SuperTransp.Controllers
 					List<PublicTransportGroupViewModel> model = new();
 
 					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
-					ViewBag.IsTotalAccess = false;
-					ViewBag.IsDeleteAccess = false;
-					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
-					int? stateId = HttpContext.Session.GetInt32("StateId");
 
-					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
-					{
-						model = _publicTransportGroup.GetAllByStateId((int)stateId);
-					}
-					else
-					{
-						model = _publicTransportGroup.GetAll();
-					}
-
-					if (_security.IsTotalAccess(1) || _security.IsUpdateAccess(1))
-					{
-						ViewBag.IsTotalAccess = true;
-					}
-
-					return View(model);
+					return View();
 				}
 
 				return RedirectToAction("Login", "Security");
@@ -311,6 +292,51 @@ namespace SuperTransp.Controllers
 			}
 		}
 
+		[HttpGet]
+		public IActionResult GetPublicTransportGroup()
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 1))
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
+					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+					int? stateId = HttpContext.Session.GetInt32("StateId");
+					List<PublicTransportGroupViewModel> ptgData = new List<PublicTransportGroupViewModel>();
+
+					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
+					{
+						ptgData = _publicTransportGroup.GetAllByStateId((int)stateId);
+					}
+					else
+					{
+						ptgData = _publicTransportGroup.GetAll();
+					}
+
+					var list = ptgData.Select(ptg => new {
+						nombre = ptg.PTGCompleteName,
+						tipo = ptg.ModeName,
+						rif = ptg.PublicTransportGroupRif,
+						cupos = ptg.Partners,
+						cargados = ptg.TotalDrivers,
+						estado = ptg.StateName,
+						id = ptg.PublicTransportGroupId
+					});
+
+					return Json(new { data = list });
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(new { error = ex.Message });
+			}
+		}
 
 		[HttpGet]
 		public JsonResult GetMunicipality(int stateId)

@@ -81,7 +81,7 @@
 				<h2>Menu</h2>
 				<ul>
 					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
-					<li>@Html.ActionLink("Seleccionar organización", "PublicTransportGroupDriverList", "Supervision", new { ptgRifName = Model.PublicTransportGroupRif }, null)</li>
+					<li>@Html.ActionLink("Seleccionar socio", "PublicTransportGroupDriverList", "Supervision", new { ptgRifName = Model.PublicTransportGroupRif }, null)</li>
 					<li>@Html.ActionLink("Agregar resumen de supervisión", "PublicTransportGroupList", "Supervision")</li>
 					<li>@Html.ActionLink("Modificar resumen de supervisión", "SummaryList", "Supervision")</li>
 					<li>@Html.ActionLink("Supervisión", "Index", "Supervision")</li>
@@ -278,6 +278,7 @@
 		const driverIdentityDocument = document.querySelector('[name="DriverIdentityDocument"]').value;
 		const partnerNumber = '@Model.PartnerNumber';
 		const publicTransportGroupRif = '@Model.PublicTransportGroupRif';
+		const driverId = '@Model.DriverId';
 
 		const dropzone = new Dropzone("#myDropzone", {
 			url: saveFilesUrl,
@@ -299,6 +300,7 @@
 				driverIdentityDocument: driverIdentityDocument,
 				partnerNumber: partnerNumber,
 				publicTransportGroupRif: publicTransportGroupRif,
+				driverId: driverId,
 			},
 
 			init: function () {
@@ -334,6 +336,7 @@
 				var partnerNumber = '@Model.PartnerNumber';
 				var publicTransportGroupRif = '@Model.PublicTransportGroupRif';
 				var publicTransportGroupId = '@Model.PublicTransportGroupId';
+				var driverId = '@Model.DriverId';
 				const validUrl = '@Url.Action("DeleteAllSupervisionPictures", "Supervision")';
 
 				$.ajax({
@@ -348,6 +351,7 @@
 						publicTransportGroupRif: publicTransportGroupRif,
 						partnerNumber: partnerNumber,
 						publicTransportGroupId: publicTransportGroupId,
+						driverId: driverId,
 					},
 					success: function () {
 						alert("Las imágenes fueron eliminadas correctamente.");

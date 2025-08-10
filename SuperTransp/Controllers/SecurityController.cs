@@ -758,12 +758,10 @@ namespace SuperTransp.Controllers
 			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && !string.IsNullOrEmpty(selectedStateName))
 			{
 				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+				ViewBag.SelectedStateName = selectedStateName;
+				ViewBag.FilterType = filterType;
+
 				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
-				string? stateName = HttpContext.Session.GetString("StateName");
-				int? stateId = HttpContext.Session.GetInt32("StateId");
-
-				List<SecurityLogbookModel> model = new List<SecurityLogbookModel>();
-
 				int? groupId = HttpContext.Session.GetInt32("SecurityGroupId");
 
 				if (groupId is null ||
@@ -772,31 +770,63 @@ namespace SuperTransp.Controllers
 				{
 					return RedirectToAction("Login", "Security");
 				}
-
-				if (securityGroupId.HasValue)
-				{
-					if (securityGroupId != 1)
-					{
-						if (!_security.GroupHasAccessToModule((int)securityGroupId, 6))
-						{
-							model = _security.GetLogbookByStateName(selectedStateName, filterType);
-						}
-						else
-						{
-							model = _security.GetLogbookAllExceptAdminByStateName(selectedStateName, filterType);
-						}						
-					}
-					else
-					{
-
-						model = _security.GetLogbookAllBySelectedStateName(selectedStateName, filterType);
-					}
-				}
 					
-				return View(model);
+				return View();
 			}
 
 			return RedirectToAction("Login", "Security");
+		}
+
+		[HttpGet]
+		public IActionResult GetLogbookData(string selectedStateName, string filterType)
+		{
+			try
+			{
+				if (string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) || string.IsNullOrEmpty(selectedStateName))
+					return RedirectToAction("Login", "Security");
+
+				int? groupId = HttpContext.Session.GetInt32("SecurityGroupId");
+				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+				if (groupId is null ||
+					(groupId != 1 && !_security.GroupHasAccessToModule(groupId.Value, 4)) ||
+					(groupId == 1 ? false : !_security.GroupHasAccessToModule(groupId.Value, 18)))
+					return RedirectToAction("Login", "Security");
+
+				List<SecurityLogbookModel> model;
+
+				if (securityGroupId != 1)
+				{
+					if (!_security.GroupHasAccessToModule(securityGroupId.Value, 6))
+						model = _security.GetLogbookByStateName(selectedStateName, filterType);
+					else
+						model = _security.GetLogbookAllExceptAdminByStateName(selectedStateName, filterType);
+				}
+				else
+				{
+					model = _security.GetLogbookAllBySelectedStateName(selectedStateName, filterType);
+				}
+
+				var resultado = model.Select(m => new
+				{
+					id = m.SecurityLogbookId,
+					fecha = m.SecurityLogbookDate.ToString("dd/MM/yyyy hh:mm tt"),
+					dispositivo = m.DeviceType,
+					os = m.DeviceOperatingSystem,
+					navegador = m.DeviceBrowser,
+					ip = m.DeviceIP,
+					nombre = m.UserFullName,
+					login = m.UserLogin,
+					estado = m.UserState,
+					accion = m.ActionDescription
+				});
+
+				return Json(new { data = resultado });
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(new { error = ex.Message });
+			}
 		}
 	}
 }

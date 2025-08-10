@@ -88,22 +88,9 @@ namespace SuperTransp.Controllers
 						return RedirectToAction("Login", "Security");
 					}
 
-					List<PublicTransportGroupViewModel> model = new();
-
 					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
-					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
-					int? stateId = HttpContext.Session.GetInt32("StateId");
 
-					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
-					{
-						model = _publicTransportGroup.GetAllByStateId((int)stateId);
-					}
-					else
-					{
-						model = _publicTransportGroup.GetAll();
-					}
-
-					return View(model);
+					return View();
 				}
 
 				return RedirectToAction("Login", "Security");
@@ -111,6 +98,60 @@ namespace SuperTransp.Controllers
 			catch (Exception ex)
 			{
 				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
+
+		[HttpGet]
+		public IActionResult GetPublicTransportGroup()
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+				{
+					int? groupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+					if (groupId is null ||
+						(groupId != 1 && !_security.GroupHasAccessToModule(groupId.Value, 4)) ||
+						(groupId == 1 ? false : !_security.GroupHasAccessToModule(groupId.Value, 20)))
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
+					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+					int? stateId = HttpContext.Session.GetInt32("StateId");
+					List<PublicTransportGroupViewModel> ptgData = new List<PublicTransportGroupViewModel>();
+
+					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
+					{
+						ptgData = _publicTransportGroup.GetAllByStateId((int)stateId);
+					}
+					else
+					{
+						ptgData = _publicTransportGroup.GetAll();
+					}
+
+					var list = ptgData.Select(ptg => new
+					{
+						nombre = ptg.PTGCompleteName,
+						estado = ptg.StateName,
+						modalidad = ptg.ModeName,
+						rif = ptg.PublicTransportGroupRif,
+						cupos = ptg.Partners,
+						cargados = ptg.TotalDrivers,
+						supervisados = ptg.TotalSupervisedDrivers,
+						estatus = ptg.Partners == ptg.TotalSupervisedDrivers ? "SUPERVISADA" : "PENDIENTE",
+						color = ptg.Partners == ptg.TotalSupervisedDrivers ? "green" : "red",
+						id = ptg.PublicTransportGroupId
+					});
+
+					return Json(new { data = list });
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(new { error = ex.Message });
 			}
 		}
 
@@ -201,22 +242,9 @@ namespace SuperTransp.Controllers
 						return RedirectToAction("Login", "Security");
 					}
 
-					List<PublicTransportGroupViewModel> model = new();
-
 					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
-					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
-					int? stateId = HttpContext.Session.GetInt32("StateId");
 
-					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
-					{
-						model = _report.GetAllSupervisedVehiclesStatisticsByStateId((int)stateId);
-					}
-					else
-					{
-						model = _report.GetAllSupervisedVehiclesStatistics();
-					}
-
-					return View(model);
+					return View();
 				}
 
 				return RedirectToAction("Login", "Security");
@@ -224,6 +252,57 @@ namespace SuperTransp.Controllers
 			catch (Exception ex)
 			{
 				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
+
+		[HttpGet]
+		public IActionResult GetPublicTransportGroupSupervisedDriversStatistics()
+		{
+			try
+			{
+				List<PublicTransportGroupViewModel> model;
+				int? groupId = HttpContext.Session.GetInt32("SecurityGroupId");
+				int? stateId = HttpContext.Session.GetInt32("StateId");
+
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+				{
+					if (groupId is null ||
+						(groupId != 1 && !_security.GroupHasAccessToModule(groupId.Value, 4)) ||
+						(groupId == 1 ? false : !_security.GroupHasAccessToModule(groupId.Value, 21)))
+						{
+							return RedirectToAction("Login", "Security");
+						}
+
+					if (groupId != 1 && !_security.GroupHasAccessToModule((int)groupId, 6))
+						model = _report.GetAllSupervisedVehiclesStatisticsByStateId((int)stateId);
+					else
+						model = _report.GetAllSupervisedVehiclesStatistics();
+
+					var resultado = model.Select(ptg => new
+					{
+						nombre = ptg.PTGCompleteName,
+						estado = ptg.StateName,
+						modalidad = ptg.ModeName,
+						rif = ptg.PublicTransportGroupRif,
+						supervisados = ptg.TotalSupervisedDrivers,
+						operativos = ptg.TotalWorkingVehicles,
+						noOperativos = ptg.TotalNotWorkingVehicles,
+						conVehiculo = ptg.TotalWithVehicle,
+						sinVehiculo = ptg.TotalWithoutVehicle,
+						presentes = ptg.TotalDriverInPerson,
+						ausentes = ptg.TotalDriverNotInPerson,
+						color = ptg.Partners == ptg.TotalSupervisedDrivers ? "green" : "red",
+						id = ptg.PublicTransportGroupId
+					});
+
+					return Json(new { data = resultado });
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(new { error = ex.Message });
 			}
 		}
 

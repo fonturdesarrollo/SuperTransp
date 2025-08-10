@@ -1,4 +1,4 @@
-﻿@model List<SuperTransp.Models.PublicTransportGroupViewModel>
+﻿@* @model List<SuperTransp.Models.PublicTransportGroupViewModel> *@
 @{
 	Layout = "";
 }
@@ -61,6 +61,11 @@
 				<section>
 					<h4 style="color:#4cbece">Organizaciones Registradas y socios supervisados</h4>
 					<br />
+					<div id="loadingSpinner" style="text-align:center; padding:1em;">
+						<div class="spinner-border text-info" role="status">
+							<span class="sr-only">Cargando...</span>
+						</div>
+					</div>
 					<table id="publicTransportGroupListDetail" class="table table-striped table-bordered dt-responsive dt-nowrap">
 						<thead>
 							<tr>
@@ -77,31 +82,6 @@
 								<th>Ausentes</th>
 							</tr>
 						</thead>
-						<tbody>
-							@foreach (var ptg in Model)
-							{
-								<tr>
-									@{
-										var statusColorPTG = ptg.Partners == ptg.TotalSupervisedDrivers ? "green" : "red";
-										var statusDescription = ptg.Partners == ptg.TotalSupervisedDrivers ? "SUPERVISADA" : "PENDIENTE";
-									}
-
-									<td>
-										@Html.ActionLink(@ptg.PTGCompleteName, "PublicTransportGroupDriverList", "Reports", new { publicTransportGroupId = ptg.PublicTransportGroupId }, new { style = $"color: {statusColorPTG};" })
-									</td>
-									<td>@ptg.StateName</td>
-									<td>@ptg.ModeName</td>
-									<td>@ptg.PublicTransportGroupRif</td>
-									<td>@ptg.TotalSupervisedDrivers</td>
-									<td>@ptg.TotalWorkingVehicles</td>
-									<td>@ptg.TotalNotWorkingVehicles</td>
-									<td>@ptg.TotalWithVehicle</td>
-									<td>@ptg.TotalWithoutVehicle</td>
-									<td>@ptg.TotalDriverInPerson</td>
-									<td>@ptg.TotalDriverNotInPerson</td>
-								</tr>
-							}
-						</tbody>
 					</table>
 				</section>
 			</div>
@@ -129,31 +109,52 @@
 	<script type="text/javascript">
 
 		$(document).ready(function () {
+			var checkExistingUrl = '@Url.Action("GetPublicTransportGroupSupervisedDriversStatistics", "Reports")';
+			var urlPtg = '@Url.Action("PublicTransportGroupDriverList", "Reports")';
+
+		    $('#loadingSpinner').show();
 
 			$('#publicTransportGroupListDetail').DataTable({
-				stateSave: true,
-				"language": {
-					"sProcessing":    "Procesando...",
-					"sLengthMenu":    "Mostrar _MENU_ registros",
-					"sZeroRecords":   "No se encontraron resultados",
-					"sEmptyTable":    "Ningún dato disponible en esta tabla",
-					"sInfo":          "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
-					"sInfoEmpty":     "Mostrando registros del 0 al 0 de un total de 0 registros",
-					"sInfoFiltered":  "(filtrado de un total de _MAX_ registros)",
-					"sInfoPostFix":   "",
-					"sSearch":        "Buscar:",
-					"sUrl":           "",
-					"sInfoThousands":  ",",
-					"sLoadingRecords": "Cargando...",
-					"oPaginate": {
-						"sFirst":    "Primero",
-						"sLast":    "Último",
-						"sNext":    "Siguiente",
-						"sPrevious": "Anterior"
+				ajax: {
+					url: checkExistingUrl,
+					dataSrc: function (json) {
+						$('#loadingSpinner').fadeOut();
+						return json.data;
+					}
+				},
+				columns: [
+					{
+						data: 'nombre',
+						render: function (data, type, row) {
+							return `<a href="${urlPtg}?publicTransportGroupId=${row.id}" style="color:${row.color};">${data}</a>`;
+						}
 					},
-					"oAria": {
-						"sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
-						"sSortDescending": ": Activar para ordenar la columna de manera descendente"
+					{ data: 'estado' },
+					{ data: 'modalidad' },
+					{ data: 'rif' },
+					{ data: 'supervisados' },
+					{ data: 'operativos' },
+					{ data: 'noOperativos' },
+					{ data: 'conVehiculo' },
+					{ data: 'sinVehiculo' },
+					{ data: 'presentes' },
+					{ data: 'ausentes' }
+				],
+				stateSave: true,
+				language: {
+					sProcessing: "Procesando...",
+					sLengthMenu: "Mostrar _MENU_ registros",
+					sZeroRecords: "No se encontraron resultados",
+					sEmptyTable: "Ningún dato disponible en esta tabla",
+					sInfo: "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+					sInfoEmpty: "Mostrando registros del 0 al 0 de un total de 0 registros",
+					sInfoFiltered: "(filtrado de un total de _MAX_ registros)",
+					sSearch: "Buscar:",
+					oPaginate: {
+						sFirst: "Primero",
+						sLast: "Último",
+						sNext: "Siguiente",
+						sPrevious: "Anterior"
 					}
 				}
 			});

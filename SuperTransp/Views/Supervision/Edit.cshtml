@@ -38,6 +38,10 @@
 		.custom-textbox {
 			border: 2px solid;
 		}
+
+		.error-highlight {
+			border: 2px solid red;
+		}
 	</style>
 </head>
 <body class="is-preload">
@@ -81,7 +85,7 @@
 				<h2>Menu</h2>
 				<ul>
 					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
-					<li>@Html.ActionLink("Seleccionar organización", "PublicTransportGroupDriverList", "Supervision", new { ptgRifName = Model.PublicTransportGroupRif }, null)</li>
+					<li>@Html.ActionLink("Seleccionar socio", "PublicTransportGroupDriverList", "Supervision", new { ptgRifName = Model.PublicTransportGroupRif }, null)</li>
 					<li>@Html.ActionLink("Agregar resumen de supervisión", "PublicTransportGroupList", "Supervision")</li>
 					<li>@Html.ActionLink("Modificar resumen de supervisión", "SummaryList", "Supervision")</li>
 					<li>@Html.ActionLink("Supervisión", "Index", "Supervision")</li>
@@ -292,6 +296,7 @@
 		const driverIdentityDocument = document.querySelector('[name="DriverIdentityDocument"]').value;
 		const partnerNumber = '@Model.PartnerNumber';
 		const publicTransportGroupRif = '@Model.PublicTransportGroupRif';
+		const driverId = '@Model.DriverId';
 
 		const dropzone = new Dropzone("#myDropzone", {
 			url: saveFilesUrl,
@@ -313,6 +318,7 @@
 				driverIdentityDocument: driverIdentityDocument,
 				partnerNumber: partnerNumber,
 				publicTransportGroupRif: publicTransportGroupRif,
+				driverId: driverId,
 			},
 
 			init: function () {
@@ -348,6 +354,7 @@
 				var partnerNumber = '@Model.PartnerNumber';
 				var publicTransportGroupRif = '@Model.PublicTransportGroupRif';
 				var publicTransportGroupId = '@Model.PublicTransportGroupId';
+				var driverId = '@Model.DriverId';
 				const validUrl = '@Url.Action("DeleteAllSupervisionPictures", "Supervision")';
 
 				$.ajax({
@@ -362,6 +369,7 @@
 						publicTransportGroupRif: publicTransportGroupRif,
 						partnerNumber: partnerNumber,
 						publicTransportGroupId: publicTransportGroupId,
+						driverId: driverId,
 					},
 					success: function () {
 						alert("Las imágenes fueron eliminadas correctamente.");
@@ -501,129 +509,81 @@
 		function isOkToSave() {
 			let firstInvalidField = null;
 			let message = "";
-			const dzInstance = Dropzone.forElement("#myDropzone");
-			const uploaded = dzInstance.getAcceptedFiles().filter(f => f.status === Dropzone.SUCCESS);
+			const dz = Dropzone.forElement("#myDropzone");
+			const uploaded = dz.getAcceptedFiles().filter(f => f.status === Dropzone.SUCCESS);
+			const val = id => $(`#${id}`).val();
+			const isEmpty = id => val(id) === "";
 
-			if ($("#DriverWithVehicle").val() == "" && $("#DriverWithVehicle").val() != "False" && !firstInvalidField) {
-				firstInvalidField = "#DriverWithVehicle";
-				message = "Debe indicar si el socio posee o no vehículo";
-			}
-
-			if($("#DriverWithVehicle option:selected").text() == "Sí")
-			{
-				if ($("#InPerson").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#InPerson";
-					message = "Debe indicar si el socio se presentó o no a la supervisión";
+			const validateField = (condition, fieldId, msg) => {
+				if (condition && !firstInvalidField) {
+					firstInvalidField = `#${fieldId}`;
+					message = msg;
 				}
+			};
 
-				if ($("#WorkingVehicle").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#WorkingVehicle";
-					message = "Debe indicar si el vehículo está operativo o no";
-				}
+			validateField(isEmpty("DriverWithVehicle") && val("DriverWithVehicle") !== "False", "DriverWithVehicle", "Debe indicar si el socio posee o no vehículo");
 
-				if ($("#WorkingVehicle").val() == "False" &&  $("#FailureTypeId").val() == ""  &&  !firstInvalidField) {
-					firstInvalidField = "#FailureTypeId";
-					message = "Debe indicar si el tipo de falla";
-				}	
+			if ($("#DriverWithVehicle option:selected").text() === "Sí") {
+				const requiredFields = [
+					["InPerson", "Debe indicar si el socio se presentó o no a la supervisión"],
+					["WorkingVehicle", "Debe indicar si el vehículo está operativo o no"],
+					["FailureTypeId", "Debe indicar el tipo de falla", () => val("WorkingVehicle") === "False"],
+					["Plate", "Debe colocar la placa"],
+					["Year", "Debe seleccionar el año del vehículo"],
+					["Make", "Debe seleccionar la marca del vehículo"],
+					["VehicleDataId", "Debe seleccionar el modelo del vehículo"],
+					["Passengers", "Debe seleccionar la cantidad de puestos"],
+					["RimId", "Debe seleccionar el tipo de neumáticos"],
+					["Wheels", "Debe seleccionar la cantidad de neumáticos"],
+					["FuelTypeId", "Debe seleccionar el tipo de combustible"],
+					["TankCapacity", "Debe seleccionar la capacidad del tanque de combustible"],
+					["BatteryId", "Debe seleccionar el tipo de batería"],
+					["NumberOfBatteries", "Debe seleccionar la cantidad de baterías"],
+					["MotorOilId", "Debe seleccionar el tipo de aceite"],
+					["Liters", "Debe seleccionar los litros de aceite"],
+					["FingerprintTrouble", "Debe seleccionar si tiene o no problemas con la huella"],
+					["FailureTypeId", "Debe seleccionar si tiene o no alguna falla"]
+				];
 
-				if($("#Plate").val() == "" && !firstInvalidField){
-					firstInvalidField = "#Plate";
-					message = "Debe colocar la placa";
-				}
-
-				if ($("#Years").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#Years";
-					message = "Debe seleccionar el año del vehículo";
-				}
-
-				if ($("#Make").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#Make";
-					message = "Debe seleccionar la marca del vehículo";
-				}
-
-				if ($("#VehicleDataId").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#VehicleDataId";
-					message = "Debe seleccionar el modelo del vehículo";
-				}
-
-				if ($("#Passengers").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#Passengers";
-					message = "Debe seleccionar la cantidad de puestos";
-				}
-
-				if ($("#RimId").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#RimId";
-					message = "Debe seleccionar el tipo de neumáticos";
-				}
-
-				if ($("#Wheels").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#Wheels";
-					message = "Debe seleccionar la cantidad de neumáticos";
-				}
-
-				if ($("#FuelTypeId").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#FuelTypeId";
-					message = "Debe seleccionar el tipo de combustible";
-				}
-
-				if ($("#TankCapacity").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#TankCapacity";
-					message = "Debe seleccionar la capacidad del tanque de combustible";
-				}
-
-				if ($("#BatteryId").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#BatteryId";
-					message = "Debe seleccionar el tipo de batería";
-				}
-
-				if ($("#NumberOfBatteries").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#NumberOfBatteries";
-					message = "Debe seleccionar la cantidad de baterías";
-				}
-
-				if ($("#MotorOilId").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#MotorOilId";
-					message = "Debe seleccionar el tipo de aceite";
-				}
-
-				if ($("#Liters").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#Liters";
-					message = "Debe seleccionar los litros de aceite";
-				}
-
-				if ($("#FingerprintTrouble").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#FingerprintTrouble";
-					message = "Debe seleccionar si tiene o no problemas con la huella";
-				}
-
-				if ($("#FailureTypeId").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#FailureTypeId";
-					message = "Debe seleccionar si tiene o no alguna falla";
-				}
+				requiredFields.forEach(([id, msg, cond]) => {
+					validateField(isEmpty(id) && (!cond || cond()), id, msg);
+				});
 
 				@inject Microsoft.AspNetCore.Mvc.Rendering.IJsonHelper Json
-
 				const pictures = @Json.Serialize(Model.Pictures);
-				var currentTotalPictures = pictures.length;
-				var modeId = $("#ModeId").val();
+				const totalPics = pictures.length;
+				const modeId = val("ModeId");
 
-				if(uploaded.length > 0){
-					message = validateMode(modeId, uploaded, currentTotalPictures);
-					firstInvalidField = message == "" ? "": firstInvalidField = "#myDropzone"
-					}else{
-					if(currentTotalPictures == 0){
+				if (uploaded.length > 0) {
+					const modeMessage = validateMode(modeId, uploaded, totalPics);
+					if (modeMessage && !firstInvalidField) {
 						firstInvalidField = "#myDropzone";
-						message = "Debe agregar imágenes del vehículo para poder actualizar";
-					}else{
-						message = validateMode(modeId, uploaded, currentTotalPictures);
-						firstInvalidField = message == "" ? "": firstInvalidField = "#myDropzone"
+						message = modeMessage;
+					}
+				} else if (totalPics === 0) {
+					firstInvalidField = "#myDropzone";
+					message = "Debe agregar imágenes del vehículo para poder actualizar";
+				} else {
+					const modeMessage = validateMode(modeId, uploaded, totalPics);
+					if (modeMessage && !firstInvalidField) {
+						firstInvalidField = "#myDropzone";
+						message = modeMessage;
 					}
 				}
+			}
 
-				if (firstInvalidField) {
-					showAlert(message, firstInvalidField);
-					return false;
+			if (firstInvalidField && message !== "") {
+				const el = $(firstInvalidField);
+				if (el.length) {
+					el.addClass("is-invalid");
+					el.on("input", function () {
+						$(this).removeClass("is-invalid");
+					});
+					el[0].scrollIntoView({ behavior: "smooth", block: "center" });
+					el.focus();
 				}
+				alert(message);
+				return false;
 			}
 
 			return true;
@@ -639,9 +599,9 @@
 						var quantityMessage ="";
 
 						if(uploaded.length > 2){
-							quantityMessage = currentTotalPictures + ", haga clic en el recuadro: Cargar imágenes, y agregue 2 imágenes (las actuales serán sustituidas)"
+							quantityMessage = uploaded.length +  ", haga clic en el recuadro: Cargar imágenes, y agregue 2 imágenes (las actuales serán sustituidas)"
 						}else if(uploaded.length < 2){
-							quantityMessage = currentTotalPictures + ", haga clic en el recuadro: Cargar imágenes, y agregue 2 imágenes (las actuales serán sustituidas)."
+							quantityMessage = uploaded.length  + ", haga clic en el recuadro: Cargar imágenes, y agregue 2 imágenes (las actuales serán sustituidas)."
 						}
 
 						message = staticMessage + quantityMessage;
@@ -655,7 +615,7 @@
 						var quantityMessage ="";
 
 						if(uploaded.length < 4){
-							quantityMessage = currentTotalPictures + ", haga clic en el recuadro: Cargar imágenes, y agregue 4 imágenes (las actuales serán sustituidas)."
+							quantityMessage = uploaded.length + ", haga clic en el recuadro: Cargar imágenes, y agregue 4 imágenes (las actuales serán sustituidas)."
 						}
 
 						message = staticMessage + quantityMessage;
@@ -666,21 +626,6 @@
 			return message;
 		}
 
-		function showAlert(message, selector) {
-			alert(message);
-			highlightErrorField(selector);
-			$(selector).focus();
-		}
-
-		function highlightErrorField(selector) {
-			$(selector).addClass("is-invalid");
-			$(selector).on("input", function () {
-				$(this).removeClass("is-invalid");
-			});
-
-			$(selector)[0].scrollIntoView({ behavior: "smooth", block: "center" });
-		}
-
 		function showMsg(hasCurrentJob) {
 			if (hasCurrentJob != "OK") {
 				alert(hasCurrentJob);
@@ -688,6 +633,31 @@
 			} else {
 
 				$("form").unbind('submit').submit();
+			}
+		}
+
+		function setTransportTypeDefaultValues(modeId){
+			if('@Model.DriverWithVehicle' === 'False'){
+				switch (modeId) {
+				  case "3":
+					$('#Passengers').val("4");
+					$('#Wheels').val("4");
+					$('#FuelTypeId').val("1");
+					$('#BatteryId').val("1");
+					$('#TankCapacity').val("50");
+					$('#NumberOfBatteries').val("1");
+					$('#Liters').val("4");
+					break;
+				  case "4":
+					$('#Passengers').val("2");
+					$('#Wheels').val("2");
+					$('#FuelTypeId').val("1");
+					$('#BatteryId').val("9");
+					$('#TankCapacity').val("10");
+					$('#NumberOfBatteries').val("1");
+					$('#Liters').val("1");
+					break;
+				}
 			}
 		}
 
@@ -702,6 +672,8 @@
 					return false;
 				}
 			});
+
+			setTransportTypeDefaultValues($("#ModeId").val())
 
 			$('#Plate').on('input', function() {
 				const value = $(this).val();

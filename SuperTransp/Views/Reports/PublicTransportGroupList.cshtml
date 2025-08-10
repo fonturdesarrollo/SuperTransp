@@ -1,4 +1,4 @@
-﻿@model List<SuperTransp.Models.PublicTransportGroupViewModel>
+﻿@* @model List<SuperTransp.Models.PublicTransportGroupViewModel> *@
 @{
 	Layout = "";
 }
@@ -61,6 +61,11 @@
 				<section>
 					<h4 style="color:#4cbece">Organizaciones Registradas</h4>
 					<br />
+					<div id="loadingSpinner" style="text-align:center; padding:1em;">
+						<div class="spinner-border text-info" role="status">
+							<span class="sr-only">Cargando...</span>
+						</div>
+					</div>
 					<table id="publicTransportGroupListDetail" class="table table-striped table-bordered dt-responsive dt-nowrap">
 						<thead>
 							<tr>
@@ -74,28 +79,6 @@
 								<th>Estatus</th>
 							</tr>
 						</thead>
-						<tbody>
-							@foreach (var ptg in Model)
-							{
-								<tr>
-									@{
-										var statusColorPTG = ptg.Partners == ptg.TotalSupervisedDrivers ? "green" : "red";
-										var statusDescription = ptg.Partners == ptg.TotalSupervisedDrivers ? "SUPERVISADA" : "PENDIENTE";
-									}
-
-									<td>
-										@Html.ActionLink(@ptg.PTGCompleteName, "PublicTransportGroupDriverList", "Reports", new { publicTransportGroupId = ptg.PublicTransportGroupId }, new { style = $"color: {statusColorPTG};" })
-									</td>
-									<td>@ptg.StateName</td>
-									<td>@ptg.ModeName</td>
-									<td>@ptg.PublicTransportGroupRif</td>
-									<td>@ptg.Partners</td>
-									<td>@ptg.TotalDrivers</td>
-									<td>@ptg.TotalSupervisedDrivers</td>
-									<td>@statusDescription</td>
-								</tr>
-							}
-						</tbody>
 					</table>
 				</section>
 			</div>
@@ -123,31 +106,49 @@
 	<script type="text/javascript">
 
 		$(document).ready(function () {
+			var checkExistingUrl = '@Url.Action("GetPublicTransportGroup", "Reports")';
+			var urlPtg = '@Url.Action("PublicTransportGroupDriverList", "Reports")';
+			
+			$('#loadingSpinner').show();
 
 			$('#publicTransportGroupListDetail').DataTable({
-				stateSave: true,
-				"language": {
-					"sProcessing":    "Procesando...",
-					"sLengthMenu":    "Mostrar _MENU_ registros",
-					"sZeroRecords":   "No se encontraron resultados",
-					"sEmptyTable":    "Ningún dato disponible en esta tabla",
-					"sInfo":          "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
-					"sInfoEmpty":     "Mostrando registros del 0 al 0 de un total de 0 registros",
-					"sInfoFiltered":  "(filtrado de un total de _MAX_ registros)",
-					"sInfoPostFix":   "",
-					"sSearch":        "Buscar:",
-					"sUrl":           "",
-					"sInfoThousands":  ",",
-					"sLoadingRecords": "Cargando...",
-					"oPaginate": {
-						"sFirst":    "Primero",
-						"sLast":    "Último",
-						"sNext":    "Siguiente",
-						"sPrevious": "Anterior"
+				ajax: {
+					url: checkExistingUrl,
+					dataSrc: function (json) {
+						$('#loadingSpinner').fadeOut();
+						return json.data;
+					}
+				},
+				columns: [
+					{
+						data: 'nombre',
+						render: function (data, type, row) {
+							return `<a href="${urlPtg}?publicTransportGroupId=${row.id}" style="color:${row.color};">${data}</a>`;
+						}
 					},
-					"oAria": {
-						"sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
-						"sSortDescending": ": Activar para ordenar la columna de manera descendente"
+					{ data: 'estado' },
+					{ data: 'modalidad' },
+					{ data: 'rif' },
+					{ data: 'cupos' },
+					{ data: 'cargados' },
+					{ data: 'supervisados' },
+					{ data: 'estatus' }
+				],
+				stateSave: true,
+				language: {
+					sProcessing: "Procesando...",
+					sLengthMenu: "Mostrar _MENU_ registros",
+					sZeroRecords: "No se encontraron resultados",
+					sEmptyTable: "Ningún dato disponible en esta tabla",
+					sInfo: "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+					sInfoEmpty: "Mostrando registros del 0 al 0 de un total de 0 registros",
+					sInfoFiltered: "(filtrado de un total de _MAX_ registros)",
+					sSearch: "Buscar:",
+					oPaginate: {
+						sFirst: "Primero",
+						sLast: "Último",
+						sNext: "Siguiente",
+						sPrevious: "Anterior"
 					}
 				}
 			});

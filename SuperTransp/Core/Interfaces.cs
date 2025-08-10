@@ -106,6 +106,7 @@ namespace SuperTransp.Core
 		{
 			public int AddOrEdit(SupervisionViewModel model);
 			public int AddSimple(SupervisionViewModel model);
+			public int AddOrEditRound(SupervisionRoundModel model);
 			public SupervisionViewModel GetById(int supervisionId);
 			public SupervisionViewModel GetByPublicTransportGroupIdAndDriverIdAndPartnerNumberStateId(int publicTransportGroupId, int driverId, int partnerNumber, int stateId);
 			public SupervisionViewModel GetByPublicTransportGroupGUIDAndPartnerNumber(string publicTransportGroupGUID, int partnerNumber);
@@ -117,6 +118,8 @@ namespace SuperTransp.Core
 			public List<SupervisionSummaryViewModel> GetAllSupervisionSummary();
 			public List<SupervisionSummaryViewModel> GetSupervisionSummaryByStateId(int stateId);
 			public SupervisionSummaryViewModel GetSupervisionSummaryById(int supervisionSummaryId);
+			public bool IsActiveSupervisionRoundByStateMonthAndYear(int stateId, int month, int year);
+			public bool IsFinishedSupervisionRoundByStateMonthAndYear(int stateId, int month, int year);
 			public bool IsSupervisionSummaryDoneByPtgId(int publicTransportGroupId);
 			public bool IsUserSupervisingPublicTransportGroup(int securityUserId, int publicTransportGroupId);
 			public bool DeletePicturesByPTGIdAndPartnerNumber(int publicTransportGroupId, int partnerNumber);
@@ -127,6 +130,8 @@ namespace SuperTransp.Core
 		{
 			public List<CommonDataViewModel> GetYesNo();
 			public List<CommonDataViewModel> GetYears();
+			public List<CommonDataViewModel> GetCurrentYears();
+			public List<CommonDataViewModel> GetMonthNames();
 			public List<CommonDataViewModel> GetMakesByYear(int year);
 			public List<CommonDataViewModel> GetModelsByYearAndMake(int year, string make);
 			public CommonDataViewModel GetVehicleDataById(int? vehicleDataId);
@@ -151,6 +156,17 @@ namespace SuperTransp.Core
 			public List<PublicTransportGroupViewModel> GetAllSupervisedVehiclesStatisticsByStateId(int stateId);
 			public List<PublicTransportGroupViewModel> GetAllSupervisedDriversStatisticsInEstate();
 			public List<PublicTransportGroupViewModel> GetAllSupervisedDriversStatisticsInEstateByStateId(int stateId);
+		}
+		public interface IFtpService
+		{
+			Task DeleteFilesInFolderAsync(string folderPath);
+			Task UploadFileAsync(Stream fileStream, string folderPath, string fileName);
+			Task<List<string>> ListFilesAsync(string folderPath);
+			Task<bool> FolderExistsAsync(string folderPath);
+			Task CreateFolderAsync(string folderPath);
+			Task DeleteFolderAsync(string folderPath);
+			Task TransferFileAsync(string sourcePath, string destinationPath);
+			Task DeleteFileAsync(string filePath);
 		}
 	}
 }

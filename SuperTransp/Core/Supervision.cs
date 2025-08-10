@@ -88,6 +88,7 @@ namespace SuperTransp.Core
 								cmd.Parameters.AddWithValue("@PublicTransportGroupId", model.PublicTransportGroupId);
 								cmd.Parameters.AddWithValue("@PartnerNumber", model.PartnerNumber);
 								cmd.Parameters.AddWithValue("@VehicleImageUrl", picture.VehicleImageUrl);
+								cmd.Parameters.AddWithValue("@DriverId", model.DriverId);
 
 								cmd.ExecuteScalar();
 							}
@@ -190,6 +191,62 @@ namespace SuperTransp.Core
 			}
 		}
 
+		public int AddOrEditRound(SupervisionRoundModel model)
+		{
+			int result = 0;
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					if (model != null)
+					{
+						SqlCommand cmd = new("SuperTransp_SupervisionRoundAddOrEdit", sqlConnection)
+						{
+							CommandType = System.Data.CommandType.StoredProcedure
+						};
+
+						cmd.Parameters.AddWithValue("@SupervisionRoundId", model.SupervisionRoundId);
+						cmd.Parameters.AddWithValue("@SupervisionRoundStartDate", model.SupervisionRoundStartDate);
+						cmd.Parameters.AddWithValue("@StateId", model.StateId);
+						cmd.Parameters.AddWithValue("@SupervisionRoundStartDescription", model.SupervisionRoundStartDescription);
+						cmd.Parameters.AddWithValue("@SupervisionRoundEndDate", model.SupervisionRoundEndDate);
+						cmd.Parameters.AddWithValue("@SupervisionRoundEndDescription", model.SupervisionRoundEndDescription);
+						cmd.Parameters.AddWithValue("@SupervisionRoundStatus", model.SupervisionRoundStatus);
+
+						result = Convert.ToInt32(cmd.ExecuteScalar());
+
+						if(model.SupervisionRoundId == 0)
+						{
+							_security.AddLogbook(0, false,
+								$" apertura vuelta de supervisión," +
+								$" mes: {model.SupervisionRoundStartDate.ToString("MMMM").ToUpper()} -" +
+								$" año: {model.SupervisionRoundStartDate.ToString("yyyy")} -" +
+								$" descripcion: {model.SupervisionRoundStartDescription}");
+						}
+						else
+						{
+							_security.AddLogbook(model.SupervisionRoundId, false,
+								$" cierrre vuelta de supervisión," +
+								$" mes: {model.SupervisionRoundEndDate?.ToString("MMMM").ToUpper()} -" +
+								$" año: {model.SupervisionRoundEndDate?.ToString("yyyy")} -" +
+								$" descripcion: {model.SupervisionRoundEndDescription}");
+						}				
+					}
+				}
+
+				return result;
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al añadir la supervisión {ex.Message}", ex);
+			}
+		}
+
 		public bool DeletePicturesByPTGIdAndPartnerNumber(int publicTransportGroupId, int partnerNumber)
 		{
 			using (SqlConnection sqlConnection = GetConnection())
@@ -221,7 +278,10 @@ namespace SuperTransp.Core
 					}
 
 					List<PublicTransportGroupViewModel> ptg = new();
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE StateId = @StateId AND PublicTransportGroupRif = @PublicTransportGroupRif AND Partners = TotalDrivers", sqlConnection);
+					//ESTO PERMITE QUE SOLO LAS ORGANIZACIONES CON SOCIOS IGUALES A CUPOS SEAN MOSTRADOS EN LA LISTA, SE OMITE ESTA VALIDACION PORQUE 
+					//EXISTEN ORGANIZACIONES CON CUPOS VACIOS QUE DEDEN SUPERVISARSE
+					//SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE StateId = @StateId AND PublicTransportGroupRif = @PublicTransportGroupRif AND Partners = TotalDrivers", sqlConnection);
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE StateId = @StateId AND PublicTransportGroupRif = @PublicTransportGroupRif", sqlConnection);
 					cmd.Parameters.AddWithValue("@StateId", stateId);
 					cmd.Parameters.AddWithValue("@PublicTransportGroupRif", ptgRif);
 
@@ -603,6 +663,9 @@ namespace SuperTransp.Core
 					}
 
 					List<PublicTransportGroupViewModel> ptg = new();
+					//ESTO PERMITE QUE SOLO LAS ORGANIZACIONES CON SOCIOS IGUALES A CUPOS SEAN MOSTRADOS EN LA LISTA, SE OMITE ESTA VALIDACION PORQUE 
+					//EXISTEN ORGANIZACIONES CON CUPOS VACIOS QUE DEDEN SUPERVISARSE
+					//SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE PublicTransportGroupRif = @PublicTransportGroupRif AND Partners = TotalDrivers", sqlConnection);
 					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE PublicTransportGroupRif = @PublicTransportGroupRif ORDER BY StateName, PTGCompleteName, PartnerNumber", sqlConnection);
 					cmd.Parameters.AddWithValue("@PublicTransportGroupRif", ptgRif);
 
@@ -1046,6 +1109,63 @@ namespace SuperTransp.Core
 			catch (Exception ex)
 			{
 				throw new Exception($"Error al obtener todos los resumenes de supervision {ex.Message}", ex);
+			}
+		}
+		public bool IsActiveSupervisionRoundByStateMonthAndYear(int stateId, int month, int year)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<SupervisionRoundModel> round = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_SupervisionRoundDetail WHERE StateId = @StateId AND StartMonth = @StartMonth AND StartYear = @StartYear AND SupervisionRoundStatus = 1", sqlConnection);
+					cmd.Parameters.AddWithValue("@StateId", stateId);
+					cmd.Parameters.AddWithValue("@StartMonth", month);
+					cmd.Parameters.AddWithValue("@StartYear", year);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						return dr.HasRows;
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener el estatus de la vuelta de supervision cerrada {ex.Message}", ex);
+			}
+		}
+
+		public bool IsFinishedSupervisionRoundByStateMonthAndYear(int stateId, int month, int year)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<SupervisionRoundModel> round = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_SupervisionRoundDetail WHERE StateId = @StateId AND EndMonth = @EndMonth AND EndYear = @EndYear AND SupervisionRoundStatus = 0", sqlConnection);
+					cmd.Parameters.AddWithValue("@StateId", stateId);
+					cmd.Parameters.AddWithValue("@EndMonth", month);
+					cmd.Parameters.AddWithValue("@EndYear", year);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						return dr.HasRows;
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener el estatus de la vuelta de supervision cerrada {ex.Message}", ex);
 			}
 		}
 

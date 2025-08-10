@@ -1,6 +1,7 @@
 ﻿using Microsoft.Data.SqlClient;
 using SuperTransp.Models;
 using System.Data;
+using System.Globalization;
 using static SuperTransp.Core.Interfaces;
 
 namespace SuperTransp.Core
@@ -38,6 +39,37 @@ namespace SuperTransp.Core
 			}
 
 			return years;
+		}
+
+		public List<CommonDataViewModel> GetCurrentYears()
+		{
+			var lastYear = DateTime.Now;
+			List<CommonDataViewModel> years = new List<CommonDataViewModel>();
+
+			for (int i = 0; i < 1; i++)
+			{
+				years.Add(new CommonDataViewModel
+				{
+					YearId = DateTime.Now.AddYears(i).Year,
+					YearName = DateTime.Now.AddYears(i).Year.ToString()
+				});
+			}
+
+			return years;
+		}
+
+		public List<CommonDataViewModel> GetMonthNames()
+		{
+			List<CommonDataViewModel> months = new List<CommonDataViewModel>();
+
+			for (int i = 1; i <= 12; i++)
+			{
+				string monthName = new DateTime(2020, i, 1).ToString("MMMM", new CultureInfo("es-ES"));
+
+				months.Add(new CommonDataViewModel { MonthId = i, MonthName = monthName.ToUpper() });
+			}
+
+			return months;
 		}
 
 		public List<CommonDataViewModel> GetPassengers()

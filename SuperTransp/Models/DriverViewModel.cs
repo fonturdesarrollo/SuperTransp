@@ -22,5 +22,7 @@ namespace SuperTransp.Models
 		public int SexId { get; set; }
 		public string? SexName { get; set; }
 		public DateTime Birthdate { get; set; }
+		public string? StateName { get; set; }
+		public string? PublicTransportGroupRif { get; set; }
 	}
 }

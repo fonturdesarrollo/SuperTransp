@@ -93,7 +93,7 @@
 							</div>
 							<div class="col-6 col-12-xsmall">
 								<strong>Nombre:</strong>
-								@Html.TextBoxFor(x => x.DriverFullName, new { placeholder = "Nombre del transportista", tabindex = "0", maxlength = "20" })
+								@Html.TextBoxFor(x => x.DriverFullName, new { placeholder = "Nombre del socio", tabindex = "0", maxlength = "20" })
 							</div>
 							<div class="col-6">
 								<strong>Sexo:</strong>
@@ -110,7 +110,7 @@
 							</div>
 							<div class="col-6">
 								<strong>Teléfono:</strong>
-								@Html.TextBoxFor(x => x.DriverPhone, new { placeholder = "Teléfono del transportista", maxlength = "11" })
+								@Html.TextBoxFor(x => x.DriverPhone, new { placeholder = "Teléfono del socio", maxlength = "11" })
 								<span asp-validation-for="DriverPhone" class="text-danger"></span>
 							</div>
 							<div class="col-12">
@@ -215,36 +215,64 @@
 		$("body").on("click", "#saveRequest", function (event) {
 			event.preventDefault();
 
-			if (!isOkToSave()) {
-				return false;
-			}
+			if (!isOkToSave()) return false;
 
-			if (!confirm("¿Está seguro de que desea actualizar los registros?")) {
-				return false;
-			}
+			if (!confirm("¿Está seguro de que desea actualizar los registros?")) return false;
 
 			$(this).closest("form").trigger("submit");
 		});
+
 
 		$("form").on("submit", function (e) {
 			e.preventDefault();
 
 			if ($(this).valid()) {
-				var paramValue2 = $('#PublicTransportGroupId').val();
-				var paramValue4 = $('#PartnerNumber').val();
-				var paramValue5 = $('#DriverId').val();
-				var checkExistingUrl = '@Url.Action("CheckExistingValuesOnEdit", "Driver")';
+				let paramValue2 = $('#PublicTransportGroupId').val();
+				let paramValue4 = $('#PartnerNumber').val();
+				let paramValue5 = $('#DriverId').val();
+				let pTGCompleteName = $('#PTGCompleteName').val();
+
+				let checkExistingUrl = '@Url.Action("CheckExistingValuesOnEdit", "Driver")';
+				let editUrl = '@Url.Action("EditWithAjax", "Driver")';
+				let redirectToAddBase = '@Url.Action("Add", "Driver")';
+
 				$.ajax({
 					url: checkExistingUrl,
 					data: {
-						paramValue2: paramValue2,
-						paramValue4: paramValue4,
-						paramValue5: paramValue5
+						paramValue2,
+						paramValue4,
+						paramValue5
 					},
-					success: function (data) {
-						showMsg(data);
-					},
-					cache: false
+					success: function (response) {
+						if (response.redirectUrl) {
+							showMsg(response.message || "Redireccionando...");
+							setTimeout(function () {
+								window.location.href = response.redirectUrl;
+							}, 1000);
+							return;
+						}
+
+						if (response.canContinue) {
+							let formData = $("form").serialize();
+
+							$.ajax({
+								url: editUrl,
+								type: 'POST',
+								data: formData,
+								success: function (data) {
+									if (data.redirectUrl) {
+										showMsg(data.message || "Datos actualizados correctamente");
+										window.location.href = data.redirectUrl
+									} else {
+										showMsg(data.message || "Datos actualizados correctamente");
+										window.location.href = `${redirectToAddBase}?publicTransportGroupId=${paramValue2}&pTGCompleteName=${encodeURIComponent(pTGCompleteName)}`;
+									}
+								}
+							});
+						} else {
+							showMsg(response.message);
+						}
+					}
 				});
 			}
 		});
@@ -255,7 +283,7 @@
 
 			if ($("#DriverIdentityDocument").val() == "" && !firstInvalidField) {
 				firstInvalidField = "#DriverIdentityDocument";
-				message = "Debe colocar la cédula del transportista";
+				message = "Debe colocar la cédula del socio";
 			}
 
 			if (!firstInvalidField) {
@@ -269,7 +297,7 @@
 
 			if ($("#DriverFullName").val() == "" && !firstInvalidField) {
 				firstInvalidField = "#DriverFullName";
-				message = "Debe colocar el nombre del transportista";
+				message = "Debe colocar el nombre del socio";
 			} else {
 				const driverFullName = $("#DriverFullName").val().trim();
 				const regex = /^[a-zA-ZñÑ\s]{5,}$/;
@@ -285,6 +313,11 @@
 			if ($("#SexId").val() == ""  &&  !firstInvalidField) {
 				firstInvalidField = "#SexId";
 				message = "Debe indicar el sexo";
+			}
+
+			if ($("#Birthdate").val() == ""  &&  !firstInvalidField) {
+				firstInvalidField = "#Birthdate";
+				message = "Debe indicar la fecha de nacimiento";
 			}
 
 			if ($("#PartnerNumber").val() != "" &&  $("#PartnerNumber").val() == "0" && !firstInvalidField) {

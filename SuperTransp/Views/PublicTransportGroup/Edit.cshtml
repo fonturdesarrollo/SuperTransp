@@ -92,7 +92,16 @@
 					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
 					<li>@Html.ActionLink("Agregar organización", "Add", "PublicTransportGroup")</li>
 					<li>@Html.ActionLink("Modificar organización", "PublicTransportGroupList", "PublicTransportGroup")</li>
-					<li>@Html.ActionLink("Agregar socios a organización", "PublicTransportGroupList", "Driver")</li>
+					<li>
+					<li>
+						@Html.ActionLink(
+							"Agregar socios a organización",
+							"Add",
+							"Driver",
+							new { publicTransportGroupId = @Model.PublicTransportGroupId, pTGCompleteName = @Model.PTGCompleteName },
+							null
+						)
+					</li>
 					<li>@Html.ActionLink("Organizaciones de transporte", "Index", "PublicTransportGroup")</li>
 					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 				</ul>
@@ -117,7 +126,6 @@
 							</div>
 							<div class="col-12">
 								<strong>Entidad legal:</strong>
-								@* @Html.DropDownListFor(t => t.DesignationId, (SelectList)ViewBag.Designation, "-- Seleccione --", new { @class = "form-control" }) *@
 								@Html.TextBox("DesignationName", null, new { @class = "form-control", @id = "designationInput", placeholder = "-- Seleccione o escriba para buscar --" })
 								@Html.HiddenFor(t => t.DesignationId)
 							</div>

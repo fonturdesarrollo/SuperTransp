@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Security.Principal;
 
 namespace SuperTransp.Models
 {
@@ -59,5 +60,17 @@ namespace SuperTransp.Models
 		public int PartnerNumber { get; set; }
 		public string? VehicleImageUrl { get; set; }
 		public DateTime SupervisionPictureDateAdded { get; set; }
+	}
+
+	public class SupervisionRoundModel
+	{
+		[Key]
+		public int SupervisionRoundId { get; set; }
+		public int StateId { get; set; }
+		public DateTime SupervisionRoundStartDate { get; set; }
+		public string? SupervisionRoundStartDescription { get; set; }
+		public DateTime? SupervisionRoundEndDate { get; set; }
+		public string? SupervisionRoundEndDescription { get; set; }
+		public bool SupervisionRoundStatus { get; set; }
 	}
 }

@@ -288,6 +288,8 @@ namespace SuperTransp.Core
 							driver.SexId = (int)dr["SexId"];
 							driver.SexName = (string)dr["SexName"];
 							driver.Birthdate = (DateTime)dr["Birthdate"];
+							driver.StateName = (string)dr["StateName"];
+							driver.PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"];
 						}
 					}
 

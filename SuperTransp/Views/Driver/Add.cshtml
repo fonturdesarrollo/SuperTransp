@@ -82,9 +82,13 @@
 						<br />
 						@if (TempData["SuccessMessage"] != null)
 						{
-							<div id="successMessage" class="alert alert-success">
+							<div id="successMessage" class="alert alert-success d-none">
 								@TempData["SuccessMessage"]
 							</div>
+						}
+						else
+						{
+							<div id="successMessage" class="alert alert-success d-none"></div>
 						}
 					</a>
 				</div>
@@ -126,6 +130,7 @@
 								<strong>Cédula:</strong>
 								@Html.HiddenFor(x => x.PTGCompleteName)
 								@Html.HiddenFor(x => x.PublicTransportGroupId)
+								<input type="hidden" id="publicTransportGroupId" value="@Model.PublicTransportGroupId" />
 								@Html.TextBoxFor(x => x.DriverIdentityDocument, new { placeholder = "Cédula", tabindex = "0", maxlength = "8" })
 								<span asp-validation-for="DriverIdentityDocument" class="text-danger"></span>
 							</div>
@@ -148,7 +153,7 @@
 							</div>
 							<div class="col-6">
 								<strong>Teléfono:</strong>
-								@Html.TextBoxFor(x => x.DriverPhone, new { placeholder = "Teléfono del transportista", maxlength = "11" })
+								@Html.TextBoxFor(x => x.DriverPhone, new { placeholder = "Teléfono del socio", maxlength = "11" })
 								<span asp-validation-for="DriverPhone" class="text-danger"></span>
 							</div>
 							<div class="col-12">
@@ -183,55 +188,6 @@
 						<th>QR</th>
 					</tr>
 				</thead>
-				<tbody>
-					@foreach (var driver in ViewBag.Drivers)
-					{
-						var driverUrl = $"{driver.PublicTransportGroupGUID}|{driver.PartnerNumber}";
-
-						<tr data-ptgguid=@driverUrl>
-
-							<td>@driver.DriverFullName</td>
-							<td>@driver.DriverIdentityDocument</td>
-							<td>@driver.PartnerNumber</td>
-							<td>@driver.DriverPhone</td>
-							<td>@driver.SexName</td>
-							<td>@driver.Birthdate.ToString("dd/MM/yyyy")</td>
-							<td id="@driver.PublicTransportGroupId">
-								@{
-									if (ViewBag.IsTotalAccess)
-									{
-										@Html.ActionLink("MODIFICAR", "Edit", "Driver", new { driverPublicTransportGroupId = driver.DriverPublicTransportGroupId }, new { @id = "btnEdit" })
-									}
-									else
-									{
-										<span>SOLO LECTURA</span>
-									}
-								}
-							</td>
-							<td id="@driver.DriverPublicTransportGroupId">
-								@{
-									if (ViewBag.IsDeleteAccess)
-									{
-										<a href="javascript:void(0);"
-										   id="btnDelete"
-										   onclick="confirmDeletion('@Url.Action("Delete", "Driver", new { driverId = @driver.DriverId, publicTransportGroupId = @driver.PublicTransportGroupId, pTGCompleteName = @driver.PTGCompleteName })')">
-											ELIMINAR
-										</a>
-									}
-									else
-									{
-										<span>SOLO LECTURA</span>
-									}
-								}
-							</td>
-							<td>
-								<button class="generateQR view-info p-1" type="button">
-									<i class="bi bi-qr-code"></i>
-								</button>
-							</td>
-						</tr>
-					}
-				</tbody>
 			</table>
 		</div>
 
@@ -308,11 +264,34 @@
 			});
 		});
 
-		function confirmDeletion(url) {
-			const userConfirmed = confirm("¿Está seguro de que desea eliminar este registro?, de tenerla cargada, se borran los datos de la supervisión (vehículos e imágenes)");
-			if (userConfirmed) {
-				window.location.href = url;
+		function confirmDeletion(deleteUrl) {
+			if (!confirm("¿Está seguro de que desea eliminar este registro? Al hacerlo, también se borrarán los datos de supervisión (vehículos e imágenes) si están cargados.")) {
+				return;
 			}
+
+			const params = new URLSearchParams(deleteUrl.split('?')[1]);
+			const driverId = params.get("driverId");
+			const checkExistingUrl = '@Url.Action("DeleteDriverAjax", "Driver")';
+
+			$.ajax({
+				url: checkExistingUrl,
+				type: 'POST',
+				data: { driverId: driverId },
+				headers: {
+					'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+				},
+				success: function (response) {
+					if (response.success) {
+						alert(response.message || 'Registro eliminado.');
+						$('#inventory').DataTable().ajax.reload(null, false);
+					} else {
+						alert(response.message || 'Error al eliminar el conductor.');
+					}
+				},
+				error: function () {
+					alert('Error en el servidor al intentar eliminar el registro.');
+				}
+			});
 		}
 
 		document.addEventListener("DOMContentLoaded", function () {
@@ -348,18 +327,68 @@
 			});
 		});
 
-		$("body").on("click", "#saveRequest", function (event) {
+		$("#saveRequest").on("click", function (event) {
 			event.preventDefault();
 
-			if (!isOkToSave()) {
-				return false;
-			}
+			if (!isOkToSave()) return false;
 
-			if (!confirm("¿Está seguro de que desea actualizar los registros?")) {
-				return false;
-			}
+			if (!confirm("¿Está seguro de que desea actualizar los registros?")) return false;
 
-			$(this).closest("form").trigger("submit");
+			let paramValue2 = $('#PublicTransportGroupId').val();
+			let paramValue4 = $('#PartnerNumber').val();
+			let checkExistingUrl = '@Url.Action("CheckExistingValues", "Driver")';
+
+			$.ajax({
+				url: checkExistingUrl,
+				type: "GET",
+				data: {
+					paramValue2: paramValue2,
+					paramValue4: paramValue4
+				},
+				success: function (validationResponse) {
+					if (validationResponse !== "OK") {
+						alert(validationResponse);
+						return;
+					}
+					let saveUrl = '@Url.Action("AddWithAjax", "Driver")';
+					let formData = $("form").serialize();
+
+					$.ajax({
+						url: saveUrl,
+						type: "POST",
+						data: formData,
+						headers: {
+							"RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val()
+						},
+						success: function (response) {
+							if (response.success) {
+								alert("Registro actualizado correctamente.");
+
+								$("form")[0].reset();
+								$("#DriverFullName, #DriverPhone").prop("readonly", false);
+								$("#SexId").removeClass("readonly-style").off("click");
+								$("#publicTransportGroupId").val("@Model.PublicTransportGroupId");
+								$("#PTGCompleteName").val("@Model.PTGCompleteName");
+								$("#Birthdate").val("");
+								$('#inventory').DataTable().ajax.reload();
+								$("#DriverIdentityDocument").focus();
+							}
+							else if (response.redirect) {
+								window.location.href = response.redirect;
+							}
+							else {
+								alert(response.message);
+							}
+						},
+						error: function () {
+							alert("Error en el servidor al guardar el socio.");
+						}
+					});
+				},
+				error: function () {
+					alert("Error al validar los datos del socio.");
+				}
+			});
 		});
 
 		$("form").on("submit", function (e) {
@@ -389,7 +418,7 @@
 
 			if ($("#DriverIdentityDocument").val() == "" && !firstInvalidField) {
 				firstInvalidField = "#DriverIdentityDocument";
-				message = "Debe colocar la cédula del transportista";
+				message = "Debe colocar la cédula del socio";
 			}
 
 			if (!firstInvalidField) {
@@ -403,7 +432,7 @@
 
 			if ($("#DriverFullName").val() == "" && !firstInvalidField) {
 				firstInvalidField = "#DriverFullName";
-				message = "Debe colocar el nombre del transportista";
+				message = "Debe colocar el nombre del socio";
 			} else {
 				const driverFullName = $("#DriverFullName").val().trim();
 				const regex = /^[a-zA-ZñÑ\s]{5,}$/;
@@ -419,6 +448,11 @@
 			if ($("#SexId").val() == ""  &&  !firstInvalidField) {
 				firstInvalidField = "#SexId";
 				message = "Debe indicar el sexo";
+			}
+
+			if ($("#Birthdate").val() == ""  && !firstInvalidField) {
+				firstInvalidField = "#Birthdate";
+				message = "Debe colocar la fecha de nacimiento";
 			}
 
 			if ($("#PartnerNumber").val() != "" &&  $("#PartnerNumber").val() == "0" && !firstInvalidField) {
@@ -444,7 +478,6 @@
 					message = "Debe colocar un número de télefono válido";
 				}
 			}
-
 
 			if (firstInvalidField) {
 				showAlert(message, firstInvalidField);
@@ -564,35 +597,49 @@
 			});
 		}
 
+		var publicTransportGroupId = $('#publicTransportGroupId').val();
+		var controllerUrl = `@Url.Action("GetDriversByPTG", "Driver")` + `?publicTransportGroupId=${publicTransportGroupId}`;
+
 		$('#inventory').DataTable({
+			ajax: {
+				url: controllerUrl,
+				dataSrc: 'data'
+			},
+			columns: [
+				{ data: 'nombre' },
+				{ data: 'cedula' },
+				{ data: 'socio' },
+				{ data: 'telefono' },
+				{ data: 'sexo' },
+				{ data: 'nacimiento' },
+				{ data: 'modificar' },
+				{ data: 'eliminar' },
+				{ data: 'qr' }
+			],
+			createdRow: function (row, data, dataIndex) {
+				let ptgGUID = `${data.ptgGUID}`;
+				$(row).attr('data-ptgguid', ptgGUID);
+			},
 			stateSave: true,
-			"language": {
-				"sProcessing":    "Procesando...",
-				"sLengthMenu":    "Mostrar _MENU_ registros",
-				"sZeroRecords":   "No se encontraron resultados",
-				"sEmptyTable":    "Ningún dato disponible en esta tabla",
-				"sInfo":          "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
-				"sInfoEmpty":     "Mostrando registros del 0 al 0 de un total de 0 registros",
-				"sInfoFiltered":  "(filtrado de un total de _MAX_ registros)",
-				"sInfoPostFix":   "",
-				"sSearch":        "Buscar:",
-				"sUrl":           "",
-				"sInfoThousands":  ",",
-				"sLoadingRecords": "Cargando...",
-				"oPaginate": {
-					"sFirst":    "Primero",
-					"sLast":    "Último",
-					"sNext":    "Siguiente",
-					"sPrevious": "Anterior"
-				},
-				"oAria": {
-					"sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
-					"sSortDescending": ": Activar para ordenar la columna de manera descendente"
+			language: {
+				sProcessing: "Procesando...",
+				sLengthMenu: "Mostrar _MENU_ registros",
+				sZeroRecords: "No se encontraron resultados",
+				sEmptyTable: "Ningún dato disponible en esta tabla",
+				sInfo: "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+				sInfoEmpty: "Mostrando registros del 0 al 0 de un total de 0 registros",
+				sInfoFiltered: "(filtrado de un total de _MAX_ registros)",
+				sSearch: "Buscar:",
+				oPaginate: {
+					sFirst: "Primero",
+					sLast: "Último",
+					sNext: "Siguiente",
+					sPrevious: "Anterior"
 				}
 			}
 		});
 	});
-	</script>
+</script>
 </body>
 </html>
 

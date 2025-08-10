@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using QRCoder;
 using SuperTransp.Core;
 using SuperTransp.Models;
+using System.Net;
+using System.Reflection;
 using System.Xml.Linq;
 using static SuperTransp.Core.Interfaces;
 
@@ -58,27 +60,8 @@ namespace SuperTransp.Controllers
 					List<PublicTransportGroupViewModel> model = new();
 
 					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
-					ViewBag.IsTotalAccess = false;
-					ViewBag.IsDeleteAccess = false;
-					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
-					int? stateId = HttpContext.Session.GetInt32("StateId");
 
-					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
-					{
-						model = _publicTransportGroup.GetAllByStateId((int)stateId);
-					}
-					else
-					{
-						model = _publicTransportGroup.GetAll();
-						ViewBag.IsTotalAccess = true;
-					}
-
-					if (_security.IsTotalAccess(2) || _security.IsUpdateAccess(2))
-					{
-						ViewBag.IsTotalAccess = true;
-					}
-
-					return View(model);
+					return View();
 				}
 
 				return RedirectToAction("Login", "Security");
@@ -86,6 +69,52 @@ namespace SuperTransp.Controllers
 			catch (Exception ex)
 			{
 				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
+
+		[HttpGet]
+		public IActionResult GetPublicTransportGroup()
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 2))
+					{
+						return RedirectToAction("Login", "Security");
+					} 
+
+					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+					int? stateId = HttpContext.Session.GetInt32("StateId");
+					List<PublicTransportGroupViewModel> ptgData = new List<PublicTransportGroupViewModel>();
+
+					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
+					{
+						ptgData = _publicTransportGroup.GetAllByStateId((int)stateId);
+					}
+					else
+					{
+						ptgData = _publicTransportGroup.GetAll();
+					}
+
+					var list = ptgData.Select(ptg => new {
+						nombre = ptg.PTGCompleteName,
+						tipo = ptg.ModeName,
+						rif = ptg.PublicTransportGroupRif,
+						cupos = ptg.Partners,
+						cargados = ptg.TotalDrivers,
+						estado = ptg.StateName,
+						id = ptg.PublicTransportGroupId
+					});
+
+					return Json(new { data = list });
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(new { error = ex.Message });
 			}
 		}
 
@@ -112,7 +141,7 @@ namespace SuperTransp.Controllers
 						Birthdate = DateTime.Now.AddYears(-20)
 					};
 
-					ViewBag.Drivers = _driver.GetByPublicTransportGroupId(publicTransportGroupId);
+					//ViewBag.Drivers = _driver.GetByPublicTransportGroupId(publicTransportGroupId);
 					ViewBag.Partners = ptg.Partners;
 					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 
@@ -148,12 +177,12 @@ namespace SuperTransp.Controllers
 			}
 		}
 
-		[HttpPost]
-		public IActionResult Add(DriverViewModel model)
+		[HttpGet]
+		public IActionResult GetDriversByPTG(int publicTransportGroupId)
 		{
 			try
 			{
-				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
 					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 2))
 					{
@@ -161,21 +190,66 @@ namespace SuperTransp.Controllers
 					}
 
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+					var drivers = _driver.GetByPublicTransportGroupId(publicTransportGroupId);
+					var isTotalAccess = securityGroupId == 1 || _security.IsTotalAccess(2) || _security.IsUpdateAccess(2);
+					var isDeleteAccess = securityGroupId == 1 || _security.IsTotalAccess(2);
+					var editControllerUrl = $"{Url.Action("Edit", "Driver")}?driverPublicTransportGroupId=";
 
-					if (_security.IsTotalAccess(2) || _security.IsUpdateAccess(2) || securityGroupId == 1)
+					var data = drivers.Select(driver => new
 					{
-						int driverId = _driver.AddOrEdit(model);
+						nombre = driver.DriverFullName,
+						cedula = driver.DriverIdentityDocument,
+						socio = driver.PartnerNumber,
+						telefono = driver.DriverPhone,
+						sexo = driver.SexName,
+						driverId = driver.DriverId,
+						ptgGUID = $"{driver.PublicTransportGroupGUID}|{driver.PartnerNumber}",
+						nacimiento = driver.Birthdate.ToString("dd/MM/yyyy"),
+						modificar = isTotalAccess ? $@"<a id='btnEdit' href='{editControllerUrl}{driver.DriverPublicTransportGroupId}'>MODIFICAR</a>" : "<span>SOLO LECTURA</span>",
+						eliminar = isDeleteAccess ? $@"<a id='btnDelete' href='javascript:void(0);' onclick=""confirmDeletion('/Driver/Delete?driverId={driver.DriverId}&publicTransportGroupId={driver.PublicTransportGroupId}&pTGCompleteName={driver.PTGCompleteName}')"">ELIMINAR</a>" : "<span>SOLO LECTURA</span>",
+						qr = "<button class='generateQR view-info p-1' type='button'><i class='bi bi-qr-code'></i></button>"
+					});
 
-						if (driverId > 0)
-						{
-							TempData["SuccessMessage"] = "Datos actualizados correctamente";
-
-							return RedirectToAction("Add", new { publicTransportGroupId = model.PublicTransportGroupId, pTGCompleteName = model.PTGCompleteName });
-						}
-					}
+					return Json(new { data });
 				}
 
 				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(new { error = ex.Message });
+			}
+		}
+
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public IActionResult AddWithAjax(DriverViewModel model)
+		{
+			try
+			{
+				if (string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) || !ModelState.IsValid)
+					return Json(new { success = false, redirect = Url.Action("Login", "Security") });
+
+				int? groupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+				if (groupId != 1 && !_security.GroupHasAccessToModule(groupId.Value, 2))
+					return Json(new { success = false, redirect = Url.Action("Login", "Security") });
+
+				if (_security.IsTotalAccess(2) || _security.IsUpdateAccess(2) || groupId == 1)
+				{
+					int driverId = _driver.AddOrEdit(model);
+
+					if (driverId > 0)
+					{
+						return Json(new
+						{
+							success = true,
+							message = "Datos actualizados correctamente"
+						});
+					}
+				}
+
+				return Json(new { success = false, redirect = Url.Action("Login", "Security") });
 			}
 			catch (Exception ex)
 			{
@@ -222,66 +296,196 @@ namespace SuperTransp.Controllers
 			return RedirectToAction("Login", "Security");
 		}
 
-		public IActionResult Edit(DriverViewModel model)
+		[HttpPost]
+		public JsonResult EditWithAjax(DriverViewModel model)
 		{
 			try
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
 				{
-					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 2))
-					{
-						return RedirectToAction("Login", "Security");
-					}
-
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 2))
+					{
+						return Json(new
+						{
+							success = false,
+							redirectUrl = Url.Action("Login", "Security")
+						});
+					}
 
 					if (_security.IsTotalAccess(2) || _security.IsUpdateAccess(2) || securityGroupId == 1)
 					{
 						_driver.AddOrEdit(model);
 
-						TempData["SuccessMessage"] = "Datos actualizados correctamente";
-
-						return RedirectToAction("Add", new { publicTransportGroupId = model.PublicTransportGroupId, pTGCompleteName = model.PTGCompleteName });
+						return Json(new
+						{
+							success = true,
+							message = "Datos actualizados correctamente",
+							redirectUrl = Url.Action("Add", new { publicTransportGroupId = model.PublicTransportGroupId, pTGCompleteName = model.PTGCompleteName })
+						});
 					}
 				}
 
-				return RedirectToAction("Login", "Security");
+				return Json(new
+				{
+					success = false,
+					redirectUrl = Url.Action("Login", "Security")
+				});
 			}
 			catch (Exception ex)
 			{
-				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+				return Json(new { success = false, message = ex.Message });
 			}
 		}
 
-		public IActionResult Delete(int driverId, int publicTransportGroupId, string pTGCompleteName)
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public async Task<JsonResult> DeleteDriverAjaxAsync(int driverId)
 		{
 			try
 			{
-				if (!string.IsNullOrEmpty(HttpContext.Session?.GetString("SecurityUserId")) && ModelState.IsValid)
+				if (string.IsNullOrEmpty(HttpContext.Session?.GetString("SecurityUserId")))
+					return Json(new { success = false, redirect = Url.Action("Login", "Security") });
+
+				if (!ModelState.IsValid)
+					return Json(new { success = false, message = "Datos inválidos para eliminar el socio." });
+
+				var groupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+				if (groupId != 1 && !_security.GroupHasAccessToModule(groupId.Value, 2))
+					return Json(new { success = false, redirect = Url.Action("Login", "Security") });
+
+				if (groupId == 1 || _security.IsTotalAccess(2))
 				{
-					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 2))
-					{
-						return RedirectToAction("Login", "Security");
-					}
+					var driverData = _driver.GetById(driverId);
+					var result = _driver.Delete(driverId);
 
-					if (_security.IsTotalAccess(2))
+					if (result)
 					{
-						var result = _driver.Delete(driverId);
+						await DeleteDriverVehiclePictures(driverData.StateName, driverData.PublicTransportGroupRif, driverData.DriverId);
 
-						if (result)
+						return Json(new
 						{
-							TempData["SuccessMessage"] = "Registro eliminado correctamente";
-
-							return RedirectToAction("Add", new { publicTransportGroupId = publicTransportGroupId, pTGCompleteName = pTGCompleteName });
-						}
+							success = true,
+							message = "Registro eliminado correctamente"
+						});
 					}
 				}
 
-				return RedirectToAction("Login", "Security");
+				return Json(new { success = false, message = "No tiene permisos suficientes para eliminar el registro." });
 			}
 			catch (Exception ex)
 			{
-				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+				return Json(new
+				{
+					success = false,
+					message = $"Error al eliminar: {ex.Message}"
+				});
+			}
+		}
+
+		private async Task<bool> DeleteDriverVehiclePictures(string? stateName, string? publicTransportGroupRif, int driverId)
+		{
+			var ftpBaseUrl = _configuration["FtpSettings:BaseUrl"];
+			var ftpUsername = _configuration["FtpSettings:Username"];
+			var ftpPassword = _configuration["FtpSettings:Password"];
+			var baseImagesUrl = _configuration["FtpSettings:BaseImagesUrl"];
+
+			var newFolderName = $"{stateName.ToUpper().Trim()}";
+			var ftpFolderPath = $"{ftpBaseUrl}/{newFolderName}";
+			var subFolderName = $"{publicTransportGroupRif}-{driverId}-supervision";
+			var ftpSubFolderPath = $"{ftpFolderPath}/{subFolderName}";
+
+			if (await FolderExistsAsync(ftpSubFolderPath, ftpUsername, ftpPassword))
+			{
+				try
+				{
+					var fileList = await ListFilesAsync(ftpSubFolderPath, ftpUsername, ftpPassword);
+					if (fileList.Count == 0) return false;
+
+					var deleteTasks = fileList.Select(fileName => DeleteFileAsync($"{ftpSubFolderPath}/{fileName}", ftpUsername, ftpPassword));
+					await Task.WhenAll(deleteTasks);
+
+					try
+					{
+						await DeleteFolderAsync(ftpSubFolderPath, ftpUsername, ftpPassword);
+					}
+					catch (WebException ex)
+					{
+						Console.WriteLine($"Error al eliminar la carpeta FTP: {((FtpWebResponse)ex.Response).StatusDescription}");
+					}
+
+				}
+				catch (WebException ex)
+				{
+					Console.WriteLine($"Error FTP: {((FtpWebResponse)ex.Response).StatusDescription}");
+				}
+
+				return true;
+			}
+
+			return false;
+		}
+
+		private async Task DeleteFolderAsync(string ftpFolderPath, string username, string password)
+		{
+			FtpWebRequest request = (FtpWebRequest)WebRequest.Create(ftpFolderPath);
+			request.Method = WebRequestMethods.Ftp.RemoveDirectory;
+			request.Credentials = new NetworkCredential(username, password);
+			using (FtpWebResponse response = (FtpWebResponse)await request.GetResponseAsync())
+			{
+				Console.WriteLine($"Carpeta eliminada: {response.StatusDescription}");
+			}
+		}
+
+		private async Task<bool> FolderExistsAsync(string folderPath, string username, string password)
+		{
+			try
+			{
+				FtpWebRequest request = (FtpWebRequest)WebRequest.Create(folderPath);
+				request.Method = WebRequestMethods.Ftp.ListDirectory;
+				request.Credentials = new NetworkCredential(username, password);
+				using (await request.GetResponseAsync()) { return true; }
+			}
+			catch (WebException ex)
+			{
+				return ((FtpWebResponse)ex.Response).StatusCode != FtpStatusCode.ActionNotTakenFileUnavailable;
+			}
+		}
+
+		private async Task<List<string>> ListFilesAsync(string folderPath, string username, string password)
+		{
+			var files = new List<string>();
+			FtpWebRequest request = (FtpWebRequest)WebRequest.Create(folderPath);
+			request.Method = WebRequestMethods.Ftp.ListDirectory;
+			request.Credentials = new NetworkCredential(username, password);
+
+			using (var response = (FtpWebResponse)await request.GetResponseAsync())
+			using (var reader = new StreamReader(response.GetResponseStream()))
+			{
+				string line;
+				while ((line = await reader.ReadLineAsync()) != null)
+				{
+					files.Add(line);
+				}
+			}
+
+			return files;
+		}
+
+		private async Task DeleteFileAsync(string filePath, string username, string password)
+		{
+			try
+			{
+				FtpWebRequest deleteRequest = (FtpWebRequest)WebRequest.Create(filePath);
+				deleteRequest.Method = WebRequestMethods.Ftp.DeleteFile;
+				deleteRequest.Credentials = new NetworkCredential(username, password);
+
+				using (await deleteRequest.GetResponseAsync()) { } // Confirmación de eliminación
+			}
+			catch (WebException ex)
+			{
+				Console.WriteLine($"Error al eliminar {filePath}: {((FtpWebResponse)ex.Response).StatusDescription}");
 			}
 		}
 
@@ -357,7 +561,11 @@ namespace SuperTransp.Controllers
 						var finalData = allData.Where(x => x.PartnerNumber == paramValue4 && x.DriverId != paramValue5);
 						if (finalData.Any())
 						{
-							return Json($"El número de socio {paramValue4} ya está registrado a la línea.");
+							return Json(new
+							{
+								canContinue = false,
+								message = $"El número de socio {paramValue4} ya está registrado a la línea."
+							});
 						}
 					}
 				}
@@ -366,13 +574,25 @@ namespace SuperTransp.Controllers
 
 				if (paramValue4 > ptgPartners.Partners)
 				{
-					return Json($"La línea tiene cupo solo para {ptgPartners.Partners} transportista(s) no puede agregar un número de socio {paramValue4}.");
+					return Json(new
+					{
+						canContinue = false,
+						message = $"La línea tiene cupo solo para {ptgPartners.Partners} transportista(s), no puede agregar el número de socio {paramValue4}."
+					});
 				}
 
-				return Json("OK");
+				return Json(new
+				{
+					canContinue = true,
+					message = "OK"
+				});
 			}
 
-			return Json("ERROR");
+			return Json(new
+			{
+				canContinue = false,
+				message = "Sesión inválida"
+			});
 		}
 
 		[HttpPost]

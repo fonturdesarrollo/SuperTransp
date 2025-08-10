@@ -35,6 +35,7 @@ builder.Services.AddTransient<ICommonData, CommonData>();
 builder.Services.AddTransient<IReport, Reports>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ClientInfoService>();
+builder.Services.AddScoped<IFtpService, FtpService>();
 
 var app = builder.Build();
 

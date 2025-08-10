@@ -34,5 +34,8 @@
 		public string? CommonDataValue { get; set; }
 		public int SexId { get; set; }
 		public string? SexName { get; set; }
+		public string? MonthName { get; set; }
+		public int MonthId { get; set; }
+		public int? SupervisionRoundYears { get; set; }
 	}
 }
