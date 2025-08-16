@@ -118,8 +118,10 @@ namespace SuperTransp.Core
 			public List<SupervisionSummaryViewModel> GetAllSupervisionSummary();
 			public List<SupervisionSummaryViewModel> GetSupervisionSummaryByStateId(int stateId);
 			public SupervisionSummaryViewModel GetSupervisionSummaryById(int supervisionSummaryId);
+			public SupervisionRoundModel GetActiveSupervisionRoundByStateId(int stateId);
 			public bool IsActiveSupervisionRoundByStateMonthAndYear(int stateId, int month, int year);
 			public bool IsFinishedSupervisionRoundByStateMonthAndYear(int stateId, int month, int year);
+			public bool IsActiveSupervisionRoundByStateId(int stateId);
 			public bool IsSupervisionSummaryDoneByPtgId(int publicTransportGroupId);
 			public bool IsUserSupervisingPublicTransportGroup(int securityUserId, int publicTransportGroupId);
 			public bool DeletePicturesByPTGIdAndPartnerNumber(int publicTransportGroupId, int partnerNumber);

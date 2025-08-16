@@ -51,10 +51,17 @@ namespace SuperTransp.Controllers
 		}
 
 		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-		public IActionResult Error(string errorMessage)
+		public IActionResult Error()
 		{
-			ViewBag.ErrorMessage = errorMessage;
-			return View();
+			// Puedes pasar información adicional, como el ID del error
+			return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
 		}
+
+		//[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+		//public IActionResult Error(string errorMessage)
+		//{
+		//	ViewBag.ErrorMessage = errorMessage;
+		//	return View();
+		//}
 	}
 }

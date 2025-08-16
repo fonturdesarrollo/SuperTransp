@@ -40,6 +40,8 @@ namespace SuperTransp.Core
 
 					if (model != null)
 					{
+						var round = GetActiveSupervisionRoundByStateId(model.StateId);
+
 						SqlCommand cmd = new("SuperTransp_SupervisionAddOrEdit", sqlConnection)
 						{
 							CommandType = System.Data.CommandType.StoredProcedure
@@ -67,6 +69,7 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@Remarks", string.IsNullOrEmpty(model.Remarks) ? string.Empty : model.Remarks.ToUpper().Trim());
 						cmd.Parameters.AddWithValue("@SecurityUserId", model.SecurityUserId);
 						cmd.Parameters.AddWithValue("@SupervisionStatus", model.SupervisionStatus);
+						cmd.Parameters.AddWithValue("@SupervisionRoundId", round.SupervisionRoundId);
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
 
@@ -145,6 +148,8 @@ namespace SuperTransp.Core
 
 					if (model != null)
 					{
+						var round = GetActiveSupervisionRoundByStateId(model.StateId);
+
 						SqlCommand cmd = new("SuperTransp_SupervisionAddSimple", sqlConnection)
 						{
 							CommandType = System.Data.CommandType.StoredProcedure
@@ -154,6 +159,7 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@DriverId", model.DriverId);
 						cmd.Parameters.AddWithValue("@DriverWithVehicle", model.DriverWithVehicle);
 						cmd.Parameters.AddWithValue("@SecurityUserId", model.SecurityUserId);
+						cmd.Parameters.AddWithValue("@SupervisionRoundId", round.SupervisionRoundId);
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
 
@@ -1111,6 +1117,42 @@ namespace SuperTransp.Core
 				throw new Exception($"Error al obtener todos los resumenes de supervision {ex.Message}", ex);
 			}
 		}
+
+		public SupervisionRoundModel GetActiveSupervisionRoundByStateId(int stateId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SupervisionRoundModel round = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_SupervisionRoundDetail WHERE StateId = @StateId AND SupervisionRoundStatus = 1", sqlConnection);
+					cmd.Parameters.AddWithValue("@StateId", stateId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							round.SupervisionRoundId = (int)dr["SupervisionRoundId"];
+							round.StateId = (int)dr["StateId"];
+							round.SupervisionRoundStartDate = (DateTime)dr["SupervisionRoundStartDate"];
+							round.SupervisionRoundStartDescription = (string)dr["SupervisionRoundStartDescription"];
+						}
+					}
+
+					return round;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener vuelta de supervision {ex.Message}", ex);
+			}
+		}
+
 		public bool IsActiveSupervisionRoundByStateMonthAndYear(int stateId, int month, int year)
 		{
 			try
@@ -1128,6 +1170,32 @@ namespace SuperTransp.Core
 					cmd.Parameters.AddWithValue("@StartMonth", month);
 					cmd.Parameters.AddWithValue("@StartYear", year);
 
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						return dr.HasRows;
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener el estatus de la vuelta de supervision cerrada {ex.Message}", ex);
+			}
+		}
+
+		public bool IsActiveSupervisionRoundByStateId(int stateId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<SupervisionRoundModel> round = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_SupervisionRoundDetail WHERE StateId = @StateId AND SupervisionRoundStatus = 1", sqlConnection);
+					cmd.Parameters.AddWithValue("@StateId", stateId);
 					using (SqlDataReader dr = cmd.ExecuteReader())
 					{
 						return dr.HasRows;

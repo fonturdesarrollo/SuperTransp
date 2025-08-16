@@ -21,8 +21,9 @@ namespace SuperTransp.Controllers
 		private readonly IConfiguration _configuration;
 		private readonly IGeography _geography;
 		private readonly IFtpService _ftpService;
+		private readonly IDriver _driver;
 
-		public SupervisionController(ISupervision supervision, ISecurity security, IPublicTransportGroup publicTransportGroup, ICommonData commonData, IConfiguration configuration, IGeography geography, IFtpService ftpService)
+		public SupervisionController(ISupervision supervision, ISecurity security, IPublicTransportGroup publicTransportGroup, ICommonData commonData, IConfiguration configuration, IGeography geography, IFtpService ftpService, IDriver driver)
 		{
 			_supervision = supervision;
 			_security = security;
@@ -31,6 +32,7 @@ namespace SuperTransp.Controllers
 			_configuration = configuration;
 			_geography = geography;
 			_ftpService = ftpService;
+			_driver = driver;
 		}
 
 		public IActionResult Index()
@@ -67,6 +69,20 @@ namespace SuperTransp.Controllers
 				ViewBag.Months = new SelectList(_commonData.GetMonthNames(), "MonthId", "MonthName");
 				ViewBag.Years = new SelectList(_commonData.GetCurrentYears(), "YearId", "YearName");
 				ViewBag.ModulesInGroup = _security.GetModulesByGroupId(ViewBag.SecurityGroupId);
+				ViewBag.RoundActive = _supervision.IsActiveSupervisionRoundByStateId((int)stateId);
+
+				var currentRound = _supervision.GetActiveSupervisionRoundByStateId((int)stateId);
+
+				if(currentRound != null)
+				{
+					ViewBag.CurrentRoundStartDate = $"{currentRound.SupervisionRoundStartDate.ToString("MMMM").ToUpper()} {currentRound.SupervisionRoundStartDate.ToString("yyyy")}";
+				}
+				else
+				{
+					ViewBag.CurrentRoundStartDate = "No existe vuelta de supervisión abierta";
+				}
+
+				ViewBag.RoundMessage = ViewBag.RoundActive  ? $"Vuelta {ViewBag.CurrentRoundStartDate}" : "No existe vuelta de supervisión abierta";
 			}
 
 			return View();
@@ -129,7 +145,9 @@ namespace SuperTransp.Controllers
 				SupervisionRoundStatus = true
 			};
 
-			_supervision.AddOrEditRound(model);			
+			_supervision.AddOrEditRound(model);
+
+			TempData["SuccessMessage"] = "Datos actualizados correctamente";
 
 			return RedirectToAction("Index");
 		}
@@ -143,6 +161,8 @@ namespace SuperTransp.Controllers
 
 				int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
 				int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
+				var driver = _driver.GetById(driverId);
+
 				ViewBag.IsTotalAccess = false;
 
 				if (securityGroupId != null && _security.GroupHasAccessToModule((int)securityGroupId, 3) || securityGroupId == 1)
@@ -215,6 +235,20 @@ namespace SuperTransp.Controllers
 						ViewBag.IsTotalAccess = true;
 					}
 
+					if(driver != null)
+					{
+						var currentRound = _supervision.GetActiveSupervisionRoundByStateId((int)driver.StateId);
+
+						if (currentRound != null)
+						{
+							ViewBag.CurrentRoundStartDate = $"{currentRound.SupervisionRoundStartDate.ToString("MMMM").ToUpper()} {currentRound.SupervisionRoundStartDate.ToString("yyyy")}";
+						}
+						else
+						{
+							ViewBag.CurrentRoundStartDate = "No existe vuelta de supervisión abierta";
+						}
+					}
+
 					return View(model);
 				}
 
@@ -242,6 +276,8 @@ namespace SuperTransp.Controllers
 					if (_security.IsTotalAccess(3) || securityGroupId == 1)
 					{
 						int supervisionId = 0;
+						var driver = _driver.GetById(model.DriverId);
+						model.StateId = driver.StateId;
 
 						if (!model.DriverWithVehicle)
 						{
@@ -306,6 +342,7 @@ namespace SuperTransp.Controllers
 
 				int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
 				int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
+				var driver = _driver.GetById(driverId);
 				ViewBag.IsTotalAccess = false;
 
 				if (securityGroupId != null && _security.GroupHasAccessToModule((int)securityGroupId,3) || securityGroupId == 1)
@@ -380,6 +417,20 @@ namespace SuperTransp.Controllers
 						{
 
 							ViewBag.IsTotalAccess = true;
+						}
+
+						if (driver != null)
+						{
+							var currentRound = _supervision.GetActiveSupervisionRoundByStateId((int)driver.StateId);
+
+							if (currentRound != null)
+							{
+								ViewBag.CurrentRoundStartDate = $"{currentRound.SupervisionRoundStartDate.ToString("MMMM").ToUpper()} {currentRound.SupervisionRoundStartDate.ToString("yyyy")}";
+							}
+							else
+							{
+								ViewBag.CurrentRoundStartDate = "No existe vuelta de supervisión abierta";
+							}
 						}
 
 						return View(model);

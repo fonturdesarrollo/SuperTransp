@@ -24,5 +24,6 @@ namespace SuperTransp.Models
 		public DateTime Birthdate { get; set; }
 		public string? StateName { get; set; }
 		public string? PublicTransportGroupRif { get; set; }
+		public int StateId { get; set; }
 	}
 }

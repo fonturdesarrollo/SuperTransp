@@ -290,6 +290,7 @@ namespace SuperTransp.Core
 							driver.Birthdate = (DateTime)dr["Birthdate"];
 							driver.StateName = (string)dr["StateName"];
 							driver.PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"];
+							driver.StateId = (int)dr["StateId"];
 						}
 					}
 

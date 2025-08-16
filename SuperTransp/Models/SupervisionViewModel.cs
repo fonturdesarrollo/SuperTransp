@@ -49,6 +49,7 @@ namespace SuperTransp.Models
 		public string? FuelTypeName { get; set; }
 		public string? BatteryName { get; set; }
 		public string? FailureTypeName { get; set; }
+		public int StateId { get; set; }
 		public List<SupervisionPictures>? Pictures { get; set; }
 	}
 
