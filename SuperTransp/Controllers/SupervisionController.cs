@@ -88,6 +88,7 @@ namespace SuperTransp.Controllers
 			return View();
 		}
 
+		[HttpGet]
 		public IActionResult PublicTransportGroupDriverList(string ptgRifName)
 		{
 			try
@@ -95,32 +96,53 @@ namespace SuperTransp.Controllers
 				var result = CheckSessionAndPermission(3);
 				if (result != null) return result;
 
-				List<PublicTransportGroupViewModel> model = new();
 				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+
+				var vm = new PublicTransportGroupDriverListPageVM
+				{
+					PTGRifName = ptgRifName ?? "",
+					Items = new List<PublicTransportGroupViewModel>()
+				};
+
+				return View(vm);
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message });
+			}
+		}
+
+		[HttpGet]
+		public IActionResult PublicTransportGroupDriverListData(string ptgRifName)
+		{
+			try
+			{
+				var perm = CheckSessionAndPermission(3);
+				if (perm != null)
+				{
+					return Json(new { data = new List<object>(), message = "No autorizado" });
+				}
+
 				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 				int? stateId = HttpContext.Session.GetInt32("StateId");
-				int? userId = HttpContext.Session.GetInt32("SecurityUserId");
+
+				List<PublicTransportGroupViewModel> model;
 
 				if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
 				{
-					model = _supervision.GetDriverPublicTransportGroupByStateIdAndPTGRif((int)stateId, ptgRifName);					
+					model = _supervision.GetDriverPublicTransportGroupByStateIdAndPTGRif((int)stateId, ptgRifName);
 				}
 				else
 				{
 					model = _supervision.GetAllDriverPublicTransportGroup(ptgRifName);
 				}
 
-				if(!model.Any())
-				{
-					TempData["SuccessMessage"] = $"No existe la organización con el RIF {ptgRifName}";
-					return RedirectToAction("Index");
-				}
-
-				return View(model);
+				return Json(new { data = model });
 			}
 			catch (Exception ex)
 			{
-				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+				Response.StatusCode = 500;
+				return Json(new { data = new List<object>(), error = ex.Message });
 			}
 		}
 
@@ -169,14 +191,16 @@ namespace SuperTransp.Controllers
 				{
 					if (!_supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId))
 					{
-						return RedirectToAction("PublicTransportGroupDriverList");
+						TempData["SuccessMessage"] = "Esta organización está siendo supervisada por otro supervisor";
+						return RedirectToAction("PublicTransportGroupDriverList", new { ptgRifName = publicTransportGroupRif });
 					}
 
 					if (_supervision.IsSupervisionSummaryDoneByPtgId(publicTransportGroupId))
 					{
 						if (!_security.GroupHasAccessToModule((int)securityGroupId, 19))
 						{
-							return RedirectToAction("PublicTransportGroupDriverList");
+							TempData["SuccessMessage"] = "No tiene acceso a este proceso";
+							return RedirectToAction("PublicTransportGroupDriverList", new { ptgRifName = publicTransportGroupRif });
 						}
 					}
 
@@ -199,22 +223,6 @@ namespace SuperTransp.Controllers
 					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 
 					PopulateViewBagForSupervision();
-
-					//ViewBag.DriverWithVehicle = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
-					//ViewBag.WorkingVehicle = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
-					//ViewBag.InPerson = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
-					//ViewBag.Years = new SelectList(_commonData.GetYears(), "YearId", "YearName");
-					//ViewBag.Passengers = new SelectList(_commonData.GetPassengers(), "PassengerId", "Passengers");
-					//ViewBag.Rims = new SelectList(_commonData.GetRims(), "RimId", "RimName");
-					//ViewBag.Wheels = new SelectList(_commonData.GetWheels(), "WheelId", "Wheels");
-					//ViewBag.FuelTypes = new SelectList(_commonData.GetFuelTypes(), "FuelTypeId", "FuelTypeName");
-					//ViewBag.TankCapacity = new SelectList(_commonData.GetTankCapacity(), "TankCapacityId", "TankCapacity");
-					//ViewBag.Batteries = new SelectList(_commonData.GetBatteries(), "BatteryId", "BatteryName");
-					//ViewBag.NumberOfBatteries = new SelectList(_commonData.GetNumberOfBatteries(), "BatteriesId", "Batteries");
-					//ViewBag.MotorOil = new SelectList(_commonData.GetMotorOil(), "MotorOilId", "MotorOilName");
-					//ViewBag.OilLitters = new SelectList(_commonData.GetOilLitters(), "OilLittersId", "OilLitters");
-					//ViewBag.FailureType = new SelectList(_commonData.GetFailureType(), "FailureTypeId", "FailureTypeName");
-					//ViewBag.FingerprintProblem = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
 
 					var ftpBaseUrl = _configuration["FtpSettings:BaseUrl"];
 					var tempFolderName = $"{publicTransportGroupRif}-{driverId}-supervision_temp";
@@ -349,14 +357,16 @@ namespace SuperTransp.Controllers
 				{
 					if (!_supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId))
 					{
-						return RedirectToAction("PublicTransportGroupDriverList");
+						TempData["SuccessMessage"] = "Esta organización está siendo supervisada por otro supervisor";
+						return RedirectToAction("PublicTransportGroupDriverList" , new { ptgRifName = publicTransportGroupRif });
 					}
 
 					if (_supervision.IsSupervisionSummaryDoneByPtgId(publicTransportGroupId))
 					{
 						if (!_security.GroupHasAccessToModule((int)securityGroupId, 19))
 						{
-							return RedirectToAction("PublicTransportGroupDriverList");
+							TempData["SuccessMessage"] = "No tiene acceso a este proceso";
+							return RedirectToAction("PublicTransportGroupDriverList", new { ptgRifName = publicTransportGroupRif });
 						}
 					}
 
@@ -382,23 +392,6 @@ namespace SuperTransp.Controllers
 
 						ViewBag.Makes = new SelectList(_commonData.GetMakesByYear((int)model.Year).ToList(), "Make", "Make");
 						ViewBag.VehicleModel = new SelectList(_commonData.GetModelsByYearAndMake((int)model.Year, model.Make).ToList(), "VehicleDataId", "ModelName");
-
-
-						//ViewBag.DriverWithVehicle = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
-						//ViewBag.WorkingVehicle = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
-						//ViewBag.InPerson = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
-						//ViewBag.Years = new SelectList(_commonData.GetYears(), "YearId", "YearName");
-						//ViewBag.Passengers = new SelectList(_commonData.GetPassengers(), "PassengerId", "Passengers");
-						//ViewBag.Rims = new SelectList(_commonData.GetRims(), "RimId", "RimName");
-						//ViewBag.Wheels = new SelectList(_commonData.GetWheels(), "WheelId", "Wheels");
-						//ViewBag.FuelTypes = new SelectList(_commonData.GetFuelTypes(), "FuelTypeId", "FuelTypeName");
-						//ViewBag.TankCapacity = new SelectList(_commonData.GetTankCapacity(), "TankCapacityId", "TankCapacity");
-						//ViewBag.Batteries = new SelectList(_commonData.GetBatteries(), "BatteryId", "BatteryName");
-						//ViewBag.NumberOfBatteries = new SelectList(_commonData.GetNumberOfBatteries(), "BatteriesId", "Batteries");
-						//ViewBag.MotorOil = new SelectList(_commonData.GetMotorOil(), "MotorOilId", "MotorOilName");
-						//ViewBag.OilLitters = new SelectList(_commonData.GetOilLitters(), "OilLittersId", "OilLitters");
-						//ViewBag.FailureType = new SelectList(_commonData.GetFailureType(), "FailureTypeId", "FailureTypeName");
-						//ViewBag.FingerprintProblem = new SelectList(_commonData.GetYesNo(), "YesNoId", "YesNoName");
 
 						var ftpBaseUrl = _configuration["FtpSettings:BaseUrl"];
 						var tempFolderName = $"{publicTransportGroupRif}-{driverId}-supervision_temp";

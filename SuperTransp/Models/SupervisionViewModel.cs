@@ -74,4 +74,10 @@ namespace SuperTransp.Models
 		public string? SupervisionRoundEndDescription { get; set; }
 		public bool SupervisionRoundStatus { get; set; }
 	}
+
+	public class PublicTransportGroupDriverListPageVM
+	{
+		public string PTGRifName { get; set; } = "";
+		public List<PublicTransportGroupViewModel> Items { get; set; } = new();
+	}
 }

@@ -193,6 +193,10 @@
 		}
 	});
 
+	$(window).on("beforeunload", function () {
+		$("#loadingOverlay").show();
+	});
+
 	function isOkToSave() {
 		let firstInvalidField = null;
 		let message = "";

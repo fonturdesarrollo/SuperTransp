@@ -163,6 +163,10 @@ $("form").on("submit", function (e) {
     }
 });
 
+$(window).on("beforeunload", function () {
+    $("#loadingOverlay").show();
+});
+
 function isOkToSave() {
     let firstInvalidField = null;
     let message = "";

@@ -172,7 +172,7 @@
 		<div class="modal-content">
 			<span class="close">&times;</span>
 			<h3>Indique el RIF</h3>
-			@using (Html.BeginForm("PublicTransportGroupDriverList", "Supervision", FormMethod.Post))
+			@using (Html.BeginForm("PublicTransportGroupDriverList", "Supervision", FormMethod.Get))
 			{
 				@Html.AntiForgeryToken()
 				<label for="ptgRifId">RIF</label>
