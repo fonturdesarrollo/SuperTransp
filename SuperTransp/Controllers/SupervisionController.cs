@@ -174,7 +174,7 @@ namespace SuperTransp.Controllers
 			return RedirectToAction("Index");
 		}
 
-		public async Task<IActionResult> AddAsync(int publicTransportGroupId, string pTGCompleteName, string driverFullName, int partnerNumber, string? publicTransportGroupRif, int driverIdentityDocument, string stateName, int? supervisionStatus, int driverId, int supervisionId, int modeId, string modeName)
+		public async Task<IActionResult> AddAsync(int publicTransportGroupId, string pTGCompleteName, string driverFullName, int partnerNumber, string? publicTransportGroupRif, int driverIdentityDocument, string stateName, int? supervisionStatus, int driverId, int supervisionId, int modeId, string modeName, int driverPublicTransportGroupId)
 		{
 			try
 			{
@@ -217,7 +217,8 @@ namespace SuperTransp.Controllers
 						SecurityUserId = (int)securityUserId,
 						SupervisionId = supervisionId,
 						ModeId = modeId,
-						ModeName = modeName
+						ModeName = modeName,
+						DriverPublicTransportGroupId = driverPublicTransportGroupId
 					};
 
 					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
@@ -302,7 +303,7 @@ namespace SuperTransp.Controllers
 							model.VehicleImageUrl = string.IsNullOrEmpty(model.VehicleImageUrl) ? string.Empty : model.VehicleImageUrl;
 							model.SupervisionStatus = true;
 							model.FailureTypeId = model.WorkingVehicle ? 1 : model.FailureTypeId;
-							var imageUrl = await SupervisionPictureUrl(model.StateName, model.PublicTransportGroupRif, model.DriverIdentityDocument, model.PartnerNumber, model.DriverId);
+							var imageUrl = await SupervisionPictureUrl(model.StateName, model.PublicTransportGroupRif, model.DriverIdentityDocument, model.PartnerNumber, model.DriverPublicTransportGroupId);
 
 							if (imageUrl != null && imageUrl.Any())
 							{
@@ -341,7 +342,7 @@ namespace SuperTransp.Controllers
 			}
 		}
 
-		public async Task<IActionResult> EditAsync(int publicTransportGroupId, string pTGCompleteName, string driverFullName, int partnerNumber, string? publicTransportGroupRif, int driverIdentityDocument, string stateName, int? supervisionStatus, int driverId, int supervisionId, int modeId, string modeName, int stateId)
+		public async Task<IActionResult> EditAsync(int publicTransportGroupId, string pTGCompleteName, string driverFullName, int partnerNumber, string? publicTransportGroupRif, int driverIdentityDocument, string stateName, int? supervisionStatus, int driverId, int supervisionId, int modeId, string modeName, int stateId, int driverPublicTransportGroupId)
 		{
 			try
 			{
@@ -370,7 +371,7 @@ namespace SuperTransp.Controllers
 						}
 					}
 
-					var model = _supervision.GetByPublicTransportGroupIdAndDriverIdAndPartnerNumberStateId(publicTransportGroupId, driverId, partnerNumber, (int)stateId);
+					var model = _supervision.GetByPublicTransportGroupIdAndDriverIdAndPartnerNumberStateId(publicTransportGroupId, driverPublicTransportGroupId, partnerNumber, (int)stateId);
 
 					if(model != null)
 					{
@@ -391,7 +392,7 @@ namespace SuperTransp.Controllers
 						PopulateViewBagForSupervision();
 
 						ViewBag.Makes = new SelectList(_commonData.GetMakesByYear((int)model.Year).ToList(), "Make", "Make");
-						ViewBag.VehicleModel = new SelectList(_commonData.GetModelsByYearAndMake((int)model.Year, model.Make).ToList(), "VehicleDataId", "ModelName");
+						ViewBag.VehicleModel = new SelectList(_commonData.GetModelsByYearAndMake((int)model.Year, model.Make).ToList(), "VehicleDataId", "ModelName");									
 
 						var ftpBaseUrl = _configuration["FtpSettings:BaseUrl"];
 						var tempFolderName = $"{publicTransportGroupRif}-{driverId}-supervision_temp";
@@ -464,7 +465,7 @@ namespace SuperTransp.Controllers
 		}
 
 		[HttpPost]
-		public async Task<IActionResult> SaveFiles(IFormFile file, string stateName, string driverIdentityDocument, string partnerNumber, string publicTransportGroupRif, string driverId)
+		public async Task<IActionResult> SaveFiles(IFormFile file, string stateName, string driverIdentityDocument, string partnerNumber, string publicTransportGroupRif, string driverId, int driverPublicTransportGroupId)
 		{
 			if (file?.Length > 0 &&
 				!string.IsNullOrEmpty(stateName) &&
@@ -475,7 +476,7 @@ namespace SuperTransp.Controllers
 				var ftpBaseUrl = _configuration["FtpSettings:BaseUrl"];
 				var newFolderName = $"{stateName.ToUpper().Trim()}";
 				var ftpFolderPath = Path.Combine(ftpBaseUrl, newFolderName).Replace("\\", "/");
-				var subFolderName = $"{publicTransportGroupRif}-{driverId}-supervision_temp";
+				var subFolderName = $"{publicTransportGroupRif}-{driverPublicTransportGroupId}-supervision_temp";
 				var ftpSubFolderPath = Path.Combine(ftpFolderPath, subFolderName).Replace("\\", "/");
 				var ftpFileName = Guid.NewGuid().ToString();
 

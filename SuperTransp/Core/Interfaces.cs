@@ -98,7 +98,8 @@ namespace SuperTransp.Core
 			public bool RegisteredPhone(string driverPhone, int publicTransportGroupId);
 			public bool RegisteredPartnerNumber(int partnerNumber, int publicTransportGroupId);
 			public DriverViewModel GetById(int driverId);
-			public bool Delete(int driverId);
+			public DriverViewModel GetPartnerById(int driverPublicTransportGroupId);
+			public bool DeletePartner(int driverId, int driverPublicTransportGroupId, int partnerNumber);
 			public int TotalDriversByPublicTransportGroupId(int publicTransportGroupId);
 		}
 
@@ -169,6 +170,12 @@ namespace SuperTransp.Core
 			Task DeleteFolderAsync(string folderPath);
 			Task TransferFileAsync(string sourcePath, string destinationPath);
 			Task DeleteFileAsync(string filePath);
+		}
+
+		public interface IUniverse
+		{
+			public int AddOrEdit(UniverseViewModel model);
+			public UniverseViewModel GetByStateId(int stateId);
 		}
 	}
 }

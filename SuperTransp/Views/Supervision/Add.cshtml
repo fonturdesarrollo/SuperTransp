@@ -51,6 +51,7 @@
          data-public-transport-group-rif="@Model.PublicTransportGroupRif"
          data-driver-id="@Model.DriverId"
          data-public-transport-group-id="@Model.PublicTransportGroupId"
+         data-driver-public-transport-group-id="@Model.DriverPublicTransportGroupId"
          data-is-total-access="@isTotalAccess.ToString().ToLower()">
         <!-- Header -->
         <header id="header">
@@ -121,6 +122,7 @@
                             @Html.HiddenFor(x => x.PublicTransportGroupRif)
                             @Html.HiddenFor(x => x.ModeId)
                             @Html.HiddenFor(x => x.StateId)
+                            @Html.HiddenFor(x => x.DriverPublicTransportGroupId)
                             @Html.DropDownList("DriverWithVehicle", (IEnumerable<SelectListItem>)ViewBag.DriverWithVehicle, "Seleccione", new { @class = "form-control" })
                         </div>
                         <div class="row" id="additionalFields" style="visibility: hidden; opacity: 0; height: 0; overflow: hidden; transition: opacity 0.3s ease-in-out;">

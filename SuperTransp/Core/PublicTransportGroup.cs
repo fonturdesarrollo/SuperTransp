@@ -12,12 +12,14 @@ namespace SuperTransp.Core
 		private readonly IConfiguration _configuration;
 		private readonly ISecurity _security;
 		private readonly IDesignation _designation;
+		private readonly IUniverse _universe;
 
-		public PublicTransportGroup(IConfiguration configuration, ISecurity security, IDesignation designation)
+		public PublicTransportGroup(IConfiguration configuration, ISecurity security, IDesignation designation, IUniverse universe)
 		{
 			this._configuration = configuration;
 			this._security = security;
 			_designation = designation;
+			_universe = universe;
 		}
 
 		private SqlConnection GetConnection()
@@ -325,6 +327,10 @@ namespace SuperTransp.Core
 					{
 						while (dr.Read())
 						{
+							var ptgUniverse = _universe.GetByStateId(stateId);
+							var totalGlobalPartners = ptgUniverse?.TotalPublicTransportGroups;
+							var totalGlobalDrivers = ptgUniverse?.TotalDrivers;
+
 							ptg.Add(new PublicTransportGroupViewModel
 							{
 								StateId = (int)dr["StateId"],
@@ -332,6 +338,8 @@ namespace SuperTransp.Core
 								TotalPTGInState = (int)dr["TotalPTGInState"],
 								TotaPartnersByPTG = (int)dr["TotaPartnersByPTG"],
 								TotalAddedPartners = (int)dr["TotalAddedPartners"],
+								TotalUniversePTGInState = totalGlobalPartners ?? 0,
+								TotalUniverseDriversInState = totalGlobalDrivers ?? 0,
 							});
 						}
 					}
@@ -370,6 +378,10 @@ namespace SuperTransp.Core
 					{
 						while (dr.Read())
 						{
+							var ptgUniverse = _universe.GetByStateId((int)dr["StateId"]);
+							var totalGlobalPartners = ptgUniverse?.TotalPublicTransportGroups;
+							var totalGlobalDrivers = ptgUniverse?.TotalDrivers;
+
 							ptg.Add(new PublicTransportGroupViewModel
 							{
 								StateId = (int)dr["StateId"],
@@ -377,6 +389,8 @@ namespace SuperTransp.Core
 								TotalPTGInState = (int)dr["TotalPTGInState"],
 								TotaPartnersByPTG = (int)dr["TotaPartnersByPTG"],
 								TotalAddedPartners = (int)dr["TotalAddedPartners"],
+								TotalUniversePTGInState = totalGlobalPartners ?? 0,
+								TotalUniverseDriversInState = totalGlobalDrivers ?? 0,
 							});
 						}
 					}

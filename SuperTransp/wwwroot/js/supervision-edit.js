@@ -28,6 +28,7 @@
 			partnerNumber: data.partnerNumber,
 			publicTransportGroupRif: data.publicTransportGroupRif,
 			driverId: data.driverId,
+			driverPublicTransportGroupId: data.driverPublicTransportGroupId,
 		},
 		init: function () {
 			this.on("addedfile", function (file) {

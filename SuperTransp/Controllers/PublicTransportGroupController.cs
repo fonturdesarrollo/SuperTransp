@@ -43,9 +43,7 @@ namespace SuperTransp.Controllers
 			var result = CheckSessionAndPermission(1);
 			if (result != null) return result;
 
-			ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
-			ViewBag.SecurityGroupId = (int)HttpContext.Session.GetInt32("SecurityGroupId");
-			ViewBag.SystemVersion = (string)HttpContext.Session.GetString("SystemVersion");
+			SetCommonViewBag();
 
 			return View();
 		}
@@ -63,7 +61,8 @@ namespace SuperTransp.Controllers
 					PublicTransportGroupIdModifiedDate = DateTime.Now
 				};
 
-				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+				SetCommonViewBag();
+
 				ViewBag.IsTotalAccess = false;
 				ViewBag.IsDeleteAccess = false;
 				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
@@ -73,7 +72,7 @@ namespace SuperTransp.Controllers
 				{
 					if (securityGroupId != 1)
 					{
-						if (_security.GroupHasAccessToModule((int)securityGroupId, 6))
+						if (HasModuleAccess(6))
 						{
 							ViewBag.States = new SelectList(_geography.GetAllStates(), "StateId", "StateName");
 							ViewBag.Union = new SelectList(_union.GetAll(), "UnionId", "UnionName");
@@ -132,6 +131,13 @@ namespace SuperTransp.Controllers
 
 				if (_security.IsTotalAccess(1) || _security.IsUpdateAccess(1) || securityGroupId == 1)
 				{
+					if(model.DesignationId == 0)
+					{
+						TempData["SuccessMessage"] = "Debe seleccionar la entidad legal de la lista";
+
+						return RedirectToAction("Add");
+					}
+
 					int publicTransportGroupId = _publicTransportGroup.AddOrEdit(model);
 
 					if (publicTransportGroupId > 0)
@@ -162,13 +168,13 @@ namespace SuperTransp.Controllers
 			int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 			int? stateId = HttpContext.Session.GetInt32("StateId");
 
-			ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+			SetCommonViewBag();
 
 			if (securityGroupId.HasValue)
 			{
 				if (securityGroupId != 1)
 				{
-					if (_security.GroupHasAccessToModule((int)securityGroupId, 6))
+					if(HasModuleAccess(6))
 					{
 						ViewBag.States = new SelectList(_geography.GetAllStates(), "StateId", "StateName");
 						ViewBag.Union = new SelectList(_union.GetByStateId((int)model.StateId), "UnionId", "UnionName");
@@ -219,6 +225,13 @@ namespace SuperTransp.Controllers
 
 				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 
+				if (model.DesignationId == 0)
+				{
+					TempData["SuccessMessage"] = "Debe seleccionar la entidad legal de la lista";
+
+					return RedirectToAction("Add");
+				}
+
 				if (_security.IsTotalAccess(1) || _security.IsUpdateAccess(1) || securityGroupId == 1)
 				{
 					_publicTransportGroup.AddOrEdit(model);
@@ -243,7 +256,7 @@ namespace SuperTransp.Controllers
 
 				List<PublicTransportGroupViewModel> model = new();
 
-				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+				SetCommonViewBag();
 
 				return View();		
 			}
@@ -401,6 +414,20 @@ namespace SuperTransp.Controllers
 
 			return designationValues;
 		}
+
+		private bool HasModuleAccess(int moduleId)
+		{
+			var groupId = HttpContext.Session.GetInt32("SecurityGroupId");
+			return groupId == 1 || _security.GroupHasAccessToModule(groupId ?? 0, moduleId);
+		}
+
+		private void SetCommonViewBag()
+		{
+			ViewBag.EmployeeName = $"{HttpContext.Session.GetString("FullName")} ({HttpContext.Session.GetString("SecurityGroupName")})";
+			ViewBag.SecurityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+			ViewBag.SystemVersion = HttpContext.Session.GetString("SystemVersion");
+		}
+
 		private IActionResult? CheckSessionAndPermission(int requiredModuleId)
 		{
 			var securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
@@ -414,7 +441,6 @@ namespace SuperTransp.Controllers
 			return null;
 		}
 	}
-
 	public class QRRequest
 	{
 		public string ptgGUID { get; set; }

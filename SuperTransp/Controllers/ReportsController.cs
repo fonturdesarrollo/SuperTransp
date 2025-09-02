@@ -8,19 +8,19 @@ namespace SuperTransp.Controllers
 {
 	public class ReportsController : Controller
 	{
-		ISupervision _supervision;
-		private ISecurity _security;
-		private IPublicTransportGroup _publicTransportGroup;
-		private IReport _report;
-		private IGeography _geography;
+		private readonly ISupervision _supervision;
+		private readonly ISecurity _security;
+		private readonly IPublicTransportGroup _publicTransportGroup;
+		private readonly IReport _report;
+		private readonly IGeography _geography;
 
-		public ReportsController(ISupervision supervision, IPublicTransportGroup publicTransportGroup, ISecurity security, IReport report, IGeography geography	)
+		public ReportsController(ISupervision supervision, IPublicTransportGroup publicTransportGroup, ISecurity security, IReport report, IGeography geography)
 		{
-			this._security = security;
-			this._supervision = supervision;
-			this._publicTransportGroup = publicTransportGroup;
-			this._report = report;
-			this._geography = geography;
+			_security = security;
+			_supervision = supervision;
+			_publicTransportGroup = publicTransportGroup;
+			_report = report;
+			_geography = geography;
 		}
 
 		public IActionResult Index()
@@ -34,6 +34,13 @@ namespace SuperTransp.Controllers
 
 				int? stateId = HttpContext.Session.GetInt32("StateId");
 				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+				List<GeographyViewModel> states = _geography.GetAllStates();
+
+				states.Add(new GeographyViewModel
+				{
+					StateId = 0,
+					StateName = "Todos los estados"
+				});
 
 				if (securityGroupId.HasValue)
 				{
@@ -42,12 +49,14 @@ namespace SuperTransp.Controllers
 						if (_security.GroupHasAccessToModule((int)securityGroupId, 6))
 						{
 							ViewBag.States = new SelectList(_geography.GetAllStates(), "StateName", "StateName");
+							ViewBag.StatisticsStates = new SelectList(states, "StateId", "StateName");
 						}
 						else
 						{
 							if (stateId.HasValue)
 							{
 								ViewBag.States = new SelectList(_geography.GetStateById((int)stateId), "StateName", "StateName");
+								ViewBag.StatisticsStates = new SelectList(states.Where(s=> s.StateId == (int)stateId), "StateId", "StateName");
 
 								if (_security.IsTotalAccess(1) || _security.IsUpdateAccess(1))
 								{
@@ -59,6 +68,8 @@ namespace SuperTransp.Controllers
 					else
 					{
 						ViewBag.States = new SelectList(_geography.GetAllStates(), "StateName", "StateName");
+						
+						ViewBag.StatisticsStates = new SelectList(states, "StateId", "StateName");
 					}
 				}
 
@@ -66,6 +77,7 @@ namespace SuperTransp.Controllers
 				ViewBag.ModulesInGroup = _security.GetModulesByGroupId(ViewBag.SecurityGroupId);
 				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 				ViewBag.SecurityGroupId = (int)HttpContext.Session.GetInt32("SecurityGroupId");
+				ViewBag.UserStateId = (int)stateId;
 
 				return View();
 			}
@@ -186,7 +198,7 @@ namespace SuperTransp.Controllers
 			}
 		}
 
-		public IActionResult PublicTransportGroupStatisticsInState()
+		public IActionResult PublicTransportGroupStatisticsInState(int selectedStatisticsStateId)
 		{
 			try
 			{
@@ -205,7 +217,12 @@ namespace SuperTransp.Controllers
 
 					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
-					int? stateId = HttpContext.Session.GetInt32("StateId");
+					int? stateId = 0;
+
+					if (selectedStatisticsStateId != 0)
+					{
+						stateId = selectedStatisticsStateId;
+					}
 
 					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
 					{
@@ -213,7 +230,14 @@ namespace SuperTransp.Controllers
 					}
 					else
 					{
-						model = _publicTransportGroup.GetAllStatistics();
+						if(selectedStatisticsStateId == 0)
+						{
+							model = _publicTransportGroup.GetAllStatistics();
+						}
+						else
+						{
+							model = _publicTransportGroup.GetAllStatisticsByStateId((int)stateId);
+						}						
 					}
 
 					return View(model);

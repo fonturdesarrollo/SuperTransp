@@ -176,7 +176,7 @@ namespace SuperTransp.Controllers
 					ptgGUID = $"{driver.PublicTransportGroupGUID}|{driver.PartnerNumber}",
 					nacimiento = driver.Birthdate.ToString("dd/MM/yyyy"),
 					modificar = isTotalAccess ? $@"<a id='btnEdit' href='{editControllerUrl}{driver.DriverPublicTransportGroupId}'>MODIFICAR</a>" : "<span>SOLO LECTURA</span>",
-					eliminar = isDeleteAccess ? $@"<a id='btnDelete' href='javascript:void(0);' onclick=""confirmDeletion('/Driver/Delete?driverId={driver.DriverId}&publicTransportGroupId={driver.PublicTransportGroupId}&pTGCompleteName={driver.PTGCompleteName}')"">ELIMINAR</a>" : "<span>SOLO LECTURA</span>",
+					eliminar = isDeleteAccess ? $@"<a id='btnDelete' href='javascript:void(0);' onclick=""confirmDeletion('/Driver/Delete?driverId={driver.DriverId}&driverPublicTransportGroupId={driver.DriverPublicTransportGroupId}&partnerNumber={driver.PartnerNumber}&publicTransportGroupId={driver.PublicTransportGroupId}&pTGCompleteName={driver.PTGCompleteName}')"">ELIMINAR</a>" : "<span>SOLO LECTURA</span>",
 					qr = "<button class='generateQR view-info p-1' type='button'><i class='bi bi-qr-code'></i></button>"
 				});
 
@@ -206,14 +206,14 @@ namespace SuperTransp.Controllers
 				{
 					int driverId = _driver.AddOrEdit(model);
 
-					if (driverId > 0)
-					{
+					//if (driverId > 0)
+					//{
 						return Json(new
 						{
 							success = true,
 							message = "Datos actualizados correctamente"
 						});
-					}
+					//}
 				}
 
 				return Json(new { success = false, redirect = Url.Action("Login", "Security") });
@@ -300,7 +300,7 @@ namespace SuperTransp.Controllers
 
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public async Task<JsonResult> DeleteDriverAjaxAsync(int driverId)
+		public async Task<JsonResult> DeleteDriverAjaxAsync(int driverId, int driverPublicTransportGroupId, int partnerNumber)
 		{
 			try
 			{
@@ -317,12 +317,12 @@ namespace SuperTransp.Controllers
 
 				if (groupId == 1 || _security.IsTotalAccess(2))
 				{
-					var driverData = _driver.GetById(driverId);
-					var result = _driver.Delete(driverId);
+					var driverData = _driver.GetPartnerById(driverPublicTransportGroupId);
+					var result = _driver.DeletePartner(driverId, driverPublicTransportGroupId, partnerNumber);
 
 					if (result)
 					{
-						await DeleteDriverVehiclePictures(driverData.StateName, driverData.PublicTransportGroupRif, driverData.DriverId);
+						await DeleteDriverVehiclePictures(driverData.StateName, driverData.PublicTransportGroupRif, driverPublicTransportGroupId);
 
 						return Json(new
 						{
@@ -406,7 +406,7 @@ namespace SuperTransp.Controllers
 				var driver = _driver.GetByIdentityDocument(driverIdentityDocument);
 				if (driver != null)
 				{
-					return Json(new { driverFullName = driver.DriverFullName, driverPhone = driver.DriverPhone, driverSexId = driver.SexId });
+					return Json(new { driverId = driver.DriverId, driverFullName = driver.DriverFullName, driverPhone = driver.DriverPhone, driverSexId = driver.SexId, driverBirthDate = driver.Birthdate.ToString("dd/MM/yyyy") });
 				}
 			}
 
@@ -430,10 +430,11 @@ namespace SuperTransp.Controllers
 					return Json($"La línea tiene cupo solo para {ptgPartners.Partners} transportista(s) no puede agregar mas.");
 				}
 
-				if(paramValue4 > ptgPartners.Partners)
-				{
-					return Json($"La línea tiene cupo solo para {ptgPartners.Partners} transportista(s) no puede agregar un número de socio {paramValue4}.");
-				}
+				//ELIMINADA VALIDACIÓN DE NÚMERO DE SOCIO CORRELATIVO
+				//if(paramValue4 > ptgPartners.Partners)
+				//{
+				//	return Json($"La línea tiene cupo solo para {ptgPartners.Partners} transportista(s) no puede agregar un número de socio {paramValue4}.");
+				//}
 
 				return Json("OK");
 			}
@@ -472,16 +473,17 @@ namespace SuperTransp.Controllers
 				}
 			}
 
-			var ptgPartners = _publicTransportGroup.GetPublicTransportGroupById(paramValue2);
+			//ELIMINADA VALIDACIÓN DE NÚMERO DE SOCIO CORRELATIVO
+			//var ptgPartners = _publicTransportGroup.GetPublicTransportGroupById(paramValue2);
 
-			if (paramValue4 > ptgPartners.Partners)
-			{
-				return Json(new
-				{
-					canContinue = false,
-					message = $"La línea tiene cupo solo para {ptgPartners.Partners} transportista(s), no puede agregar el número de socio {paramValue4}."
-				});
-			}
+			//if (paramValue4 > ptgPartners.Partners)
+			//{
+			//	return Json(new
+			//	{
+			//		canContinue = false,
+			//		message = $"La línea tiene cupo solo para {ptgPartners.Partners} transportista(s), no puede agregar el número de socio {paramValue4}."
+			//	});
+			//}
 
 			return Json(new
 			{

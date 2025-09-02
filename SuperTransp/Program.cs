@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using SuperTransp.Core;
+using SuperTransp.Middleware;
 using static SuperTransp.Core.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,8 +32,11 @@ builder.Services.AddTransient<ICommonData, CommonData>();
 builder.Services.AddTransient<IReport, Reports>();
 builder.Services.AddScoped<ClientInfoService>();
 builder.Services.AddScoped<IFtpService, FtpService>();
+builder.Services.AddScoped<IUniverse, Universe>();
 
 var app = builder.Build();
+
+app.UseMiddleware<MaintenanceMiddleware>();
 
 if (!app.Environment.IsDevelopment())
 {
@@ -48,6 +52,8 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
 	ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 });
+
+	
 
 app.UseStaticFiles();
 

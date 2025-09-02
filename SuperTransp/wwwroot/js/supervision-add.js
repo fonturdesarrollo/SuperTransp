@@ -14,6 +14,7 @@ const getModelsUrl = wrapper.dataset.getModelsUrl;
 const partnerNumber = wrapper.dataset.partnerNumber;
 const publicTransportGroupRif = wrapper.dataset.publicTransportGroupRif;
 const driverId = wrapper.dataset.driverId;
+const driverPublicTransportGroupId = wrapper.dataset.driverPublicTransportGroupId;
 const publicTransportGroupId = wrapper.dataset.publicTransportGroupId;
 const isTotalAccess = wrapper.dataset.isTotalAccess === "true";
 
@@ -42,6 +43,7 @@ const dropzone = new Dropzone("#myDropzone", {
         partnerNumber: partnerNumber,
         publicTransportGroupRif: publicTransportGroupRif,
         driverId: driverId,
+        driverPublicTransportGroupId: driverPublicTransportGroupId,
     },
 
     init: function () {

@@ -36,11 +36,13 @@ function confirmDeletion(deleteUrl) {
 
     const params = new URLSearchParams(deleteUrl.split('?')[1]);
     const driverId = params.get("driverId");
+    const driverPublicTransportGroupId = params.get("driverPublicTransportGroupId");
+    const partnerNumber = params.get("partnerNumber");
 
     $.ajax({
         url: window.deleteDriverAjaxUrl,
         type: 'POST',
-        data: { driverId: driverId },
+        data: { driverId: driverId, driverPublicTransportGroupId: driverPublicTransportGroupId, partnerNumber: partnerNumber },
         headers: {
             'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
         },
@@ -98,6 +100,8 @@ $("#saveRequest").on("click", function (event) {
 
     if (!confirm("¿Está seguro de que desea actualizar los registros?")) return false;
 
+    $("#saveRequest").prop("disabled", true);
+
     let paramValue2 = $('#PublicTransportGroupId').val();
     let paramValue4 = $('#PartnerNumber').val();
 
@@ -111,9 +115,12 @@ $("#saveRequest").on("click", function (event) {
         success: function (validationResponse) {
             if (validationResponse !== "OK") {
                 alert(validationResponse);
+                $("#saveRequest").prop("disabled", false);
                 return;
             }
+
             let formData = $("form").serialize();
+            formData += "&DriverId=" + (Number.isInteger(window.driverId) ? window.driverId : 0);
 
             $.ajax({
                 url: window.addWithAjaxUrl,
@@ -134,21 +141,24 @@ $("#saveRequest").on("click", function (event) {
                         $("#Birthdate").val("");
                         $('#inventory').DataTable().ajax.reload();
                         $("#DriverIdentityDocument").focus();
-                    }
-                    else if (response.redirect) {
+                    } else if (response.redirect) {
                         window.location.href = response.redirect;
-                    }
-                    else {
+                        return;
+                    } else {
                         alert(response.message);
                     }
+
+                    $("#saveRequest").prop("disabled", false);
                 },
                 error: function () {
                     alert("Error en el servidor al guardar el socio.");
+                    $("#saveRequest").prop("disabled", false);
                 }
             });
         },
         error: function () {
             alert("Error al validar los datos del socio.");
+            $("#saveRequest").prop("disabled", false);
         }
     });
 });
@@ -319,19 +329,23 @@ $(document).ready(function () {
             data: { driverIdentityDocument: value },
             success: function (response) {
                 if (response && response.driverFullName && response.driverPhone) {
+                    window.driverId = response.driverId;
                     $("#DriverFullName").val(response.driverFullName);
                     $("#DriverPhone").val(response.driverPhone);
                     $("#SexId").val(response.driverSexId);
-                    $("#Birthdate").val("");
+                    $("#Birthdate").val(response.driverBirthDate);
 
                     $("#SexId").addClass("readonly-style");
                     $("#SexId").on("click", e => e.preventDefault());
 
                     $("#DriverFullName").prop("readonly", true);
                     $("#DriverPhone").prop("readonly", true);
-                    $("#Birthdate").focus();
+                    $("#Birthdate").prop("readonly", true);
+
+                    $("#PartnerNumber").focus();
                 } 
                 else {
+                    window.driverId = response.driverId;
                     $('#SexId').removeClass('readonly-style');
                     $("#DriverFullName").prop("readonly", false);
                     $("#DriverPhone").prop("readonly", false);

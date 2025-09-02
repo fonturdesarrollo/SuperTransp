@@ -48,7 +48,7 @@ namespace SuperTransp.Core
 						};
 
 						cmd.Parameters.AddWithValue("@SupervisionId", model.SupervisionId);
-						cmd.Parameters.AddWithValue("@DriverId", model.DriverId);
+						cmd.Parameters.AddWithValue("@DriverId", model.DriverPublicTransportGroupId);
 						cmd.Parameters.AddWithValue("@DriverWithVehicle", model.DriverWithVehicle);
 						cmd.Parameters.AddWithValue("@WorkingVehicle", model.WorkingVehicle);
 						cmd.Parameters.AddWithValue("@InPerson", model.InPerson);
@@ -91,7 +91,7 @@ namespace SuperTransp.Core
 								cmd.Parameters.AddWithValue("@PublicTransportGroupId", model.PublicTransportGroupId);
 								cmd.Parameters.AddWithValue("@PartnerNumber", model.PartnerNumber);
 								cmd.Parameters.AddWithValue("@VehicleImageUrl", picture.VehicleImageUrl);
-								cmd.Parameters.AddWithValue("@DriverId", model.DriverId);
+								cmd.Parameters.AddWithValue("@DriverId", model.DriverPublicTransportGroupId);
 
 								cmd.ExecuteScalar();
 							}
@@ -156,7 +156,7 @@ namespace SuperTransp.Core
 						};
 
 						cmd.Parameters.AddWithValue("@SupervisionId", model.SupervisionId);
-						cmd.Parameters.AddWithValue("@DriverId", model.DriverId);
+						cmd.Parameters.AddWithValue("@DriverId", model.DriverPublicTransportGroupId);
 						cmd.Parameters.AddWithValue("@DriverWithVehicle", model.DriverWithVehicle);
 						cmd.Parameters.AddWithValue("@SecurityUserId", model.SecurityUserId);
 						cmd.Parameters.AddWithValue("@SupervisionRoundId", round.SupervisionRoundId);
@@ -343,6 +343,7 @@ namespace SuperTransp.Core
 								FingerprintTrouble = (bool)dr["FingerprintTrouble"],
 								Remarks = (string)dr["Remarks"],
 								UserFullName = (string)dr["UserFullName"],
+								DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"],
 								Pictures = GetPicturesByPTGIdAndPartnerNumber((int)dr["PublicTransportGroupId"], (int)dr["PartnerNumber"]),
 							});
 						}
@@ -517,9 +518,9 @@ namespace SuperTransp.Core
 					}
 
 					SupervisionViewModel supervision = new();
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE PublicTransportGroupId = @PublicTransportGroupId AND DriverId = @DriverId AND PartnerNumber = @PartnerNumber AND StateId = @StateId", sqlConnection);
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE PublicTransportGroupId = @PublicTransportGroupId AND DriverPublicTransportGroupId = @DriverPublicTransportGroupId AND PartnerNumber = @PartnerNumber AND StateId = @StateId", sqlConnection);
 					cmd.Parameters.AddWithValue("@PublicTransportGroupId", publicTransportGroupId);
-					cmd.Parameters.AddWithValue("@DriverId", driverId);
+					cmd.Parameters.AddWithValue("@DriverPublicTransportGroupId", driverId);
 					cmd.Parameters.AddWithValue("@PartnerNumber", partnerNumber);
 					cmd.Parameters.AddWithValue("@StateId", stateId);
 
@@ -569,6 +570,7 @@ namespace SuperTransp.Core
 							supervision.VehicleDataId = (int)dr["VehicleDataId"];
 							supervision.SupervisionStatus = (bool)dr["SupervisionStatus"];
 							supervision.SupervisionDateAdded = (DateTime)dr["SupervisionDateAdded"];
+							supervision.DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"];
 							supervision.Pictures = GetPicturesByPTGIdAndPartnerNumber(publicTransportGroupId, partnerNumber);
 						}
 					}
@@ -728,6 +730,7 @@ namespace SuperTransp.Core
 								Remarks = (string)dr["Remarks"],
 								UserFullName = (string)dr["UserFullName"],
 								SecurityUserId = (int)dr["SecurityUserId"],
+								DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"],
 								Pictures = GetPicturesByPTGIdAndPartnerNumber((int)dr["PublicTransportGroupId"], (int)dr["PartnerNumber"]),
 							});
 						}

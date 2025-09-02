@@ -87,6 +87,7 @@
                                 @Html.HiddenFor(x => x.PTGCompleteName)
                                 @Html.HiddenFor(x => x.DriverId)
                                 @Html.HiddenFor(x => x.PublicTransportGroupId)
+                                @Html.HiddenFor(x => x.DriverPublicTransportGroupId)
                                 @Html.TextBoxFor(x => x.DriverIdentityDocument, new { placeholder = "Cédula", tabindex = "0", maxlength = "8" })
                                 <span asp-validation-for="DriverIdentityDocument" class="text-danger"></span>
                             </div>

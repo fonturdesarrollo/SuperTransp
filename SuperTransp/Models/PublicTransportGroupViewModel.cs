@@ -8,9 +8,10 @@ namespace SuperTransp.Models
 		public int PublicTransportGroupId { get; set; }
 		[Required(ErrorMessage = "Rif es requerido")]
 		public string? PublicTransportGroupRif { get; set; }
-		[Required(ErrorMessage = "Nomenclatura es requerida")]
+		[Required(ErrorMessage = "Entidad legal es requerida")]
+		[Range(1, int.MaxValue, ErrorMessage = "La Entidad legal debe agegarse")]
 		public int DesignationId { get; set; }
-		[Required(ErrorMessage = "Nombre de la línea es requerida")]
+		[Required(ErrorMessage = "Nombre de la organización es requerida")]
 		public string? PublicTransportGroupName { get; set; }
 		[Required(ErrorMessage = "Modalidad es requerida")]
 		public int ModeId { get; set; }
@@ -76,5 +77,8 @@ namespace SuperTransp.Models
 		public int TotalPTGInState { get; set; }
 		public int TotaPartnersByPTG { get; set; }
 		public int TotalAddedPartners { get; set; }
+		public int TotalUniversePTGInState { get; set; }
+		public int TotalUniverseDriversInState { get; set; }
+		public int DriverPublicTransportGroupId { get; set; }
 	}
 }

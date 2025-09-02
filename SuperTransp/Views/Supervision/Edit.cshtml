@@ -122,6 +122,7 @@
 								@Html.HiddenFor(x => x.ModeId)
 								@Html.HiddenFor(x => x.Pictures)
 								@Html.HiddenFor(x => x.StateId)
+								@Html.HiddenFor(x => x.DriverPublicTransportGroupId)
 								@Html.DropDownListFor(t => t.DriverWithVehicle, (SelectList)ViewBag.DriverWithVehicle, "-- Seleccione --", new { @class = "form-control" })
 							</div>
 							<div class="row" id="additionalFields" style="visibility: hidden; opacity: 0; height: 0; overflow: hidden; transition: opacity 0.3s ease-in-out;">
@@ -308,6 +309,7 @@
 			publicTransportGroupRif: '@Model.PublicTransportGroupRif',
 			publicTransportGroupId: '@Model.PublicTransportGroupId',
 			driverId: '@Model.DriverId',
+			driverPublicTransportGroupId: '@Model.DriverPublicTransportGroupId',
 			isTotalAccess: @((isTotalAccess).ToString().ToLower()),
 			fileUrls: @Html.Raw(Json.Serialize(Model.Pictures.Select(p => p.VehicleImageUrl))),
 			pictures: @Html.Raw(Json.Serialize(Model.Pictures)),

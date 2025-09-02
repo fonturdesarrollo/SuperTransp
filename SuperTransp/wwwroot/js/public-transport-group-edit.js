@@ -1,8 +1,4 @@
-﻿function sanitizeInputValue(value) {
-    return value.replace(/[^a-zA-ZñÑ0-9\s]/g, "");
-}
-
-document.addEventListener("DOMContentLoaded", function () {
+﻿document.addEventListener("DOMContentLoaded", function () {
     var inputElement = document.querySelector("[name='PublicTransportGroupRif']");
     if (inputElement) {
         inputElement.addEventListener("input", function () {
@@ -48,6 +44,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     handleInput("[name='PublicTransportGroupName']", sanitizeInputValue);
+
     handleInput("[name='RepresentativeName']", sanitizeInputValue);
 
     handleInput("[name='RepresentativeIdentityDocument']", function (value) {
@@ -85,6 +82,8 @@ $("form").on("submit", function (e) {
         var paramValue2 = $('#PublicTransportGroupId').val();
         var paramValue3 = $('#Partners').val();
 
+        $("#saveRequest").prop("disabled", true);
+
         $.ajax({
             url: window.checkExistingUrl,
             data: {
@@ -94,6 +93,7 @@ $("form").on("submit", function (e) {
             },
             success: function (data) {
                 showMsg(data);
+                $("#saveRequest").prop("disabled", false);
             },
             cache: false
         });
@@ -137,7 +137,7 @@ function isOkToSave() {
             message = "El nombre debe contener solo letras, números y espacios, y al menos 5 caracteres.";
         }
         const inputUpper = orgName.toUpperCase();
-        if (window.patterns && window.patterns.some(pref => inputUpper.startsWith(pref)) && !firstInvalidField) {
+        if (inputUpper.startsWith(typedName)) {
             firstInvalidField = "#PublicTransportGroupName";
             message = "Seleccione la entidad legal desde la lista, no la escriba en el nombre.";
         }

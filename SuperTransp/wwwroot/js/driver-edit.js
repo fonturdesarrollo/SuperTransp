@@ -81,6 +81,8 @@ $("form").on("submit", function (e) {
         let paramValue5 = $('#DriverId').val();
         let pTGCompleteName = $('#PTGCompleteName').val();
 
+        $("#saveRequest").prop("disabled", true);
+
         $.ajax({
             url: window.checkExistingValuesOnEditUrl,
             data: {
@@ -90,6 +92,7 @@ $("form").on("submit", function (e) {
             },
             success: function (response) {
                 if (response.redirectUrl) {
+                    $("#saveRequest").prop("disabled", false);
                     showMsg(response.message || "Redireccionando...");
                     setTimeout(function () {
                         window.location.href = response.redirectUrl;
@@ -99,6 +102,7 @@ $("form").on("submit", function (e) {
 
                 if (response.canContinue) {
                     let formData = $("form").serialize();
+                    formData += "&DriverId=" + (Number.isInteger(window.driverId) ? window.driverId : 0);
 
                     $.ajax({
                         url: window.editWithAjaxUrl,
@@ -116,6 +120,7 @@ $("form").on("submit", function (e) {
                     });
                 } else {
                     showMsg(response.message);
+                    $("#saveRequest").prop("disabled", false);
                 }
             }
         });
