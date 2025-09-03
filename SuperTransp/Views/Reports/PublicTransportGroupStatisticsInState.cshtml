@@ -118,7 +118,7 @@
                     int totalPartners = 0;
                     int totalPTGUniverseInState = 0;
                     int totalDriversUniverseInState = 0;
-                    double porcentajeOrganizaciones = 0; 
+                    double porcentajeOrganizaciones = 0;
                     double porcentajeSocios = 0;
 
                     if (Model != null && Model.Any())
@@ -128,18 +128,18 @@
                         totalPTGUniverseInState = Model.Sum(x => x.TotalUniversePTGInState);
                         totalDriversUniverseInState = Model.Sum(x => x.TotalUniverseDriversInState);
 
-                        porcentajeOrganizaciones = ((double)totalPTG / totalPTGUniverseInState) * 100;
-                        porcentajeSocios = ((double)totalPartners / totalDriversUniverseInState) * 100;
+                        porcentajeOrganizaciones = totalPTGUniverseInState > 0 ? ((double)totalPTG / totalPTGUniverseInState) * 100 : 0;
+                        porcentajeSocios = totalDriversUniverseInState > 0 ? ((double)totalPartners / totalDriversUniverseInState) * 100 : 0;
                     }
                 }
 
-            Total universo de organizaciones: @totalPTGUniverseInState.ToString("N0", new System.Globalization.CultureInfo("de-DE"))
-            <br />
-            Total universo de socios: @totalDriversUniverseInState.ToString("N0", new System.Globalization.CultureInfo("de-DE"))
-            <br />
-            Total organizaciones cargadas: @totalPTG.ToString("N0", new System.Globalization.CultureInfo("de-DE")) avance: @porcentajeOrganizaciones.ToString("F2", new System.Globalization.CultureInfo("de-DE"))%
-            <br />
-            Total socios cargados: @totalPartners.ToString("N0", new System.Globalization.CultureInfo("de-DE")) avance: @porcentajeSocios.ToString("F2", new System.Globalization.CultureInfo("de-DE"))%
+                Total universo de organizaciones: @totalPTGUniverseInState.ToString("N0", new System.Globalization.CultureInfo("de-DE"))
+                <br />
+                Total universo de socios: @totalDriversUniverseInState.ToString("N0", new System.Globalization.CultureInfo("de-DE"))
+                <br />
+                Total organizaciones cargadas: @totalPTG.ToString("N0", new System.Globalization.CultureInfo("de-DE")) avance: @porcentajeOrganizaciones.ToString("F2", new System.Globalization.CultureInfo("de-DE"))%
+                <br />
+                Total socios cargados: @totalPartners.ToString("N0", new System.Globalization.CultureInfo("de-DE")) avance: @porcentajeSocios.ToString("F2", new System.Globalization.CultureInfo("de-DE"))%
             </h3>
         </div>
     </div>
@@ -147,6 +147,7 @@
     <div class="chart-type-selector">
         <button id="donut-btn" class="active">Dona</button>
         <button id="pie-btn">Torta</button>
+        <button id="bar-btn">Barras</button>
     </div>
 
     <div class="chart-container" id="chartContainer"></div>
@@ -154,134 +155,181 @@
     <script>
         const chartItems = @Html.Raw(JsonSerializer.Serialize(chartItems));
 
+        // Instancias y tipos actuales
         const apexCharts = {};
+        const currentTypes = {};
 
-        // Función global para obtener los datos basados en los checkboxes
+        // Paleta consistente entre dona/torta y barras (mismo orden que los checkboxes)
+        // 0: Orgs. Cargadas, 1: Socios Cargados, 2: Socios Totales, 3: Universo Orgs., 4: Universo Socios
+        const COLORS = [
+            '#4CAF50', // Orgs. Cargadas
+            '#2196F3', // Socios Cargados
+            '#FF9800', // Socios Totales
+            '#9C27B0', // Universo Orgs.
+            '#E91E63'  // Universo Socios
+        ];
+
+        // IDs de checkboxes por tarjeta
+        function getCheckboxIds(chartId) {
+            return {
+                ptg: `ptg-checkbox-${chartId}`,
+                partners: `partners-checkbox-${chartId}`,
+                totalPartnersByPTG: `total-partners-by-ptg-checkbox-${chartId}`,
+                universePtg: `universe-ptg-checkbox-${chartId}`,
+                universePartners: `universe-partners-checkbox-${chartId}`
+            };
+        }
+
+        // Genera series, labels y colores según checkboxes
         function getChartData(item) {
             const seriesData = [];
             const labels = [];
+            const colors = [];
 
-            const ptgCheckboxId = `ptg-checkbox-${item.ChartId}`;
-            const partnersCheckboxId = `partners-checkbox-${item.ChartId}`;
-            const totalPartnersByPTGCheckboxId = `total-partners-by-ptg-checkbox-${item.ChartId}`;
-            const universePtgCheckboxId = `universe-ptg-checkbox-${item.ChartId}`;
-            const universePartnersCheckboxId = `universe-partners-checkbox-${item.ChartId}`;
+            const ids = getCheckboxIds(item.ChartId);
 
-            const showPtg = document.getElementById(ptgCheckboxId).checked;
-            const showPartners = document.getElementById(partnersCheckboxId).checked;
-            const showTotalPartnersByPTG = document.getElementById(totalPartnersByPTGCheckboxId).checked;
-            const showUniversePtg = document.getElementById(universePtgCheckboxId).checked;
-            const showUniversePartners = document.getElementById(universePartnersCheckboxId).checked;
+            const picks = [
+                { show: document.getElementById(ids.ptg).checked, value: item.TotalPTGInState, label: 'Organizaciones Cargadas', color: COLORS[0] },
+                { show: document.getElementById(ids.partners).checked, value: item.TotalAddedPartners, label: 'Socios Cargados', color: COLORS[1] },
+                { show: document.getElementById(ids.totalPartnersByPTG).checked, value: item.TotaPartnersByPTG, label: 'Socios Totales', color: COLORS[2] },
+                { show: document.getElementById(ids.universePtg).checked, value: item.TotalUniversePTGInState, label: 'Universo Organizaciones', color: COLORS[3] },
+                { show: document.getElementById(ids.universePartners).checked, value: item.TotalUniverseDriversInState, label: 'Universo Socios', color: COLORS[4] }
+            ];
 
-            if (showPtg) {
-                seriesData.push(item.TotalPTGInState);
-                labels.push('Organizaciones Cargadas');
-            }
-            if (showPartners) {
-                seriesData.push(item.TotalAddedPartners);
-                labels.push('Socios Cargados');
-            }
-            if (showTotalPartnersByPTG) {
-                seriesData.push(item.TotaPartnersByPTG);
-                labels.push('Socios Totales');
-            }
-            if (showUniversePtg) {
-                seriesData.push(item.TotalUniversePTGInState);
-                labels.push('Universo Organizaciones');
-            }
-            if (showUniversePartners) {
-                seriesData.push(item.TotalUniverseDriversInState);
-                labels.push('Universo Socios');
-            }
+            picks.forEach(p => {
+                if (p.show) {
+                    seriesData.push(p.value);
+                    labels.push(p.label);
+                    colors.push(p.color);
+                }
+            });
 
-            return { seriesData, labels };
-        };
+            return { seriesData, labels, colors };
+        }
 
-        // Función para obtener las opciones del gráfico según el tipo
+        // Tooltip custom para pie/donut: asegura etiqueta correcta
+        function pieDonutTooltipCustom({ series, seriesIndex, w }) {
+            const label = w?.globals?.labels?.[seriesIndex] ?? `Elemento ${seriesIndex + 1}`;
+            const val = series?.[seriesIndex] ?? 0;
+            const value = Number(val).toLocaleString('de-DE');
+            return `<div class="apex-tooltip"><span>${label}: ${value}</span></div>`;
+        }
+
+        // Opciones por tipo (sin leyenda, valores absolutos en etiquetas)
         function getChartOptions(chartType, data, item) {
-            let options = {
-                series: data.seriesData,
-                labels: data.labels,
-                chart: {
-                    type: chartType,
-                    height: 250
-                },
-                dataLabels: {
-                    enabled: true,
-                    formatter: function (val, opts) {
-                        return opts.w.config.series[opts.seriesIndex].toLocaleString('de-DE');
-                    }
-                },
-                legend: {
-                    show: false
-                },
-                responsive: [{
-                    breakpoint: 480,
-                    options: {
-                        chart: {
-                            width: 200
-                        },
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }]
+            const base = {
+                chart: { type: chartType, height: 250 },
+                legend: { show: false },
+                colors: data.colors.length ? data.colors : COLORS,
+                responsive: [
+                    { breakpoint: 480, options: { chart: { width: 200 }, legend: { position: 'bottom' } } }
+                ]
             };
 
-            if (chartType === 'donut') {
-                options.plotOptions = {
-                    pie: {
-                        donut: {
-                            labels: {
+            if (chartType === 'donut' || chartType === 'pie') {
+                const options = {
+                    ...base,
+                    series: data.seriesData,
+                    labels: data.labels,
+                    dataLabels: {
+                        enabled: true,
+                        formatter: function (val, opts) {
+                            return opts.w.config.series[opts.seriesIndex]?.toLocaleString('de-DE');
+                        }
+                    },
+                    tooltip: { custom: pieDonutTooltipCustom },
+                    plotOptions: {
+                        pie: { expandOnClick: chartType === 'pie' ? false : true }
+                    }
+                };
+
+                if (chartType === 'donut') {
+                    options.plotOptions.pie.donut = {
+                        labels: {
+                            show: true,
+                            total: {
                                 show: true,
-                                total: {
-                                    show: true,
-                                    label: 'Total Orgs.',
-                                    formatter: function (w) {
-                                        return item.TotalPTGInState.toLocaleString('de-DE');
-                                    }
+                                label: 'Total Orgs.',
+                                formatter: function () {
+                                    return (item.TotalPTGInState ?? 0).toLocaleString('de-DE');
                                 }
                             }
                         }
-                    }
-                };
-            } else if (chartType === 'pie') {
-                options.plotOptions = {
-                    pie: {
-                        expandOnClick: false
+                    };
+                }
+                return options;
+            }
+
+            if (chartType === 'bar') {
+                return {
+                    ...base,
+                    chart: { ...base.chart, type: 'bar' },
+                    series: [{ name: 'Valores', data: data.seriesData }],
+                    xaxis: {
+                        categories: data.labels,
+                        labels: { rotate: -30, trim: true }
+                    },
+                    plotOptions: {
+                        bar: {
+                            horizontal: false,
+                            columnWidth: '55%',
+                            distributed: true, // cada barra toma su color desde colors[]
+                            dataLabels: { position: 'top' }
+                        }
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        formatter: function (val) { return (val ?? 0).toLocaleString('de-DE'); },
+                        offsetY: -10,
+                        style: { fontSize: '12px', colors: ['#304758'] }
+                    },
+                    tooltip: {
+                        y: { formatter: val => (val ?? 0).toLocaleString('de-DE') }
                     }
                 };
             }
 
-            return options;
+            return base;
         }
 
-        // Función para actualizar un solo gráfico
+        function activeChartType() {
+            return document.querySelector('.chart-type-selector button.active').id.replace('-btn', '');
+        }
+
+        // Render desde cero (para cambios de tipo)
+        function renderChart(item, chartType) {
+            if (apexCharts[item.ChartId]) {
+                try { apexCharts[item.ChartId].destroy(); } catch (_) {}
+            }
+            const chartDiv = document.getElementById(item.ChartId);
+            chartDiv.innerHTML = ''; // limpiar residuos
+
+            const data = getChartData(item);
+            const options = getChartOptions(chartType, data, item);
+
+            const chart = new ApexCharts(chartDiv, options);
+            chart.render();
+            apexCharts[item.ChartId] = chart;
+            currentTypes[item.ChartId] = chartType;
+        }
+
+        // Update dentro del mismo tipo (checkboxes)
         function updateChart(chartId) {
-            const chartType = document.querySelector('.chart-type-selector button.active').id.replace('-btn', '');
+            const chartType = currentTypes[chartId] || activeChartType();
             const item = chartItems.find(i => i.ChartId === chartId);
             const data = getChartData(item);
             const options = getChartOptions(chartType, data, item);
-            apexCharts[chartId].updateOptions(options, true);
+            apexCharts[chartId].updateOptions(options, true, true);
         }
 
-        // Función para actualizar todos los gráficos
-        function updateAllCharts(chartType) {
-            Object.keys(apexCharts).forEach(chartId => {
-                const item = chartItems.find(i => i.ChartId === chartId);
-                const data = getChartData(item);
-                const options = getChartOptions(chartType, data, item);
-                apexCharts[chartId].updateOptions(options, true);
-            });
-
-            // Actualizar el estado de los botones
-            document.querySelectorAll('.chart-type-selector button').forEach(btn => {
-                btn.classList.remove('active');
-            });
+        // Cambiar tipo para todos: recrear
+        function changeAllChartsType(chartType) {
+            chartItems.forEach(item => renderChart(item, chartType));
+            document.querySelectorAll('.chart-type-selector button').forEach(btn => btn.classList.remove('active'));
             document.getElementById(`${chartType}-btn`).classList.add('active');
         }
 
-        // Inicializar los gráficos
+        // Inicializar UI y gráficos
         chartItems.forEach(item => {
             const card = document.createElement('div');
             card.className = 'chart-card';
@@ -289,34 +337,28 @@
             const controlsDiv = document.createElement('div');
             controlsDiv.className = 'controls';
 
-            const ptgCheckboxId = `ptg-checkbox-${item.ChartId}`;
-            controlsDiv.innerHTML += `
-                <input type="checkbox" id="${ptgCheckboxId}" checked>
-                <label for="${ptgCheckboxId}">Orgs. Cargadas</label>
-            `;
+            const ids = getCheckboxIds(item.ChartId);
 
-            const partnersCheckboxId = `partners-checkbox-${item.ChartId}`;
+            // Por defecto: Orgs. Cargadas y Socios Cargados
             controlsDiv.innerHTML += `
-                <input type="checkbox" id="${partnersCheckboxId}" checked>
-                <label for="${partnersCheckboxId}">Socios Cargados</label>
+                <input type="checkbox" id="${ids.ptg}" checked>
+                <label for="${ids.ptg}">Orgs. Cargadas</label>
             `;
-
-            const totalPartnersByPTGCheckboxId = `total-partners-by-ptg-checkbox-${item.ChartId}`;
             controlsDiv.innerHTML += `
-                <input type="checkbox" id="${totalPartnersByPTGCheckboxId}">
-                <label for="${totalPartnersByPTGCheckboxId}">Socios Totales</label>
+                <input type="checkbox" id="${ids.partners}" checked>
+                <label for="${ids.partners}">Socios Cargados</label>
             `;
-
-            const universePtgCheckboxId = `universe-ptg-checkbox-${item.ChartId}`;
             controlsDiv.innerHTML += `
-                <input type="checkbox" id="${universePtgCheckboxId}">
-                <label for="${universePtgCheckboxId}">Universo Orgs.</label>
+                <input type="checkbox" id="${ids.totalPartnersByPTG}">
+                <label for="${ids.totalPartnersByPTG}">Socios Totales</label>
             `;
-
-            const universePartnersCheckboxId = `universe-partners-checkbox-${item.ChartId}`;
             controlsDiv.innerHTML += `
-                <input type="checkbox" id="${universePartnersCheckboxId}">
-                <label for="${universePartnersCheckboxId}">Universo Socios</label>
+                <input type="checkbox" id="${ids.universePtg}">
+                <label for="${ids.universePtg}">Universo Orgs.</label>
+            `;
+            controlsDiv.innerHTML += `
+                <input type="checkbox" id="${ids.universePartners}">
+                <label for="${ids.universePartners}">Universo Socios</label>
             `;
 
             const chartDiv = document.createElement('div');
@@ -331,38 +373,19 @@
             card.appendChild(label);
             document.getElementById('chartContainer').appendChild(card);
 
-            const initialData = getChartData(item);
-            const initialOptions = getChartOptions('donut', initialData, item);
+            // Render inicial como donut
+            renderChart(item, 'donut');
 
-            const chart = new ApexCharts(chartDiv, initialOptions);
-            chart.render();
-            apexCharts[item.ChartId] = chart;
-
-            document.getElementById(ptgCheckboxId).addEventListener('change', () => {
-                updateChart(item.ChartId);
-            });
-            document.getElementById(partnersCheckboxId).addEventListener('change', () => {
-                updateChart(item.ChartId);
-            });
-            document.getElementById(totalPartnersByPTGCheckboxId).addEventListener('change', () => {
-                updateChart(item.ChartId);
-            });
-            document.getElementById(universePtgCheckboxId).addEventListener('change', () => {
-                updateChart(item.ChartId);
-            });
-            document.getElementById(universePartnersCheckboxId).addEventListener('change', () => {
-                updateChart(item.ChartId);
+            // Eventos de checkboxes => actualizar
+            Object.values(ids).forEach(cid => {
+                document.getElementById(cid).addEventListener('change', () => updateChart(item.ChartId));
             });
         });
 
-        // Event listeners para los botones de tipo de gráfico
-        document.getElementById('donut-btn').addEventListener('click', () => {
-            updateAllCharts('donut');
-        });
-
-        document.getElementById('pie-btn').addEventListener('click', () => {
-            updateAllCharts('pie');
-        });
+        // Botones de tipo => recrear
+        document.getElementById('donut-btn').addEventListener('click', () => changeAllChartsType('donut'));
+        document.getElementById('pie-btn').addEventListener('click', () => changeAllChartsType('pie'));
+        document.getElementById('bar-btn').addEventListener('click', () => changeAllChartsType('bar'));
     </script>
 </body>
 </html>
