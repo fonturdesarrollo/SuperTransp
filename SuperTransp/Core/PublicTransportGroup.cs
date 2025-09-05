@@ -1,4 +1,6 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using ClosedXML.Excel;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.IdentityModel.Abstractions;
 using SuperTransp.Controllers;
 using SuperTransp.Models;
@@ -27,6 +29,7 @@ namespace SuperTransp.Core
 			SqlConnection sqlConnection = new(_configuration.GetConnectionString("connectionString"));
 			return sqlConnection;
 		}
+
 		public int AddOrEdit(PublicTransportGroupViewModel model)
 		{
 			int result = 0;

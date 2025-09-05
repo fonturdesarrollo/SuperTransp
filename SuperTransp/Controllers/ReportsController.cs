@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DocumentFormat.OpenXml.EMMA;
+using DocumentFormat.OpenXml.Wordprocessing;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using SuperTransp.Core;
 using SuperTransp.Models;
@@ -13,14 +15,16 @@ namespace SuperTransp.Controllers
 		private readonly IPublicTransportGroup _publicTransportGroup;
 		private readonly IReport _report;
 		private readonly IGeography _geography;
+		private readonly IExcelExporter _excelExporter;
 
-		public ReportsController(ISupervision supervision, IPublicTransportGroup publicTransportGroup, ISecurity security, IReport report, IGeography geography)
+		public ReportsController(ISupervision supervision, IPublicTransportGroup publicTransportGroup, ISecurity security, IReport report, IGeography geography, IExcelExporter excelExporter)
 		{
 			_security = security;
 			_supervision = supervision;
 			_publicTransportGroup = publicTransportGroup;
 			_report = report;
 			_geography = geography;
+			_excelExporter = excelExporter;
 		}
 
 		public IActionResult Index()
@@ -361,6 +365,46 @@ namespace SuperTransp.Controllers
 					}
 
 					return View(model);
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
+
+		[HttpGet]
+		public async Task<IActionResult> ExportPublicTransportGroupAndDrivers()
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 4))
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
+					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+					int? stateId = HttpContext.Session.GetInt32("StateId");
+
+					byte[] content = Array.Empty<byte>();
+
+					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
+					{
+						content = await _excelExporter.GenerateExcelPublicTransportGroupAndDriversAsync((int)stateId);
+					}
+					else
+					{
+						content = await _excelExporter.GenerateExcelPublicTransportGroupAndDriversAsync(0);
+					}					
+
+					return File(content,
+								"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+								"OrganizacionesYSocios.xlsx");
+
 				}
 
 				return RedirectToAction("Login", "Security");

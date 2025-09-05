@@ -150,9 +150,9 @@
     </div>
 
     <div class="chart-type-selector">
-        <button id="donut-btn" class="active">Dona</button>
+        <button id="bar-btn" class="active">Barras</button>
         <button id="pie-btn">Torta</button>
-        <button id="bar-btn">Barras</button>
+        <button id="donut-btn">Dona</button>
     </div>
 
     <div class="chart-container" id="chartContainer"></div>
@@ -400,7 +400,7 @@
                 card.appendChild(label);
                 container.appendChild(card);
 
-                renderChart(item, 'donut');
+                renderChart(item, 'bar');
 
                 Object.values(ids).forEach(cid => {
                     document.getElementById(cid).addEventListener('change', () => updateChart(item.ChartId));

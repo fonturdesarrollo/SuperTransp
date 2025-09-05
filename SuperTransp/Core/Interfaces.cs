@@ -172,6 +172,11 @@ namespace SuperTransp.Core
 			Task DeleteFileAsync(string filePath);
 		}
 
+		public interface IExcelExporter
+		{			
+			public Task<byte[]> GenerateExcelPublicTransportGroupAndDriversAsync(int stateId);
+		}
+
 		public interface IUniverse
 		{
 			public int AddOrEdit(UniverseViewModel model);

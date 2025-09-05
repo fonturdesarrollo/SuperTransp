@@ -33,6 +33,7 @@ builder.Services.AddTransient<IReport, Reports>();
 builder.Services.AddScoped<ClientInfoService>();
 builder.Services.AddScoped<IFtpService, FtpService>();
 builder.Services.AddScoped<IUniverse, Universe>();
+builder.Services.AddScoped<IExcelExporter, ExcelExporter>();
 
 var app = builder.Build();
 

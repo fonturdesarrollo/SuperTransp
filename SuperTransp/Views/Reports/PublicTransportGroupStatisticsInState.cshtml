@@ -145,9 +145,9 @@
     </div>
 
     <div class="chart-type-selector">
-        <button id="donut-btn" class="active">Dona</button>
+        <button id="bar-btn" class="active">Barras</button>
         <button id="pie-btn">Torta</button>
-        <button id="bar-btn">Barras</button>
+        <button id="donut-btn">Dona</button>
     </div>
 
     <div class="chart-container" id="chartContainer"></div>
@@ -374,7 +374,7 @@
             document.getElementById('chartContainer').appendChild(card);
 
             // Render inicial como donut
-            renderChart(item, 'donut');
+            renderChart(item, 'bar');
 
             // Eventos de checkboxes => actualizar
             Object.values(ids).forEach(cid => {
