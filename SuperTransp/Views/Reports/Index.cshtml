@@ -163,24 +163,24 @@
                                                 <li>
                                                     @Html.ActionLink(
                                                     "Gráficos Organizaciones por estado",
-                                                                        "PublicTransportGroupStatisticsInState",
-                                                                        "Reports",
-                                                                        new { selectedStatisticsStateId = ViewBag.UserStateId },
-                                                                        null
-                                                                        )
-                                </li>
-                                                                }
+                                                    "PublicTransportGroupStatisticsInState",
+                                                    "Reports",
+                                                    new { selectedStatisticsStateId = ViewBag.UserStateId }, null)
+                                                </li>
+                                            }
                                         }
                                         if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 23))
                                         {
                                             <li>@Html.ActionLink("Gráficos vehículos supervisados por estado", "SupervisedDriversStatisticsInEstate", "Reports")</li>
                                         }
-
-                                        <li>
-                                            <a href="#" id="exportExcelLink" data-url="@Url.Action("ExportPublicTransportGroupAndDrivers", "Reports")">
-                                                Exportar a Excel Organizaciones y socios
-                                            </a>
-                                        </li>
+                                        if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 27))
+                                        {
+                                            <li>
+                                                <a href="#" id="exportExcelLink" data-url="@Url.Action("ExportPublicTransportGroupAndDrivers", "Reports")">
+                                                    Exportar a Excel Organizaciones y socios
+                                                </a>
+                                            </li>
+                                        }
                                     }
                                 </ul>
 
@@ -305,16 +305,14 @@
                 const mensaje = "¿Desea exportar los registros? esto tomará algún tiempo.";
 
                 if (confirm(mensaje)) {
-                    // Mostrar spinner
                     spinner.classList.remove("hidden");
 
-                    // Simular la descarga
                     downloadFrame.src = url;
 
                     // Ocultar el spinner después de un tiempo prudencial
                     setTimeout(() => {
                         spinner.classList.add("hidden");
-                    }, 3000);
+                    }, 3500);
                 }
             });
         });

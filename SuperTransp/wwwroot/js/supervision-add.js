@@ -119,10 +119,27 @@ document.addEventListener("DOMContentLoaded", function () {
     handleInput("[name='Plate']", function (value) {
         return value.toUpperCase().replace(/\s+/g, "");
     });
+});
 
-    handleInput("[name='Remarks']", function (value) {
-        return value.toUpperCase();
-    });
+document.addEventListener("DOMContentLoaded", function () {
+    function handleInputRemarks(selector, transformFunction) {
+        const inputElement = document.querySelector(selector);
+        if (inputElement) {
+            inputElement.addEventListener("input", function () {
+                const start = inputElement.selectionStart;
+                const end = inputElement.selectionEnd;
+
+                const transformed = transformFunction(inputElement.value);
+
+                if (inputElement.value !== transformed) {
+                    inputElement.value = transformed;
+                    inputElement.setSelectionRange(start, end);
+                }
+            });
+        }
+    }
+
+    handleInputRemarks("[name='Remarks']", sanitizeInputValue);
 });
 
 function handleSaveRequest(event) {
@@ -378,12 +395,6 @@ $(document).ready(function () {
     $('#Plate').on('input', function () {
         const value = $(this).val();
         const sanitizedValue = value.replace(/[^a-zA-Z0-9\s]/g, '');
-        $(this).val(sanitizedValue);
-    });
-
-    $('#Remarks').on('input', function () {
-        const value = $(this).val();
-        const sanitizedValue = value.replace(/[^a-zA-Z\s]/g, '');
         $(this).val(sanitizedValue);
     });
 

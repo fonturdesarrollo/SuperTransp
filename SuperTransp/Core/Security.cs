@@ -1194,6 +1194,7 @@ namespace SuperTransp.Core
 		{
 			int currentMonth = DateTime.Now.Month;
 			int currentYear = DateTime.Now.Year;
+			string currentState = selectedStateName.ToLower() == "todos los estados" ? string.Empty : $"AND UserState = '{selectedStateName}'";
 			string whereCondition = string.Empty;
 
 			using (SqlConnection sqlConnection = GetConnection())
@@ -1205,11 +1206,11 @@ namespace SuperTransp.Core
 
 				if(filterType =="currentMonth")
 				{
-					whereCondition = $"WHERE (MONTH(SecurityLogbookDate) = {currentMonth}) AND (YEAR(SecurityLogbookDate) = {currentYear}) AND UserState = '{selectedStateName}' ORDER BY SecurityLogbookId DESC";
+					whereCondition = $"WHERE (MONTH(SecurityLogbookDate) = {currentMonth}) AND (YEAR(SecurityLogbookDate) = {currentYear}) {currentState} ORDER BY SecurityLogbookId DESC";
 				}
 				else
 				{
-					whereCondition = $"WHERE (MONTH(SecurityLogbookDate) = {currentMonth} OR MONTH(SecurityLogbookDate) = {currentMonth - 1}) AND (YEAR(SecurityLogbookDate) = {currentYear}) AND UserState = '{selectedStateName}' ORDER BY SecurityLogbookId DESC";
+					whereCondition = $"WHERE (MONTH(SecurityLogbookDate) = {currentMonth} OR MONTH(SecurityLogbookDate) = {currentMonth - 1}) AND (YEAR(SecurityLogbookDate) = {currentYear}) {currentState} ORDER BY SecurityLogbookId DESC";
 				}
 
 				List<SecurityLogbookModel> logbook = new();

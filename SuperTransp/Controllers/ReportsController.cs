@@ -38,13 +38,23 @@ namespace SuperTransp.Controllers
 
 				int? stateId = HttpContext.Session.GetInt32("StateId");
 				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
-				List<GeographyViewModel> states = _geography.GetAllStates();
+				List<GeographyViewModel> statisticsStates = new List<GeographyViewModel>();
+				List<GeographyViewModel> movementsStates = new List<GeographyViewModel>();
 
-				states.Add(new GeographyViewModel
+				statisticsStates.Add(new GeographyViewModel
 				{
 					StateId = 0,
-					StateName = "Todos los estados"
+					StateName = "Todos los Estados"
 				});
+
+				movementsStates.Add(new GeographyViewModel
+				{
+					StateId = 0,
+					StateName = "Todos los Estados"
+				});
+
+				statisticsStates.AddRange(_geography.GetAllStates());
+				movementsStates.AddRange(_geography.GetAllStates());
 
 				if (securityGroupId.HasValue)
 				{
@@ -53,14 +63,14 @@ namespace SuperTransp.Controllers
 						if (_security.GroupHasAccessToModule((int)securityGroupId, 6))
 						{
 							ViewBag.States = new SelectList(_geography.GetAllStates(), "StateName", "StateName");
-							ViewBag.StatisticsStates = new SelectList(states, "StateId", "StateName");
+							ViewBag.StatisticsStates = new SelectList(statisticsStates, "StateId", "StateName");
 						}
 						else
 						{
 							if (stateId.HasValue)
 							{
 								ViewBag.States = new SelectList(_geography.GetStateById((int)stateId), "StateName", "StateName");
-								ViewBag.StatisticsStates = new SelectList(states.Where(s=> s.StateId == (int)stateId), "StateId", "StateName");
+								ViewBag.StatisticsStates = new SelectList(statisticsStates.Where(s=> s.StateId == (int)stateId), "StateId", "StateName");
 
 								if (_security.IsTotalAccess(1) || _security.IsUpdateAccess(1))
 								{
@@ -71,9 +81,8 @@ namespace SuperTransp.Controllers
 					}
 					else
 					{
-						ViewBag.States = new SelectList(_geography.GetAllStates(), "StateName", "StateName");
-						
-						ViewBag.StatisticsStates = new SelectList(states, "StateId", "StateName");
+						ViewBag.States = new SelectList(movementsStates, "StateName", "StateName");						
+						ViewBag.StatisticsStates = new SelectList(statisticsStates, "StateId", "StateName");
 					}
 				}
 

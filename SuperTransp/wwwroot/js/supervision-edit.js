@@ -145,17 +145,24 @@
 	});
 
 	document.addEventListener("DOMContentLoaded", function () {
-		function handleInput(selector, transformFunction) {
-			var inputElement = document.querySelector(selector);
+		function handleInputRemarks(selector, transformFunction) {
+			const inputElement = document.querySelector(selector);
 			if (inputElement) {
 				inputElement.addEventListener("input", function () {
-					inputElement.value = transformFunction(inputElement.value);
+					const start = inputElement.selectionStart;
+					const end = inputElement.selectionEnd;
+
+					const transformed = transformFunction(inputElement.value);
+
+					if (inputElement.value !== transformed) {
+						inputElement.value = transformed;
+						inputElement.setSelectionRange(start, end);
+					}
 				});
 			}
 		}
-		handleInput("[name='Remarks']", function (value) {
-			return value.toUpperCase();
-		});
+
+		handleInputRemarks("[name='Remarks']", sanitizeInputValue);
 	});
 
 	function handleSaveRequest(event) {
@@ -360,12 +367,6 @@
 		$('#Plate').on('input', function () {
 			const value = $(this).val();
 			const sanitizedValue = value.replace(/[^a-zA-Z0-9\s]/g, '');
-			$(this).val(sanitizedValue);
-		});
-
-		$('#Remarks').on('input', function () {
-			const value = $(this).val();
-			const sanitizedValue = value.replace(/[^a-zA-Z\s]/g, '');
 			$(this).val(sanitizedValue);
 		});
 
