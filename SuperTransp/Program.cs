@@ -39,22 +39,20 @@ var app = builder.Build();
 
 app.UseMiddleware<MaintenanceMiddleware>();
 
-if (!app.Environment.IsDevelopment())
-{
-	app.UseExceptionHandler("/Home/Error"); 
-	app.UseHsts();
-}
-else
-{
-	app.UseDeveloperExceptionPage();
-}
+//if (!app.Environment.IsDevelopment())
+//{
+//	app.UseExceptionHandler("/Home/Error"); 
+//	app.UseHsts();
+//}
+//else
+//{
+//	app.UseDeveloperExceptionPage();
+//}
 
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
 	ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-});
-
-	
+});	
 
 app.UseStaticFiles();
 

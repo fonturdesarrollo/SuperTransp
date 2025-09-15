@@ -180,6 +180,11 @@
                                                     Exportar a Excel Organizaciones y socios
                                                 </a>
                                             </li>
+                                            <li>
+                                                <a href="#" id="exportExcelSupervisionsLink" data-url="@Url.Action("ExportSupervisionDetail", "Reports")">
+                                                    Exportar a Excel Supervisiones
+                                                </a>
+                                            </li>
                                         }
                                     }
                                 </ul>
@@ -309,10 +314,33 @@
 
                     downloadFrame.src = url;
 
+                    setTimeout(() => {
+                        spinner.classList.add("hidden");
+                    }, 5500);
+                }
+            });
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const link = document.getElementById("exportExcelSupervisionsLink");
+            const spinner = document.getElementById("loading-spinner");
+            const downloadFrame = document.getElementById("downloadFrame");
+
+            link.addEventListener("click", function (event) {
+                event.preventDefault();
+
+                const url = this.getAttribute("data-url");
+                const mensaje = "¿Desea exportar los registros? esto tomará algún tiempo.";
+
+                if (confirm(mensaje)) {
+                    spinner.classList.remove("hidden");
+
+                    downloadFrame.src = url;
+
                     // Ocultar el spinner después de un tiempo prudencial
                     setTimeout(() => {
                         spinner.classList.add("hidden");
-                    }, 3500);
+                    }, 4500);
                 }
             });
         });

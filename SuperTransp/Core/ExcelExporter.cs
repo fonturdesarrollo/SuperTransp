@@ -53,5 +53,35 @@ namespace SuperTransp.Core
 				return stream.ToArray();
 			}
 		}
+
+		public async Task<byte[]> GenerateExcelSupervisionDetailAsync(int stateId)
+		{
+			var dt = new DataTable();
+
+			var whereClause = stateId > 0 ? "WHERE StateId = @StateId" : string.Empty;
+
+			using (var con = (GetConnection()))
+			using (var cmd = new SqlCommand($"SELECT * FROM SuperTransp_SupervisionDetail {whereClause} ORDER BY Estado, Municipio, Organizacion, Cedula", con))
+			{
+				if (stateId > 0)
+				{
+					cmd.Parameters.AddWithValue("@StateId", stateId);
+				}
+
+				await con.OpenAsync();
+				using (var reader = await cmd.ExecuteReaderAsync())
+				{
+					dt.Load(reader);
+				}
+			}
+
+			using (var workbook = new XLWorkbook())
+			using (var stream = new MemoryStream())
+			{
+				workbook.Worksheets.Add(dt, "DetalleDeSupervisión");
+				workbook.SaveAs(stream);
+				return stream.ToArray();
+			}
+		}
 	}
 }

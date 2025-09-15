@@ -85,6 +85,7 @@ $("#btnDeleteImages").on("click", function () {
                 partnerNumber: partnerNumber,
                 publicTransportGroupId: publicTransportGroupId,
                 driverId: driverId,
+                driverPublicTransportGroupId: driverPublicTransportGroupId,
             },
             success: function () {
                 alert("Las imágenes fueron eliminadas correctamente.");

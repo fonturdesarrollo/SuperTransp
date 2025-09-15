@@ -423,5 +423,45 @@ namespace SuperTransp.Controllers
 				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
 			}
 		}
+
+		[HttpGet]
+		public async Task<IActionResult> ExportSupervisionDetail()
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 4))
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
+					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+					int? stateId = HttpContext.Session.GetInt32("StateId");
+
+					byte[] content = Array.Empty<byte>();
+
+					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
+					{
+						content = await _excelExporter.GenerateExcelSupervisionDetailAsync((int)stateId);
+					}
+					else
+					{
+						content = await _excelExporter.GenerateExcelSupervisionDetailAsync(0);
+					}
+
+					return File(content,
+								"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+								"DetalleDeSupervisión.xlsx");
+
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
 	}
 }

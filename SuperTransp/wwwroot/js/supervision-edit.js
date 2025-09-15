@@ -68,6 +68,7 @@
 					partnerNumber: data.partnerNumber,
 					publicTransportGroupId: data.publicTransportGroupId,
 					driverId: data.driverId,
+					driverPublicTransportGroupId: data.driverPublicTransportGroupId,
 				},
 				success: function () {
 					alert("Las imágenes fueron eliminadas correctamente.");

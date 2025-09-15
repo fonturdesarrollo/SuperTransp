@@ -798,14 +798,7 @@ namespace SuperTransp.Core
 
 				if(!string.IsNullOrEmpty(plate))
 				{
-					SqlCommand cmd = new("SELECT  dbo.Supervision.Plate, dbo.Driver.DriverIdentityDocument, dbo.Driver.DriverFullName, dbo.PublicTransportGroup.PublicTransportGroupRif, dbo.Designation.DesignationName + ' ' + dbo.PublicTransportGroup.PublicTransportGroupName AS PTGCompleteName, dbo.State.StateName, dbo.Driver.DriverId " +
-						"FROM  dbo.Supervision INNER JOIN  dbo.Driver ON dbo.Supervision.DriverId = dbo.Driver.DriverId " +
-						"INNER JOIN dbo.DriverPublicTransportGroup ON dbo.Driver.DriverId = dbo.DriverPublicTransportGroup.DriverId " +
-						"INNER JOIN dbo.PublicTransportGroup ON dbo.DriverPublicTransportGroup.PublicTransportGroupId = dbo.PublicTransportGroup.PublicTransportGroupId " +
-						"INNER JOIN dbo.Designation ON dbo.PublicTransportGroup.DesignationId = dbo.Designation.DesignationId " +
-						"INNER JOIN  dbo.Municipality ON dbo.PublicTransportGroup.MunicipalityId = dbo.Municipality.MunicipalityId " +
-						"INNER JOIN dbo.State ON dbo.Municipality.StateId = dbo.State.StateId " +
-						"WHERE (dbo.Supervision.Plate = @Plate)", sqlConnection);
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_SupervisionVehiclePlate WHERE Plate = @Plate", sqlConnection);
 
 					cmd.Parameters.AddWithValue("@Plate", plate);
 

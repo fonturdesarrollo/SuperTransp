@@ -226,7 +226,7 @@ namespace SuperTransp.Controllers
 					PopulateViewBagForSupervision();
 
 					var ftpBaseUrl = _configuration["FtpSettings:BaseUrl"];
-					var tempFolderName = $"{publicTransportGroupRif}-{driverId}-supervision_temp";
+					var tempFolderName = $"{publicTransportGroupRif}-{driverPublicTransportGroupId}-supervision_temp";
 					string ftpTempFolderPath = Path.Combine(ftpBaseUrl, stateName.ToUpper().Trim(), tempFolderName).Replace("\\", "/");
 
 					await _ftpService.DeleteFilesInFolderAsync(ftpTempFolderPath);
@@ -303,7 +303,8 @@ namespace SuperTransp.Controllers
 							model.VehicleImageUrl = string.IsNullOrEmpty(model.VehicleImageUrl) ? string.Empty : model.VehicleImageUrl;
 							model.SupervisionStatus = true;
 							model.FailureTypeId = model.WorkingVehicle ? 1 : model.FailureTypeId;
-							var imageUrl = await SupervisionPictureUrl(model.StateName, model.PublicTransportGroupRif, model.DriverIdentityDocument, model.PartnerNumber, model.DriverPublicTransportGroupId);
+
+							var imageUrl = await SupervisionPictureUrl(model.StateName, model.PublicTransportGroupRif, model.DriverIdentityDocument, model.PartnerNumber, model.DriverPublicTransportGroupId, model.ModeId);
 
 							if (imageUrl != null && imageUrl.Any())
 							{
@@ -395,7 +396,7 @@ namespace SuperTransp.Controllers
 						ViewBag.VehicleModel = new SelectList(_commonData.GetModelsByYearAndMake((int)model.Year, model.Make).ToList(), "VehicleDataId", "ModelName");									
 
 						var ftpBaseUrl = _configuration["FtpSettings:BaseUrl"];
-						var tempFolderName = $"{publicTransportGroupRif}-{driverId}-supervision_temp";
+						var tempFolderName = $"{publicTransportGroupRif}-{driverPublicTransportGroupId}-supervision_temp";
 						string ftpTempFolderPath = Path.Combine(ftpBaseUrl, stateName.ToUpper().Trim(), tempFolderName).Replace("\\", "/");
 
 						await _ftpService.DeleteFilesInFolderAsync(ftpTempFolderPath);
@@ -571,14 +572,14 @@ namespace SuperTransp.Controllers
 			return BadRequest("No se pudo subir el archivo.");
 		}
 
-		public async Task<JsonResult> DeleteAllSupervisionPictures(string stateName, string publicTransportGroupRif, int partnerNumber, int publicTransportGroupId, int driverId)
+		public async Task<JsonResult> DeleteAllSupervisionPictures(string stateName, string publicTransportGroupRif, int partnerNumber, int publicTransportGroupId, int driverId, int driverPublicTransportGroupId)
 		{
 			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 			{
 				var ftpBaseUrl = _configuration["FtpSettings:BaseUrl"];
 				var newFolderName = $"{stateName.ToUpper().Trim()}";
 				var ftpFolderPath = Path.Combine(ftpBaseUrl, newFolderName).Replace("\\", "/");
-				var subFolderName = $"{publicTransportGroupRif}-{driverId}-supervision_temp";
+				var subFolderName = $"{publicTransportGroupRif}-{driverPublicTransportGroupId}-supervision_temp";
 				var ftpSubFolderPath = Path.Combine(ftpFolderPath, subFolderName).Replace("\\", "/");
 
 				await _ftpService.DeleteFilesInFolderAsync(ftpSubFolderPath);
@@ -589,7 +590,7 @@ namespace SuperTransp.Controllers
 			return Json("ERROR");
 		}
 
-		private async Task<List<SupervisionPictures>> SupervisionPictureUrl(string stateName, string publicTransportGroupRif, int driverIdentityDocument, int partnerNumber, int driverId)
+		private async Task<List<SupervisionPictures>> SupervisionPictureUrl(string stateName, string publicTransportGroupRif, int driverIdentityDocument, int partnerNumber, int driverId, int ptgMode)
 		{
 			var ftpBaseUrl = _configuration["FtpSettings:BaseUrl"];
 			var baseImagesUrl = _configuration["FtpSettings:BaseImagesUrl"];
@@ -626,17 +627,23 @@ namespace SuperTransp.Controllers
 					}
 				}
 
+				// Paso 2.1: Filtrar archivos según ptgMode
+				if (ptgMode != 4 && fileList.Count > 4)
+				{
+					fileList = fileList.Take(4).ToList();
+				}
+				else if (ptgMode == 4 && fileList.Count > 2)
+				{
+					fileList = fileList.Take(2).ToList();
+				}
+
 				// Paso 3: Transferir archivos a la carpeta final
 				var transferTasks = fileList.Select(fileName =>
 					_ftpService.TransferFileAsync($"{ftpSubFolderPath}/{fileName}", $"{ftpfinalFolderPath}/{fileName}"));
 				await Task.WhenAll(transferTasks); // Transferencias en paralelo
 
 				// Paso 4: Eliminar archivos de la carpeta temporal
-				var deleteTasks = fileList.Select(fileName =>
-					_ftpService.DeleteFileAsync($"{ftpSubFolderPath}/{fileName}"));
-				await Task.WhenAll(deleteTasks);
-
-				await _ftpService.DeleteFolderAsync(ftpSubFolderPath);
+				await _ftpService.DeleteFilesInFolderAsync(ftpSubFolderPath);
 
 				// Paso 5: Registrar imágenes
 				foreach (var fileName in await _ftpService.ListFilesAsync(ftpfinalFolderPath))
@@ -717,7 +724,7 @@ namespace SuperTransp.Controllers
 				{
 					if (!existingPlate.Where(x => x.DriverId == paramValue1).Any())
 					{
-						return Json($"El número de placa {paramValue2} ya está asignado al socio {existingPlate.FirstOrDefault().DriverFullName} línea {existingPlate.FirstOrDefault().PTGCompleteName} estado {existingPlate.FirstOrDefault().StateName.ToUpper()}.");
+						return Json($"El número de placa {paramValue2} ya está asignado al socio {existingPlate.FirstOrDefault().DriverFullName} organización {existingPlate.FirstOrDefault().PTGCompleteName} estado {existingPlate.FirstOrDefault().StateName.ToUpper()}.");
 					}
 				}
 

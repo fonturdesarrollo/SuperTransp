@@ -1,4 +1,5 @@
-﻿@model List<SuperTransp.Models.PublicTransportGroupViewModel>
+﻿@using SuperTransp.Extensions
+@model List<SuperTransp.Models.PublicTransportGroupViewModel>
 @{
 	Layout = "";
 }
@@ -104,6 +105,9 @@
 								<th>Nombre</th>
 								<th># Socio</th>
 								<th>Estatus</th>
+								<th>Presente en supervisión</th>
+								<th>Con vehículo</th>
+								<th>Vehículo operativo</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -149,6 +153,15 @@
 														</button>
 													}
 												}
+											</td>
+											<td>
+												@ptg.InPerson.ToSpanishYesNo()
+											</td>
+											<td>
+												@ptg.DriverWithVehicle.ToSpanishYesNo()
+											</td>
+											<td>
+												@ptg.WorkingVehicle.ToSpanishYesNo()
 											</td>
 										</tr>
 									}
