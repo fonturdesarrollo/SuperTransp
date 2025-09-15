@@ -1,4 +1,4 @@
-﻿@model List<SuperTransp.Models.PublicTransportGroupViewModel>
+﻿@* @model List<SuperTransp.Models.PublicTransportGroupViewModel> *@
 @{
 	Layout = "";
 }
@@ -59,6 +59,11 @@
 				<section>
 					<h4 style="color:#4cbece"> Seleccione una organización</h4>
 					<br />
+					<div id="loadingSpinner" style="text-align:center; padding:1em;">
+						<div class="spinner-border text-info" role="status">
+							<span class="sr-only">Cargando...</span>
+						</div>
+					</div>
 					<table id="inventory" class="table table-striped table-bordered dt-responsive dt-nowrap">
 						<thead>
 							<tr>
@@ -70,21 +75,6 @@
 								<th>Estado</th>
 							</tr>
 						</thead>
-						<tbody>
-							@foreach (var ptg in Model)
-							{
-								<tr>
-									<td>
-										@Html.ActionLink(@ptg.PTGCompleteName, "Add", "Driver", new { publicTransportGroupId = ptg.PublicTransportGroupId, pTGCompleteName = ptg.PTGCompleteName })
-									</td>
-									<td>@ptg.ModeName</td>
-									<td>@ptg.PublicTransportGroupRif</td>
-									<td>@ptg.Partners</td>
-									<td>@ptg.TotalDrivers</td>
-									<td>@ptg.StateName</td>
-								</tr>
-							}
-						</tbody>
 					</table>
 				</section>
 			</div>
@@ -112,36 +102,53 @@
 	<script type="text/javascript">
 
 		$(document).ready(function () {
+			var checkExistingUrl = '@Url.Action("GetPublicTransportGroup", "Driver")';
+			var urlPtg = '@Url.Action("Add", "Driver")';
 
-			$('#inventory').DataTable({
-				stateSave: true,
-				"language": {
-					"sProcessing":    "Procesando...",
-					"sLengthMenu":    "Mostrar _MENU_ registros",
-					"sZeroRecords":   "No se encontraron resultados",
-					"sEmptyTable":    "Ningún dato disponible en esta tabla",
-					"sInfo":          "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
-					"sInfoEmpty":     "Mostrando registros del 0 al 0 de un total de 0 registros",
-					"sInfoFiltered":  "(filtrado de un total de _MAX_ registros)",
-					"sInfoPostFix":   "",
-					"sSearch":        "Buscar:",
-					"sUrl":           "",
-					"sInfoThousands":  ",",
-					"sLoadingRecords": "Cargando...",
-					"oPaginate": {
-						"sFirst":    "Primero",
-						"sLast":    "Último",
-						"sNext":    "Siguiente",
-						"sPrevious": "Anterior"
+			$('#loadingSpinner').show();
+
+			var table = $('#inventory').DataTable({
+				ajax: {
+					url: checkExistingUrl,
+					dataSrc: function (json) {
+						$('#loadingSpinner').fadeOut();
+						return json.data;
+					}
+				},
+				pageLength: 10,
+				lengthMenu: [10, 25, 50, 100, 500, 1000, 2000, 3000],
+				columns: [
+					{
+						data: 'nombre',
+						render: function (data, type, row) {
+							return `<a href="${urlPtg}?publicTransportGroupId=${row.id}&pTGCompleteName=${encodeURIComponent(data)}">${data}</a>`;
+						}
 					},
-					"oAria": {
-						"sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
-						"sSortDescending": ": Activar para ordenar la columna de manera descendente"
+					{ data: 'tipo' },
+					{ data: 'rif' },
+					{ data: 'cupos' },
+					{ data: 'cargados' },
+					{ data: 'estado' }
+				],
+				stateSave: true,
+				language: {
+					sProcessing: "Procesando...",
+					sLengthMenu: "Mostrar _MENU_ registros",
+					sZeroRecords: "No se encontraron resultados",
+					sEmptyTable: "Ningún dato disponible en esta tabla",
+					sInfo: "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+					sInfoEmpty: "Mostrando registros del 0 al 0 de un total de 0 registros",
+					sInfoFiltered: "(filtrado de un total de _MAX_ registros)",
+					sSearch: "Buscar:",
+					oPaginate: {
+						sFirst: "Primero",
+						sLast: "Último",
+						sNext: "Siguiente",
+						sPrevious: "Anterior"
 					}
 				}
 			});
 		});
 	</script>
-
 </body>
 </html>

@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using QRCoder;
 using SuperTransp.Core;
 using SuperTransp.Models;
+using System.Net;
+using System.Reflection;
 using System.Xml.Linq;
 using static SuperTransp.Core.Interfaces;
 
@@ -10,14 +12,15 @@ namespace SuperTransp.Controllers
 {
 	public class DriverController : Controller
 	{
-		private ISecurity _security;
-		private IGeography _geography;
-		private IPublicTransportGroup _publicTransportGroup;
-		private IDriver _driver;
-		private IConfiguration _configuration;
-		private ICommonData _commonData;
+		private readonly ISecurity _security;
+		private readonly IGeography _geography;
+		private readonly IPublicTransportGroup _publicTransportGroup;
+		private readonly IDriver _driver;
+		private readonly IConfiguration _configuration;
+		private readonly ICommonData _commonData;
+		private readonly IFtpService _ftpService;
 
-		public DriverController(IDriver driver, IPublicTransportGroup publicTransportGroup, ISecurity security, IGeography geography, IConfiguration configuration, ICommonData commonData)
+		public DriverController(IDriver driver, IPublicTransportGroup publicTransportGroup, ISecurity security, IGeography geography, IConfiguration configuration, ICommonData commonData, IFtpService ftpService)
 		{
 			_driver = driver;
 			_publicTransportGroup = publicTransportGroup;
@@ -25,62 +28,75 @@ namespace SuperTransp.Controllers
 			_geography = geography;
 			_configuration = configuration;
 			_commonData = commonData;
+			_ftpService = ftpService;
 		}
+
 		public IActionResult Index()
 		{
-			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("FullName")) && HttpContext.Session.GetInt32("SecurityGroupId") != null)
-			{
-				if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 2))
-				{
-					return RedirectToAction("Login", "Security");
-				}
+			var result = CheckSessionAndPermission(2);
+			if (result != null) return result;
 
-				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
-				ViewBag.SecurityGroupId = (int)HttpContext.Session.GetInt32("SecurityGroupId");
+			ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+			ViewBag.SecurityGroupId = (int)HttpContext.Session.GetInt32("SecurityGroupId");
 
-				return View();
-			}
-
-			return RedirectToAction("Login", "Security");
+			return View();
 		}
 
 		public IActionResult PublicTransportGroupList()
 		{
 			try
 			{
-				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
-				{
-					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 2))
-					{
-						return RedirectToAction("Login", "Security");
-					}
+				var result = CheckSessionAndPermission(2);
+				if (result != null) return result;
 
-					List<PublicTransportGroupViewModel> model = new();
+				List<PublicTransportGroupViewModel> model = new();
 
-					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
-					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
-					int? stateId = HttpContext.Session.GetInt32("StateId");
+				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 
-					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
-					{
-						model = _publicTransportGroup.GetAllByStateId((int)stateId);
-					}
-					else
-					{
-						model = _publicTransportGroup.GetAll();
-						ViewBag.IsTotalAccess = true;
-					}
-
-					ViewBag.IsTotalAccess = _security.IsTotalAccess(2);
-
-					return View(model);
-				}
-
-				return RedirectToAction("Login", "Security");
+				return View();
 			}
 			catch (Exception ex)
 			{
 				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
+
+		[HttpGet]
+		public IActionResult GetPublicTransportGroup()
+		{
+			try
+			{
+				var result = CheckSessionAndPermission(2);
+				if (result != null) return result;
+
+				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+				int? stateId = HttpContext.Session.GetInt32("StateId");
+				List<PublicTransportGroupViewModel> ptgData = new List<PublicTransportGroupViewModel>();
+
+				if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
+				{
+					ptgData = _publicTransportGroup.GetAllByStateId((int)stateId);
+				}
+				else
+				{
+					ptgData = _publicTransportGroup.GetAll();
+				}
+
+				var list = ptgData.Select(ptg => new {
+					nombre = ptg.PTGCompleteName,
+					tipo = ptg.ModeName,
+					rif = ptg.PublicTransportGroupRif,
+					cupos = ptg.Partners,
+					cargados = ptg.TotalDrivers,
+					estado = ptg.StateName,
+					id = ptg.PublicTransportGroupId
+				});
+
+				return Json(new { data = list });
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(new { error = ex.Message });
 			}
 		}
 
@@ -88,42 +104,45 @@ namespace SuperTransp.Controllers
 		{
 			try
 			{
-				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+				var result = CheckSessionAndPermission(2);
+				if (result != null) return result;
+
+				ViewBag.IsTotalAccess = false;
+				ViewBag.IsDeleteAccess = false;
+				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+				var ptg = _publicTransportGroup.GetPublicTransportGroupById(publicTransportGroupId);
+				var model = new DriverViewModel
 				{
-					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 2))
-					{
-						return RedirectToAction("Login", "Security");
-					}
+					PublicTransportGroupId = publicTransportGroupId,
+					PTGCompleteName = pTGCompleteName,
+					DriverModifiedDate = DateTime.Now,
+					Birthdate = DateTime.Now.AddYears(-20)
+				};
 
-					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
-					var ptg = _publicTransportGroup.GetPublicTransportGroupById(publicTransportGroupId);
-					var model = new DriverViewModel
-					{
-						PublicTransportGroupId = publicTransportGroupId,
-						PTGCompleteName = pTGCompleteName,
-						DriverModifiedDate = DateTime.Now,
-						Birthdate = DateTime.Now.AddYears(-20)
-					};
+				ViewBag.Partners = ptg.Partners;
+				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 
-					ViewBag.Drivers = _driver.GetByPublicTransportGroupId(publicTransportGroupId);
-					ViewBag.Partners = ptg.Partners;
-					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
-
-					if (securityGroupId != 1)
-					{
-						ViewBag.IsTotalAccess = _security.IsTotalAccess(2);
-					}
-					else
+				if (securityGroupId != 1)
+				{
+					if (_security.IsTotalAccess(2) || _security.IsUpdateAccess(2))
 					{
 						ViewBag.IsTotalAccess = true;
 					}
 
-					ViewBag.Sex = new SelectList(_commonData.GetSex(), "SexId", "SexName");
-
-					return View(model);
+					if (_security.IsTotalAccess(2))
+					{
+						ViewBag.IsDeleteAccess = true;
+					}
+				}
+				else
+				{
+					ViewBag.IsTotalAccess = true;
+					ViewBag.IsDeleteAccess = true;
 				}
 
-				return RedirectToAction("Login", "Security");
+				ViewBag.Sex = new SelectList(_commonData.GetSex(), "SexId", "SexName");
+
+				return View(model);
 			}
 
 			catch (Exception ex)
@@ -132,34 +151,72 @@ namespace SuperTransp.Controllers
 			}
 		}
 
-		[HttpPost]
-		public IActionResult Add(DriverViewModel model)
+		[HttpGet]
+		public IActionResult GetDriversByPTG(int publicTransportGroupId)
 		{
 			try
 			{
-				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
+				var result = CheckSessionAndPermission(2);
+				if (result != null) return result;
+
+				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+				var drivers = _driver.GetByPublicTransportGroupId(publicTransportGroupId);
+				var isTotalAccess = securityGroupId == 1 || _security.IsTotalAccess(2) || _security.IsUpdateAccess(2);
+				var isDeleteAccess = securityGroupId == 1 || _security.IsTotalAccess(2);
+				var editControllerUrl = $"{Url.Action("Edit", "Driver")}?driverPublicTransportGroupId=";
+
+				var data = drivers.Select(driver => new
 				{
-					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 2))
-					{
-						return RedirectToAction("Login", "Security");
-					}
+					nombre = driver.DriverFullName,
+					cedula = driver.DriverIdentityDocument,
+					socio = driver.PartnerNumber,
+					telefono = driver.DriverPhone,
+					sexo = driver.SexName,
+					driverId = driver.DriverId,
+					ptgGUID = $"{driver.PublicTransportGroupGUID}|{driver.PartnerNumber}",
+					nacimiento = driver.Birthdate.ToString("dd/MM/yyyy"),
+					modificar = isTotalAccess ? $@"<a id='btnEdit' href='{editControllerUrl}{driver.DriverPublicTransportGroupId}'>MODIFICAR</a>" : "<span>SOLO LECTURA</span>",
+					eliminar = isDeleteAccess ? $@"<a id='btnDelete' href='javascript:void(0);' onclick=""confirmDeletion('/Driver/Delete?driverId={driver.DriverId}&driverPublicTransportGroupId={driver.DriverPublicTransportGroupId}&partnerNumber={driver.PartnerNumber}&publicTransportGroupId={driver.PublicTransportGroupId}&pTGCompleteName={driver.PTGCompleteName}')"">ELIMINAR</a>" : "<span>SOLO LECTURA</span>",
+					qr = "<button class='generateQR view-info p-1' type='button'><i class='bi bi-qr-code'></i></button>"
+				});
 
-					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+				return Json(new { data });
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(new { error = ex.Message });
+			}
+		}
 
-					if (_security.IsTotalAccess(2) || securityGroupId == 1)
-					{
-						int driverId = _driver.AddOrEdit(model);
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public IActionResult AddWithAjax(DriverViewModel model)
+		{
+			try
+			{
+				if (string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) || !ModelState.IsValid)
+					return Json(new { success = false, redirect = Url.Action("Login", "Security") });
 
-						if (driverId > 0)
+				int? groupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+				if (groupId != 1 && !_security.GroupHasAccessToModule(groupId.Value, 2))
+					return Json(new { success = false, redirect = Url.Action("Login", "Security") });
+
+				if (_security.IsTotalAccess(2) || _security.IsUpdateAccess(2) || groupId == 1)
+				{
+					int driverId = _driver.AddOrEdit(model);
+
+					//if (driverId > 0)
+					//{
+						return Json(new
 						{
-							TempData["SuccessMessage"] = "Datos actualizados correctamente";
-
-							return RedirectToAction("Add", new { publicTransportGroupId = model.PublicTransportGroupId, pTGCompleteName = model.PTGCompleteName });
-						}
-					}
+							success = true,
+							message = "Datos actualizados correctamente"
+						});
+					//}
 				}
 
-				return RedirectToAction("Login", "Security");
+				return Json(new { success = false, redirect = Url.Action("Login", "Security") });
 			}
 			catch (Exception ex)
 			{
@@ -170,95 +227,160 @@ namespace SuperTransp.Controllers
 		[HttpGet]
 		public IActionResult Edit(int driverPublicTransportGroupId)
 		{
-			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+			var result = CheckSessionAndPermission(2);
+			if (result != null) return result;
+
+			ViewBag.IsTotalAccess = false;
+			ViewBag.IsDeleteAccess = false;
+			var model = _driver.GetByDriverPublicTransportGroupId(driverPublicTransportGroupId);
+			var ptg = _publicTransportGroup.GetPublicTransportGroupById(model.PublicTransportGroupId);
+			int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+			ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+			ViewBag.Partners = ptg.Partners;
+
+			if (securityGroupId != 1)
 			{
-				if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 2))
-				{
-					return RedirectToAction("Login", "Security");
-				}
-
-				var model = _driver.GetByDriverPublicTransportGroupId(driverPublicTransportGroupId);
-				var ptg = _publicTransportGroup.GetPublicTransportGroupById(model.PublicTransportGroupId);
-				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
-
-				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
-				ViewBag.Partners = ptg.Partners;
-
-				if (securityGroupId != 1)
-				{
-					ViewBag.IsTotalAccess = _security.IsTotalAccess(2);
-				}
-				else
+				if (_security.IsTotalAccess(2) || _security.IsUpdateAccess(2))
 				{
 					ViewBag.IsTotalAccess = true;
 				}
-
-				ViewBag.Sex = new SelectList(_commonData.GetSex(), "SexId", "SexName");
-
-				return View(model);
+			}
+			else
+			{
+				ViewBag.IsTotalAccess = true;
 			}
 
-			return RedirectToAction("Login", "Security");
+			ViewBag.Sex = new SelectList(_commonData.GetSex(), "SexId", "SexName");
+
+			return View(model);
 		}
 
-		public IActionResult Edit(DriverViewModel model)
+		[HttpPost]
+		public JsonResult EditWithAjax(DriverViewModel model)
 		{
 			try
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
 				{
-					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 2))
+					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 2))
 					{
-						return RedirectToAction("Login", "Security");
+						return Json(new
+						{
+							success = false,
+							redirectUrl = Url.Action("Login", "Security")
+						});
 					}
 
-					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
-
-					if (_security.IsTotalAccess(2) || securityGroupId == 1)
+					if (_security.IsTotalAccess(2) || _security.IsUpdateAccess(2) || securityGroupId == 1)
 					{
 						_driver.AddOrEdit(model);
 
-						TempData["SuccessMessage"] = "Datos actualizados correctamente";
-
-						return RedirectToAction("Add", new { publicTransportGroupId = model.PublicTransportGroupId, pTGCompleteName = model.PTGCompleteName });
+						return Json(new
+						{
+							success = true,
+							message = "Datos actualizados correctamente",
+							redirectUrl = Url.Action("Add", new { publicTransportGroupId = model.PublicTransportGroupId, pTGCompleteName = model.PTGCompleteName })
+						});
 					}
 				}
 
-				return RedirectToAction("Login", "Security");
+				return Json(new
+				{
+					success = false,
+					redirectUrl = Url.Action("Login", "Security")
+				});
 			}
 			catch (Exception ex)
 			{
-				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+				return Json(new { success = false, message = ex.Message });
 			}
 		}
 
-		public IActionResult Delete(int driverId, int publicTransportGroupId, string pTGCompleteName)
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public async Task<JsonResult> DeleteDriverAjaxAsync(int driverId, int driverPublicTransportGroupId, int partnerNumber)
 		{
 			try
 			{
-				if (!string.IsNullOrEmpty(HttpContext.Session?.GetString("SecurityUserId")) && ModelState.IsValid)
-				{
-					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 2))
-					{
-						return RedirectToAction("Login", "Security");
-					}
+				if (string.IsNullOrEmpty(HttpContext.Session?.GetString("SecurityUserId")))
+					return Json(new { success = false, redirect = Url.Action("Login", "Security") });
 
-					var result = _driver.Delete(driverId);
+				if (!ModelState.IsValid)
+					return Json(new { success = false, message = "Datos inválidos para eliminar el socio." });
+
+				var groupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+				if (groupId != 1 && !_security.GroupHasAccessToModule(groupId.Value, 2))
+					return Json(new { success = false, redirect = Url.Action("Login", "Security") });
+
+				if (groupId == 1 || _security.IsTotalAccess(2))
+				{
+					var driverData = _driver.GetPartnerById(driverPublicTransportGroupId);
+					var result = _driver.DeletePartner(driverId, driverPublicTransportGroupId, partnerNumber);
 
 					if (result)
 					{
-						TempData["SuccessMessage"] = "Registro eliminado correctamente";
+						await DeleteDriverVehiclePictures(driverData.StateName, driverData.PublicTransportGroupRif, driverPublicTransportGroupId);
 
-						return RedirectToAction("Add", new { publicTransportGroupId = publicTransportGroupId, pTGCompleteName = pTGCompleteName });
+						return Json(new
+						{
+							success = true,
+							message = "Registro eliminado correctamente"
+						});
 					}
 				}
 
-				return RedirectToAction("Login", "Security");
+				return Json(new { success = false, message = "No tiene permisos suficientes para eliminar el registro." });
 			}
 			catch (Exception ex)
 			{
-				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+				return Json(new
+				{
+					success = false,
+					message = $"Error al eliminar: {ex.Message}"
+				});
 			}
+		}
+
+		private async Task<bool> DeleteDriverVehiclePictures(string? stateName, string? publicTransportGroupRif, int driverId)
+		{
+			var ftpBaseUrl = _configuration["FtpSettings:BaseUrl"];
+			var newFolderName = $"{stateName.ToUpper().Trim()}";
+			var ftpFolderPath = $"{ftpBaseUrl}/{newFolderName}";
+			var subFolderName = $"{publicTransportGroupRif}-{driverId}-supervision";
+			var ftpSubFolderPath = $"{ftpFolderPath}/{subFolderName}";
+
+			if (await _ftpService.FolderExistsAsync(ftpSubFolderPath))
+			{
+				try
+				{
+					var fileList = await _ftpService.ListFilesAsync(ftpSubFolderPath);
+					if (fileList.Count == 0) return false;
+
+					var deleteTasks = fileList.Select(fileName => _ftpService.DeleteFileAsync($"{ftpSubFolderPath}/{fileName}"));
+					await Task.WhenAll(deleteTasks);
+
+					try
+					{
+						await _ftpService.DeleteFolderAsync(ftpSubFolderPath);
+					}
+					catch (WebException ex)
+					{
+						Console.WriteLine($"Error al eliminar la carpeta FTP: {((FtpWebResponse)ex.Response).StatusDescription}");
+					}
+
+				}
+				catch (WebException ex)
+				{
+					Console.WriteLine($"Error FTP: {((FtpWebResponse)ex.Response).StatusDescription}");
+				}
+
+				return true;
+			}
+
+			return false;
 		}
 
 		public JsonResult CheckDocumentIdExist(int paramValue1, int paramValue2)
@@ -282,10 +404,9 @@ namespace SuperTransp.Controllers
 			if (driverIdentityDocument > 0)
 			{
 				var driver = _driver.GetByIdentityDocument(driverIdentityDocument);
-
 				if (driver != null)
 				{
-					return Json(new { driverFullName = driver.DriverFullName, driverPhone = driver.DriverPhone, driverSexId = driver.SexId });
+					return Json(new { driverId = driver.DriverId, driverFullName = driver.DriverFullName, driverPhone = driver.DriverPhone, driverSexId = driver.SexId, driverBirthDate = driver.Birthdate.ToString("dd/MM/yyyy") });
 				}
 			}
 
@@ -309,10 +430,11 @@ namespace SuperTransp.Controllers
 					return Json($"La línea tiene cupo solo para {ptgPartners.Partners} transportista(s) no puede agregar mas.");
 				}
 
-				if(paramValue4 > ptgPartners.Partners)
-				{
-					return Json($"La línea tiene cupo solo para {ptgPartners.Partners} transportista(s) no puede agregar un número de socio {paramValue4}.");
-				}
+				//ELIMINADA VALIDACIÓN DE NÚMERO DE SOCIO CORRELATIVO
+				//if(paramValue4 > ptgPartners.Partners)
+				//{
+				//	return Json($"La línea tiene cupo solo para {ptgPartners.Partners} transportista(s) no puede agregar un número de socio {paramValue4}.");
+				//}
 
 				return Json("OK");
 			}
@@ -322,34 +444,52 @@ namespace SuperTransp.Controllers
 
 		public JsonResult CheckExistingValuesOnEdit(int paramValue2, int paramValue4, int paramValue5)
 		{
-			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+			var result = CheckSessionAndPermission(2);
+			if (result != null)
 			{
-				if (_driver.RegisteredPartnerNumber(paramValue4, paramValue2))
+				return Json(new
 				{
-					var allData = _driver.GetByPublicTransportGroupId(paramValue2);
-					var driverData = allData.Where(x => x.PartnerNumber == paramValue4 && x.DriverId == paramValue5).ToList();
+					canContinue = false,
+					message = "Sesión inválida"
+				});
+			} 
 
-					if (!driverData.Any())
+			if (_driver.RegisteredPartnerNumber(paramValue4, paramValue2))
+			{
+				var allData = _driver.GetByPublicTransportGroupId(paramValue2);
+				var driverData = allData.Where(x => x.PartnerNumber == paramValue4 && x.DriverId == paramValue5).ToList();
+
+				if (!driverData.Any())
+				{
+					var finalData = allData.Where(x => x.PartnerNumber == paramValue4 && x.DriverId != paramValue5);
+					if (finalData.Any())
 					{
-						var finalData = allData.Where(x => x.PartnerNumber == paramValue4 && x.DriverId != paramValue5);
-						if (finalData.Any())
+						return Json(new
 						{
-							return Json($"El número de socio {paramValue4} ya está registrado a la línea.");
-						}
+							canContinue = false,
+							message = $"El número de socio {paramValue4} ya está registrado a la línea."
+						});
 					}
 				}
-
-				var ptgPartners = _publicTransportGroup.GetPublicTransportGroupById(paramValue2);
-
-				if (paramValue4 > ptgPartners.Partners)
-				{
-					return Json($"La línea tiene cupo solo para {ptgPartners.Partners} transportista(s) no puede agregar un número de socio {paramValue4}.");
-				}
-
-				return Json("OK");
 			}
 
-			return Json("ERROR");
+			//ELIMINADA VALIDACIÓN DE NÚMERO DE SOCIO CORRELATIVO
+			//var ptgPartners = _publicTransportGroup.GetPublicTransportGroupById(paramValue2);
+
+			//if (paramValue4 > ptgPartners.Partners)
+			//{
+			//	return Json(new
+			//	{
+			//		canContinue = false,
+			//		message = $"La línea tiene cupo solo para {ptgPartners.Partners} transportista(s), no puede agregar el número de socio {paramValue4}."
+			//	});
+			//}
+
+			return Json(new
+			{
+				canContinue = true,
+				message = "OK"
+			});	
 		}
 
 		[HttpPost]
@@ -381,6 +521,18 @@ namespace SuperTransp.Controllers
 				Console.WriteLine($"Error al generar el código QR: {ex.Message}");
 				return StatusCode(500, new { success = false, message = $"Error interno al generar el código QR: {ex.Message}" });
 			}
+		}
+		private IActionResult? CheckSessionAndPermission(int requiredModuleId)
+		{
+			var securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+			if (securityGroupId == null)
+				return RedirectToAction("Login", "Security");
+
+			if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, requiredModuleId))
+				return RedirectToAction("Login", "Security");
+
+			return null;
 		}
 
 		public class QRDriverRequest

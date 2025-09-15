@@ -33,14 +33,15 @@ namespace SuperTransp.Core
 			public string? Decrypt(string encryptedText);
 			public int AddLogbook(int processId, bool isDeleteAction, string actionDescription);
 			public bool IsTotalAccess(int securityModuleId);
+			public bool IsUpdateAccess(int securityModuleId);
 			public bool BlockLogin(string login);
 			public bool IsBlockedLogin(string login);
 			public bool IsInactiveLogin(string login);
 			public string GeneratePublicKey();
 			public bool ValidateKey(string key, byte[] sign);
-			public List<SecurityLogbookModel> GetLogbookByStateName(string userState);
-			public List<SecurityLogbookModel> GetLogbookAllExceptAdmin();
-			public List<SecurityLogbookModel> GetLogbookAll();
+			public List<SecurityLogbookModel> GetLogbookByStateName(string userState, string filterType);
+			public List<SecurityLogbookModel> GetLogbookAllExceptAdminByStateName(string selectStateName, string filterType);
+			public List<SecurityLogbookModel> GetLogbookAllBySelectedStateName(string selectedStateName, string filterType);
 		}
 		public interface IGeography
 		{
@@ -97,7 +98,8 @@ namespace SuperTransp.Core
 			public bool RegisteredPhone(string driverPhone, int publicTransportGroupId);
 			public bool RegisteredPartnerNumber(int partnerNumber, int publicTransportGroupId);
 			public DriverViewModel GetById(int driverId);
-			public bool Delete(int driverId);
+			public DriverViewModel GetPartnerById(int driverPublicTransportGroupId);
+			public bool DeletePartner(int driverId, int driverPublicTransportGroupId, int partnerNumber);
 			public int TotalDriversByPublicTransportGroupId(int publicTransportGroupId);
 		}
 
@@ -105,6 +107,7 @@ namespace SuperTransp.Core
 		{
 			public int AddOrEdit(SupervisionViewModel model);
 			public int AddSimple(SupervisionViewModel model);
+			public int AddOrEditRound(SupervisionRoundModel model);
 			public SupervisionViewModel GetById(int supervisionId);
 			public SupervisionViewModel GetByPublicTransportGroupIdAndDriverIdAndPartnerNumberStateId(int publicTransportGroupId, int driverId, int partnerNumber, int stateId);
 			public SupervisionViewModel GetByPublicTransportGroupGUIDAndPartnerNumber(string publicTransportGroupGUID, int partnerNumber);
@@ -116,6 +119,10 @@ namespace SuperTransp.Core
 			public List<SupervisionSummaryViewModel> GetAllSupervisionSummary();
 			public List<SupervisionSummaryViewModel> GetSupervisionSummaryByStateId(int stateId);
 			public SupervisionSummaryViewModel GetSupervisionSummaryById(int supervisionSummaryId);
+			public SupervisionRoundModel GetActiveSupervisionRoundByStateId(int stateId);
+			public bool IsActiveSupervisionRoundByStateMonthAndYear(int stateId, int month, int year);
+			public bool IsFinishedSupervisionRoundByStateMonthAndYear(int stateId, int month, int year);
+			public bool IsActiveSupervisionRoundByStateId(int stateId);
 			public bool IsSupervisionSummaryDoneByPtgId(int publicTransportGroupId);
 			public bool IsUserSupervisingPublicTransportGroup(int securityUserId, int publicTransportGroupId);
 			public bool DeletePicturesByPTGIdAndPartnerNumber(int publicTransportGroupId, int partnerNumber);
@@ -126,6 +133,8 @@ namespace SuperTransp.Core
 		{
 			public List<CommonDataViewModel> GetYesNo();
 			public List<CommonDataViewModel> GetYears();
+			public List<CommonDataViewModel> GetCurrentYears();
+			public List<CommonDataViewModel> GetMonthNames();
 			public List<CommonDataViewModel> GetMakesByYear(int year);
 			public List<CommonDataViewModel> GetModelsByYearAndMake(int year, string make);
 			public CommonDataViewModel GetVehicleDataById(int? vehicleDataId);
@@ -150,6 +159,29 @@ namespace SuperTransp.Core
 			public List<PublicTransportGroupViewModel> GetAllSupervisedVehiclesStatisticsByStateId(int stateId);
 			public List<PublicTransportGroupViewModel> GetAllSupervisedDriversStatisticsInEstate();
 			public List<PublicTransportGroupViewModel> GetAllSupervisedDriversStatisticsInEstateByStateId(int stateId);
+		}
+		public interface IFtpService
+		{
+			Task DeleteFilesInFolderAsync(string folderPath);
+			Task UploadFileAsync(Stream fileStream, string folderPath, string fileName);
+			Task<List<string>> ListFilesAsync(string folderPath);
+			Task<bool> FolderExistsAsync(string folderPath);
+			Task CreateFolderAsync(string folderPath);
+			Task DeleteFolderAsync(string folderPath);
+			Task TransferFileAsync(string sourcePath, string destinationPath);
+			Task DeleteFileAsync(string filePath);
+		}
+
+		public interface IExcelExporter
+		{			
+			public Task<byte[]> GenerateExcelPublicTransportGroupAndDriversAsync(int stateId);
+			public Task<byte[]> GenerateExcelSupervisionDetailAsync(int stateId);
+		}
+
+		public interface IUniverse
+		{
+			public int AddOrEdit(UniverseViewModel model);
+			public UniverseViewModel GetByStateId(int stateId);
 		}
 	}
 }

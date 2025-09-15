@@ -1,4 +1,6 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using ClosedXML.Excel;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.IdentityModel.Abstractions;
 using SuperTransp.Controllers;
 using SuperTransp.Models;
@@ -12,12 +14,14 @@ namespace SuperTransp.Core
 		private readonly IConfiguration _configuration;
 		private readonly ISecurity _security;
 		private readonly IDesignation _designation;
+		private readonly IUniverse _universe;
 
-		public PublicTransportGroup(IConfiguration configuration, ISecurity security, IDesignation designation)
+		public PublicTransportGroup(IConfiguration configuration, ISecurity security, IDesignation designation, IUniverse universe)
 		{
 			this._configuration = configuration;
 			this._security = security;
 			_designation = designation;
+			_universe = universe;
 		}
 
 		private SqlConnection GetConnection()
@@ -25,6 +29,7 @@ namespace SuperTransp.Core
 			SqlConnection sqlConnection = new(_configuration.GetConnectionString("connectionString"));
 			return sqlConnection;
 		}
+
 		public int AddOrEdit(PublicTransportGroupViewModel model)
 		{
 			int result = 0;
@@ -325,6 +330,10 @@ namespace SuperTransp.Core
 					{
 						while (dr.Read())
 						{
+							var ptgUniverse = _universe.GetByStateId(stateId);
+							var totalGlobalPartners = ptgUniverse?.TotalPublicTransportGroups;
+							var totalGlobalDrivers = ptgUniverse?.TotalDrivers;
+
 							ptg.Add(new PublicTransportGroupViewModel
 							{
 								StateId = (int)dr["StateId"],
@@ -332,6 +341,8 @@ namespace SuperTransp.Core
 								TotalPTGInState = (int)dr["TotalPTGInState"],
 								TotaPartnersByPTG = (int)dr["TotaPartnersByPTG"],
 								TotalAddedPartners = (int)dr["TotalAddedPartners"],
+								TotalUniversePTGInState = totalGlobalPartners ?? 0,
+								TotalUniverseDriversInState = totalGlobalDrivers ?? 0,
 							});
 						}
 					}
@@ -370,6 +381,10 @@ namespace SuperTransp.Core
 					{
 						while (dr.Read())
 						{
+							var ptgUniverse = _universe.GetByStateId((int)dr["StateId"]);
+							var totalGlobalPartners = ptgUniverse?.TotalPublicTransportGroups;
+							var totalGlobalDrivers = ptgUniverse?.TotalDrivers;
+
 							ptg.Add(new PublicTransportGroupViewModel
 							{
 								StateId = (int)dr["StateId"],
@@ -377,6 +392,8 @@ namespace SuperTransp.Core
 								TotalPTGInState = (int)dr["TotalPTGInState"],
 								TotaPartnersByPTG = (int)dr["TotaPartnersByPTG"],
 								TotalAddedPartners = (int)dr["TotalAddedPartners"],
+								TotalUniversePTGInState = totalGlobalPartners ?? 0,
+								TotalUniverseDriversInState = totalGlobalDrivers ?? 0,
 							});
 						}
 					}
@@ -409,7 +426,11 @@ namespace SuperTransp.Core
 					}
 
 					List<PublicTransportGroupViewModel> ptg = new();
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail WHERE StateId = @StateId AND TotalSupervisedDrivers = Partners AND SupervisionSummaryId = 0", sqlConnection);
+
+					//ESTO PERMITE QUE SOLO LAS ORGANIZACIONES CON SOCIOS IGUALES A CUPOS SEAN MOSTRADOS EN LA LISTA, SE OMITE ESTA VALIDACION PORQUE 
+					//EXISTEN ORGANIZACIONES CON CUPOS VACIOS QUE DEDEN SUPERVISARSE
+					//SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail WHERE StateId = @StateId AND TotalSupervisedDrivers = Partners AND SupervisionSummaryId = 0", sqlConnection);
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail WHERE StateId = @StateId AND SupervisionSummaryId = 0", sqlConnection);
 					cmd.Parameters.AddWithValue("@StateId", stateId);
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
@@ -467,7 +488,10 @@ namespace SuperTransp.Core
 					}
 
 					List<PublicTransportGroupViewModel> ptg = new();
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail WHERE TotalSupervisedDrivers = Partners AND SupervisionSummaryId = 0", sqlConnection);
+					//ESTO PERMITE QUE SOLO LAS ORGANIZACIONES CON SOCIOS IGUALES A CUPOS SEAN MOSTRADOS EN LA LISTA, SE OMITE ESTA VALIDACION PORQUE 
+					//EXISTEN ORGANIZACIONES CON CUPOS VACIOS QUE DEDEN SUPERVISARSE
+					//SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail WHERE TotalSupervisedDrivers = Partners AND SupervisionSummaryId = 0", sqlConnection);
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail WHERE SupervisionSummaryId = 0", sqlConnection);
 
 
 					using (SqlDataReader dr = cmd.ExecuteReader())

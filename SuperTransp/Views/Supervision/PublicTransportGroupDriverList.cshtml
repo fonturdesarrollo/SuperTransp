@@ -1,4 +1,4 @@
-﻿@model List<SuperTransp.Models.PublicTransportGroupViewModel>
+﻿@model SuperTransp.Models.PublicTransportGroupDriverListPageVM
 @{
 	Layout = "";
 }
@@ -11,7 +11,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 	<link rel="stylesheet" href="~/assets/css/main.css" />
 	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
-    <link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
+	<link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
 
 	<!-- Bootstrap CSS -->
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
@@ -34,10 +34,10 @@
 			box-shadow: none;
 		}
 
-		.view-info:focus, .view-info:active {
-			outline: none !important;
-			box-shadow: none !important;
-		}
+			.view-info:focus, .view-info:active {
+				outline: none !important;
+				box-shadow: none !important;
+			}
 
 		body.modal-open {
 			overflow: auto !important;
@@ -47,13 +47,22 @@
 			z-index: 1050 !important;
 		}
 
+		.custom-success {
+			background-color: green; /* fondo verde */
+			color: #ffffff; /* letras blancas */
+			padding: 15px;
+			border-radius: 5px;
+			margin-top: 10px;
+			text-align: center;
+			font-weight: bold;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+		}
 	</style>
 
 </head>
 <body class="is-preload">
 	<div style="width:100%; max-width: 100em; margin: 0 auto; padding: 0 1em;">
 		<!-- Header -->
-
 		<header id="header">
 			<div class="inner">
 				<!-- Logo -->
@@ -63,6 +72,13 @@
 					<span>@ViewBag.EmployeeName</span>
 					<br />
 					<span>Agregar supervisión a organización de transporte</span>
+					<br />
+					@if (TempData["SuccessMessage"] != null)
+					{
+						<div id="successMessage" class="custom-success">
+							@TempData["SuccessMessage"]
+						</div>
+					}
 				</a>
 			</div>
 			<!-- Nav -->
@@ -79,7 +95,7 @@
 			<ul>
 				<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
 				<li>@Html.ActionLink("Agregar resumen de supervisión", "PublicTransportGroupList", "Supervision")</li>
-				<li>@Html.ActionLink("Modificar resumen de supervisión", "SummaryList", "Supervision")</li> 
+				<li>@Html.ActionLink("Modificar resumen de supervisión", "SummaryList", "Supervision")</li>
 				<li>@Html.ActionLink("Supervisión", "Index", "Supervision")</li>
 				<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 			</ul>
@@ -91,11 +107,16 @@
 				<section>
 					<h4 style="color:#4cbece"> Seleccione una Organización</h4>
 					<br />
+					<div id="loadingSpinner" style="text-align:center; padding:1em;">
+						<div class="spinner-border text-info" role="status">
+							<span class="sr-only">Cargando...</span>
+						</div>
+					</div>
 					<table id="inventory" class="table table-striped table-bordered dt-responsive dt-nowrap">
 						<thead>
 							<tr>
 								<th>Nombre Organización</th>
-								<th>Rif</th>	
+								<th>Rif</th>
 								<th>Nombre Socio</th>
 								<th># Socio</th>
 								<th>Cédula</th>
@@ -104,146 +125,7 @@
 								<th>Estatus</th>
 							</tr>
 						</thead>
-						<tbody>
-							@foreach (var ptg in Model)
-							{
-								<tr>
-									<td>										
-										@{
-											var statusColorPTG = "red";
-											var addEdit = ptg.SupervisionStatusName == "PENDIENTE" ? "Add" : "Edit";
-											var statusColorDriver = ptg.SupervisionStatusName == "PENDIENTE" ? "red" : "green";
-
-											if (ptg.TotalSupervisedDrivers > 0 && ptg.TotalDrivers == ptg.TotalSupervisedDrivers)
-											{
-												statusColorPTG = "green";
-											}
-										}
-										@* Nombre Linea *@
-										@Html.ActionLink(@ptg.PTGCompleteName, addEdit, "Supervision",
-											new
-											{
-												publicTransportGroupId = ptg.PublicTransportGroupId,
-												pTGCompleteName = ptg.PTGCompleteName,
-												driverFullName = ptg.DriverFullName,
-												partnerNumber = ptg.PartnerNumber,
-												publicTransportGroupRif = ptg.PublicTransportGroupRif,
-												driverIdentityDocument = ptg.DriverIdentityDocument,
-												stateName = ptg.StateName,
-												supervisionStatus = ptg.SupervisionStatus,
-												driverId = ptg.DriverId,
-												supervisionId = ptg.SupervisionId,
-												modeId = ptg.ModeId,
-												modeName = ptg.ModeName,
-												stateId = ptg.StateId,
-											},
-											new { @class = "action-link", style = $"color: {statusColorPTG};", data_group_id = ptg.PublicTransportGroupId }
-										)
-									</td>
-									<td>
-										@* RIF *@
-										@Html.ActionLink(@ptg.PublicTransportGroupRif, addEdit, "Supervision",
-											new
-											{
-												publicTransportGroupId = ptg.PublicTransportGroupId,
-												pTGCompleteName = ptg.PTGCompleteName,
-												driverFullName = ptg.DriverFullName,
-												partnerNumber = ptg.PartnerNumber,
-												publicTransportGroupRif = ptg.PublicTransportGroupRif,
-												driverIdentityDocument = ptg.DriverIdentityDocument,
-												stateName = ptg.StateName,
-												supervisionStatus = ptg.SupervisionStatus,
-												driverId = ptg.DriverId,
-												supervisionId = ptg.SupervisionId,
-												modeId = ptg.ModeId,
-												modeName = ptg.ModeName,
-												stateId = ptg.StateId,
-											},
-											new { @class = "action-link", style = $"color: {statusColorPTG};", data_group_id = ptg.PublicTransportGroupId }
-									)
-									</td>
-									<td>
-										@* Nombre Transportista *@
-										@Html.ActionLink(@ptg.DriverFullName, addEdit, "Supervision",
-											new
-											{
-												publicTransportGroupId = ptg.PublicTransportGroupId,
-												pTGCompleteName = ptg.PTGCompleteName,
-												driverFullName = ptg.DriverFullName,
-												partnerNumber = ptg.PartnerNumber,
-												publicTransportGroupRif = ptg.PublicTransportGroupRif,
-												driverIdentityDocument = ptg.DriverIdentityDocument,
-												stateName = ptg.StateName,
-												supervisionStatus = ptg.SupervisionStatus,
-												driverId = ptg.DriverId,
-												supervisionId = ptg.SupervisionId,
-												modeId = ptg.ModeId,
-												modeName = ptg.ModeName,
-												stateId = ptg.StateId,
-											},
-											new { @class = "action-link", style = $"color: {statusColorDriver};", data_group_id = ptg.PublicTransportGroupId }
-										)																			
-									</td>
-									<td>
-										@ptg.PartnerNumber
-									</td>
-									<td>
-										@* Cedula *@
-										@Html.ActionLink(@ptg.DriverIdentityDocument.ToString(), addEdit, "Supervision",
-											new
-											{
-												publicTransportGroupId = ptg.PublicTransportGroupId,
-												pTGCompleteName = ptg.PTGCompleteName,
-												driverFullName = ptg.DriverFullName,
-												partnerNumber = ptg.PartnerNumber,
-												publicTransportGroupRif = ptg.PublicTransportGroupRif,
-												driverIdentityDocument = ptg.DriverIdentityDocument,
-												stateName = ptg.StateName,
-												supervisionStatus = ptg.SupervisionStatus,
-												driverId = ptg.DriverId,
-												supervisionId = ptg.SupervisionId,
-												modeId = ptg.ModeId,
-												modeName = ptg.ModeName,
-												stateId = ptg.StateId,
-											},
-											new { @class = "action-link", style = $"color: {statusColorDriver};", data_group_id = ptg.PublicTransportGroupId }
-										)										
-									</td>
-									<td>@ptg.StateName</td>
-									<td>@ptg.UserFullName</td>
-									<td>
-										@ptg.SupervisionStatusName
-										@{
-											if (@ptg.SupervisionStatusName == "SUPERVISADO"){
-												<button class="view-info p-1" data-name="@ptg.PTGCompleteName" data-driver="@ptg.DriverFullName" data-partner="@ptg.PartnerNumber" 
-												data-driver-with-vehicle="@ptg.DriverWithVehicle" data-driver-with-working-vehicle="@ptg.WorkingVehicle"
-														data-driver-in-person="@ptg.InPerson"
-														data-vehicle-plate="@ptg.Plate" 
-														data-vehicle-year="@ptg.Year"
-														data-vehicle-make="@ptg.Make"
-														data-vehicle-model="@ptg.Model"
-														data-vehicle-passengers="@ptg.Passengers"
-														data-vehicle-rim-name="@ptg.RimName"
-														data-vehicle-wheels="@ptg.Wheels"
-														data-vehicle-motor-oil-name="@ptg.MotorOilName"
-														data-vehicle-motor-oil-liters="@ptg.Liters"
-														data-vehicle-fuel-type="@ptg.FuelTypeName"
-														data-vehicle-tank-capacity="@ptg.TankCapacity"
-														data-vehicle-battery-name="@ptg.BatteryName"
-														data-vehicle-number-batteries="@ptg.NumberOfBatteries"
-														data-vehicle-failure-type-name="@ptg.FailureTypeName"
-														data-vehicle-image-url='@Html.Raw(Json.Serialize(ptg.Pictures.Select(p => p.VehicleImageUrl)))'
-														data-fingerprint-trouble="@ptg.FingerprintTrouble"
-														data-remarks="@ptg.Remarks"										
-														data-status="@ptg.SupervisionStatusName">
-													<i class="fas fa-eye" style="font-size: 14px;"></i>
-												</button>
-											}
-										}
-									</td>
-								</tr>
-							}
-						</tbody>
+						<tbody></tbody>
 					</table>
 				</section>
 			</div>
@@ -312,152 +194,220 @@
 	@***********************************************************@
 
 	<script type="text/javascript">
-
 		$(document).ready(function () {
 
-			$(".action-link").on("click", function (event) {
-				event.preventDefault();
+			setTimeout(function(){
+				$("#successMessage").fadeOut("slow");
+			}, 2500);
 
-				var url = $(this).attr("href");
-				var controllerUrl = '@Url.Action("CheckPermission", "Supervision")';
-				var publicTransportGroupId = $(this).data("group-id");
+			$('#loadingSpinner').show();
 
-				$.ajax({
-					url: controllerUrl,
-					type: "GET",
-					data: { publicTransportGroupId: publicTransportGroupId },
-					success: function (response) {
-						if (response.hasPermission) {
-							window.location.href = url;
-						} else {
-							alert(response.message);
+			var ptgRifName = @Html.Raw(Json.Serialize(Model.PTGRifName ?? ""));
+
+			if (!ptgRifName) {
+				var qs = new URLSearchParams(window.location.search);
+				ptgRifName = qs.get('ptgRifName') || "";
+			}
+
+			var table = $('#inventory').DataTable({
+			stateSave: true,
+			ajax: {
+				url: '@Url.Action("PublicTransportGroupDriverListData", "Supervision")',
+				type: "GET",
+				data: function (d) {
+					d.ptgRifName = ptgRifName;
+				},
+				dataSrc: 'data',
+				complete: function() {
+					$('#loadingSpinner').hide();
+				},
+				error: function(xhr, status, error) {
+					$('#loadingSpinner').hide();
+					console.error("Error cargando datos:", error);
+				}
+			},
+			columns: [
+				{
+					data: "ptgCompleteName",
+					render: function (data, type, row) {
+						var statusColorPTG = (row.totalSupervisedDrivers > 0 && row.totalDrivers === row.totalSupervisedDrivers) ? "green" : "red";
+						var url = buildSupervisionUrl(row);
+						return `<a href="${url}" class="action-link" style="color:${statusColorPTG};" data-group-id="${row.publicTransportGroupId}">${data}</a>`;
+					}
+				},
+				{ data: "publicTransportGroupRif" },
+				{
+					data: "driverFullName",
+					render: function (data, type, row) {
+						var statusColorDriver = row.supervisionStatusName === "PENDIENTE" ? "red" : "green";
+						var url = buildSupervisionUrl(row);
+						return `<a href="${url}" class="action-link" style="color:${statusColorDriver};" data-group-id="${row.publicTransportGroupId}">${data}</a>`;
+					}
+				},
+				{ data: "partnerNumber" },
+				{
+					data: "driverIdentityDocument",
+					render: function (data, type, row) {
+						var statusColorDriver = row.supervisionStatusName === "PENDIENTE" ? "red" : "green";
+						var url = buildSupervisionUrl(row);
+						return `<a href="${url}" class="action-link" style="color:${statusColorDriver};" data-group-id="${row.publicTransportGroupId}">${data}</a>`;
+					}
+				},
+				{ data: "stateName" },
+				{ data: "userFullName" },
+				{
+				data: "supervisionStatusName",
+				render: function (data, type, row) {
+					if (data === "SUPERVISADO") {
+							return `${data}
+								<button class="view-info p-1"
+									data-name="${row.ptgCompleteName}"
+									data-driver="${row.driverFullName}"
+									data-partner="${row.partnerNumber}"
+									data-driver-with-vehicle="${row.driverWithVehicle}"
+									data-driver-with-working-vehicle="${row.workingVehicle}"
+									data-driver-in-person="${row.inPerson}"
+									data-vehicle-plate="${row.plate}"
+									data-vehicle-year="${row.year}"
+									data-vehicle-make="${row.make}"
+									data-vehicle-model="${row.model}"
+									data-vehicle-passengers="${row.passengers}"
+									data-vehicle-rim-name="${row.rimName}"
+									data-vehicle-wheels="${row.wheels}"
+									data-vehicle-motor-oil-name="${row.motorOilName}"
+									data-vehicle-motor-oil-liters="${row.liters}"
+									data-vehicle-fuel-type="${row.fuelTypeName}"
+									data-vehicle-tank-capacity="${row.tankCapacity}"
+									data-vehicle-battery-name="${row.batteryName}"
+									data-vehicle-number-batteries="${row.numberOfBatteries}"
+									data-vehicle-failure-type-name="${row.failureTypeName}"
+									data-vehicle-image-url='${JSON.stringify(row.pictures?.map(p => p.vehicleImageUrl) || [])}'
+									data-fingerprint-trouble="${row.fingerprintTrouble}"
+									data-remarks="${row.remarks}"
+									data-status="${row.supervisionStatusName}">
+									<i class="fas fa-eye" style="font-size:14px;"></i>
+								</button>`;
 						}
-					},
-					error: function () {
-						alert("Error al validar permisos.");
-					}
-				});
-			});
 
-			$(document).on('click touchstart', '.view-info', function () {
-				$('#modalName').text($(this).data('name'));
-				$('#modalDriver').text($(this).data('driver'));
-				$('#modalPartner').text($(this).data('partner'));
-
-				if($(this).data('driver-with-vehicle') == "True"){
-					$('#modalDriverWithVehicle').text('Sí')
-					$(".modal-vehicle-data").show();
-					$(".modal-image").show();
-				}else {
-					$('#modalDriverWithVehicle').text('No')
-				    $(".modal-vehicle-data").hide();
-					$(".modal-image").show().hide();
-				}
-
-				if($(this).data('driver-with-working-vehicle') == "True"){
-					$('#modalDriverWithWorkingVehicle').text('Sí')
-				}else {
-					$('#modalDriverWithWorkingVehicle').text('No')
-				}
-
-				if($(this).data('driver-in-person') == "True"){
-					$('#modalDriverInPerson').text('Sí')
-				}else {
-					$('#modalDriverInPerson').text('No')
-				}
-
-				$('#modalVehiclePlate').text($(this).data('vehicle-plate'));
-				$('#modalVehicleYear').text($(this).data('vehicle-year'));
-				$('#modalVehicleMake').text($(this).data('vehicle-make'));
-				$('#modalVehicleModel').text($(this).data('vehicle-model'));
-				$('#modalVehiclePassengers').text($(this).data('vehicle-passengers'));
-				$('#modalVehicleRimName').text($(this).data('vehicle-rim-name'));
-				$('#modalVehicleWheels').text($(this).data('vehicle-wheels'));
-				$('#modalVehicleMotorOilname').text($(this).data('vehicle-motor-oil-name'));
-				$('#modalVehicleMotorOilLiters').text($(this).data('vehicle-motor-oil-liters'));
-				$('#modalVehicleFuelType').text($(this).data('vehicle-fuel-type'));
-				$('#modalVehicleTankCapacity').text($(this).data('vehicle-tank-capacity'));
-				$('#modalVehicleBatteryName').text($(this).data('vehicle-battery-name'));
-				$('#modalVehicleNumberOfBatteries').text($(this).data('vehicle-number-batteries'));
-				$('#modalVehicleFailureTypeName').text($(this).data('vehicle-failure-type-name'));
-
-				const rawList = this.dataset.vehicleImageUrl;
-				const urls = rawList ? JSON.parse(rawList) : [];
-
-				const container = document.getElementById("thumbnail-container");
-				container.innerHTML = "";
-
-				urls.forEach(url => {
-					if (!url) return;
-
-					const element = document.createElement("div");
-					element.style.display = "inline-block";
-					element.style.margin = "6px";
-
-					if (/\.(jpe?g|png|gif|bmp|webp)$/i.test(url)) {
-						const img = document.createElement("img");
-						img.src = url;
-						img.style.width = "100px";
-						img.style.border = "1px solid #ccc";
-						img.style.borderRadius = "4px";
-						element.appendChild(img);
-					} else if (/\.pdf$/i.test(url)) {
-						const icon = document.createElement("img");
-						icon.src = "/images/pdf-icon.png";
-						icon.style.width = "100px";
-						icon.title = url.split("/").pop();
-						element.appendChild(icon);
-					}
-
-					element.addEventListener("click", () => window.open(url, "_blank"));
-					container.appendChild(element);
-				});
-
-				if($(this).data('fingerprint-trouble') == "True"){
-					$('#modalDriverFingerprintTrouble').text('Sí')
-				}else {
-					$('#modalDriverFingerprintTrouble').text('No')
-				}
-
-				$('#modalRemarks').text($(this).data('remarks'));
-
-				$('#modalStatus').text($(this).data('status'));
-				$('#infoModal').modal('show');
-
-			});
-
-			$('.close-modal, .close').on('click', function () {
-				$('#infoModal').modal('hide');
-			});
-
-			$('#inventory').DataTable({
-				stateSave: true,
-				"language": {
-					"sProcessing":    "Procesando...",
-					"sLengthMenu":    "Mostrar _MENU_ registros",
-					"sZeroRecords":   "No se encontraron resultados",
-					"sEmptyTable":    "Ningún dato disponible en esta tabla",
-					"sInfo":          "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
-					"sInfoEmpty":     "Mostrando registros del 0 al 0 de un total de 0 registros",
-					"sInfoFiltered":  "(filtrado de un total de _MAX_ registros)",
-					"sInfoPostFix":   "",
-					"sSearch":        "Buscar:",
-					"sUrl":           "",
-					"sInfoThousands":  ",",
-					"sLoadingRecords": "Cargando...",
-					"oPaginate": {
-						"sFirst":    "Primero",
-						"sLast":    "Último",
-						"sNext":    "Siguiente",
-						"sPrevious": "Anterior"
-					},
-					"oAria": {
-						"sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
-						"sSortDescending": ": Activar para ordenar la columna de manera descendente"
+						return data;
 					}
 				}
+			],
+			language: {
+				sProcessing: "Procesando...",
+				sLengthMenu: "Mostrar _MENU_ registros",
+				sZeroRecords: "No se encontraron resultados",
+				sEmptyTable: "Ningún dato disponible en esta tabla",
+				sInfo: "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+				sInfoEmpty: "Mostrando registros del 0 al 0 de un total de 0 registros",
+				sInfoFiltered: "(filtrado de un total de _MAX_ registros)",
+				sSearch: "Buscar:",
+				oPaginate: {
+					sFirst: "Primero",
+					sLast: "Último",
+					sNext: "Siguiente",
+					sPrevious: "Anterior"
+				}
+			}
+	});
+
+	function buildSupervisionUrl(row) {
+		var addEdit = row.supervisionStatusName === "PENDIENTE" ? "Add" : "Edit";
+		var url = '@Url.Action("__ACTION__", "Supervision")'.replace("__ACTION__", addEdit);
+
+		var params = {
+			publicTransportGroupId: row.publicTransportGroupId,
+			pTGCompleteName: row.ptgCompleteName,
+			driverFullName: row.driverFullName,
+			partnerNumber: row.partnerNumber,
+			publicTransportGroupRif: row.publicTransportGroupRif,
+			driverIdentityDocument: row.driverIdentityDocument,
+			stateName: row.stateName,
+			supervisionStatus: row.supervisionStatus,
+			driverId: row.driverId,
+			supervisionId: row.supervisionId,
+			modeId: row.modeId,
+			modeName: row.modeName,
+			stateId: row.stateId,
+			driverPublicTransportGroupId: row.driverPublicTransportGroupId
+		};
+
+		var queryString = Object.keys(params)
+			.map(k => `${k}=${encodeURIComponent(params[k] ?? "")}`)
+			.join("&");
+
+			return `${url}?${queryString}`;
+		}
+
+		$(document).on('click touchstart', '.view-info', function () {
+			$('#modalDriver').text($(this).data('driver'));
+			$('#modalPartner').text($(this).data('partner'));
+
+			var tt = $(this).data('driver-with-vehicle');
+			if ($(this).data('driver-with-vehicle') == true) {
+				$('#modalDriverWithVehicle').text('Sí')
+				$(".modal-vehicle-data").show();
+				$(".modal-image").show();
+			} else {
+				$('#modalDriverWithVehicle').text('No')
+				$(".modal-vehicle-data").hide();
+				$(".modal-image").hide();
+			}
+
+			$('#modalDriverWithWorkingVehicle').text($(this).data('driver-with-working-vehicle') == true ? 'Sí' : 'No');
+			$('#modalDriverInPerson').text($(this).data('driver-in-person') == true ? 'Sí' : 'No');
+
+			$('#modalVehiclePlate').text($(this).data('vehicle-plate'));
+			$('#modalVehicleYear').text($(this).data('vehicle-year'));
+			$('#modalVehicleMake').text($(this).data('vehicle-make'));
+			$('#modalVehicleModel').text($(this).data('vehicle-model'));
+			$('#modalVehiclePassengers').text($(this).data('vehicle-passengers'));
+			$('#modalVehicleRimName').text($(this).data('vehicle-rim-name'));
+			$('#modalVehicleWheels').text($(this).data('vehicle-wheels'));
+			$('#modalVehicleMotorOilname').text($(this).data('vehicle-motor-oil-name'));
+			$('#modalVehicleMotorOilLiters').text($(this).data('vehicle-motor-oil-liters'));
+			$('#modalVehicleFuelType').text($(this).data('vehicle-fuel-type'));
+			$('#modalVehicleTankCapacity').text($(this).data('vehicle-tank-capacity'));
+			$('#modalVehicleBatteryName').text($(this).data('vehicle-battery-name'));
+			$('#modalVehicleNumberOfBatteries').text($(this).data('vehicle-number-batteries'));
+			$('#modalVehicleFailureTypeName').text($(this).data('vehicle-failure-type-name'));
+
+			const rawList = this.dataset.vehicleImageUrl;
+			const urls = rawList ? JSON.parse(rawList) : [];
+			const container = document.getElementById("thumbnail-container");
+			container.innerHTML = "";
+			urls.forEach(url => {
+				if (!url) return;
+				const element = document.createElement("div");
+				element.style.display = "inline-block";
+				element.style.margin = "6px";
+				if (/\.(jpe?g|png|gif|bmp|webp)$/i.test(url)) {
+					const img = document.createElement("img");
+					img.src = url;
+					img.style.width = "100px";
+					img.style.border = "1px solid #ccc";
+					img.style.borderRadius = "4px";
+					element.appendChild(img);
+				} else if (/\.pdf$/i.test(url)) {
+					const icon = document.createElement("img");
+					icon.src = "/images/pdf-icon.png";
+					icon.style.width = "100px";
+					icon.title = url.split("/").pop();
+					element.appendChild(icon);
+				}
+				element.addEventListener("click", () => window.open(url, "_blank"));
+				container.appendChild(element);
 			});
+
+			$('#modalDriverFingerprintTrouble').text($(this).data('fingerprint-trouble') == true ? 'Sí' : 'No');
+			$('#modalRemarks').text($(this).data('remarks'));
+			$('#infoModal').modal('show');
 		});
+
+		$('.close-modal, .close').on('click', function () {
+			$('#infoModal').modal('hide');
+		});
+	});
 	</script>
 </body>
 </html>

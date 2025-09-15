@@ -50,11 +50,24 @@ namespace SuperTransp.Controllers
 			return View();
 		}
 
-		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-		public IActionResult Error(string errorMessage)
+		public IActionResult Maintenance()
 		{
-			ViewBag.ErrorMessage = errorMessage;
 			return View();
 		}
+
+
+		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+		public IActionResult Error()
+		{
+			// Puedes pasar información adicional, como el ID del error
+			return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+		}
+
+		//[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+		//public IActionResult Error(string errorMessage)
+		//{
+		//	ViewBag.ErrorMessage = errorMessage;
+		//	return View();
+		//}
 	}
 }

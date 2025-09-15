@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Security.Principal;
 
 namespace SuperTransp.Models
 {
@@ -48,6 +49,8 @@ namespace SuperTransp.Models
 		public string? FuelTypeName { get; set; }
 		public string? BatteryName { get; set; }
 		public string? FailureTypeName { get; set; }
+		public int StateId { get; set; }
+		public int DriverPublicTransportGroupId { get; set; }
 		public List<SupervisionPictures>? Pictures { get; set; }
 	}
 
@@ -59,5 +62,23 @@ namespace SuperTransp.Models
 		public int PartnerNumber { get; set; }
 		public string? VehicleImageUrl { get; set; }
 		public DateTime SupervisionPictureDateAdded { get; set; }
+	}
+
+	public class SupervisionRoundModel
+	{
+		[Key]
+		public int SupervisionRoundId { get; set; }
+		public int StateId { get; set; }
+		public DateTime SupervisionRoundStartDate { get; set; }
+		public string? SupervisionRoundStartDescription { get; set; }
+		public DateTime? SupervisionRoundEndDate { get; set; }
+		public string? SupervisionRoundEndDescription { get; set; }
+		public bool SupervisionRoundStatus { get; set; }
+	}
+
+	public class PublicTransportGroupDriverListPageVM
+	{
+		public string PTGRifName { get; set; } = "";
+		public List<PublicTransportGroupViewModel> Items { get; set; } = new();
 	}
 }

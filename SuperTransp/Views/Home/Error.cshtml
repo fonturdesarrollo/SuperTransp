@@ -1,0 +1,86 @@
+﻿@model ErrorViewModel
+@{
+	Layout = "";
+}
+
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Error</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+	<link rel="stylesheet" href="~/assets/css/main.css" />
+	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
+</head>
+<body class="is-preload">
+	<!-- Wrapper -->
+	<div id="wrapper">
+
+		<!-- Header -->
+		<header id="header">
+			<div class="inner">
+				<!-- Logo -->
+				<a href="#" class="logo">
+					<span><img src="~/images/Logo.png" width="100px" height="100px" alt="" /></span>
+				</a>
+			</div>
+
+			<!-- Nav -->
+			<nav>
+				<ul>
+					<li><a href="#menu">Menu</a></li>
+				</ul>
+			</nav>
+		</header>
+
+		<!-- Menu -->
+		<nav id="menu">
+			<h2>Menu</h2>
+			<ul>
+				<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
+				<li>@Html.ActionLink("Salir", "Login", "Security")</li>
+			</ul>
+		</nav>
+
+		<div id="main">
+			<div class="inner">
+				<!-- Form -->
+				<section>
+					<div class="row">
+						<div class="col-12">
+							<h1>A ocurrido un error al procesar su requerimiento</h1>
+							<strong><label style="color:red"> ID de la solicitud:</label></strong> <code>@Model.RequestId</code>
+@* 							<strong> <label style="color:red"> @ViewBag.ErrorMessage</label></strong> *@
+						</div>
+					</div>
+				</section>
+				<section>
+					<div class="box alt">
+						<div class="row gtr-uniform">
+							<div class="col-12"><span class="image fit"><img src="~/images/error-notification-banner.jpg" alt="" /></span></div>
+						</div>
+					</div>
+				</section>
+				<br />
+			</div>
+		</div>
+
+		<!-- Footer -->
+		<footer id="footer">
+			<label style="text-align:center">
+				Sistema para la Supervisión de Organizaciones de Transporte &copy; @DateTime.Now.Year
+			</label>
+		</footer>
+	</div>
+
+	<!-- Scripts -->
+	<script src="~/assets/js/jquery.min.js"></script>
+	<script src="~/assets/js/browser.min.js"></script>
+	<script src="~/assets/js/breakpoints.min.js"></script>
+	<script src="~/assets/js/util.js"></script>
+	<script src="~/assets/js/main.js"></script>
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+</body>
+</html>

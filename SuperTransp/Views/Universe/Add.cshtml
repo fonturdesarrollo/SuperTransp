@@ -1,0 +1,215 @@
+﻿@model SuperTransp.Models.UniverseViewModel
+@{
+	Layout = "";
+}
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Agregar Universo por Estado</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+	<link rel="stylesheet" href="~/assets/css/main.css" />
+	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
+	<link rel="stylesheet" href="~/datatable/css/bootstrap.css" />
+	<link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
+
+	<style>
+		.is-invalid {
+			border: 2px solid red;
+			background-color: #ffe6e6;
+		}
+	</style>
+</head>
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Agregar Universo por Estado</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+	<link rel="stylesheet" href="~/assets/css/main.css" />
+	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
+</head>
+<body class="is-preload">
+	@using (Html.BeginForm("Add", "Universe", FormMethod.Post))
+	{
+		@Html.AntiForgeryToken()
+		<!-- Wrapper -->
+		<div id="wrapper">
+
+			<!-- Header -->
+			<header id="header">
+				<div class="inner">
+
+					<!-- Logo -->
+					<a href="#" class="logo">
+						<span><img src="~/images/Logo.png" width="100px" height="100px" alt="" /></span>
+						<br />
+						<span class="title">@ViewBag.EmployeeName</span>
+						<br />
+						@if (TempData["SuccessMessage"] != null)
+						{
+							<div id="successMessage" class="alert alert-success">
+								@TempData["SuccessMessage"]
+							</div>
+						}
+					</a>
+				</div>
+				<!-- Nav -->
+				<nav>
+					<ul>
+						<li><a href="#menu">Menu</a></li>
+					</ul>
+				</nav>
+			</header>
+
+			<!-- Menu -->
+			<nav id="menu">
+				<h2>Menu</h2>
+				<ul>
+					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
+					<li>@Html.ActionLink("Ajustes", "Index", "Settings")</li>
+					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
+				</ul>
+			</nav>
+
+			<!-- Main -->
+			<div id="main">
+				<div class="inner">
+					<!-- Form -->
+					<section>
+						<h1 style="color:#4cbece">Agregar Universo por Estado</h1>
+						<br />
+						<div class="row gtr-uniform">
+							<div class="col-12">
+								<strong>Estado:</strong>
+								@Html.DropDownListFor(t => t.StateId, (SelectList)ViewBag.States, "-- Seleccione --", new { @class = "form-control" })
+							</div>
+							<div class="col-6">
+								<strong>Total universo de organizaciones:</strong>
+								@Html.TextBoxFor(x => x.TotalPublicTransportGroups, new { placeholder = "Total universo de organizaciones", tabindex = "0", maxlength = "5" })
+							</div>
+							<div class="col-6">
+								<strong>Total universo de socios:</strong>
+								@Html.TextBoxFor(x => x.TotalDrivers, new { placeholder = "Total universo de socios", tabindex = "0", maxlength = "5" })
+							</div>
+							<div class="col-12">
+								<ul class="actions">
+									<li><input type="submit" value="Actualizar" class="primary" id="saveRequest"/></li>
+								</ul>
+							</div>
+						</div>
+					</section>
+				</div>
+			</div>
+		</div>
+	}
+	<!-- Scripts -->
+	<script src="~/assets/js/jquery.min.js"></script>
+	<script src="~/assets/js/browser.min.js"></script>
+	<script src="~/assets/js/breakpoints.min.js"></script>
+	<script src="~/assets/js/util.js"></script>
+	<script src="~/assets/js/main.js"></script>
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+
+	<script type="text/javascript">
+
+		document.addEventListener("DOMContentLoaded", function () {
+			function handleInput(selector, transformFunction) {
+				var inputElement = document.querySelector(selector);
+				if (inputElement) {
+					inputElement.addEventListener("input", function () {
+						inputElement.value = transformFunction(inputElement.value);
+					});
+				}
+			}
+
+			handleInput("[name='TotalPublicTransportGroups']", function (value) {
+				return value.replace(/[^0-9]/g, "");
+			});
+
+			handleInput("[name='TotalDrivers']", function (value) {
+				return value.replace(/[^0-9]/g, "");
+			});
+		});
+
+		$("body").on("click", "#saveRequest", function (event) {
+			event.preventDefault();
+
+			if (!isOkToSave()) {
+				return false;
+			}
+
+			if (!confirm("¿Está seguro de que desea actualizar los registros?")) {
+				return false;
+			}
+
+			$(this).closest("form").trigger("submit");
+		});
+
+		function isOkToSave() {
+			let firstInvalidField = null;
+			let message = "";
+
+			if ($("#StateId").val() == "" && !firstInvalidField) {
+				firstInvalidField = "#StateId";
+				message = "Debe seleccionar el estado";
+			}
+
+			const ptgs = $("#TotalPublicTransportGroups").val();
+			if (ptgs === "" && !firstInvalidField) {
+				firstInvalidField = "#TotalPublicTransportGroups";
+				message = "Debe colocar el universo total de organizaciones en el estado";
+			} else if (ptgs === "0" && !firstInvalidField) {
+				firstInvalidField = "#TotalPublicTransportGroups";
+				message = "El universo de organizaciones no puede ser cero";
+			}
+
+			const drivers = $("#TotalDrivers").val();
+			if (drivers === "" && !firstInvalidField) {
+				firstInvalidField = "#TotalDrivers";
+				message = "Debe colocar el universo total de socios en el estado";
+			} else if (drivers === "0" && !firstInvalidField) {
+				firstInvalidField = "#TotalDrivers";
+				message = "El universo de socios no puede ser cero";
+			}
+
+			if (firstInvalidField) {
+				showAlert(message, firstInvalidField);
+				return false;
+			}
+
+			return true;
+		}
+
+		function showAlert(message, selector) {
+			alert(message);
+			highlightErrorField(selector);
+			$(selector).focus();
+		}
+
+		function highlightErrorField(selector) {
+			$(selector).addClass("is-invalid");
+			$(selector).on("input", function () {
+				$(this).removeClass("is-invalid");
+			});
+
+			$(selector)[0].scrollIntoView({ behavior: "smooth", block: "center" });
+		}
+
+		$(document).ready(function () {
+			setTimeout(function(){
+				$("#successMessage").fadeOut("slow");
+			}, 2500);
+
+
+			$('#ModelName').on('input', function() {
+				const value = $(this).val();
+				const sanitizedValue = value.replace(/[^a-zA-Z0-9\s]/g, '');
+				$(this).val(sanitizedValue);
+			});
+		});
+	</script>
+</body>
+</html>

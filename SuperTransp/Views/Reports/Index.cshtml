@@ -1,103 +1,388 @@
 ﻿@model SecurityUserViewModel
 @{
-	Layout = "";
+    Layout = "";
 }
 <!DOCTYPE HTML>
 <html>
 <head>
-	<title>Reportes</title>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-	<link rel="stylesheet" href="~/assets/css/main.css" />
-	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
-	<link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
+    <title>Reportes</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="stylesheet" href="~/assets/css/main.css" />
+    <noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
+    <link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
+
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 50%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            cursor: pointer;
+        }
+
+        .btn-align-right {
+            margin-top: 15px;
+            float: right;
+        }
+
+        .is-invalid {
+            border: 2px solid red;
+            background-color: #ffe6e6;
+        }
+
+        .custom-success {
+            background-color: #b30000; /* rojo intenso */
+            color: #ffffff; /* letras blancas */
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        /* Estilos del spinner */
+        .spinner-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .spinner {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #3498db;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 2s linear infinite;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @@keyframes spin {
+            0%
+
+        {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+
+        }</style>
 </head>
 <body class="is-preload">
-	@using (Html.BeginForm("AccesLogin", "Login", FormMethod.Post))
-	{
-		<!-- Wrapper -->
-		<div id="wrapper">
+    @using (Html.BeginForm("AccesLogin", "Login", FormMethod.Post))
+    {
+        <div id="wrapper">
 
-			<!-- Header -->
-			<header id="header">
-				<div class="inner">
-					<!-- Logo -->
-					<a href="#" class="logo">
-						<span><img src="~/images/Logo.png" width="100px" height="100px" alt="" /></span>
-						<br />
-						<span>@ViewBag.EmployeeName</span>						
-						<br />
-						<span>Reportes</span>
-					</a>
-				</div>
+            <header id="header">
+                <div class="inner">
+                    <a href="#" class="logo">
+                        <span><img src="~/images/Logo.png" width="100px" height="100px" alt="" /></span>
+                        <br />
+                        <span>@ViewBag.EmployeeName</span>
+                        <br />
+                        <span>Reportes</span>
+                    </a>
+                </div>
 
-				<!-- Nav -->
-				<nav>
-					<ul>
-						<li><a href="#menu">Menu</a></li>
-					</ul>
-				</nav>
-			</header>
+                <nav>
+                    <ul>
+                        <li><a href="#menu">Menu</a></li>
+                    </ul>
+                </nav>
+            </header>
 
-			<!-- Menu -->
-			<nav id="menu">
-				<h2>Menu</h2>
-				<ul>
-					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
-					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
-				</ul>
-			</nav>
+            <nav id="menu">
+                <h2>Menu</h2>
+                <ul>
+                    <li>@Html.ActionLink("Inicio", "Index", "Home")</li>
+                    <li>@Html.ActionLink("Salir", "Login", "Security")</li>
+                </ul>
+            </nav>
 
-			<div id="main">
-				<div class="inner">
-					<!-- Form -->
-					<br />
-					<section>
-						<h2>Consultas Generales</h2>
-						<div class="row">
-							<div class="col-6 col-12-medium">
-								<h3>Organizaciones de Transporte</h3>
-								<ul>
-									<li>@Html.ActionLink("Organizaciones y Transportistas", "PublicTransportGroupList", "Reports")</li>
-									<li>@Html.ActionLink("Organizaciones con socios supervisados", "PublicTransportGroupSupervisedDriversStatistics", "Reports")</li>
-									<li>@Html.ActionLink("Gráficos Organizaciones por estado", "PublicTransportGroupStatisticsInState", "Reports")</li>
-									<li>@Html.ActionLink("Gráficos vehículos supervisados por estado", "SupervisedDriversStatisticsInEstate", "Reports")</li>
-								</ul>
-							</div>
-							@{
-								var modulesInGroup = (IEnumerable<SecurityModuleModel>)ViewBag.ModulesInGroup;
+            <div id="main">
+                <div class="inner">
+                    <br />
+                    <section>
+                        <h2>Consultas Generales</h2>
+                        <div class="row">
+                            <div class="col-6 col-12-medium">
+                                <h3>Organizaciones de Transporte</h3>
+                                <ul>
+                                    @{
+                                        var modulesInGroup = (IEnumerable<SecurityModuleModel>)ViewBag.ModulesInGroup;
 
-								if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 18))
-								{
-									<div class="col-6 col-12-medium">
-										<h3>Auditoría</h3>
-										<ul>
-											<li>@Html.ActionLink("Movimientos", "Logbook", "Security")</li>
-										</ul>
-									</div>
-								}
-							}
-						</div>
-					</section>
+                                        if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 20))
+                                        {
+                                            <li>@Html.ActionLink("Organizaciones y Transportistas", "PublicTransportGroupList", "Reports")</li>
+                                        }
+                                        if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 21))
+                                        {
+                                            <li>@Html.ActionLink("Organizaciones con socios supervisados", "PublicTransportGroupSupervisedDriversStatistics", "Reports")</li>
+                                        }
+                                        if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 22))
+                                        {
+                                            if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 6))
+                                            {
+                                                <li><a href="#" id="openStatisticsModal">Gráficos Organizaciones por estado</a></li>
+                                            }
+                                            else
+                                            {
+                                                <li>
+                                                    @Html.ActionLink(
+                                                    "Gráficos Organizaciones por estado",
+                                                    "PublicTransportGroupStatisticsInState",
+                                                    "Reports",
+                                                    new { selectedStatisticsStateId = ViewBag.UserStateId }, null)
+                                                </li>
+                                            }
+                                        }
+                                        if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 23))
+                                        {
+                                            <li>@Html.ActionLink("Gráficos vehículos supervisados por estado", "SupervisedDriversStatisticsInEstate", "Reports")</li>
+                                        }
+                                        if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 27))
+                                        {
+                                            <li>
+                                                <a href="#" id="exportExcelLink" data-url="@Url.Action("ExportPublicTransportGroupAndDrivers", "Reports")">
+                                                    Exportar a Excel Organizaciones y socios
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a href="#" id="exportExcelSupervisionsLink" data-url="@Url.Action("ExportSupervisionDetail", "Reports")">
+                                                    Exportar a Excel Supervisiones
+                                                </a>
+                                            </li>
+                                        }
+                                    }
+                                </ul>
 
-				</div>
-			</div>
-			<!-- Footer -->
-			<footer id="footer">
-				<label style="text-align:center">
-					Sistema para la Supervisión de Organizaciones de Transporte &copy; @DateTime.Now.Year
-				</label>
-			</footer>
-		</div>
-	}
-	<!-- Scripts -->
-	<script src="~/assets/js/jquery.min.js"></script>
-	<script src="~/assets/js/browser.min.js"></script>
-	<script src="~/assets/js/breakpoints.min.js"></script>
-	<script src="~/assets/js/util.js"></script>
-	<script src="~/assets/js/main.js"></script>
-	@{
-		await Html.RenderPartialAsync("_ValidationScriptsPartial");
-	}
+                                <iframe id="downloadFrame" style="display:none;"></iframe>
+                            </div>
+                            @{
+                                modulesInGroup = (IEnumerable<SecurityModuleModel>)ViewBag.ModulesInGroup;
+
+                                if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 18))
+                                {
+                                    <div class="col-6 col-12-medium">
+                                        <h3>Auditoría</h3>
+                                        <ul>
+                                            <li><a href="#" id="openModal">Movimientos</a></li>
+                                        </ul>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </section>
+                </div>
+            </div>
+            <footer id="footer">
+                <label style="text-align:center">
+                    Sistema para la Supervisión de Organizaciones de Transporte &copy; @DateTime.Now.Year
+                </label>
+            </footer>
+        </div>
+    }
+
+    <div id="modalForm" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Indique el estado</h3>
+            @using (Html.BeginForm("Logbook", "Security", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <label for="ptgRifId">Estado</label>
+                @Html.DropDownList("selectedStateName", (SelectList)ViewBag.States, "Seleccione el estado", new { @class = "form-control", id = "StateId" })
+
+                <div class="form-group mt-3">
+                    <label class="form-label d-block">Filtro de fecha:</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="filterType" id="currentMonth" value="currentMonth" checked>
+                        <label class="form-check-label" for="currentMonth">Mes actual</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="filterType" id="twoMonths" value="twoMonths">
+                        <label class="form-check-label" for="twoMonths">Mes actual + Mes pasado</label>
+                    </div>
+                </div>
+
+                <input type="submit" value="Buscar" id="sendRequest" class="btn-align-right" />
+            }
+        </div>
+    </div>
+
+    <div id="modalStatisticsForm" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Indique el estado</h3>
+            @using (Html.BeginForm("PublicTransportGroupStatisticsInState", "Reports", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <label>Estado</label>
+                @Html.DropDownList("selectedStatisticsStateId", (SelectList)ViewBag.StatisticsStates, "Seleccione el estado", new { @class = "form-control", id = "StatisticsStateId" })
+
+                <input type="submit" value="Buscar" id="sendStatisticsRequest" class="btn-align-right" />
+            }
+        </div>
+    </div>
+
+    <div id="loading-spinner" class="spinner-container hidden">
+        <div class="spinner"></div>
+    </div>
+
+    <script src="~/assets/js/jquery.min.js"></script>
+    <script src="~/assets/js/browser.min.js"></script>
+    <script src="~/assets/js/breakpoints.min.js"></script>
+    <script src="~/assets/js/util.js"></script>
+    <script src="~/assets/js/main.js"></script>
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script type="text/javascript">
+        $("body").on("click", "#sendRequest", function (event) {
+            event.preventDefault();
+
+            const state = $("#StateId").val();
+
+            if(state == ""){
+                alert("Debe indicar el estado");
+                return false;
+            }
+
+            $(this).closest("form").trigger("submit");
+        });
+
+        $("body").on("click", "#sendStatisticsRequest", function (event) {
+            event.preventDefault();
+
+            const state = $("#StatisticsStateId").val();
+
+            if (state === "") {
+                alert("Debe indicar el estado");
+                return false;
+            }
+
+            $(this).closest("form")[0].submit();
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const link = document.getElementById("exportExcelLink");
+            const spinner = document.getElementById("loading-spinner");
+            const downloadFrame = document.getElementById("downloadFrame");
+
+            link.addEventListener("click", function (event) {
+                event.preventDefault();
+
+                const url = this.getAttribute("data-url");
+                const mensaje = "¿Desea exportar los registros? esto tomará algún tiempo.";
+
+                if (confirm(mensaje)) {
+                    spinner.classList.remove("hidden");
+
+                    downloadFrame.src = url;
+
+                    setTimeout(() => {
+                        spinner.classList.add("hidden");
+                    }, 5500);
+                }
+            });
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const link = document.getElementById("exportExcelSupervisionsLink");
+            const spinner = document.getElementById("loading-spinner");
+            const downloadFrame = document.getElementById("downloadFrame");
+
+            link.addEventListener("click", function (event) {
+                event.preventDefault();
+
+                const url = this.getAttribute("data-url");
+                const mensaje = "¿Desea exportar los registros? esto tomará algún tiempo.";
+
+                if (confirm(mensaje)) {
+                    spinner.classList.remove("hidden");
+
+                    downloadFrame.src = url;
+
+                    // Ocultar el spinner después de un tiempo prudencial
+                    setTimeout(() => {
+                        spinner.classList.add("hidden");
+                    }, 4500);
+                }
+            });
+        });
+
+        $(document).ready(function () {
+            setTimeout(function(){
+                $("#successMessage").fadeOut("slow");
+            }, 2500);
+
+            $("#openModal").click(function (e) {
+                e.preventDefault();
+                $("#modalForm").fadeIn(function () {
+                    $("#ptgRifId").focus();
+                });
+            });
+
+            $("#openStatisticsModal").click(function (e) {
+                e.preventDefault();
+                $("#modalStatisticsForm").fadeIn(function () {
+                });
+            });
+
+            $(".close").click(function () {
+                $("#modalForm").fadeOut();
+            });
+
+            $(".close").click(function () {
+                $("#modalStatisticsForm").fadeOut();
+            });
+
+            $(window).click(function (e) {
+                if ($(e.target).is("#modalForm")) {
+                    $("#modalForm").fadeOut();
+                }
+            });
+
+            $(window).click(function (e) {
+                if ($(e.target).is("#modalStatisticsForm")) {
+                    $("#modalStatisticsForm").fadeOut();
+                }
+            });
+        });
+    </script>
 </body>
 </html>

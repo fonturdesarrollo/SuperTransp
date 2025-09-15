@@ -1,750 +1,285 @@
 ﻿@model SuperTransp.Models.SupervisionViewModel
 @{
-	Layout = "";
+    Layout = "";
 }
 <!DOCTYPE HTML>
 <html>
 <head>
-	<title>Agregar Supervisión</title>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-	<link rel="stylesheet" href="~/assets/css/main.css" />
-	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
-	<link rel="stylesheet" href="~/datatable/css/bootstrap.css" />
-	<link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
-
-	@* DropZone************************************************************************************ *@
+    <title>Agregar Supervisión</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="stylesheet" href="~/assets/css/main.css" />
+    <noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
+    <link rel="stylesheet" href="~/datatable/css/bootstrap.css" />
+    <link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
     <link href="~/plugins/dropzone/dropzone.min.css" rel="stylesheet" />
-	@* ************************************************************************************ *@
-
-	<style>
-		.is-invalid {
-			border: 2px solid red;
-			background-color: #ffe6e6;
-		}
-
-		#additionalFields {
-			visibility: hidden;
-			opacity: 0;
-			height: 0;
-			overflow: hidden;
-			transition: opacity 0.3s ease-in-out, height 0.3s ease-in-out;
-		}
-
-		.custom-textarea {
-			border: 2px solid;
-		}
-
-		.custom-textbox {
-			border: 2px solid;
-		}
-	</style>
+    <style>
+        .is-invalid {
+            border: 2px solid red;
+            background-color: #ffe6e6;
+        }
+        #additionalFields {
+            visibility: hidden;
+            opacity: 0;
+            height: 0;
+            overflow: hidden;
+            transition: opacity 0.3s ease-in-out, height 0.3s ease-in-out;
+        }
+        .custom-textarea {
+            border: 2px solid;
+        }
+        .custom-textbox {
+            border: 2px solid;
+        }
+    </style>
 </head>
 <body class="is-preload">
-	@{
-		bool isTotalAccess = ViewBag.IsTotalAccess != null && ViewBag.IsTotalAccess is bool && ViewBag.IsTotalAccess == true;
-	}
-	@using (Html.BeginForm("Add", "Supervision", FormMethod.Post))
-	{
-		@Html.AntiForgeryToken()
-		<!-- Wrapper -->
-		<div id="wrapper">
-
-			<!-- Header -->
-			<header id="header">
-				<div class="inner">
-
-					<!-- Logo -->
-					<a href="#" class="logo">
-						<span><img src="~/images/Logo.png" width="100px" height="100px" alt="" /></span>
-						<br />
-						<span class="title">@ViewBag.EmployeeName</span>
-						<br />
-						@if (TempData["SuccessMessage"] != null)
-						{
-							<div id="successMessage" class="alert alert-success">
-								@TempData["SuccessMessage"]
-							</div>
-						}
-					</a>
-				</div>
-				<!-- Nav -->
-				<nav>
-					<ul>
-						<li><a href="#menu">Menu</a></li>
-					</ul>
-				</nav>
-			</header>
-
-			<!-- Menu -->
-			<nav id="menu">
-				<h2>Menu</h2>
-				<ul>
-					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
-					<li>@Html.ActionLink("Seleccionar organización", "PublicTransportGroupDriverList", "Supervision", new { ptgRifName = Model.PublicTransportGroupRif }, null)</li>
-					<li>@Html.ActionLink("Agregar resumen de supervisión", "PublicTransportGroupList", "Supervision")</li>
-					<li>@Html.ActionLink("Modificar resumen de supervisión", "SummaryList", "Supervision")</li>
-					<li>@Html.ActionLink("Supervisión", "Index", "Supervision")</li>
-					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
-				</ul>
-			</nav>
-
-			<!-- Main -->
-			<div id="main">
-				<div class="inner">
-					<!-- Form -->
-					<section>
-						<h1 style="color:#4cbece">Agregar supervisión</h1>
-						<label>Organización: @Model.PublicTransportGroupRif @Model.PTGCompleteName</label><br />
-						<label>Tipo: @Model.ModeName</label><br />
-						<label>Nombre Socio: @Model.DriverIdentityDocument @Model.DriverFullName</label><br />
-						<label>Socio: @Model.PartnerNumber</label>
-						<br />
-						<br />
-						<br />
-						<div class="row gtr-uniform">
-							<div class="col-12">
-								<strong>¿Posee vehículo?:</strong>
-								@Html.HiddenFor(x => x.PTGCompleteName)
-								@Html.HiddenFor(x => x.PublicTransportGroupId)
-								@Html.HiddenFor(x => x.DriverIdentityDocument)
-								@Html.HiddenFor(x => x.StateName)
-								@Html.HiddenFor(x => x.DriverId)
-								@Html.HiddenFor(x => x.SecurityUserId)
-								@Html.HiddenFor(x => x.SupervisionId)
-								@Html.HiddenFor(x => x.PartnerNumber)
-								@Html.HiddenFor(x => x.PublicTransportGroupRif)
-								@Html.HiddenFor(x => x.ModeId)
-								@Html.DropDownList("DriverWithVehicle", (IEnumerable<SelectListItem>)ViewBag.DriverWithVehicle, "Seleccione", new { @class = "form-control" })
-							</div>
-							<div class="row" id="additionalFields" style="visibility: hidden; opacity: 0; height: 0; overflow: hidden; transition: opacity 0.3s ease-in-out;">
-								<div class="col-4">
-									<strong>¿Socio presente?:</strong>
-									@Html.DropDownListFor(t => t.InPerson, (SelectList)ViewBag.InPerson, "-- Seleccione --", new { @class = "form-control" })
-								</div>
-								<div class="col-4">
-									<strong>¿Vehículo operativo?:</strong>
-									@Html.DropDownListFor(t => t.WorkingVehicle, (SelectList)ViewBag.WorkingVehicle, "-- Seleccione --", new { @class = "form-control" })
-								</div>
-								<div class="col-4">
-									<strong>Tipo de falla vehículo:</strong>
-									@Html.DropDownListFor(t => t.FailureTypeId, (SelectList)ViewBag.FailureType, "-- Seleccione --", new { @class = "form-control" })
-								</div>
-								<div class="col-12">
-									<br />
-									<strong>Placa:</strong>
-									@Html.TextBoxFor(x => x.Plate, new { placeholder = "Número de placa", maxlength = "7", @class = "custom-textbox" })
-								</div>
-								<div class="col-6">
-									<br />
-									<strong>Año:</strong>
-									@Html.DropDownList("Years", (IEnumerable<SelectListItem>)ViewBag.Years, "Seleccione", new { @class = "form-control" })
-								</div>
-								<div class="col-6">
-									<br />
-									<strong>Marca:</strong>
-									<select id="MakeId" name="Make" class="form-control">
-										<option value="">Seleccione</option>
-									</select>
-								</div>
-								<div class="col-6">
-									<br />
-									<strong>Modelo:</strong>
-									<select id="VehicleDataId" name="VehicleDataId" class="form-control">
-										<option value="">Seleccione</option>
-									</select>
-								</div>
-								<div class="col-6">
-									<br />
-									<strong>Puestos:</strong>
-									@Html.DropDownListFor(t => t.Passengers, (SelectList)ViewBag.Passengers, "-- Seleccione --", new { @class = "form-control" })
-								</div>
-								<div class="col-6">
-									<br />
-									<strong>Medida neumáticos:</strong>
-									@Html.DropDownListFor(t => t.RimId, (SelectList)ViewBag.Rims, "-- Seleccione --", new { @class = "form-control" })
-								</div>
-								<div class="col-6">
-									<br />
-									<strong>Cantidad neumáticos:</strong>
-									@Html.DropDownListFor(t => t.Wheels, (SelectList)ViewBag.Wheels, "-- Seleccione --", new { @class = "form-control" })
-								</div>
-								<div class="col-6">
-									<br />
-									<strong>Tipo combustible:</strong>
-									@Html.DropDownListFor(t => t.FuelTypeId, (SelectList)ViewBag.FuelTypes, "-- Seleccione --", new { @class = "form-control" })
-								</div>
-								<div class="col-6">
-									<br />
-									<strong>Capacidad tanque:</strong>
-									@Html.DropDownListFor(t => t.TankCapacity, (SelectList)ViewBag.TankCapacity, "-- Seleccione --", new { @class = "form-control" })
-								</div>
-								<div class="col-6">
-									<br />
-									<strong>Tipo batería:</strong>
-									@Html.DropDownListFor(t => t.BatteryId, (SelectList)ViewBag.Batteries, "-- Seleccione --", new { @class = "form-control" })
-								</div>
-								<div class="col-6">
-									<br />
-									<strong>Cantidad baterias:</strong>
-									@Html.DropDownListFor(t => t.NumberOfBatteries, (SelectList)ViewBag.NumberOfBatteries, "-- Seleccione --", new { @class = "form-control" })
-								</div>
-								<div class="col-6">
-									<br />
-									<strong>Tipo de aceite:</strong>
-									@Html.DropDownListFor(t => t.MotorOilId, (SelectList)ViewBag.MotorOil, "-- Seleccione --", new { @class = "form-control" })
-								</div>
-								<div class="col-6">
-									<br />
-									<strong>Litros:</strong>
-									@Html.DropDownListFor(t => t.Liters, (SelectList)ViewBag.OilLitters, "-- Seleccione --", new { @class = "form-control" })
-								</div>
-								<div class="col-6">
-									<br />
-									<strong>Problema huella:</strong>
-									@Html.DropDownListFor(t => t.FingerprintTrouble, (SelectList)ViewBag.FingerprintProblem, "-- Seleccione --", new { @class = "form-control" })
-								</div>
-								<div class="col-12">
-									<br />
-									<strong>Observaciones:</strong>
-									@Html.TextAreaFor(x => x.Remarks, new
-										{
-											@class = "custom-textarea",
-											placeholder = "Observaciones",
-											maxlength = "500"
-										})
-								</div>
-								<div class="col-12">
-									<br />
-									<strong>Cargar imágenes:</strong>
-									<div id="myDropzone"
-										 class="dropzone @(isTotalAccess ? "dz-clickable" : "dz-disabled")"
-										 style="@(isTotalAccess ? "" : "pointer-events:none; opacity:0.6;")">
-										<div class="dz-message">
-											Haga clic aquí para subir las imágenes
-										</div>
-									</div>
-								</div>
-								<div class="col-12">
-									<br />
-									<ul class="actions">
-										@{
-											if(ViewBag.IsTotalAccess)
-											{
-												<li><button type="submit" id="saveRequest" class="primary">Agregar supervisión</button></li>
-												<li style="margin-left:auto;">
-													<button id="btnDeleteImages" type="button" class="primary">
-														Eliminar imágenes de la lista
-													</button>
-												</li>
-											}
-										}
-									</ul>
-								</div>
-							</div>
-						</div>
-					</section>
-				</div>
-			</div>
-		</div>
-	}
-	<!-- Scripts -->
-	<script src="~/assets/js/jquery.min.js"></script>
-	<script src="~/assets/js/browser.min.js"></script>
-	<script src="~/assets/js/breakpoints.min.js"></script>
-	<script src="~/assets/js/util.js"></script>
-	<script src="~/assets/js/main.js"></script>
-
-	@* DropZone************************************************************************************ *@
-		<script src="~/plugins/dropzone/dropzone.min.js"></script>
-	@* ************************************************************************************ *@
-
-	@{
-		await Html.RenderPartialAsync("_ValidationScriptsPartial");
-	}
-
-	<script type="text/javascript">
-
-		function confirmDeletion(url) {
-			const userConfirmed = confirm("¿Está seguro de que desea eliminar este registro?");
-			if (userConfirmed) {
-				window.location.href = url;
-			}
-		}
-
-		Dropzone.autoDiscover = false;
-		var saveFilesUrl = '@Url.Action("SaveFiles", "Supervision")';
-		const stateName = document.querySelector('[name="StateName"]').value;
-		const driverIdentityDocument = document.querySelector('[name="DriverIdentityDocument"]').value;
-		const partnerNumber = '@Model.PartnerNumber';
-		const publicTransportGroupRif = '@Model.PublicTransportGroupRif';
-
-		const dropzone = new Dropzone("#myDropzone", {
-			url: saveFilesUrl,
-			autoProcessQueue: true,
-			paramName: "file",
-			maxFilesize: 10,
-			acceptedFiles: ".jpg,.jpeg,.png,.gif,.webp",
-			dictDefaultMessage: "Arrastra las imágenes aquí o haga clic para agregarlas.",
-			addRemoveLinks: true,
-			maxFiles: 4,
-			addRemoveLinks: false,
-
-			headers: {
-				"RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val()
-			},
-
-			params: {
-				stateName: stateName,
-				driverIdentityDocument: driverIdentityDocument,
-				partnerNumber: partnerNumber,
-				publicTransportGroupRif: publicTransportGroupRif,
-			},
-
-			init: function () {
-				this.on("addedfile", function (file) {
-					if (this.files.length > 4) {
-						this.removeFile(file);
-						alert("Solo se pueden subir hasta 4 imágenes.");
-						return;
-					}
-					console.log("Archivo agregado:", file);
-				});
-
-				this.on("removedfile", function (file) {
-					console.log("Archivo eliminado:", file);
-				});
-
-				this.on("queuecomplete", function () {
-					let uploadedFiles = this.getAcceptedFiles().filter(f => f.status === Dropzone.SUCCESS);
-					if (uploadedFiles.length > 0 && uploadedFiles.length <= 4) {
-						alert("Todas las imágenes han sido cargadas correctamente.");
-					}
-				});
-
-				this.on("error", function (file, errorMessage) {
-					alert("Hubo un error al subir la imagen: " + errorMessage);
-				});
-			}
-		});
-
-		$("#btnDeleteImages").on("click", function () {
-			if (confirm("¿Está seguro de que desea eliminar todas las imágenes?")) {
-				var stateName = document.querySelector('[name="StateName"]').value;
-				var partnerNumber = '@Model.PartnerNumber';
-				var publicTransportGroupRif = '@Model.PublicTransportGroupRif';
-				var publicTransportGroupId = '@Model.PublicTransportGroupId';
-				const validUrl = '@Url.Action("DeleteAllSupervisionPictures", "Supervision")';
-
-				$.ajax({
-					url: validUrl,
-					type: "POST",
-					headers: {
-						'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-					},
-
-					data: {
-						stateName: stateName,
-						publicTransportGroupRif: publicTransportGroupRif,
-						partnerNumber: partnerNumber,
-						publicTransportGroupId: publicTransportGroupId,
-					},
-					success: function () {
-						alert("Las imágenes fueron eliminadas correctamente.");
-
-						if (Dropzone.instances.length > 0) {
-							Dropzone.instances[0].removeAllFiles(true); 
-						}
-					},
-					error: function () {
-						alert("Ocurrió un error al intentar eliminar las imágenes.");
-					}
-				});
-			}
-		});
-
-		document.addEventListener("DOMContentLoaded", function () {
-			function handleInput(selector, transformFunction) {
-				var inputElement = document.querySelector(selector);
-				if (inputElement) {
-					inputElement.addEventListener("input", function () {
-						inputElement.value = transformFunction(inputElement.value);
-					});
-
-					inputElement.addEventListener("keydown", function (event) {
-						if (event.key === "Tab" || event.key === " " || event.code === "Space") {
-							event.preventDefault();
-						}
-					});
-				}
-			}
-
-			handleInput("[name='Plate']", function (value) {
-				return value.toUpperCase().replace(/\s+/g, ""); 
-			});
-		});
-
-		document.addEventListener("DOMContentLoaded", function () {
-			function handleInput(selector, transformFunction) {
-				var inputElement = document.querySelector(selector);
-				if (inputElement) {
-					inputElement.addEventListener("input", function () {
-						inputElement.value = transformFunction(inputElement.value);
-					});
-				}
-			}
-
-			handleInput("[name='Remarks']", function (value) {
-				return value.toUpperCase();
-			});
-
-		});
-
-		function handleSaveRequest(event) {
-			if (event) {
-				event.preventDefault();
-			}
-
-			if (!isOkToSave()) {
-				return false;
-			}
-
-			if (!confirm("¿Está seguro que desea actualizar los registros?")) {
-				return false;
-			}
-
-			$("#saveRequest").closest("form").trigger("submit");
-		}
-
-		$("body").on("click", "#saveRequest", function (event) {
-			handleSaveRequest(event);
-		});
-
-		$("form").on("submit", function (e) {
-			e.preventDefault();
-
-			if ($(this).valid()) {
-				var paramValue1 = $('#DriverId').val();
-				var paramValue2 = $('#Plate').val();
-				var checkExistingUrl = '@Url.Action("CheckExistingPlate", "Supervision")';
-				$.ajax({
-					url: checkExistingUrl,
-					data: {
-						paramValue1: paramValue1,
-						paramValue2: paramValue2
-					},
-					success: function (data) {
-						showMsg(data);
-					},
-					cache: false
-				});
-			}
-		});
-
-		function isOkToSave() {
-			let firstInvalidField = null;
-			let message = "";
-
-			const dzInstance = Dropzone.forElement("#myDropzone");
-			const uploaded = dzInstance.getAcceptedFiles().filter(f => f.status === Dropzone.SUCCESS);
-
-			if ($("#DriverWithVehicle").val() == "" && $("#DriverWithVehicle").val() != "False" && !firstInvalidField) {
-				firstInvalidField = "#DriverWithVehicle";
-				message = "Debe indicar si el socio posee o no vehículo";
-			}
-
-			if($("#DriverWithVehicle option:selected").text() == "Sí")
-			{
-				if ($("#InPerson").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#InPerson";
-					message = "Debe indicar si el socio se presentó o no a la supervisión";
-				}
-
-				if ($("#WorkingVehicle").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#WorkingVehicle";
-					message = "Debe indicar si el vehículo está operativo o no";
-				}
-
-				if ($("#WorkingVehicle").val() == "False" &&  $("#FailureTypeId").val() == ""  &&  !firstInvalidField) {
-					firstInvalidField = "#FailureTypeId";
-					message = "Debe indicar si el tipo de falla";
-				}	
-
-				if($("#Plate").val() == "" && !firstInvalidField){
-					firstInvalidField = "#Plate";
-					message = "Debe colocar la placa";
-				}
-
-				if ($("#Years").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#Years";
-					message = "Debe seleccionar el año del vehículo";
-				}
-
-				if ($("#MakeId").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#MakeId";
-					message = "Debe seleccionar la marca del vehículo";
-				}
-
-				if ($("#VehicleDataId").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#VehicleDataId";
-					message = "Debe seleccionar el modelo del vehículo";
-				}
-
-				if ($("#Passengers").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#Passengers";
-					message = "Debe seleccionar la cantidad de puestos";
-				}
-
-				if ($("#RimId").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#RimId";
-					message = "Debe seleccionar el tipo de neumáticos";
-				}
-
-				if ($("#Wheels").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#Wheels";
-					message = "Debe seleccionar la cantidad de neumáticos";
-				}
-
-				if ($("#FuelTypeId").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#FuelTypeId";
-					message = "Debe seleccionar el tipo de combustible";
-				}
-
-				if ($("#TankCapacity").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#TankCapacity";
-					message = "Debe seleccionar la capacidad del tanque de combustible";
-				}
-
-				if ($("#BatteryId").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#BatteryId";
-					message = "Debe seleccionar el tipo de batería";
-				}
-
-				if ($("#NumberOfBatteries").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#NumberOfBatteries";
-					message = "Debe seleccionar la cantidad de baterías";
-				}
-
-				if ($("#MotorOilId").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#MotorOilId";
-					message = "Debe seleccionar el tipo de aceite";
-				}
-
-				if ($("#Liters").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#Liters";
-					message = "Debe seleccionar los litros de aceite";
-				}
-
-				if ($("#FingerprintTrouble").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#FingerprintTrouble";
-					message = "Debe seleccionar si tiene o no problemas con la huella";
-				}
-
-				if ($("#FailureTypeId").val() == "" && !firstInvalidField) {
-					firstInvalidField = "#FailureTypeId";
-					message = "Debe seleccionar si tiene o no alguna falla";
-				}
-
-				if(uploaded.length > 0){
-					var modeId = $("#ModeId").val();
-
-					if(modeId === "4"){
-						if (uploaded.length < 2 || uploaded.length > 2  && !firstInvalidField) {
-							firstInvalidField = "#myDropzone";
-							var staticMessage ="El vehículo que está actualizando es una moto, debe agregar 2 imágenes para ese tipo de vehículo, está intentando agregar ";
-							var quantityMessage ="";
-
-							if(uploaded.length > 2){
-								quantityMessage = uploaded.length + ", presione el botón: Eliminar imágenes de la lista, y agregue solo 2"
-							}else if(uploaded.length < 2){
-								quantityMessage = uploaded.length + ", haga clic en el recuadro: Cargar imágenes, y agregue otra."
-							}
-
-							message = staticMessage + quantityMessage;
-						}
-					}
-					else{
-						if (uploaded.length < 4 || uploaded.length > 4 && !firstInvalidField) {
-							firstInvalidField = "#myDropzone";
-							var staticMessage ="El vehículo que está actualizando requiere de 4 imágenes para poder ser actualizado, está agregando solo ";
-							var quantityMessage ="";
-
-							if(uploaded.length < 4){
-								quantityMessage = uploaded.length + ", haga clic en el recuadro: Cargar imágenes, y agregue la(s) restante(s)."
-							}
-
-							message = staticMessage + quantityMessage;
-						}
-					}				
-				}else{
-					firstInvalidField = "#myDropzone";
-					message = "Debe agregar imágenes del vehículo para poder actualizar";
-				}
-
-				if (firstInvalidField) {
-					showAlert(message, firstInvalidField);
-					return false;
-				}
-			}
-
-			return true;
-		}
-
-		function showAlert(message, selector) {
-			alert(message);
-			highlightErrorField(selector);
-			$(selector).focus();
-		}
-
-		function highlightErrorField(selector) {
-			$(selector).addClass("is-invalid");
-			$(selector).on("input", function () {
-				$(this).removeClass("is-invalid");
-			});
-
-			$(selector)[0].scrollIntoView({ behavior: "smooth", block: "center" });
-		}
-
-		function showMsg(hasCurrentJob) {
-			if (hasCurrentJob != "OK") {
-				alert(hasCurrentJob);
-				return false;
-			} else {
-
-				$("form").unbind('submit').submit();
-			}
-		}
-
-		function setTransportTypeDefaultValues(modeId){
-			switch (modeId) {
-			  case "3":
-				$('#Passengers').val("4");
-				$('#Wheels').val("4");
-				$('#FuelTypeId').val("1");
-				$('#BatteryId').val("1");
-				$('#TankCapacity').val("50");
-				$('#NumberOfBatteries').val("1");
-				$('#Liters').val("4");
-				break;
-			  case "4":
-				$('#Passengers').val("2");
-				$('#Wheels').val("2");
-				$('#FuelTypeId').val("1");
-				$('#BatteryId').val("9");
-				$('#TankCapacity').val("10");
-				$('#NumberOfBatteries').val("1");
-				$('#Liters').val("1");
-				break;
-			}
-		}
-
-		$(document).ready(function () {
-			setTimeout(function(){
-				$("#successMessage").fadeOut("slow");
-			}, 2500);
-
-			$('#Plate').on('keydown', function (e) {
-				if (e.key === "Enter") {
-					e.preventDefault();
-					return false;
-				}
-			});
-
-			$('#Plate').on('input', function() {
-				const value = $(this).val();
-				const sanitizedValue = value.replace(/[^a-zA-Z0-9\s]/g, '');
-				$(this).val(sanitizedValue);
-			});			
-
-			$('#Remarks').on('input', function() {
-				const value = $(this).val();
-				const sanitizedValue = value.replace(/[^a-zA-Z\s]/g, '');
-				$(this).val(sanitizedValue); 
-			});
-
-			setTransportTypeDefaultValues($("#ModeId").val())
-
-			$('#DriverWithVehicle').change(function (event) {
-				const isTotalAccess = @isTotalAccess.ToString().ToLower();
-
-				if ($(this).val() === "True") {
-					$('#additionalFields').css({ visibility: 'visible', opacity: '1', height: 'auto', overflow: 'visible' });
-					$('#InPerson').val("");
-				} else if($(this).val() === "False") {
-					$('#additionalFields').css({ opacity: '0', visibility: 'hidden', height: '0', overflow: 'hidden' });
-					$('#InPerson').val("1");
-
-					if (!isTotalAccess) {
-						alert("No tiene permiso de modificar registros.");
-					} else {
-						if (confirm("¿Está seguro de que desea actualizar los registros?")) {
-							$(this).closest("form")[0].submit();
-						} else {
-							$('#DriverWithVehicle').val("");
-						}
-					}
-				}
-			});
-
-			$('#WorkingVehicle').change(function (event) {
-				if ($(this).val() === "False") {
-					$('#FailureTypeId').val("").prop("disabled", false);
-;
-				} else if($(this).val() === "True") {
-					$('#FailureTypeId').val("1").prop("disabled", true);
-				}
-			});
-
-			$('#FailureTypeId').change(function (event) {
-				if ($(this).val() === "1") {
-					$('#WorkingVehicle').val("True");
-;
-				} else {
-					$('#WorkingVehicle').val("False");
-				}
-			});
-
-
-			$('#Years').change(function () {
-				var yearId = $(this).val();
-				var getSupervisionUrl = '@Url.Action("GetMakes", "Supervision")';
-
-				$('#MakeId').empty().append('<option value="">Seleccione</option>');
-						$('#VehicleDataId').empty().append('<option value="">Seleccione</option>');
-
-				if (yearId) {
-					$.getJSON(getSupervisionUrl, { yearId: yearId }, function (data) {
-						$.each(data, function (index, makes) {
-							$('#MakeId').append($('<option>', {
-								value: makes.vehicleDataId,
-								text: makes.make
-							}));
-						});
-					});
-				}
-			});
-
-			$('#MakeId').change(function () {
-				var yearId = $('#Years').val();
-				var make = $('#MakeId option:selected').text();
-				var getSupervisionUrl = '@Url.Action("GetModels", "Supervision")';
-
-				$('#VehicleDataId').empty().append('<option value="">Seleccione</option>');
-
-				if (yearId) {
-					$.getJSON(getSupervisionUrl, { yearId: yearId, make: make }, function (data) {
-						$.each(data, function (index, models) {
-							$('#VehicleDataId').append($('<option>', {
-								value: models.vehicleDataId,
-								text: models.modelName
-							}));
-						});
-					});
-				}
-			});
-		});
-	</script>
+@{
+    bool isTotalAccess = ViewBag.IsTotalAccess != null && ViewBag.IsTotalAccess is bool && ViewBag.IsTotalAccess == true;
+}
+@using (Html.BeginForm("Add", "Supervision", FormMethod.Post, new { id = "supervisionForm" }))
+{
+    @Html.AntiForgeryToken()
+    <!-- Wrapper -->
+    <div id="wrapper"
+         data-save-files-url="@Url.Action("SaveFiles", "Supervision")"
+         data-delete-pictures-url="@Url.Action("DeleteAllSupervisionPictures", "Supervision")"
+         data-check-plate-url="@Url.Action("CheckExistingPlate", "Supervision")"
+         data-get-makes-url="@Url.Action("GetMakes", "Supervision")"
+         data-get-models-url="@Url.Action("GetModels", "Supervision")"
+         data-partner-number="@Model.PartnerNumber"
+         data-public-transport-group-rif="@Model.PublicTransportGroupRif"
+         data-driver-id="@Model.DriverId"
+         data-public-transport-group-id="@Model.PublicTransportGroupId"
+         data-driver-public-transport-group-id="@Model.DriverPublicTransportGroupId"
+         data-is-total-access="@isTotalAccess.ToString().ToLower()">
+        <!-- Header -->
+        <header id="header">
+            <div class="inner">
+                <!-- Logo -->
+                <a href="#" class="logo">
+                    <span><img src="~/images/Logo.png" width="100px" height="100px" alt="" /></span>
+                    <br />
+                    <span class="title">@ViewBag.EmployeeName</span>
+                    <br />
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div id="successMessage" class="alert alert-success">
+                            @TempData["SuccessMessage"]
+                        </div>
+                    }
+                </a>
+            </div>
+            <!-- Nav -->
+            <nav>
+                <ul>
+                    <li><a href="#menu">Menu</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <!-- Menu -->
+        <nav id="menu">
+            <h2>Menu</h2>
+            <ul>
+                <li>@Html.ActionLink("Inicio", "Index", "Home")</li>
+                <li>@Html.ActionLink("Seleccionar socio", "PublicTransportGroupDriverList", "Supervision", new { ptgRifName = Model.PublicTransportGroupRif }, null)</li>
+                <li>@Html.ActionLink("Agregar resumen de supervisión", "PublicTransportGroupList", "Supervision")</li>
+                <li>@Html.ActionLink("Modificar resumen de supervisión", "SummaryList", "Supervision")</li>
+                <li>@Html.ActionLink("Supervisión", "Index", "Supervision")</li>
+                <li>@Html.ActionLink("Salir", "Login", "Security")</li>
+            </ul>
+        </nav>
+
+        <!-- Main -->
+        <div id="main">
+            <div class="inner">
+                <!-- Form -->
+                <section>
+                    <h1 style="color:#4cbece">Agregar supervisión</h1>
+                    <label>Vuelta: @ViewBag.CurrentRoundStartDate</label><br />
+                    <label>Organización: @Model.PublicTransportGroupRif @Model.PTGCompleteName</label><br />
+                    <label>Tipo: @Model.ModeName</label><br />
+                    <label>Nombre Socio: @Model.DriverIdentityDocument @Model.DriverFullName</label><br />
+                    <label>Socio: @Model.PartnerNumber</label>
+                    <br />
+                    <br />
+                    <br />
+                    <div id="spinner" style="display:none;">
+                        <img src="/images/spinner.gif" alt="Cargando..." />
+                    </div>
+                    <div class="row gtr-uniform">
+                        <div class="col-12">
+                            <strong>¿Posee vehículo?:</strong>
+                            @Html.HiddenFor(x => x.PTGCompleteName)
+                            @Html.HiddenFor(x => x.PublicTransportGroupId)
+                            @Html.HiddenFor(x => x.DriverIdentityDocument)
+                            @Html.HiddenFor(x => x.StateName)
+                            @Html.HiddenFor(x => x.DriverId)
+                            @Html.HiddenFor(x => x.SecurityUserId)
+                            @Html.HiddenFor(x => x.SupervisionId)
+                            @Html.HiddenFor(x => x.PartnerNumber)
+                            @Html.HiddenFor(x => x.PublicTransportGroupRif)
+                            @Html.HiddenFor(x => x.ModeId)
+                            @Html.HiddenFor(x => x.StateId)
+                            @Html.HiddenFor(x => x.DriverPublicTransportGroupId)
+                            @Html.DropDownList("DriverWithVehicle", (IEnumerable<SelectListItem>)ViewBag.DriverWithVehicle, "Seleccione", new { @class = "form-control" })
+                        </div>
+                        <div class="row" id="additionalFields" style="visibility: hidden; opacity: 0; height: 0; overflow: hidden; transition: opacity 0.3s ease-in-out;">
+                            <div class="col-4">
+                                <strong>¿Socio presente?:</strong>
+                                @Html.DropDownListFor(t => t.InPerson, (SelectList)ViewBag.InPerson, "-- Seleccione --", new { @class = "form-control" })
+                            </div>
+                            <div class="col-4">
+                                <strong>¿Vehículo operativo?:</strong>
+                                @Html.DropDownListFor(t => t.WorkingVehicle, (SelectList)ViewBag.WorkingVehicle, "-- Seleccione --", new { @class = "form-control" })
+                            </div>
+                            <div class="col-4">
+                                <strong>Tipo de falla vehículo:</strong>
+                                @Html.DropDownListFor(t => t.FailureTypeId, (SelectList)ViewBag.FailureType, "-- Seleccione --", new { @class = "form-control" })
+                            </div>
+                            <div class="col-12">
+                                <br />
+                                <strong>Placa:</strong>
+                                @Html.TextBoxFor(x => x.Plate, new { placeholder = "Número de placa", maxlength = "7", @class = "custom-textbox" })
+                            </div>
+                            <div class="col-6">
+                                <br />
+                                <strong>Año:</strong>
+                                @Html.DropDownList("Years", (IEnumerable<SelectListItem>)ViewBag.Years, "Seleccione", new { @class = "form-control" })
+                            </div>
+                            <div class="col-6">
+                                <br />
+                                <strong>Marca:</strong>
+                                <select id="MakeId" name="Make" class="form-control">
+                                    <option value="">Seleccione</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <br />
+                                <strong>Modelo:</strong>
+                                <select id="VehicleDataId" name="VehicleDataId" class="form-control">
+                                    <option value="">Seleccione</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <br />
+                                <strong>Puestos:</strong>
+                                @Html.DropDownListFor(t => t.Passengers, (SelectList)ViewBag.Passengers, "-- Seleccione --", new { @class = "form-control" })
+                            </div>
+                            <div class="col-6">
+                                <br />
+                                <strong>Medida neumáticos:</strong>
+                                @Html.DropDownListFor(t => t.RimId, (SelectList)ViewBag.Rims, "-- Seleccione --", new { @class = "form-control" })
+                            </div>
+                            <div class="col-6">
+                                <br />
+                                <strong>Cantidad neumáticos:</strong>
+                                @Html.DropDownListFor(t => t.Wheels, (SelectList)ViewBag.Wheels, "-- Seleccione --", new { @class = "form-control" })
+                            </div>
+                            <div class="col-6">
+                                <br />
+                                <strong>Tipo combustible:</strong>
+                                @Html.DropDownListFor(t => t.FuelTypeId, (SelectList)ViewBag.FuelTypes, "-- Seleccione --", new { @class = "form-control" })
+                            </div>
+                            <div class="col-6">
+                                <br />
+                                <strong>Capacidad tanque:</strong>
+                                @Html.DropDownListFor(t => t.TankCapacity, (SelectList)ViewBag.TankCapacity, "-- Seleccione --", new { @class = "form-control" })
+                            </div>
+                            <div class="col-6">
+                                <br />
+                                <strong>Tipo batería:</strong>
+                                @Html.DropDownListFor(t => t.BatteryId, (SelectList)ViewBag.Batteries, "-- Seleccione --", new { @class = "form-control" })
+                            </div>
+                            <div class="col-6">
+                                <br />
+                                <strong>Cantidad baterias:</strong>
+                                @Html.DropDownListFor(t => t.NumberOfBatteries, (SelectList)ViewBag.NumberOfBatteries, "-- Seleccione --", new { @class = "form-control" })
+                            </div>
+                            <div class="col-6">
+                                <br />
+                                <strong>Tipo de aceite:</strong>
+                                @Html.DropDownListFor(t => t.MotorOilId, (SelectList)ViewBag.MotorOil, "-- Seleccione --", new { @class = "form-control" })
+                            </div>
+                            <div class="col-6">
+                                <br />
+                                <strong>Litros:</strong>
+                                @Html.DropDownListFor(t => t.Liters, (SelectList)ViewBag.OilLitters, "-- Seleccione --", new { @class = "form-control" })
+                            </div>
+                            <div class="col-6">
+                                <br />
+                                <strong>Problema huella:</strong>
+                                @Html.DropDownListFor(t => t.FingerprintTrouble, (SelectList)ViewBag.FingerprintProblem, "-- Seleccione --", new { @class = "form-control" })
+                            </div>
+                            <div class="col-12">
+                                <br />
+                                <strong>Observaciones:</strong>
+                                @Html.TextAreaFor(x => x.Remarks, new
+                                    {
+                                        @class = "custom-textarea",
+                                        placeholder = "Observaciones",
+                                        maxlength = "500"
+                                    })
+                            </div>
+                            <div class="col-12">
+                                <br />
+                                <strong>Cargar imágenes:</strong>
+                                <div id="myDropzone"
+                                     class="dropzone @(isTotalAccess ? "dz-clickable" : "dz-disabled")"
+                                     style="@(isTotalAccess ? "" : "pointer-events:none; opacity:0.6;")">
+                                    <div class="dz-message">
+                                        Haga clic aquí para subir las imágenes
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <br />
+                                <ul class="actions">
+                                    @{
+                                        if(ViewBag.IsTotalAccess)
+                                        {
+                                            <li><button type="submit" id="saveRequest" class="primary">Agregar supervisión</button></li>
+                                            <li style="margin-left:auto;">
+                                                <button id="btnDeleteImages" type="button" class="primary">
+                                                    Eliminar imágenes de la lista
+                                                </button>
+                                            </li>
+                                        }
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+        <div id="loadingOverlay" style="
+        display:none;
+        position:fixed;
+        top:0;left:0;
+        width:100%;height:100%;
+        background:rgba(255,255,255,0.7);
+        z-index:9999;
+        text-align:center;
+        padding-top:200px;
+        font-size:20px;">
+                <i class="fas fa-spinner fa-spin fa-3x"></i>
+                <p>Procesando, por favor espere...</p>
+            </div>
+    </div>
+}
+<!-- Scripts -->
+<script src="~/assets/js/jquery.min.js"></script>
+<script src="~/assets/js/browser.min.js"></script>
+<script src="~/assets/js/breakpoints.min.js"></script>
+<script src="~/assets/js/util.js"></script>
+<script src="~/assets/js/main.js"></script>
+<script src="~/js/common.js" asp-append-version="true"></script>
+<script src="~/plugins/dropzone/dropzone.min.js"></script>
+@{
+    await Html.RenderPartialAsync("_ValidationScriptsPartial");
+}
+<script src="~/js/supervision-add.js"></script>
 </body>
 </html>
-
-
