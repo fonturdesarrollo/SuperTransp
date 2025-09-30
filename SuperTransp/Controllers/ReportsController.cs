@@ -294,6 +294,71 @@ namespace SuperTransp.Controllers
 			}
 		}
 
+		public IActionResult SummaryList()
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+				{
+					int? groupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+					if (groupId is null ||
+						(groupId != 1 && !_security.GroupHasAccessToModule(groupId.Value, 4)) ||
+						(groupId == 1 ? false : !_security.GroupHasAccessToModule(groupId.Value, 21)))
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
+					List<SupervisionSummaryViewModel> model = new();
+					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+					int? stateId = HttpContext.Session.GetInt32("StateId");
+
+					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
+					{
+						model = _supervision.GetSupervisionSummaryByStateId((int)stateId);
+					}
+					else
+					{
+						model = _supervision.GetAllSupervisionSummary();
+					}
+
+					return View(model);
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
+
+		public IActionResult EditSummary(int supervisionSummaryId, int publicTransportGroupId)
+		{
+			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+			{
+				int? groupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+				if (groupId is null ||
+					(groupId != 1 && !_security.GroupHasAccessToModule(groupId.Value, 4)) ||
+					(groupId == 1 ? false : !_security.GroupHasAccessToModule(groupId.Value, 21)))
+				{
+					return RedirectToAction("Login", "Security");
+				}
+
+				int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
+				int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
+				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+
+				var model = _supervision.GetSupervisionSummaryById(supervisionSummaryId);
+
+				return View(model);
+			}
+
+			return RedirectToAction("Login", "Security");
+		}
+
 		[HttpGet]
 		public IActionResult GetPublicTransportGroupSupervisedDriversStatistics()
 		{
@@ -536,6 +601,19 @@ namespace SuperTransp.Controllers
 			}
 
 			return model;
+		}
+
+		private IActionResult? CheckSessionAndPermission(int requiredModuleId)
+		{
+			var securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+			if (securityGroupId == null)
+				return RedirectToAction("Login", "Security");
+
+			if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, requiredModuleId))
+				return RedirectToAction("Login", "Security");
+
+			return null;
 		}
 	}
 }

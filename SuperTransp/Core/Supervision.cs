@@ -344,7 +344,7 @@ namespace SuperTransp.Core
 								Remarks = (string)dr["Remarks"],
 								UserFullName = (string)dr["UserFullName"],
 								DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"],
-								Pictures = GetPicturesByPTGIdAndDriverId((int)dr["PublicTransportGroupId"], (int)dr["DriverId"]),
+								Pictures = GetPicturesByPTGIdAndDriverPublicTransportGroupId((int)dr["PublicTransportGroupId"], (int)dr["DriverPublicTransportGroupId"]),
 							});
 						}
 					}
@@ -426,7 +426,7 @@ namespace SuperTransp.Core
 								Remarks = (string)dr["Remarks"],
 								UserFullName = (string)dr["UserFullName"],
 								SecurityUserId = (int)dr["SecurityUserId"],
-								Pictures = GetPicturesByPTGIdAndDriverId((int)dr["PublicTransportGroupId"], (int)dr["DriverId"])
+								Pictures = GetPicturesByPTGIdAndDriverPublicTransportGroupId((int)dr["PublicTransportGroupId"], (int)dr["DriverPublicTransportGroupId"])
 							});
 						}
 					}
@@ -511,7 +511,7 @@ namespace SuperTransp.Core
 								Remarks = (string)dr["Remarks"],
 								UserFullName = (string)dr["UserFullName"],
 								SecurityUserId = (int)dr["SecurityUserId"],	
-								Pictures = GetPicturesByPTGIdAndDriverId((int)dr["PublicTransportGroupId"], (int)dr["DriverId"])
+								Pictures = GetPicturesByPTGIdAndDriverPublicTransportGroupId((int)dr["PublicTransportGroupId"], (int)dr["DriverPublicTransportGroupId"])
 							});
 						}
 					}
@@ -578,7 +578,7 @@ namespace SuperTransp.Core
 							supervision.FingerprintTrouble = (bool)dr["FingerprintTrouble"];
 							supervision.Remarks = (string)dr["Remarks"];
 							supervision.SecurityUserId = (int)dr["SecurityUserId"];
-							supervision.Pictures = GetPicturesByPTGIdAndDriverId((int)dr["PublicTransportGroupId"], (int)dr["DriverId"]);
+							supervision.Pictures = GetPicturesByPTGIdAndDriverPublicTransportGroupId((int)dr["PublicTransportGroupId"], (int)dr["DriverPublicTransportGroupId"]);
 						}
 					}
 
@@ -656,7 +656,7 @@ namespace SuperTransp.Core
 							supervision.SupervisionStatus = (bool)dr["SupervisionStatus"];
 							supervision.SupervisionDateAdded = (DateTime)dr["SupervisionDateAdded"];
 							supervision.DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"];
-							supervision.Pictures = GetPicturesByPTGIdAndDriverId(publicTransportGroupId, driverId);
+							supervision.Pictures = GetPicturesByPTGIdAndDriverPublicTransportGroupId(publicTransportGroupId, (int)dr["DriverPublicTransportGroupId"]);
 						}
 					}
 
@@ -731,7 +731,7 @@ namespace SuperTransp.Core
 							supervision.VehicleDataId = (int)dr["VehicleDataId"];
 							supervision.SupervisionStatus = (bool)dr["SupervisionStatus"];
 							supervision.SupervisionDateAdded = (DateTime)dr["SupervisionDateAdded"];
-							supervision.Pictures = GetPicturesByPTGIdAndDriverId((int)dr["PublicTransportGroupId"], (int)dr["DriverId"]);
+							supervision.Pictures = GetPicturesByPTGIdAndDriverPublicTransportGroupId((int)dr["PublicTransportGroupId"], (int)dr["DriverPublicTransportGroupId"]);
 						}
 					}
 
@@ -816,7 +816,7 @@ namespace SuperTransp.Core
 								UserFullName = (string)dr["UserFullName"],
 								SecurityUserId = (int)dr["SecurityUserId"],
 								DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"],
-								Pictures = GetPicturesByPTGIdAndDriverId((int)dr["PublicTransportGroupId"], (int)dr["DriverId"]),
+								Pictures = GetPicturesByPTGIdAndDriverPublicTransportGroupId((int)dr["PublicTransportGroupId"], (int)dr["DriverPublicTransportGroupId"]),
 							});
 						}
 					}
@@ -830,7 +830,7 @@ namespace SuperTransp.Core
 			}
 		}
 
-		public List<SupervisionPictures> GetPicturesByPTGIdAndDriverId(int publicTransportGroupId, int driverId)
+		public List<SupervisionPictures> GetPicturesByPTGIdAndDriverPublicTransportGroupId(int publicTransportGroupId, int driverPublicTransportGroupId)
 		{
 			try
 			{
@@ -844,7 +844,7 @@ namespace SuperTransp.Core
 					List<SupervisionPictures> pictures = new();
 					SqlCommand cmd = new("SELECT * FROM SupervisionPicture WHERE PublicTransportGroupId = @PublicTransportGroupId AND DriverId = @DriverId", sqlConnection);
 					cmd.Parameters.AddWithValue("@PublicTransportGroupId", publicTransportGroupId);
-					cmd.Parameters.AddWithValue("@DriverId", driverId);
+					cmd.Parameters.AddWithValue("@DriverId", driverPublicTransportGroupId);
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
 					{

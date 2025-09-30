@@ -1,0 +1,184 @@
+﻿@model SuperTransp.Models.SupervisionSummaryViewModel
+@{
+	Layout = "";
+}
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Resumen de Supervisión</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+	<link rel="stylesheet" href="~/assets/css/main.css" />
+	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
+	<link rel="stylesheet" href="~/datatable/css/bootstrap.css" />
+	<link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
+
+	<style>
+
+		.custom-textarea {
+			border: 2px solid;
+			height: 100px !important;
+		}
+	</style>
+</head>
+<body class="is-preload">
+	@using (Html.BeginForm("EditSummary", "Supervision", FormMethod.Post))
+	{
+		@Html.AntiForgeryToken()
+		<!-- Wrapper -->
+		<div id="wrapper">
+
+			<!-- Header -->
+			<header id="header">
+				<div class="inner">
+
+					<!-- Logo -->
+					<a href="#" class="logo">
+						<span><img src="~/images/Logo.png" width="100px" height="100px" alt="" /></span>
+						<br />
+						<span class="title">@ViewBag.EmployeeName</span>
+						<br />
+					</a>
+				</div>
+				<!-- Nav -->
+				<nav>
+					<ul>
+						<li><a href="#menu">Menu</a></li>
+					</ul>
+				</nav>
+			</header>
+
+			<!-- Menu -->
+			<nav id="menu">
+				<h2>Menu</h2>
+				<ul>
+					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
+					<li>@Html.ActionLink("Resumenes de supervision", "SummaryList", "Reports")</li>
+					<li>@Html.ActionLink("Organizaciones con socios supervisados", "PublicTransportGroupSupervisedDriversStatistics", "Reports")</li>
+					<li>@Html.ActionLink("Gráficos Organizaciones por estado", "PublicTransportGroupStatisticsInState", "Reports")</li>
+					<li>@Html.ActionLink("Gráficos vehículos supervisados por estado", "SupervisedDriversStatisticsInEstate", "Reports")</li>
+					<li>@Html.ActionLink("Reportes/Consultas", "Index", "Reports")</li>
+					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
+				</ul>
+			</nav>
+
+			<!-- Main -->
+			<div id="main">
+				<div class="inner">
+					<!-- Form -->
+					<section>
+						<h1 style="color:#4cbece">Resumen de Supervisión</h1>
+						<label>Organización: @Model.PTGCompleteName</label>
+						<br />
+						<label>Estado: @Model.StateName.ToUpper()</label>
+						<br />
+						<br />
+						<br />
+						<div class="row gtr-uniform">
+							<div class="col-8">
+								<strong>Fecha de la supervisión:</strong>
+								@Html.HiddenFor(x => x.PTGCompleteName)
+								@Html.HiddenFor(x => x.PublicTransportGroupId)
+								@Html.HiddenFor(x => x.PublicTransportGroupRif)
+								@Html.HiddenFor(x => x.SupervisionSummaryId)
+								@Html.HiddenFor(x => x.SecurityUserId)
+								@Html.HiddenFor(x => x.StateName)
+								@Html.TextBox("SupervisionDate", Model.SupervisionDate.ToString("dd/MM/yyyy"), new { maxlength = "20", @readonly = "readonly" })
+								@for (int i = 0; i < Model.Pictures.Count; i++)
+								{
+									<input type="hidden" name="Pictures[@i]" value="@Model.Pictures[i]" />
+								}
+							</div>
+							<div class="col-12">
+								<br />
+								<strong>Dirección:</strong>
+								@Html.TextAreaFor(x => x.SupervisionAddress, new
+									{
+										@class = "custom-textarea",
+										placeholder = "Dirección",
+										maxlength = "150",
+									    @readonly = "readonly"
+									})
+							</div>
+							<div class="col-12">
+								<br />
+								<strong>Observaciones:</strong>
+								@Html.TextAreaFor(x => x.SupervisionSummaryRemarks, new
+									{
+										@class = "custom-textarea",
+										placeholder = "Observaciones",
+										maxlength = "150", 
+										@readonly = "readonly"
+									})
+							</div>
+							<div class="col-12">
+								<br />
+								<strong>Imagenes o PDF:</strong>
+								<div id="thumbnail-container"></div>
+							</div>
+						</div>
+					</section>
+				</div>
+			</div>
+		</div>
+	}
+	<!-- Scripts -->
+	<script src="~/assets/js/jquery.min.js"></script>
+	<script src="~/assets/js/browser.min.js"></script>
+	<script src="~/assets/js/breakpoints.min.js"></script>
+	<script src="~/assets/js/util.js"></script>
+	<script src="~/assets/js/main.js"></script>
+
+	<script type="text/javascript">
+
+		const fileUrls = @Html.Raw(Json.Serialize(Model.Pictures.Select(p => p.SupervisionSummaryPictureUrl)));
+		const container = document.getElementById('thumbnail-container');
+
+		function isImage(url) {
+			return /\.(jpg|jpeg|png|gif|bmp|webp)$/i.test(url);
+		}
+
+		function getFileName(url) {
+			return url.split('/').pop();
+		}
+
+		fileUrls.forEach(url => {
+			const element = document.createElement('div');
+			element.style.display = 'inline-block';
+			element.style.margin = '5px';
+			element.style.cursor = 'pointer';
+
+			if (isImage(url)) {
+				const img = document.createElement('img');
+				img.src = url;
+				img.alt = 'Thumbnail';
+				img.style.width = '100px';
+				img.style.height = 'auto';
+
+				element.appendChild(img);
+			} else if (/\.pdf$/i.test(url)) {
+				const pdfIcon = document.createElement('img');
+				pdfIcon.src = '@Url.Content("~/images/pdf-icon.png")';
+				pdfIcon.alt = 'PDF';
+				pdfIcon.style.width = '100px';
+				pdfIcon.style.height = 'auto';
+				pdfIcon.title = getFileName(url);
+
+				element.appendChild(pdfIcon);
+			}
+
+			element.addEventListener('click', () => {
+				window.open(url, '_blank');
+			});
+
+			container.appendChild(element);
+		});
+
+		$(document).ready(function () {
+
+		});
+	</script>
+</body>
+</html>
+
+

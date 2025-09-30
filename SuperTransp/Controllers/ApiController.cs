@@ -56,7 +56,7 @@ public class ApiController : ControllerBase
 		var firstDriver = drivers.First();
 
 		var picture = _supervision
-			.GetPicturesByPTGIdAndDriverId(firstDriver.PublicTransportGroupId, firstDriver.DriverId)
+			.GetPicturesByPTGIdAndDriverPublicTransportGroupId(firstDriver.PublicTransportGroupId, firstDriver.DriverPublicTransportGroupId)
 			?.FirstOrDefault();
 
 		var buses = drivers.Select(driver =>

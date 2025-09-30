@@ -152,6 +152,10 @@
                                         {
                                             <li>@Html.ActionLink("Organizaciones con socios supervisados", "PublicTransportGroupSupervisedDriversStatistics", "Reports")</li>
                                         }
+                                        if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 21))
+                                        {
+                                            <li>@Html.ActionLink("Resumenes de supervision", "SummaryList", "Reports")</li>
+                                        }
                                         if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 22))
                                         {
                                             if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 6))
