@@ -113,6 +113,7 @@ namespace SuperTransp.Core
 			public SupervisionViewModel GetByPublicTransportGroupGUIDAndPartnerNumber(string publicTransportGroupGUID, int partnerNumber);
 			public List<PublicTransportGroupViewModel> GetDriverPublicTransportGroupByStateIdAndPTGRif(int stateId, string ptgRif);
 			public List<PublicTransportGroupViewModel> GetDriverPublicTransportGroupByPtgId(int publicTransportGroupId);
+			public List<PublicTransportGroupViewModel> GetDriverByDriverIdentityDocument(int driverIdentityDocument);
 			public List<PublicTransportGroupViewModel> GetAllDriverPublicTransportGroup(string ptgRif);
 			public List<PublicTransportGroupViewModel> RegisteredPlate(string plate);
 			public int AddOrEditSummary(SupervisionSummaryViewModel model);
@@ -126,7 +127,7 @@ namespace SuperTransp.Core
 			public bool IsSupervisionSummaryDoneByPtgId(int publicTransportGroupId);
 			public bool IsUserSupervisingPublicTransportGroup(int securityUserId, int publicTransportGroupId);
 			public bool DeletePicturesByPTGIdAndPartnerNumber(int publicTransportGroupId, int partnerNumber);
-			public List<SupervisionPictures> GetPicturesByPTGIdAndPartnerNumber(int publicTransportGroupId, int partnerNumber);
+			public List<SupervisionPictures> GetPicturesByPTGIdAndDriverId(int publicTransportGroupId, int driverId);
 		}
 
 		public interface ICommonData

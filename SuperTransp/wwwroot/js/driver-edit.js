@@ -139,7 +139,7 @@ function isOkToSave() {
     if (!firstInvalidField) {
         const identityValue = $("#DriverIdentityDocument").val();
 
-        if (identityValue == "" || identityValue.length < 7) {
+        if (identityValue == "" || identityValue.length < 5) {
             firstInvalidField = "#DriverIdentityDocument";
             message = "Debe colocar un número de cédula válido";
         }

@@ -148,6 +148,7 @@
         <button id="bar-btn" class="active">Barras</button>
         <button id="pie-btn">Torta</button>
         <button id="donut-btn">Dona</button>
+        <button id="export-btn">Exportar a Excel</button>
     </div>
 
     <div class="chart-container" id="chartContainer"></div>
@@ -334,6 +335,28 @@
             const card = document.createElement('div');
             card.className = 'chart-card';
 
+            // 📊 Cálculo de porcentajes por estado
+            const porcentajeOrg = item.TotalUniversePTGInState > 0
+                ? (item.TotalPTGInState / item.TotalUniversePTGInState) * 100
+                : 0;
+
+            const porcentajeSocios = item.TotalUniverseDriversInState > 0
+                ? (item.TotalAddedPartners / item.TotalUniverseDriversInState) * 100
+                : 0;
+
+            // 📌 Encabezado con porcentajes
+            const progressDiv = document.createElement('div');
+            progressDiv.style.marginBottom = '10px';
+            progressDiv.style.fontSize = '14px';
+            progressDiv.style.color = '#2c3e50';
+            progressDiv.innerHTML = `
+                <strong>% Avance Orgs:</strong> ${porcentajeOrg.toFixed(2)}%<br/>
+                <strong>% Avance Socios:</strong> ${porcentajeSocios.toFixed(2)}%
+            `;
+            card.appendChild(progressDiv);
+
+
+
             const controlsDiv = document.createElement('div');
             controlsDiv.className = 'controls';
 
@@ -373,7 +396,7 @@
             card.appendChild(label);
             document.getElementById('chartContainer').appendChild(card);
 
-            // Render inicial como donut
+            // Render iniciafl como donut
             renderChart(item, 'bar');
 
             // Eventos de checkboxes => actualizar
@@ -386,6 +409,12 @@
         document.getElementById('donut-btn').addEventListener('click', () => changeAllChartsType('donut'));
         document.getElementById('pie-btn').addEventListener('click', () => changeAllChartsType('pie'));
         document.getElementById('bar-btn').addEventListener('click', () => changeAllChartsType('bar'));
+
+
+        document.getElementById('export-btn').addEventListener('click', () => {
+            window.location.href = '@Url.Action("ExportCurrentAdvance", "Reports")';
+        });
+
     </script>
 </body>
 </html>

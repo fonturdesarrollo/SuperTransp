@@ -146,7 +146,7 @@
 
                                         if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 20))
                                         {
-                                            <li>@Html.ActionLink("Organizaciones y Transportistas", "PublicTransportGroupList", "Reports")</li>
+                                            <li>@Html.ActionLink("Organizaciones y socios", "PublicTransportGroupList", "Reports")</li>
                                         }
                                         if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 21))
                                         {
@@ -162,7 +162,7 @@
                                             {
                                                 <li>
                                                     @Html.ActionLink(
-                                                    "Gráficos Organizaciones por estado",
+                                                    "Gráficos organizaciones por estado",
                                                     "PublicTransportGroupStatisticsInState",
                                                     "Reports",
                                                     new { selectedStatisticsStateId = ViewBag.UserStateId }, null)
@@ -177,12 +177,12 @@
                                         {
                                             <li>
                                                 <a href="#" id="exportExcelLink" data-url="@Url.Action("ExportPublicTransportGroupAndDrivers", "Reports")">
-                                                    Exportar a Excel Organizaciones y socios
+                                                    Exportar a excel organizaciones y socios
                                                 </a>
                                             </li>
                                             <li>
                                                 <a href="#" id="exportExcelSupervisionsLink" data-url="@Url.Action("ExportSupervisionDetail", "Reports")">
-                                                    Exportar a Excel Supervisiones
+                                                    Exportar a excel supervisiones
                                                 </a>
                                             </li>
                                         }
@@ -316,7 +316,7 @@
 
                     setTimeout(() => {
                         spinner.classList.add("hidden");
-                    }, 5500);
+                    }, 8500);
                 }
             });
         });
@@ -340,7 +340,7 @@
                     // Ocultar el spinner después de un tiempo prudencial
                     setTimeout(() => {
                         spinner.classList.add("hidden");
-                    }, 4500);
+                    }, 8500);
                 }
             });
         });
