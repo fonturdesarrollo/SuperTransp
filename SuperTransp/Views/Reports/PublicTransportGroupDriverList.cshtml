@@ -52,7 +52,7 @@
 
 </head>
 <body class="is-preload">
-	<div id="wrapper">
+	<div style="width:100%; max-width: 75em; margin: 0 auto; padding: 0 1em;">
 		<!-- Header -->
 		<header id="header">
 			<div class="inner">
@@ -102,12 +102,13 @@
 					<table id="inventory" class="table table-striped table-bordered dt-responsive dt-nowrap">
 						<thead>
 							<tr>
+								<th>Cedula</th>
 								<th>Nombre</th>
 								<th># Socio</th>
-								<th>Estatus</th>
 								<th>Presente en supervisión</th>
 								<th>Con vehículo</th>
 								<th>Vehículo operativo</th>
+								<th>Estatus</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -118,10 +119,22 @@
 									{
 										<tr>
 											<td>
+												@ptg.DriverIdentityDocument
+											</td>
+											<td>
 												@ptg.DriverFullName
 											</td>
 											<td>
 												@ptg.PartnerNumber
+											</td>
+											<td>
+												@ptg.InPerson.ToSpanishYesNo()
+											</td>
+											<td>
+												@ptg.DriverWithVehicle.ToSpanishYesNo()
+											</td>
+											<td>
+												@ptg.WorkingVehicle.ToSpanishYesNo()
 											</td>
 											<td>
 												@ptg.SupervisionStatusName
@@ -153,15 +166,6 @@
 														</button>
 													}
 												}
-											</td>
-											<td>
-												@ptg.InPerson.ToSpanishYesNo()
-											</td>
-											<td>
-												@ptg.DriverWithVehicle.ToSpanishYesNo()
-											</td>
-											<td>
-												@ptg.WorkingVehicle.ToSpanishYesNo()
 											</td>
 										</tr>
 									}

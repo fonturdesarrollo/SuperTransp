@@ -135,16 +135,20 @@
                 @{
                     int totalWorking = 0;
                     int totalNotWorking = 0;
+                    int totalWithoutVehicle = 0;
 
                     if (Model != null && Model.Any())
                     {
                         totalWorking = Model.Sum(x => x.TotalWorkingVehicles);
                         totalNotWorking = Model.Sum(x => x.TotalNotWorkingVehicles);
+                        totalWithoutVehicle = Model.Sum(x => x.TotalWithoutVehicle);
                     }
                 }
                 Total global vehículos operativos: @totalWorking.ToString("N0", new System.Globalization.CultureInfo("de-DE"))
                 <br />
                 Total global vehículos inoperativos: @totalNotWorking.ToString("N0", new System.Globalization.CultureInfo("de-DE"))
+                <br />
+                Total global socios sin vehículo: @totalWithoutVehicle.ToString("N0", new System.Globalization.CultureInfo("de-DE"))
             </h3>
         </div>
     </div>

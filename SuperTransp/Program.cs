@@ -59,6 +59,7 @@ builder.Services.AddScoped<ClientInfoService>();
 builder.Services.AddScoped<IFtpService, FtpService>();
 builder.Services.AddScoped<IUniverse, Universe>();
 builder.Services.AddScoped<IExcelExporter, ExcelExporter>();
+builder.Services.AddScoped<IApiCore, ApiCore>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

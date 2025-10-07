@@ -184,5 +184,11 @@ namespace SuperTransp.Core
 			public int AddOrEdit(UniverseViewModel model);
 			public UniverseViewModel GetByStateId(int stateId);
 		}
+
+		public interface IApiCore
+		{
+			public DriversModel? MapToDriversModel(int idCard);
+			public RoutesModel? MapToRoutesModel();
+		}
 	}
 }

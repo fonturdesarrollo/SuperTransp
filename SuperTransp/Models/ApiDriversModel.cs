@@ -43,7 +43,7 @@ public class Roles
 	public Owner Owner { get; set; }
 }
 
-public class RootObject
+public class DriversModel
 {
 	public PersonalData PersonalData { get; set; }
 	public Roles Roles { get; set; }

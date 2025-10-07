@@ -511,6 +511,7 @@ namespace SuperTransp.Core
 								Remarks = (string)dr["Remarks"],
 								UserFullName = (string)dr["UserFullName"],
 								SecurityUserId = (int)dr["SecurityUserId"],	
+								DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"],
 								Pictures = GetPicturesByPTGIdAndDriverPublicTransportGroupId((int)dr["PublicTransportGroupId"], (int)dr["DriverPublicTransportGroupId"])
 							});
 						}
