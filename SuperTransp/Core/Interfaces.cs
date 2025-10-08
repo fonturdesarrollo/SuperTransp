@@ -189,6 +189,7 @@ namespace SuperTransp.Core
 		{
 			public DriversModel? MapToDriversModel(int idCard);
 			public RoutesModel? MapToRoutesModel();
+			public RoutesByRifModel? MapToRoutesByRifModel(string publicTransportGroupRif);
 		}
 	}
 }

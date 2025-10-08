@@ -8,11 +8,12 @@ namespace SuperTransp.Core
 	{
 		private readonly ISupervision _supervision;
 		private IPublicTransportGroup _publicTransportGroup;
-
-		public ApiCore(ISupervision supervision, IPublicTransportGroup publicTransportGroup)
+		private readonly ISecurity _security;
+		public ApiCore(ISupervision supervision, IPublicTransportGroup publicTransportGroup, ISecurity security)
 		{
 			_supervision = supervision;
 			_publicTransportGroup = publicTransportGroup;
+			_security = security;
 		}
 
 		public DriversModel? MapToDriversModel(int idCard)
@@ -74,6 +75,8 @@ namespace SuperTransp.Core
 				BirthDate = firstDriver.BirthDate?.ToString("yyyy-MM-dd") ?? "1900-01-01"
 			};
 
+			_security.AddLogbook(0, false, $"API GET Consulta de datos del socio por cedula: {idCard}");
+
 			return new DriversModel
 			{
 				PersonalData = personalData,
@@ -95,10 +98,51 @@ namespace SuperTransp.Core
 				rif = string.IsNullOrEmpty(route.PublicTransportGroupRif) ? "SIN RIF" : route.PublicTransportGroupRif
 			}).ToArray();
 
+			_security.AddLogbook(0, false, $"API GET Consulta de datos de todas las organizaciones");
+
 			return new RoutesModel
 			{
 				ptgData = routes
 			};
+		}
+
+		public RoutesByRifModel? MapToRoutesByRifModel(string publicTransportGroupRif)
+		{
+			var ptgData = _supervision.GetAllDriverPublicTransportGroup(publicTransportGroupRif);
+
+			if (ptgData == null || ptgData.Count == 0)
+				return null;
+
+			var first = ptgData.First();
+
+			var model = new RoutesByRifModel
+			{
+				superRoute = new Superroute
+				{
+					superRouteId = first.PublicTransportGroupId,
+					name = first.PTGCompleteName,
+					rif = first.PublicTransportGroupRif
+				},
+				fleet = ptgData
+					.Select(x => new RouteFleet
+					{
+						busId = x.DriverId,
+						licensePlate = x.Plate,
+						unitName = string.Empty,
+						brand = x.Make,
+						model = x.Model,
+						year = x.Year,
+						owner = new RouteOwner
+						{
+							idCard = $"V-{x.DriverIdentityDocument.ToString()}" ,
+							firstName = x.DriverFullName
+						}
+					}).ToArray()
+			};
+
+			_security.AddLogbook(0, false, $"API GET Consulta de datos de la organizacion por RIF: {publicTransportGroupRif}");
+
+			return model;
 		}
 	}
 }

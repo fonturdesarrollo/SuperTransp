@@ -1068,14 +1068,14 @@ namespace SuperTransp.Core
 						addEditDelete = "Elimino";
 					}					
 
-					cmd.Parameters.AddWithValue("@SecurityUserId", userId);
-					cmd.Parameters.AddWithValue("@DeviceIP", deviceIP);
+					cmd.Parameters.AddWithValue("@SecurityUserId", userId == null ? 0 : userId);
+					cmd.Parameters.AddWithValue("@DeviceIP", !string.IsNullOrEmpty(deviceIP) ? deviceIP : "API");
 					cmd.Parameters.AddWithValue("@DeviceType", client.DeviceType);
 					cmd.Parameters.AddWithValue("@DeviceBrowser", client.Browser);
 					cmd.Parameters.AddWithValue("@DeviceOperatingSystem", client.OperatingSystem);
-					cmd.Parameters.AddWithValue("@UserFullName", userFullName);
-					cmd.Parameters.AddWithValue("@UserLogin", userLogin);
-					cmd.Parameters.AddWithValue("@UserState", userState);
+					cmd.Parameters.AddWithValue("@UserFullName", !string.IsNullOrEmpty(userFullName) ? userFullName : "API");
+					cmd.Parameters.AddWithValue("@UserLogin", !string.IsNullOrEmpty(userLogin) ? userLogin : "API");
+					cmd.Parameters.AddWithValue("@UserState", !string.IsNullOrEmpty(userState) ? userState : "API");
 					cmd.Parameters.AddWithValue("@ActionDescription",  $"{addEditDelete} {actionDescription}");
 
 					result = Convert.ToInt32(cmd.ExecuteScalar());					

@@ -59,4 +59,29 @@ public class ApiController : ControllerBase
 			return BadRequest(e.Message);
 		}
 	}
+
+	[HttpGet("super-route/{rif}")]
+	public IActionResult GetAllRoutesByRif(string rif)
+	{
+		try
+		{
+			if(string.IsNullOrEmpty(rif))
+			{
+				return BadRequest("El rif no puede estar vacio.");
+			}
+
+			var model = _apiCore.MapToRoutesByRifModel(rif);
+
+			if (model != null)
+			{
+				return Ok(model);
+			}
+
+			return BadRequest("No existen rutas registradas.");
+		}
+		catch (Exception e)
+		{
+			return BadRequest(e.Message);
+		}
+	}
 }

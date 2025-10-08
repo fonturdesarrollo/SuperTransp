@@ -9,7 +9,6 @@ namespace SuperTransp.Core
 	{
 		private readonly IConfiguration _configuration;
 		private readonly ISecurity _security;
-
 		public Driver(IConfiguration configuration, ISecurity security)
 		{
 			this._configuration = configuration;
