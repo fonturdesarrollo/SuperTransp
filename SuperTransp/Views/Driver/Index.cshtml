@@ -11,7 +11,17 @@
 	<link rel="stylesheet" href="~/assets/css/main.css" />
 	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
 	<link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
+	<style>
+		.logo-container {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
 
+			.logo-container img {
+				display: block;
+			}
+	</style>
 </head>
 <body class="is-preload">
 	@using (Html.BeginForm("AccesLogin", "Login", FormMethod.Post))
@@ -24,13 +34,18 @@
 			<header id="header">
 				<div class="inner">
 					<!-- Logo -->
-					<a href="#" class="logo">
-						<span><img src="~/images/Logo.png" width="100px" height="100px" alt="" /></span>
-						<br />
+					<div class="logo-container">
+						<!-- Logo izquierdo -->
+						<img src="~/images/Logo.png" width="100px" height="100px" alt="Logo principal" />
+
+						<!-- Logo derecho -->
+						<img src="~/images/super-transp-logo.png" width="150px" height="150px" alt="Logo SuperTransp" />
+					</div>
+					<div class="logo">
 						<span>@ViewBag.EmployeeName</span>
 						<br />
 						<span>Agregar socios a organización de transporte</span>
-					</a>
+					</div>
 				</div>
 
 				<!-- Nav -->
@@ -70,7 +85,8 @@
 			<!-- Footer -->
 			<footer id="footer">
 				<label style="text-align:center">
-					Sistema para la Supervisión de Organizaciones de Transporte &copy; @DateTime.Now.Year
+					Sistema para la Supervisión de Organizaciones de Transporte
+					<br>Diseñado y Desarrollado por la División de Desarrollo de Software - Gerencia de Tecnología de la Información &copy; @DateTime.Now.Year
 				</label>
 			</footer>
 		</div>

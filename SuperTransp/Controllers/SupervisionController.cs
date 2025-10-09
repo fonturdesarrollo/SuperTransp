@@ -937,6 +937,8 @@ namespace SuperTransp.Controllers
 
 				_supervision.AddOrEditSummary(model);
 
+				TempData["SuccessMessage"] = "Datos actualizados correctamente";
+
 				return RedirectToAction("EditSummary", new { supervisionSummaryId = model.SupervisionSummaryId });
 			}
 

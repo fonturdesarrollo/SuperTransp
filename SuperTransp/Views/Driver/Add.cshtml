@@ -55,6 +55,16 @@
             pointer-events: none;
             background-color: #eee;
         }
+
+        .logo-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+            .logo-container img {
+                display: block;
+            }
     </style>
 </head>
 <body class="is-preload">
@@ -67,12 +77,16 @@
             <!-- Header -->
             <header id="header">
                 <div class="inner">
-
                     <!-- Logo -->
-                    <a href="#" class="logo">
-                        <span><img src="~/images/Logo.png" width="100px" height="100px" alt="" /></span>
-                        <br />
-                        <span class="title">@ViewBag.EmployeeName</span>
+                    <div class="logo-container">
+                        <!-- Logo izquierdo -->
+                        <img src="~/images/Logo.png" width="100px" height="100px" alt="Logo principal" />
+
+                        <!-- Logo derecho -->
+                        <img src="~/images/super-transp-logo.png" width="150px" height="150px" alt="Logo SuperTransp" />
+                    </div>
+                    <div class="logo">
+                        <span>@ViewBag.EmployeeName</span>
                         <br />
                         @if (TempData["SuccessMessage"] != null)
                         {
@@ -84,7 +98,7 @@
                         {
                             <div id="successMessage" class="alert alert-success d-none"></div>
                         }
-                    </a>
+                    </div>
                 </div>
                 <!-- Nav -->
                 <nav>
@@ -130,7 +144,7 @@
                             </div>
                             <div class="col-6 col-12-xsmall">
                                 <strong>Nombre:</strong>
-                                @Html.TextBoxFor(x => x.DriverFullName, new { placeholder = "Nombre del socio", tabindex = "0", maxlength = "20" })
+                                @Html.TextBoxFor(x => x.DriverFullName, new { placeholder = "Nombre del socio", tabindex = "0", maxlength = "50" })
                             </div>
                             <div class="col-6">
                                 <strong>Sexo:</strong>

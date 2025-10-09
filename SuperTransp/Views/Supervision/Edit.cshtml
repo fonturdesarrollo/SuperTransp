@@ -42,6 +42,16 @@
 		.error-highlight {
 			border: 2px solid red;
 		}
+
+		.logo-container {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+
+			.logo-container img {
+				display: block;
+			}
 	</style>
 </head>
 <body class="is-preload">
@@ -57,11 +67,15 @@
 			<!-- Header -->
 			<header id="header">
 				<div class="inner">
-
 					<!-- Logo -->
-					<a href="#" class="logo">
-						<span><img src="~/images/Logo.png" width="100px" height="100px" alt="" /></span>
-						<br />
+					<div class="logo-container">
+						<!-- Logo izquierdo -->
+						<img src="~/images/Logo.png" width="100px" height="100px" alt="Logo principal" />
+
+						<!-- Logo derecho -->
+						<img src="~/images/super-transp-logo.png" width="150px" height="150px" alt="Logo SuperTransp" />
+					</div>
+					<div class="logo">
 						<span class="title">@ViewBag.EmployeeName</span>
 						<br />
 						@if (TempData["SuccessMessage"] != null)
@@ -70,7 +84,7 @@
 								@TempData["SuccessMessage"]
 							</div>
 						}
-					</a>
+					</div>
 				</div>
 				<!-- Nav -->
 				<nav>

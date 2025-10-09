@@ -99,7 +99,18 @@
             transform: rotate(360deg);
         }
 
-        }</style>
+        }
+
+        .logo-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+            .logo-container img {
+                display: block;
+            }
+    </style>
 </head>
 <body class="is-preload">
     @using (Html.BeginForm("AccesLogin", "Login", FormMethod.Post))
@@ -108,15 +119,20 @@
 
             <header id="header">
                 <div class="inner">
-                    <a href="#" class="logo">
-                        <span><img src="~/images/Logo.png" width="100px" height="100px" alt="" /></span>
-                        <br />
+                    <!-- Logo -->
+                    <div class="logo-container">
+                        <!-- Logo izquierdo -->
+                        <img src="~/images/Logo.png" width="100px" height="100px" alt="Logo principal" />
+
+                        <!-- Logo derecho -->
+                        <img src="~/images/super-transp-logo.png" width="150px" height="150px" alt="Logo SuperTransp" />
+                    </div>
+                    <div class="logo">
                         <span>@ViewBag.EmployeeName</span>
                         <br />
                         <span>Reportes</span>
-                    </a>
+                    </div>                    
                 </div>
-
                 <nav>
                     <ul>
                         <li><a href="#menu">Menu</a></li>
@@ -154,7 +170,7 @@
                                         }
                                         if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 21))
                                         {
-                                            <li>@Html.ActionLink("Resumenes de supervision", "SummaryList", "Reports")</li>
+                                            <li>@Html.ActionLink("Resúmenes de supervisión", "SummaryList", "Reports")</li>
                                         }
                                         if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 22))
                                         {
@@ -214,7 +230,8 @@
             </div>
             <footer id="footer">
                 <label style="text-align:center">
-                    Sistema para la Supervisión de Organizaciones de Transporte &copy; @DateTime.Now.Year
+                    Sistema para la Supervisión de Organizaciones de Transporte
+                    <br>Diseñado y Desarrollado por la División de Desarrollo de Software - Gerencia de Tecnología de la Información &copy; @DateTime.Now.Year
                 </label>
             </footer>
         </div>
