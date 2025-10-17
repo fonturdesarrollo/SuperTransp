@@ -342,6 +342,9 @@
 		// });
 
 		function isOkToSave() {
+			const dzInstance = Dropzone.forElement("#myDropzone");
+			const uploaded = dzInstance.getAcceptedFiles().filter(f => f.status === Dropzone.SUCCESS);
+
 			let firstInvalidField = null;
 			let message = "";
 
@@ -353,6 +356,11 @@
 			if ($("#SupervisionSummaryRemarks").val() == "" && !firstInvalidField) {
 				firstInvalidField = "#SupervisionSummaryRemarks";
 				message = "Debe colocar las observaciones";
+			}
+
+			if (uploaded.length == 0) {
+				firstInvalidField = "#myDropzone";
+				message = "Debe agregar alguna imagen o documento para poder actualizar";
 			}
 
 			if (firstInvalidField) {

@@ -851,18 +851,23 @@ namespace SuperTransp.Controllers
 				if (result != null) return result;
 
 				int supervisionSummaryId = 0;
+				int supervisionSummaryIdExisting = 0;
 				int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
 				int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
 
 				if (_security.IsTotalAccess(3) || securityGroupId == 1)
 				{
+					supervisionSummaryIdExisting = _supervision.IsSupervisionSummaryDoneByRIF(model.PublicTransportGroupRif);
+
 					model.Pictures = await SupervisionSummaryPictureUrlAsync(model.StateName, model.PublicTransportGroupRif);
+
+					model.SupervisionSummaryId = supervisionSummaryIdExisting;					
 
 					supervisionSummaryId = _supervision.AddOrEditSummary(model);
 
-					if (supervisionSummaryId > 0)
+					if (supervisionSummaryId > 0 || supervisionSummaryIdExisting > 0)
 					{
-						return RedirectToAction("SummaryList");
+						return RedirectToAction("PublicTransportGroupList");
 					}
 				}
 
@@ -918,7 +923,7 @@ namespace SuperTransp.Controllers
 			if (_security.IsTotalAccess(3) || securityGroupId == 1)
 			{
 				List<SupervisionSummaryPictures> pictures = new List<SupervisionSummaryPictures>();
-
+				// TODO FIX THIS
 				foreach (var key in form.Keys)
 				{
 					if (key.StartsWith("Pictures["))
@@ -939,7 +944,8 @@ namespace SuperTransp.Controllers
 
 				TempData["SuccessMessage"] = "Datos actualizados correctamente";
 
-				return RedirectToAction("EditSummary", new { supervisionSummaryId = model.SupervisionSummaryId });
+				//return RedirectToAction("EditSummary", new { supervisionSummaryId = model.SupervisionSummaryId });
+				return RedirectToAction("PublicTransportGroupList");
 			}
 
 			return RedirectToAction("Login", "Security");

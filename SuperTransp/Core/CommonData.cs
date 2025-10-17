@@ -278,7 +278,7 @@ namespace SuperTransp.Core
 		{
 			List<CommonDataViewModel> capacity = new List<CommonDataViewModel>();
 
-			for (int i = 5; i <= 1200; i++)
+			for (int i = 5; i <= 250; i++)
 			{
 				capacity.Add(new CommonDataViewModel { TankCapacityId = i, TankCapacity = i });
 			}

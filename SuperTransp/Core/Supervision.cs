@@ -915,6 +915,8 @@ namespace SuperTransp.Core
 		public int AddOrEditSummary(SupervisionSummaryViewModel model)
 		{
 			int summaryId = 0;
+			int result = 0;
+
 			try
 			{
 				using (SqlConnection sqlConnection = GetConnection())
@@ -938,8 +940,10 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@SupervisionSummaryRemarks", model.SupervisionSummaryRemarks);
 						cmd.Parameters.AddWithValue("@SupervisionStatusId", model.SupervisionStatusId);
 						cmd.Parameters.AddWithValue("@SecurityUserId", model.SecurityUserId);
+						
+						result = Convert.ToInt32(cmd.ExecuteScalar());
 
-						summaryId = Convert.ToInt32(cmd.ExecuteScalar());
+						summaryId = model.SupervisionSummaryId == 0 ? result : model.SupervisionSummaryId;
 
 						// Add pictures process
 						if(model.SupervisionSummaryId == 0)
@@ -1140,9 +1144,6 @@ namespace SuperTransp.Core
 						sqlConnection.Open();
 					}
 
-					SupervisionSummaryViewModel summary = new();
-					List<SupervisionSummaryPictures> images = new List<SupervisionSummaryPictures>();
-
 					SqlCommand cmd = new("SELECT * FROM SuperTransp_SupervisionSummaryDetail WHERE PublicTransportGroupId = @PublicTransportGroupId", sqlConnection);
 					cmd.Parameters.AddWithValue("@PublicTransportGroupId", publicTransportGroupId);
 
@@ -1150,6 +1151,37 @@ namespace SuperTransp.Core
 					{
 						return dr.HasRows;
 					}
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener los transportistas {ex.Message}", ex);
+			}
+		}
+
+		public int IsSupervisionSummaryDoneByRIF(string publicTransportGroupRif)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_SupervisionSummaryDetail WHERE PublicTransportGroupRif = @PublicTransportGroupRif", sqlConnection);
+					cmd.Parameters.AddWithValue("@PublicTransportGroupRif", publicTransportGroupRif);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							return (int)dr["SupervisionSummaryId"];
+						}
+					}
+
+					return 0;
 				}
 			}
 			catch (Exception ex)

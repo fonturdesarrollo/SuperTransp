@@ -125,6 +125,7 @@ namespace SuperTransp.Core
 			public bool IsFinishedSupervisionRoundByStateMonthAndYear(int stateId, int month, int year);
 			public bool IsActiveSupervisionRoundByStateId(int stateId);
 			public bool IsSupervisionSummaryDoneByPtgId(int publicTransportGroupId);
+			public int IsSupervisionSummaryDoneByRIF(string publicTransportGroupRif);
 			public bool IsUserSupervisingPublicTransportGroup(int securityUserId, int publicTransportGroupId);
 			public bool DeletePicturesByPTGIdAndPartnerNumber(int publicTransportGroupId, int partnerNumber);
 			public List<SupervisionPictures> GetPicturesByPTGIdAndDriverPublicTransportGroupId(int publicTransportGroupId, int driverPublicTransportGroupId);
