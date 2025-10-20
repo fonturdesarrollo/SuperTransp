@@ -158,6 +158,7 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@SupervisionId", model.SupervisionId);
 						cmd.Parameters.AddWithValue("@DriverId", model.DriverPublicTransportGroupId);
 						cmd.Parameters.AddWithValue("@DriverWithVehicle", model.DriverWithVehicle);
+						cmd.Parameters.AddWithValue("@InPerson", model.InPerson);
 						cmd.Parameters.AddWithValue("@SecurityUserId", model.SecurityUserId);
 						cmd.Parameters.AddWithValue("@SupervisionRoundId", round.SupervisionRoundId);
 

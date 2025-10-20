@@ -1,11 +1,13 @@
-﻿using Microsoft.AspNetCore.HttpOverrides;
+﻿using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using SuperTransp.Core;
 using SuperTransp.Middleware;
-using static SuperTransp.Core.Interfaces;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using static SuperTransp.Core.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,8 +47,13 @@ builder.Services.AddSession(options =>
 	options.Cookie.IsEssential = true;
 });
 
+builder.Services.Configure<FormOptions>(options =>
+{
+	options.MultipartBodyLengthLimit = 20_000_000;
+});
+
 builder.Services.AddTransient<ISecurity, Security>();
-builder.Services.AddTransient<IGeography, Geography>();
+builder.Services.AddTransient<IGeography, SuperTransp.Core.Geography>();
 builder.Services.AddTransient<IPublicTransportGroup, PublicTransportGroup>();
 builder.Services.AddTransient<IDesignation, Designation>();
 builder.Services.AddTransient<IMode, Mode>();

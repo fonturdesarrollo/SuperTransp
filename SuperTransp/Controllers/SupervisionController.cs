@@ -288,11 +288,14 @@ namespace SuperTransp.Controllers
 						var driver = _driver.GetById(model.DriverId);
 						model.StateId = driver.StateId;
 
-						if (!model.DriverWithVehicle)
+						if (!model.DriverWithVehicle || !model.InPerson)
 						{
+							model.InPerson = !model.DriverWithVehicle ? false : model.InPerson;
+
 							supervisionId = _supervision.AddSimple(model);
+
 							var ftpBaseUrl = _configuration["FtpSettings:BaseUrl"];
-							var folderName = $"{model.PublicTransportGroupRif}-{model.DriverId}-supervision";
+							var folderName = $"{model.PublicTransportGroupRif}-{model.DriverPublicTransportGroupId}-supervision";
 							string ftpFolderPath = Path.Combine(ftpBaseUrl, model.StateName.ToUpper().Trim(), folderName).Replace("\\", "/");
 
 							await _ftpService.DeleteFilesInFolderAsync(ftpFolderPath);
@@ -466,6 +469,8 @@ namespace SuperTransp.Controllers
 		}
 
 		[HttpPost]
+		[RequestSizeLimit(20_000_000)]
+		[RequestFormLimits(MultipartBodyLengthLimit = 20_000_000)]
 		public async Task<IActionResult> SaveFiles(IFormFile file, string stateName, string driverIdentityDocument, string partnerNumber, string publicTransportGroupRif, string driverId, int driverPublicTransportGroupId)
 		{
 			if (file?.Length > 0 &&

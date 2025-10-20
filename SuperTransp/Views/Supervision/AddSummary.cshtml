@@ -306,6 +306,8 @@
 			}
 		});
 
+		dropzone.hiddenFileInput.removeAttribute("multiple");
+
 		$("body").on("click", "#saveRequest", function (event) {
 			event.preventDefault();
 

@@ -54,6 +54,8 @@
 		}
 	});
 
+	dropzone.hiddenFileInput.removeAttribute("multiple");
+
 	$("#btnDeleteImages").on("click", function () {
 		if (confirm("¿Está seguro de que desea eliminar todas las imágenes?")) {
 			$.ajax({
@@ -372,14 +374,23 @@
 		});
 
 		if ($('#DriverWithVehicle').val() == "True") {
+			$('#additionalFieldsX').css({ visibility: 'visible', opacity: '1', height: 'auto', overflow: 'visible' });
 			$('#additionalFields').css({ visibility: 'visible', opacity: '1', height: 'auto', overflow: 'visible' });
+		} else {
+			if ($('#InPerson').val() === "False") {
+				$('#InPerson').val("");
+			}
+		}
+
+		if ($('#InPerson').val() == "False") {
+			$('#additionalFields').css({ opacity: '0', visibility: 'hidden', height: '0', overflow: 'hidden' });
 		}
 
 		$('#DriverWithVehicle').change(function (event) {
 			if ($(this).val() === "True") {
-				$('#additionalFields').css({ visibility: 'visible', opacity: '1', height: 'auto', overflow: 'visible' });
+				$('#additionalFieldsX').css({ visibility: 'visible', opacity: '1', height: 'auto', overflow: 'visible' });
 			} else if ($(this).val() === "False") {
-				$('#additionalFields').css({ opacity: '0', visibility: 'hidden', height: '0', overflow: 'hidden' });
+				$('#additionalFieldsX').css({ opacity: '0', visibility: 'hidden', height: '0', overflow: 'hidden' });
 				if (!data.isTotalAccess) {
 					alert("No tiene permiso de modificar registros.");
 				} else {
@@ -391,6 +402,33 @@
 				}
 			}
 		});
+
+
+		$('#InPerson').change(function (event) {
+			if ($(this).val() === "True") {
+				$('#additionalFields').css({ visibility: 'visible', opacity: '1', height: 'auto', overflow: 'visible' });
+			} else if ($(this).val() === "False") {
+				$('#additionalFields').css({ opacity: '0', visibility: 'hidden', height: '0', overflow: 'hidden' });
+				if (!data.isTotalAccess) {
+					alert("No tiene permiso de modificar registros.");
+				} else {
+					if (confirm("¿Está seguro de que desea actualizar los registros?")) {
+						$(this).closest("form")[0].submit();
+					} else {
+						$('#InPerson').val("");
+					}
+				}
+			}
+		});
+
+		if ($('#WorkingVehicle').val() === "False") {
+			if ($('#FailureTypeId').val() === "1") {
+				$('#WorkingVehicle').val("True");
+				$('#FailureTypeId').val("1").prop("disabled", true);
+			}
+		} else {
+			$('#FailureTypeId').val("1").prop("disabled", true);
+		}
 
 		$('#WorkingVehicle').change(function (event) {
 			if ($(this).val() === "False") {

@@ -159,8 +159,8 @@
 					<p><strong>Nombre:</strong> <span id="modalDriver"></span></p>
 					<p><strong># Socio:</strong> <span id="modalPartner"></span></p>
 					<p><strong>¿Tiene vehículo:</strong> <span id="modalDriverWithVehicle"></span></p>
+					<p><strong>¿Socio presente?:</strong> <span id="modalDriverInPerson"></span></p>
 					<div class="modal-vehicle-data">
-						<p><strong>¿Socio presente?:</strong> <span id="modalDriverInPerson"></span></p>
 						<p><strong>¿Vehículo en funcionamiento?:</strong> <span id="modalDriverWithWorkingVehicle"></span></p>
 						<p><strong>Placa:</strong> <span id="modalVehiclePlate"></span></p>
 						<p><strong>Año:</strong> <span id="modalVehicleYear"></span></p>
@@ -358,13 +358,18 @@
 			$('#modalDriver').text($(this).data('driver'));
 			$('#modalPartner').text($(this).data('partner'));
 
-			var tt = $(this).data('driver-with-vehicle');
 			if ($(this).data('driver-with-vehicle') == true) {
 				$('#modalDriverWithVehicle').text('Sí')
-				$(".modal-vehicle-data").show();
-				$(".modal-image").show();
+				if($(this).data('driver-in-person') == false) {
+					$(".modal-vehicle-data").hide();
+					$(".modal-image").hide();
+				}else{
+					$(".modal-vehicle-data").show();
+					$(".modal-image").show();
+				}
 			} else {
 				$('#modalDriverWithVehicle').text('No')
+				$('#modalDriverInPerson').text('No')
 				$(".modal-vehicle-data").hide();
 				$(".modal-image").hide();
 			}
