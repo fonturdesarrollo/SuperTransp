@@ -175,7 +175,7 @@ namespace SuperTransp.Core
 						}
 					}
 
-					return ptg.ToList();
+					return ptg.OrderBy(st => st.StateName).ToList();
 				}
 			}
 			catch (Exception ex)
@@ -218,7 +218,7 @@ namespace SuperTransp.Core
 						}
 					}
 
-					return ptg.ToList();
+					return ptg.OrderBy(st => st.StateName).ToList();
 				}
 			}
 			catch (Exception ex)

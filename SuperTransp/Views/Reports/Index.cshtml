@@ -33,6 +33,27 @@
             width: 50%;
         }
 
+        .modal-x {
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content-x {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 400px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border-radius: 6px;
+        }
+
         .close {
             color: #aaa;
             float: right;
@@ -113,8 +134,6 @@
     </style>
 </head>
 <body class="is-preload">
-    @using (Html.BeginForm("AccesLogin", "Login", FormMethod.Post))
-    {
         <div id="wrapper">
 
             <header id="header">
@@ -149,6 +168,29 @@
             </nav>
 
             <div id="main">
+
+                @* ******* Maintenance Message ************ *@x
+                @if (ViewBag.MaintenanceMessage != null)
+                {
+                    <div id="modalMaintenanceMessage" class="modal-x" style="display:none;">
+                        <div class="modal-content-x">
+                            <span class="close" onclick="$('#modalMaintenanceMessage').fadeOut();">&times;</span>
+                            <h3>Aviso del sistema</h3>
+                            <p>@ViewBag.MaintenanceMessage</p>
+                            <div style="text-align:right;">
+                                <button onclick="$('#modalMaintenanceMessage').fadeOut();">Entendido</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <script>
+                        document.addEventListener("DOMContentLoaded", function () {
+                            $("#modalMaintenanceMessage").fadeIn();
+                        });
+                    </script>
+                }
+                @* ******* Maintenance Message ************ *@
+
                 <div class="inner">
                     <br />
                     <section>
@@ -234,8 +276,7 @@
                     <br>Diseñado y Desarrollado por la División de Desarrollo de Software - Gerencia de Tecnología de la Información &copy; @DateTime.Now.Year
                 </label>
             </footer>
-        </div>
-    }
+        </div>    
 
     <div id="modalForm" class="modal">
         <div class="modal-content">

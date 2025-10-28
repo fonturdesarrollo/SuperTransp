@@ -1,6 +1,7 @@
 ﻿using Azure.Core;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Options;
 using QRCoder;
 using SuperTransp.Core;
 using SuperTransp.Models;
@@ -25,8 +26,10 @@ namespace SuperTransp.Controllers
 		private IPublicTransportGroup _publicTransportGroup;
 		private IDriver _driver;
 		private IConfiguration _configuration;
+		private readonly IOptions<MaintenanceSettings> _settings;
 
-		public PublicTransportGroupController(IPublicTransportGroup publicTransportGroup, ISecurity security, IGeography geography, IDesignation designation, IUnion union, IMode mode, IDriver driver, IConfiguration configuration)
+		public PublicTransportGroupController(IPublicTransportGroup publicTransportGroup, ISecurity security, IGeography geography, IDesignation designation, 
+			IUnion union, IMode mode, IDriver driver, IConfiguration configuration, IOptions<MaintenanceSettings> settings)
 		{
 			_publicTransportGroup = publicTransportGroup;
 			_security = security;
@@ -36,6 +39,7 @@ namespace SuperTransp.Controllers
 			_mode = mode;
 			_driver = driver;
 			_configuration = configuration;
+			_settings = settings;
 		}
 
 		public IActionResult Index()
@@ -426,6 +430,11 @@ namespace SuperTransp.Controllers
 			ViewBag.EmployeeName = $"{HttpContext.Session.GetString("FullName")} ({HttpContext.Session.GetString("SecurityGroupName")})";
 			ViewBag.SecurityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 			ViewBag.SystemVersion = HttpContext.Session.GetString("SystemVersion");
+
+			if (_settings.Value.IsActive)
+			{
+				ViewBag.MaintenanceMessage = _settings.Value.Message;
+			}
 		}
 
 		private IActionResult? CheckSessionAndPermission(int requiredModuleId)

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using SuperTransp.Core;
 using SuperTransp.Middleware;
+using SuperTransp.Models;
 using System.Text;
 using static SuperTransp.Core.Interfaces;
 
@@ -51,6 +52,9 @@ builder.Services.Configure<FormOptions>(options =>
 {
 	options.MultipartBodyLengthLimit = 20_000_000;
 });
+
+builder.Services.Configure<MaintenanceSettings>(
+	builder.Configuration.GetSection("Maintenance"));
 
 builder.Services.AddTransient<ISecurity, Security>();
 builder.Services.AddTransient<IGeography, SuperTransp.Core.Geography>();

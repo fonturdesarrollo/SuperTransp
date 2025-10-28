@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Options;
 using QRCoder;
 using SuperTransp.Core;
 using SuperTransp.Models;
@@ -19,8 +20,10 @@ namespace SuperTransp.Controllers
 		private readonly IConfiguration _configuration;
 		private readonly ICommonData _commonData;
 		private readonly IFtpService _ftpService;
+		private readonly IOptions<MaintenanceSettings> _settings;
 
-		public DriverController(IDriver driver, IPublicTransportGroup publicTransportGroup, ISecurity security, IGeography geography, IConfiguration configuration, ICommonData commonData, IFtpService ftpService)
+		public DriverController(IDriver driver, IPublicTransportGroup publicTransportGroup, ISecurity security, IGeography geography, 
+			IConfiguration configuration, ICommonData commonData, IFtpService ftpService, IOptions<MaintenanceSettings> settings)
 		{
 			_driver = driver;
 			_publicTransportGroup = publicTransportGroup;
@@ -29,6 +32,7 @@ namespace SuperTransp.Controllers
 			_configuration = configuration;
 			_commonData = commonData;
 			_ftpService = ftpService;
+			_settings = settings;
 		}
 
 		public IActionResult Index()
@@ -38,6 +42,11 @@ namespace SuperTransp.Controllers
 
 			ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 			ViewBag.SecurityGroupId = (int)HttpContext.Session.GetInt32("SecurityGroupId");
+
+			if (_settings.Value.IsActive)
+			{
+				ViewBag.MaintenanceMessage = _settings.Value.Message;
+			}
 
 			return View();
 		}

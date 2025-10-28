@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Options;
 using SuperTransp.Core;
 using SuperTransp.Models;
 using System.Net;
@@ -22,8 +23,10 @@ namespace SuperTransp.Controllers
 		private readonly IGeography _geography;
 		private readonly IFtpService _ftpService;
 		private readonly IDriver _driver;
+		private readonly IOptions<MaintenanceSettings> _settings;
 
-		public SupervisionController(ISupervision supervision, ISecurity security, IPublicTransportGroup publicTransportGroup, ICommonData commonData, IConfiguration configuration, IGeography geography, IFtpService ftpService, IDriver driver)
+		public SupervisionController(ISupervision supervision, ISecurity security, IPublicTransportGroup publicTransportGroup, 
+			ICommonData commonData, IConfiguration configuration, IGeography geography, IFtpService ftpService, IDriver driver, IOptions<MaintenanceSettings> settings)
 		{
 			_supervision = supervision;
 			_security = security;
@@ -33,6 +36,7 @@ namespace SuperTransp.Controllers
 			_geography = geography;
 			_ftpService = ftpService;
 			_driver = driver;
+			_settings = settings;
 		}
 
 		public IActionResult Index()
@@ -83,6 +87,11 @@ namespace SuperTransp.Controllers
 				}
 
 				ViewBag.RoundMessage = ViewBag.RoundActive  ? $"Vuelta {ViewBag.CurrentRoundStartDate}" : "No existe vuelta de supervisión abierta";
+			}
+
+			if (_settings.Value.IsActive)
+			{
+				ViewBag.MaintenanceMessage = _settings.Value.Message;
 			}
 
 			return View();
@@ -733,19 +742,20 @@ namespace SuperTransp.Controllers
 					}
 				}
 
-				var plateRule = _commonData.GetCommonDataValueByName("ValidPlateRule");
+				//Esto esta en espera de que se avance mas con la supervision 22-10-2025
+				//var plateRule = _commonData.GetCommonDataValueByName("ValidPlateRule");
 
-				if (plateRule != null)
-				{
-					string regexPlatePattern = plateRule.CommonDataValue;
+				//if (plateRule != null)
+				//{
+				//	string regexPlatePattern = plateRule.CommonDataValue;
 
-					Regex regexPlate = new Regex(regexPlatePattern);
+				//	Regex regexPlate = new Regex(regexPlatePattern);
 
-					if (!regexPlate.IsMatch(paramValue2))
-					{
-						return Json($"El número de placa {paramValue2} debe tener un formato válido.");
-					}
-				}
+				//	if (!regexPlate.IsMatch(paramValue2))
+				//	{
+				//		return Json($"El número de placa {paramValue2} debe tener un formato válido.");
+				//	}
+				//}
 
 				return Json("OK");
 			}

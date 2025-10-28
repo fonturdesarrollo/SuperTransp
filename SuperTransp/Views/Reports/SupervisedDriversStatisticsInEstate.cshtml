@@ -258,9 +258,9 @@
                             show: true,
                             total: {
                                 show: true,
-                                label: 'Total Sup.',
+                                label: 'Total Operativos',
                                 formatter: function () {
-                                    return (item.TotalSupervisedDrivers ?? 0).toLocaleString('de-DE');
+                                    return (item.TotalWorkingVehicles ?? 0).toLocaleString('de-DE');
                                 }
                             }
                         }
@@ -372,7 +372,7 @@
                     <label for="${ids.working}">Operativos</label>
                 `;
                 controlsDiv.innerHTML += `
-                    <input type="checkbox" id="${ids.notWorking}">
+                    <input type="checkbox" id="${ids.notWorking}" checked>
                     <label for="${ids.notWorking}">No Operativos</label>
                 `;
                 controlsDiv.innerHTML += `

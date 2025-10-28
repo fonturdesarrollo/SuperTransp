@@ -3,6 +3,7 @@ using DocumentFormat.OpenXml.EMMA;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Options;
 using SuperTransp.Core;
 using SuperTransp.Models;
 using System.ComponentModel;
@@ -18,8 +19,10 @@ namespace SuperTransp.Controllers
 		private readonly IReport _report;
 		private readonly IGeography _geography;
 		private readonly IExcelExporter _excelExporter;
+		private readonly IOptions<MaintenanceSettings> _settings;
 
-		public ReportsController(ISupervision supervision, IPublicTransportGroup publicTransportGroup, ISecurity security, IReport report, IGeography geography, IExcelExporter excelExporter)
+		public ReportsController(ISupervision supervision, IPublicTransportGroup publicTransportGroup, ISecurity security, 
+			IReport report, IGeography geography, IExcelExporter excelExporter, IOptions<MaintenanceSettings> settings)
 		{
 			_security = security;
 			_supervision = supervision;
@@ -27,6 +30,7 @@ namespace SuperTransp.Controllers
 			_report = report;
 			_geography = geography;
 			_excelExporter = excelExporter;
+			_settings = settings;
 		}
 
 		public IActionResult Index()
@@ -93,6 +97,11 @@ namespace SuperTransp.Controllers
 				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 				ViewBag.SecurityGroupId = (int)HttpContext.Session.GetInt32("SecurityGroupId");
 				ViewBag.UserStateId = (int)stateId;
+
+				if (_settings.Value.IsActive)
+				{
+					ViewBag.MaintenanceMessage = _settings.Value.Message;
+				}
 
 				return View();
 			}

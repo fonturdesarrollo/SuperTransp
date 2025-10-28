@@ -70,6 +70,16 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@SecurityUserId", model.SecurityUserId);
 						cmd.Parameters.AddWithValue("@SupervisionStatus", model.SupervisionStatus);
 						cmd.Parameters.AddWithValue("@SupervisionRoundId", round.SupervisionRoundId);
+						cmd.Parameters.AddWithValue("@SupervisionRoundStartDate", round.SupervisionRoundStartDate);
+						cmd.Parameters.AddWithValue("@SupervisionRoundStartDescription", round.SupervisionRoundStartDescription);
+
+						//Nullable parameters
+						var param = cmd.Parameters.Add("@SupervisionRoundEndDate", SqlDbType.SmallDateTime);
+						param.Value = round.SupervisionRoundEndDate ?? (object)DBNull.Value;
+						param = cmd.Parameters.Add("@SupervisionRoundEndDescription", SqlDbType.VarChar);
+						param.Value = round.SupervisionRoundEndDescription ?? (object)DBNull.Value;
+
+						cmd.Parameters.AddWithValue("@SupervisionRoundStatus", round.SupervisionRoundStatus);
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
 
@@ -161,6 +171,16 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@InPerson", model.InPerson);
 						cmd.Parameters.AddWithValue("@SecurityUserId", model.SecurityUserId);
 						cmd.Parameters.AddWithValue("@SupervisionRoundId", round.SupervisionRoundId);
+						cmd.Parameters.AddWithValue("@SupervisionRoundStartDate", round.SupervisionRoundStartDate);
+						cmd.Parameters.AddWithValue("@SupervisionRoundStartDescription", round.SupervisionRoundStartDescription);
+
+						//Nullable parameters
+						var param = cmd.Parameters.Add("@SupervisionRoundEndDate", SqlDbType.SmallDateTime);
+						param.Value = round.SupervisionRoundEndDate ?? (object)DBNull.Value;
+						param = cmd.Parameters.Add("@SupervisionRoundEndDescription", SqlDbType.VarChar);
+						param.Value = round.SupervisionRoundEndDescription ?? (object)DBNull.Value;
+
+						cmd.Parameters.AddWithValue("@SupervisionRoundStatus", round.SupervisionRoundStatus);
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
 
