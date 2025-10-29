@@ -37,7 +37,7 @@ namespace SuperTransp.Core
 			{
 				if(model.DriverId > 0 && model.DriverPublicTransportGroupId > 0)
 				{
-					driverValues = GetById(model.DriverId);
+					driverValues = GetById(model.DriverId, model.PublicTransportGroupId);
 
 					if (driverValues != null) 
 					{
@@ -81,7 +81,7 @@ namespace SuperTransp.Core
 
 						if(!isEditing)
 						{
-							driverValues = GetById(result);
+							driverValues = GetById(result, model.PublicTransportGroupId);
 
 							_security.AddLogbook(model.DriverId, false, 
 								$" Socio ->" +
@@ -95,7 +95,7 @@ namespace SuperTransp.Core
 						}
 						else
 						{
-							driverValues = GetById(model.DriverId);
+							driverValues = GetById(model.DriverId, model.PublicTransportGroupId);
 
 							_security.AddLogbook(model.DriverId, false,
 								$" Socio ->" +
@@ -297,7 +297,7 @@ namespace SuperTransp.Core
 			}
 		}
 
-		public DriverViewModel GetById(int driverId)
+		public DriverViewModel GetById(int driverId, int publicTransportGroupId)
 		{
 			try
 			{
@@ -309,8 +309,9 @@ namespace SuperTransp.Core
 					}
 
 					DriverViewModel driver = new();
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_DriversDetail WHERE DriverId = @DriverId", sqlConnection);
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_DriversDetail WHERE DriverId = @DriverId AND PublicTransportGroupId = @PublicTransportGroupId", sqlConnection);
 					cmd.Parameters.AddWithValue("@DriverId", driverId);
+					cmd.Parameters.AddWithValue("@PublicTransportGroupId", publicTransportGroupId);
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
 					{

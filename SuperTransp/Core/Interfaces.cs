@@ -97,7 +97,7 @@ namespace SuperTransp.Core
 			public bool RegisteredDocumentId(int driverIdentityDocument, int publicTransportGroupId);
 			public bool RegisteredPhone(string driverPhone, int publicTransportGroupId);
 			public bool RegisteredPartnerNumber(int partnerNumber, int publicTransportGroupId);
-			public DriverViewModel GetById(int driverId);
+			public DriverViewModel GetById(int driverId, int publicTransportGroupId);
 			public DriverViewModel GetPartnerById(int driverPublicTransportGroupId);
 			public bool DeletePartner(int driverId, int driverPublicTransportGroupId, int partnerNumber);
 			public int TotalDriversByPublicTransportGroupId(int publicTransportGroupId);

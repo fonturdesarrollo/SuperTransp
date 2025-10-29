@@ -10,9 +10,9 @@ namespace SuperTransp.Controllers
 	{
 		private readonly ILogger<HomeController> _logger;
 		private readonly ISecurity _security;
-		private readonly IOptions<MaintenanceSettings> _settings;
+		private readonly IOptionsSnapshot<MaintenanceSettings> _settings;
 
-		public HomeController(ILogger<HomeController> logger, ISecurity security, IOptions<MaintenanceSettings> settings)
+		public HomeController(ILogger<HomeController> logger, ISecurity security, IOptionsSnapshot<MaintenanceSettings> settings)
 		{
 			_logger = logger;
 			_security = security;

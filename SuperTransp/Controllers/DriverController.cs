@@ -20,10 +20,10 @@ namespace SuperTransp.Controllers
 		private readonly IConfiguration _configuration;
 		private readonly ICommonData _commonData;
 		private readonly IFtpService _ftpService;
-		private readonly IOptions<MaintenanceSettings> _settings;
+		private readonly IOptionsSnapshot<MaintenanceSettings> _settings;
 
 		public DriverController(IDriver driver, IPublicTransportGroup publicTransportGroup, ISecurity security, IGeography geography, 
-			IConfiguration configuration, ICommonData commonData, IFtpService ftpService, IOptions<MaintenanceSettings> settings)
+			IConfiguration configuration, ICommonData commonData, IFtpService ftpService, IOptionsSnapshot<MaintenanceSettings> settings)
 		{
 			_driver = driver;
 			_publicTransportGroup = publicTransportGroup;

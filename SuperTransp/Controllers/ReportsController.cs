@@ -19,10 +19,10 @@ namespace SuperTransp.Controllers
 		private readonly IReport _report;
 		private readonly IGeography _geography;
 		private readonly IExcelExporter _excelExporter;
-		private readonly IOptions<MaintenanceSettings> _settings;
+		private readonly IOptionsSnapshot<MaintenanceSettings> _settings;
 
 		public ReportsController(ISupervision supervision, IPublicTransportGroup publicTransportGroup, ISecurity security, 
-			IReport report, IGeography geography, IExcelExporter excelExporter, IOptions<MaintenanceSettings> settings)
+			IReport report, IGeography geography, IExcelExporter excelExporter, IOptionsSnapshot<MaintenanceSettings> settings)
 		{
 			_security = security;
 			_supervision = supervision;

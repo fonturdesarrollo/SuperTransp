@@ -56,6 +56,10 @@ builder.Services.Configure<FormOptions>(options =>
 builder.Services.Configure<MaintenanceSettings>(
 	builder.Configuration.GetSection("Maintenance"));
 
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true);
+
 builder.Services.AddTransient<ISecurity, Security>();
 builder.Services.AddTransient<IGeography, SuperTransp.Core.Geography>();
 builder.Services.AddTransient<IPublicTransportGroup, PublicTransportGroup>();

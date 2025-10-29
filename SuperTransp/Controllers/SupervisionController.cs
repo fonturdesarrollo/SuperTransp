@@ -23,10 +23,10 @@ namespace SuperTransp.Controllers
 		private readonly IGeography _geography;
 		private readonly IFtpService _ftpService;
 		private readonly IDriver _driver;
-		private readonly IOptions<MaintenanceSettings> _settings;
+		private readonly IOptionsSnapshot<MaintenanceSettings> _settings;
 
 		public SupervisionController(ISupervision supervision, ISecurity security, IPublicTransportGroup publicTransportGroup, 
-			ICommonData commonData, IConfiguration configuration, IGeography geography, IFtpService ftpService, IDriver driver, IOptions<MaintenanceSettings> settings)
+			ICommonData commonData, IConfiguration configuration, IGeography geography, IFtpService ftpService, IDriver driver, IOptionsSnapshot<MaintenanceSettings> settings)
 		{
 			_supervision = supervision;
 			_security = security;
@@ -192,7 +192,7 @@ namespace SuperTransp.Controllers
 
 				int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
 				int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
-				var driver = _driver.GetById(driverId);
+				var driver = _driver.GetById(driverId, publicTransportGroupId);
 
 				ViewBag.IsTotalAccess = false;
 
@@ -294,7 +294,7 @@ namespace SuperTransp.Controllers
 					if (_security.IsTotalAccess(3) || securityGroupId == 1)
 					{
 						int supervisionId = 0;
-						var driver = _driver.GetById(model.DriverId);
+						var driver = _driver.GetById(model.DriverId, model.PublicTransportGroupId);
 						model.StateId = driver.StateId;
 
 						if (!model.DriverWithVehicle || !model.InPerson)
@@ -364,7 +364,7 @@ namespace SuperTransp.Controllers
 
 				int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
 				int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
-				var driver = _driver.GetById(driverId);
+				var driver = _driver.GetById(driverId, publicTransportGroupId);
 				ViewBag.IsTotalAccess = false;
 
 				if (securityGroupId != null && _security.GroupHasAccessToModule((int)securityGroupId,3) || securityGroupId == 1)

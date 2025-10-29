@@ -26,10 +26,10 @@ namespace SuperTransp.Controllers
 		private IPublicTransportGroup _publicTransportGroup;
 		private IDriver _driver;
 		private IConfiguration _configuration;
-		private readonly IOptions<MaintenanceSettings> _settings;
+		private readonly IOptionsSnapshot<MaintenanceSettings> _settings;
 
 		public PublicTransportGroupController(IPublicTransportGroup publicTransportGroup, ISecurity security, IGeography geography, IDesignation designation, 
-			IUnion union, IMode mode, IDriver driver, IConfiguration configuration, IOptions<MaintenanceSettings> settings)
+			IUnion union, IMode mode, IDriver driver, IConfiguration configuration, IOptionsSnapshot<MaintenanceSettings> settings)
 		{
 			_publicTransportGroup = publicTransportGroup;
 			_security = security;
