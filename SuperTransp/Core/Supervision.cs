@@ -184,7 +184,7 @@ namespace SuperTransp.Core
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
 
-						var driver = _driver.GetById(model.DriverId, model.PublicTransportGroupId);
+						var driver = _driver.GetByDriverPublicTransportGroupId(model.DriverPublicTransportGroupId);
 
 						if(driver != null)
 						{

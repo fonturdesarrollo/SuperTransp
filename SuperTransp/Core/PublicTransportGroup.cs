@@ -213,7 +213,8 @@ namespace SuperTransp.Core
 					}
 
 					List<PublicTransportGroupViewModel> ptg = new();
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail", sqlConnection);
+					//SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail", sqlConnection);
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetailNoUser", sqlConnection);
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
 					{
@@ -267,7 +268,9 @@ namespace SuperTransp.Core
 					}
 
 					List<PublicTransportGroupViewModel> ptg = new();
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail WHERE StateId = @StateId", sqlConnection);
+					//Se comentó debido a que duplica si varios usuarios modifican una supervision
+					//SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail WHERE StateId = @StateId", sqlConnection);
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetailNoUser WHERE StateId = @StateId", sqlConnection);
 					cmd.Parameters.AddWithValue("@StateId", stateId);
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
@@ -430,7 +433,8 @@ namespace SuperTransp.Core
 					//ESTO PERMITE QUE SOLO LAS ORGANIZACIONES CON SOCIOS IGUALES A CUPOS SEAN MOSTRADOS EN LA LISTA, SE OMITE ESTA VALIDACION PORQUE 
 					//EXISTEN ORGANIZACIONES CON CUPOS VACIOS QUE DEDEN SUPERVISARSE
 					//SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail WHERE StateId = @StateId AND TotalSupervisedDrivers = Partners AND SupervisionSummaryId = 0", sqlConnection);
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail WHERE StateId = @StateId AND SupervisionSummaryId = 0", sqlConnection);
+					//SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail WHERE StateId = @StateId AND SupervisionSummaryId = 0", sqlConnection);
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetailNoUser WHERE StateId = @StateId AND SupervisionSummaryId = 0", sqlConnection);
 					cmd.Parameters.AddWithValue("@StateId", stateId);
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
@@ -461,8 +465,8 @@ namespace SuperTransp.Core
 								TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"],
 								PublicTransportGroupGUID = (string)dr["PublicTransportGroupGUID"],
 								SupervisionSummaryId = (int)dr["SupervisionSummaryId"],
-								UserFullName = (string)dr["UserFullName"],
-								SecurityUserId = (int)dr["SecurityUserId"],
+								UserFullName = string.Empty,
+								SecurityUserId = 0,
 							});
 						}
 					}
@@ -491,7 +495,7 @@ namespace SuperTransp.Core
 					//ESTO PERMITE QUE SOLO LAS ORGANIZACIONES CON SOCIOS IGUALES A CUPOS SEAN MOSTRADOS EN LA LISTA, SE OMITE ESTA VALIDACION PORQUE 
 					//EXISTEN ORGANIZACIONES CON CUPOS VACIOS QUE DEDEN SUPERVISARSE
 					//SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail WHERE TotalSupervisedDrivers = Partners AND SupervisionSummaryId = 0", sqlConnection);
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail WHERE SupervisionSummaryId = 0", sqlConnection);
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetailNoUser WHERE SupervisionSummaryId = 0", sqlConnection);
 
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
@@ -522,8 +526,8 @@ namespace SuperTransp.Core
 								TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"],
 								PublicTransportGroupGUID = (string)dr["PublicTransportGroupGUID"],
 								SupervisionSummaryId = (int)dr["SupervisionSummaryId"],
-								UserFullName = (string)dr["UserFullName"],
-								SecurityUserId = (int)dr["SecurityUserId"],
+								UserFullName = string.Empty,
+								SecurityUserId = 0,
 							});
 						}
 					}

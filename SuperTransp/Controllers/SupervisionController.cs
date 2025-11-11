@@ -192,7 +192,7 @@ namespace SuperTransp.Controllers
 
 				int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
 				int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
-				var driver = _driver.GetById(driverId, publicTransportGroupId);
+				var driver = _driver.GetByDriverPublicTransportGroupId(driverPublicTransportGroupId);
 
 				ViewBag.IsTotalAccess = false;
 
@@ -200,8 +200,11 @@ namespace SuperTransp.Controllers
 				{
 					if (!_supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId))
 					{
-						TempData["SuccessMessage"] = "Esta organización está siendo supervisada por otro supervisor";
-						return RedirectToAction("PublicTransportGroupDriverList", new { ptgRifName = publicTransportGroupRif });
+						if (!_security.GroupHasAccessToModule((int)securityGroupId, 28))
+						{
+							TempData["SuccessMessage"] = "Esta organización está siendo supervisada por otro supervisor";
+							return RedirectToAction("PublicTransportGroupDriverList", new { ptgRifName = publicTransportGroupRif });
+						}
 					}
 
 					if (_supervision.IsSupervisionSummaryDoneByPtgId(publicTransportGroupId))
@@ -294,7 +297,7 @@ namespace SuperTransp.Controllers
 					if (_security.IsTotalAccess(3) || securityGroupId == 1)
 					{
 						int supervisionId = 0;
-						var driver = _driver.GetById(model.DriverId, model.PublicTransportGroupId);
+						var driver = _driver.GetByDriverPublicTransportGroupId(model.DriverPublicTransportGroupId);
 						model.StateId = driver.StateId;
 
 						if (!model.DriverWithVehicle || !model.InPerson)
@@ -364,15 +367,18 @@ namespace SuperTransp.Controllers
 
 				int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
 				int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
-				var driver = _driver.GetById(driverId, publicTransportGroupId);
+				var driver = _driver.GetByDriverPublicTransportGroupId(driverPublicTransportGroupId);
 				ViewBag.IsTotalAccess = false;
 
 				if (securityGroupId != null && _security.GroupHasAccessToModule((int)securityGroupId,3) || securityGroupId == 1)
 				{
 					if (!_supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId))
 					{
-						TempData["SuccessMessage"] = "Esta organización está siendo supervisada por otro supervisor";
-						return RedirectToAction("PublicTransportGroupDriverList" , new { ptgRifName = publicTransportGroupRif });
+						if (!_security.GroupHasAccessToModule((int)securityGroupId, 28))
+						{
+							TempData["SuccessMessage"] = "Esta organización está siendo supervisada por otro supervisor";
+							return RedirectToAction("PublicTransportGroupDriverList", new { ptgRifName = publicTransportGroupRif });
+						}
 					}
 
 					if (_supervision.IsSupervisionSummaryDoneByPtgId(publicTransportGroupId))
@@ -1007,7 +1013,10 @@ namespace SuperTransp.Controllers
 
 			if (!hasPermission)
 			{
-				return Json(new { hasPermission, message = "Esta organización está siendo supervisada por otro supervisor." });
+				if (!_security.GroupHasAccessToModule((int)securityGroupId, 28))
+				{
+					return Json(new { hasPermission, message = "Esta organización está siendo supervisada por otro supervisor." });
+				}
 			}
 
 			summaryDone = _supervision.IsSupervisionSummaryDoneByPtgId(publicTransportGroupId);

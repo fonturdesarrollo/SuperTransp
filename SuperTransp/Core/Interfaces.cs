@@ -94,6 +94,7 @@ namespace SuperTransp.Core
 			public List<DriverViewModel> GetByPublicTransportGroupId(int publicTransportGroupId);
 			public DriverViewModel GetByDriverPublicTransportGroupId(int driverPublicTransportGroupId);
 			public DriverViewModel GetByIdentityDocument(int driverIdentityDocument);
+			public List<DriverViewModel> GetAllByIdentityDocument(int driverIdentityDocument);
 			public bool RegisteredDocumentId(int driverIdentityDocument, int publicTransportGroupId);
 			public bool RegisteredPhone(string driverPhone, int publicTransportGroupId);
 			public bool RegisteredPartnerNumber(int partnerNumber, int publicTransportGroupId);

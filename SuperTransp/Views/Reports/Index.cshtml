@@ -169,7 +169,7 @@
 
             <div id="main">
 
-                @* ******* Maintenance Message ************ *@x
+                @* ******* Maintenance Message ************ *@
                 @if (ViewBag.MaintenanceMessage != null)
                 {
                     <div id="modalMaintenanceMessage" class="modal-x" style="display:none;">
@@ -378,7 +378,7 @@
 
                     setTimeout(() => {
                         spinner.classList.add("hidden");
-                    }, 8500);
+                    }, 30000);
                 }
             });
         });
@@ -399,10 +399,9 @@
 
                     downloadFrame.src = url;
 
-                    // Ocultar el spinner después de un tiempo prudencial
                     setTimeout(() => {
                         spinner.classList.add("hidden");
-                    }, 8500);
+                    }, 30000);
                 }
             });
         });

@@ -35,9 +35,69 @@ namespace SuperTransp.Core
 
 			try
 			{
-				if(model.DriverId > 0 && model.DriverPublicTransportGroupId > 0)
+				if(model.DriverPublicTransportGroupId > 0 && model.DriverPublicTransportGroupId > 0)
 				{
-					driverValues = GetById(model.DriverId, model.PublicTransportGroupId);
+					driverValues = GetByDriverPublicTransportGroupId(model.DriverPublicTransportGroupId);
+					var existingBefore = GetAllByIdentityDocument((int)model.DriverIdentityDocument);
+
+					if(driverValues != null && existingBefore.Count == 0)
+					{
+						existingBefore = GetAllByIdentityDocument((int)driverValues.DriverIdentityDocument);
+						var drv = existingBefore.Where(x => x.PublicTransportGroupId == model.PublicTransportGroupId);
+
+						if(drv.FirstOrDefault().DriverId != model.DriverId)
+						{
+							throw new Exception($"No puede modificar la cedula a este socio ya que existe en otras organizaciones", null);
+						}
+
+						if(drv.FirstOrDefault().DriverIdentityDocument != model.DriverIdentityDocument)
+						{
+							throw new Exception($"No puede modificar la cedula a este socio ya que existe en otras organizaciones", null);
+						}
+					}
+
+					//Proceso para cuando se esté modficando un driver, pero este exista en otra organizacion
+					if (existingBefore.Any())
+					{
+						int existingDriverId = existingBefore.FirstOrDefault().DriverId;
+						var drv = existingBefore.Where(x=> x.PublicTransportGroupId == model.PublicTransportGroupId);
+						if ((!drv.Any()))
+						{
+							using (SqlConnection sqlConnection = GetConnection())
+							{
+								if (sqlConnection.State == ConnectionState.Closed)
+								{
+									sqlConnection.Open();
+								}
+	
+								SqlCommand cmd = new("SuperTransp_DeletePTGDriver", sqlConnection)
+								{
+									CommandType = System.Data.CommandType.StoredProcedure
+								};
+
+								cmd.Parameters.AddWithValue("@DriverPublicTransportGroupId", model.DriverPublicTransportGroupId);
+								cmd.Parameters.AddWithValue("@PublicTransportGroupId", model.PublicTransportGroupId);
+
+								cmd.ExecuteNonQuery();
+
+								model.DriverId = existingDriverId;
+								model.DriverPublicTransportGroupId = 0;
+
+							}
+						}
+						else
+						{
+							if(model.DriverId != existingDriverId)
+							{
+								throw new Exception($"No puede modificar la cedula a este socio ya que existe en otras organizaciones", null);
+							}
+
+							if (drv.FirstOrDefault().DriverIdentityDocument != model.DriverIdentityDocument)
+							{
+								throw new Exception($"No puede modificar la cedula a este socio ya que existe en otras organizaciones", null);
+							}
+						}
+					}
 
 					if (driverValues != null) 
 					{
@@ -95,7 +155,7 @@ namespace SuperTransp.Core
 						}
 						else
 						{
-							driverValues = GetById(model.DriverId, model.PublicTransportGroupId);
+							driverValues = GetByDriverPublicTransportGroupId(model.DriverPublicTransportGroupId);
 
 							_security.AddLogbook(model.DriverId, false,
 								$" Socio ->" +
@@ -123,7 +183,7 @@ namespace SuperTransp.Core
 			}
 			catch (Exception ex)
 			{
-				throw new Exception($"Error al añadir o editar el transportista {ex.Message}", ex);
+				throw new Exception(ex.Message, ex);
 			}
 		}
 
@@ -139,7 +199,7 @@ namespace SuperTransp.Core
 					}
 
 					List<DriverViewModel> drivers = new();
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_DriversDetail WHERE PublicTransportGroupId = @PublicTransportGroupId", sqlConnection);
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_DriversDetailNoUser WHERE PublicTransportGroupId = @PublicTransportGroupId", sqlConnection);
 					cmd.Parameters.AddWithValue("@PublicTransportGroupId", publicTransportGroupId);
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
@@ -203,6 +263,7 @@ namespace SuperTransp.Core
 							driver.SexId = (int)dr["SexId"];
 							driver.SexName = (string)dr["SexName"];
 							driver.Birthdate = (DateTime)dr["Birthdate"];
+							driver.StateId = (int)dr["StateId"];
 						}
 					}
 
@@ -252,6 +313,67 @@ namespace SuperTransp.Core
 			}
 		}
 
+		public List<DriverViewModel> GetAllByIdentityDocument(int driverIdentityDocument)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<DriverViewModel> drivers = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_DriversDetailNoUser WHERE DriverIdentityDocument = @DriverIdentityDocument", sqlConnection);
+					cmd.Parameters.AddWithValue("@DriverIdentityDocument", driverIdentityDocument);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							drivers.Add(new DriverViewModel
+							{
+								DriverId = (int)dr["DriverId"],
+								PublicTransportGroupId = (int)dr["PublicTransportGroupId"],
+								DriverIdentityDocument = (int)dr["DriverIdentityDocument"],
+								DriverFullName = (string)dr["DriverFullName"],
+								PartnerNumber = (int)dr["PartnerNumber"],
+								DriverPhone = (string)dr["DriverPhone"],
+								PTGCompleteName = (string)dr["PTGCompleteName"],
+								DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"],
+								PublicTransportGroupGUID = (string)dr["PublicTransportGroupGUID"],
+								PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"],
+								SexId = (int)dr["SexId"],
+								SexName = (string)dr["SexName"],
+								Birthdate = (DateTime)dr["Birthdate"],
+							});
+						}
+					}
+
+
+					//using (SqlDataReader dr = cmd.ExecuteReader())
+					//{
+					//	while (dr.Read())
+					//	{
+					//		driver.DriverId = (int)dr["DriverId"];
+					//		driver.DriverIdentityDocument = (int)dr["DriverIdentityDocument"];
+					//		driver.DriverFullName = (string)dr["DriverFullName"];
+					//		driver.DriverPhone = (string)dr["DriverPhone"];
+					//		driver.SexId = (int)dr["SexId"];
+					//		driver.Birthdate = (DateTime)dr["Birthdate"];
+					//	}
+					//}
+
+					return drivers;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener el transportista por cedula {ex.Message}", ex);
+			}
+		}
+
 		public DriverViewModel GetPartnerById(int driverPublicTransportGroupId)
 		{
 			try
@@ -264,7 +386,7 @@ namespace SuperTransp.Core
 					}
 
 					DriverViewModel driver = new();
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_DriversDetail WHERE DriverPublicTransportGroupId = @DriverPublicTransportGroupId", sqlConnection);
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_DriversDetailNoUser WHERE DriverPublicTransportGroupId = @DriverPublicTransportGroupId", sqlConnection);
 					cmd.Parameters.AddWithValue("@DriverPublicTransportGroupId", driverPublicTransportGroupId);
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
@@ -354,10 +476,26 @@ namespace SuperTransp.Core
 
 				var driver = GetPartnerById(driverPublicTransportGroupId);
 
-				SqlCommand cmd = new("DELETE FROM DriverPublicTransportGroup WHERE DriverPublicTransportGroupId = @DriverPublicTransportGroupId", sqlConnection);
+				//Cascade deletions
+
+				SqlCommand cmd = new("DELETE FROM Supervision WHERE DriverId = @DriverPublicTransportGroupId", sqlConnection);
 				cmd.Parameters.AddWithValue("@DriverPublicTransportGroupId", driverPublicTransportGroupId);
 
 				int rowsAffected = cmd.ExecuteNonQuery();
+
+				cmd.Parameters.Clear();
+
+				cmd = new("DELETE FROM SupervisionPicture WHERE DriverId = @DriverPublicTransportGroupId", sqlConnection);
+				cmd.Parameters.AddWithValue("@DriverPublicTransportGroupId", driverPublicTransportGroupId);
+
+				rowsAffected = cmd.ExecuteNonQuery();
+
+				cmd.Parameters.Clear();
+
+				cmd = new("DELETE FROM DriverPublicTransportGroup WHERE DriverPublicTransportGroupId = @DriverPublicTransportGroupId", sqlConnection);
+				cmd.Parameters.AddWithValue("@DriverPublicTransportGroupId", driverPublicTransportGroupId);
+
+				rowsAffected = cmd.ExecuteNonQuery();
 
 				if (rowsAffected > 0)
 				{
@@ -370,23 +508,6 @@ namespace SuperTransp.Core
 							$" linea {driver.PTGCompleteName}");
 					}
 				}
-
-				//Cascade deletions
-
-				cmd.Parameters.Clear();
-
-				cmd = new("DELETE FROM Supervision WHERE DriverId = @DriverId", sqlConnection);
-				cmd.Parameters.AddWithValue("@DriverId", driverPublicTransportGroupId);
-
-				rowsAffected = cmd.ExecuteNonQuery();
-
-				cmd.Parameters.Clear();
-
-				cmd = new("DELETE FROM SupervisionPicture WHERE PublicTransportGroupId = @PublicTransportGroupId AND PartnerNumber = @PartnerNumber", sqlConnection);
-				cmd.Parameters.AddWithValue("@PublicTransportGroupId", driver.PublicTransportGroupId);
-				cmd.Parameters.AddWithValue("@PartnerNumber", partnerNumber);
-
-				rowsAffected = cmd.ExecuteNonQuery();
 
 				return true;
 			}

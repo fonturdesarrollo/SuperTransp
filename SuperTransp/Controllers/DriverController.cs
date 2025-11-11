@@ -170,6 +170,7 @@ namespace SuperTransp.Controllers
 
 				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 				var drivers = _driver.GetByPublicTransportGroupId(publicTransportGroupId);
+
 				var isTotalAccess = securityGroupId == 1 || _security.IsTotalAccess(2) || _security.IsUpdateAccess(2);
 				var isDeleteAccess = securityGroupId == 1 || _security.IsTotalAccess(2);
 				var editControllerUrl = $"{Url.Action("Edit", "Driver")}?driverPublicTransportGroupId=";
