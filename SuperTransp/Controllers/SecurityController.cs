@@ -673,56 +673,93 @@ namespace SuperTransp.Controllers
             return View();
         }
 
-        [HttpGet]
-        public IActionResult GetLogbookData(string selectedStateName, string filterType)
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) || string.IsNullOrEmpty(selectedStateName))
-                    return RedirectToAction("Login", "Security");
+        //[HttpGet]
+        //public IActionResult GetLogbookData(string selectedStateName, string filterType)
+        //{
+        //    try
+        //    {
+        //        if (string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) || string.IsNullOrEmpty(selectedStateName))
+        //            return RedirectToAction("Login", "Security");
 
-                int? groupId = HttpContext.Session.GetInt32("SecurityGroupId");
-                int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+        //        int? groupId = HttpContext.Session.GetInt32("SecurityGroupId");
+        //        int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
 
-                if (groupId is null ||
-                    (groupId != 1 && !_security.GroupHasAccessToModule(groupId.Value, 4)) ||
-                    (groupId == 1 ? false : !_security.GroupHasAccessToModule(groupId.Value, 18)))
-                    return RedirectToAction("Login", "Security");
+        //        if (groupId is null ||
+        //            (groupId != 1 && !_security.GroupHasAccessToModule(groupId.Value, 4)) ||
+        //            (groupId == 1 ? false : !_security.GroupHasAccessToModule(groupId.Value, 18)))
+        //            return RedirectToAction("Login", "Security");
 
-                List<SecurityLogbookModel> model;
+        //        List<SecurityLogbookModel> model;
 
-                if (securityGroupId != 1)
-                {
-                    if (!_security.GroupHasAccessToModule(securityGroupId.Value, 6))
-                        model = _security.GetLogbookByStateName(selectedStateName, filterType);
-                    else
-                        model = _security.GetLogbookAllExceptAdminByStateName(selectedStateName, filterType);
-                }
-                else
-                {
-                    model = _security.GetLogbookAllBySelectedStateName(selectedStateName, filterType);
-                }
+        //        if (securityGroupId != 1)
+        //        {
+        //            if (!_security.GroupHasAccessToModule(securityGroupId.Value, 6))
+        //                model = _security.GetLogbookByStateName(selectedStateName, filterType);
+        //            else
+        //                model = _security.GetLogbookAllExceptAdminByStateName(selectedStateName, filterType);
+        //        }
+        //        else
+        //        {
+        //            model = _security.GetLogbookAllBySelectedStateName(selectedStateName, filterType);
+        //        }
 
-                var resultado = model.Select(m => new
-                {
-                    id = m.SecurityLogbookId,
-                    fecha = m.SecurityLogbookDate.ToString("dd/MM/yyyy hh:mm tt"),
-                    dispositivo = m.DeviceType,
-                    os = m.DeviceOperatingSystem,
-                    navegador = m.DeviceBrowser,
-                    ip = m.DeviceIP,
-                    nombre = m.UserFullName,
-                    login = m.UserLogin,
-                    estado = m.UserState,
-                    accion = m.ActionDescription
-                });
+        //        var resultado = model.Select(m => new
+        //        {
+        //            id = m.SecurityLogbookId,
+        //            fecha = m.SecurityLogbookDate.ToString("dd/MM/yyyy hh:mm tt"),
+        //            dispositivo = m.DeviceType,
+        //            os = m.DeviceOperatingSystem,
+        //            navegador = m.DeviceBrowser,
+        //            ip = m.DeviceIP,
+        //            nombre = m.UserFullName,
+        //            login = m.UserLogin,
+        //            estado = m.UserState,
+        //            accion = m.ActionDescription
+        //        });
 
-                return Json(new { data = resultado });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
-        }
-    }
+        //        return Json(new { data = resultado });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(new { error = ex.Message });
+        //    }
+        //}
+
+		[HttpPost]
+		[IgnoreAntiforgeryToken]
+		public async Task<IActionResult> GetLogbookDataServerSide()
+		{
+			try
+			{
+				var form = await Request.ReadFormAsync(); 
+
+				int draw = int.TryParse(form["draw"].FirstOrDefault(), out var d) ? d : 1;
+				int start = int.TryParse(form["start"].FirstOrDefault(), out var s) ? s : 0;
+				int length = int.TryParse(form["length"].FirstOrDefault(), out var l) ? l : 10;
+
+				string searchValue = form["search[value]"].FirstOrDefault() ?? "";
+				string selectedStateName = form["selectedStateName"].FirstOrDefault() ?? "";
+				string filterType = form["filterType"].FirstOrDefault() ?? "currentMonth";
+
+				// Validación de sesión
+				var groupId = HttpContext.Session.GetInt32("SecurityGroupId");
+				if (!groupId.HasValue)
+					return Json(new { draw, data = new object[0], recordsTotal = 0, recordsFiltered = 0 });
+
+				var result = await _security.GetLogbookServerSideAsync(
+					draw, start, length, searchValue, selectedStateName, filterType, groupId.Value);
+
+				return Json(result);
+			}
+			catch (Exception ex)
+			{
+				return Json(new
+				{
+					error = "Error del servidor",
+					message = ex.Message,
+					details = ex.StackTrace?.Substring(0, 200)
+				});
+			}
+		}
+	}
 }

@@ -124,25 +124,28 @@
 	@***********************************************************@
 
 	<script type="text/javascript">
-		var checkExistingUrl = '@Url.Action("GetLogbookData", "Security")';
+		var checkExistingUrl = '@Url.Action("GetLogbookDataServerSide", "Security")';
+
 		$(document).ready(function () {
-			let selectedStateName = $('#selectedStateName').val();
-			let filterType = $('#filterType').val();
+			let selectedStateName = $('#selectedStateName').val() || "";
+			let filterType = $('#filterType').val() || "currentMonth";
 
 			$('#loadingSpinner').show();
 
 			$('#publicTransportGroupListDetail').DataTable({
+				destroy: true,
+				processing: true,
+				serverSide: true, 
 				ajax: {
-					url: checkExistingUrl,
-					type: 'GET',
-					data: function (d) {
-						d.selectedStateName = selectedStateName;
-						d.filterType = filterType;
-					},
-					dataSrc: 'data'
+						url: checkExistingUrl,
+						type: 'POST',
+						data: function (d) {
+							d.selectedStateName = $('#selectedStateName').val() || "";
+							d.filterType        = $('#filterType').val() || "currentMonth";
+						}
 				},
 				pageLength: 10,
-				lengthMenu: [10, 25, 50, 100, 500, 1000, 2000, 3000],
+				lengthMenu: [10, 25, 50, 100, 500],
 				order: [[0, 'desc']],
 				columns: [
 					{ data: 'id' },
@@ -156,16 +159,15 @@
 					{ data: 'estado' },
 					{ data: 'accion' }
 				],
-				stateSave: true,
 				language: {
 					sProcessing: "Procesando...",
 					sLengthMenu: "Mostrar _MENU_ registros",
 					sZeroRecords: "No se encontraron resultados",
 					sEmptyTable: "Ningún dato disponible en esta tabla",
-					sInfo: "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
-					sInfoEmpty: "Mostrando registros del 0 al 0 de un total de 0 registros",
-					sInfoFiltered: "(filtrado de un total de _MAX_ registros)",
-					sSearch: "Buscar:",
+					sInfo: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+					sInfoEmpty: "Mostrando 0 a 0 de 0 registros",
+					sInfoFiltered: "(filtrado de _MAX_ registros totales)",
+					sSearch: "Buscar en toda la tabla:",
 					oPaginate: {
 						sFirst: "Primero",
 						sLast: "Último",
@@ -174,7 +176,6 @@
 					}
 				},
 				initComplete: function () {
-
 					$('#loadingSpinner').fadeOut();
 				}
 			});
