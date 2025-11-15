@@ -70,6 +70,16 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@SecurityUserId", model.SecurityUserId);
 						cmd.Parameters.AddWithValue("@SupervisionStatus", model.SupervisionStatus);
 						cmd.Parameters.AddWithValue("@SupervisionRoundId", round.SupervisionRoundId);
+						cmd.Parameters.AddWithValue("@SupervisionRoundStartDate", round.SupervisionRoundStartDate);
+						cmd.Parameters.AddWithValue("@SupervisionRoundStartDescription", round.SupervisionRoundStartDescription);
+
+						//Nullable parameters
+						var param = cmd.Parameters.Add("@SupervisionRoundEndDate", SqlDbType.SmallDateTime);
+						param.Value = round.SupervisionRoundEndDate ?? (object)DBNull.Value;
+						param = cmd.Parameters.Add("@SupervisionRoundEndDescription", SqlDbType.VarChar);
+						param.Value = round.SupervisionRoundEndDescription ?? (object)DBNull.Value;
+
+						cmd.Parameters.AddWithValue("@SupervisionRoundStatus", round.SupervisionRoundStatus);
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
 
@@ -158,12 +168,23 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@SupervisionId", model.SupervisionId);
 						cmd.Parameters.AddWithValue("@DriverId", model.DriverPublicTransportGroupId);
 						cmd.Parameters.AddWithValue("@DriverWithVehicle", model.DriverWithVehicle);
+						cmd.Parameters.AddWithValue("@InPerson", model.InPerson);
 						cmd.Parameters.AddWithValue("@SecurityUserId", model.SecurityUserId);
 						cmd.Parameters.AddWithValue("@SupervisionRoundId", round.SupervisionRoundId);
+						cmd.Parameters.AddWithValue("@SupervisionRoundStartDate", round.SupervisionRoundStartDate);
+						cmd.Parameters.AddWithValue("@SupervisionRoundStartDescription", round.SupervisionRoundStartDescription);
+
+						//Nullable parameters
+						var param = cmd.Parameters.Add("@SupervisionRoundEndDate", SqlDbType.SmallDateTime);
+						param.Value = round.SupervisionRoundEndDate ?? (object)DBNull.Value;
+						param = cmd.Parameters.Add("@SupervisionRoundEndDescription", SqlDbType.VarChar);
+						param.Value = round.SupervisionRoundEndDescription ?? (object)DBNull.Value;
+
+						cmd.Parameters.AddWithValue("@SupervisionRoundStatus", round.SupervisionRoundStatus);
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
 
-						var driver = _driver.GetById(model.DriverId);
+						var driver = _driver.GetByDriverPublicTransportGroupId(model.DriverPublicTransportGroupId);
 
 						if(driver != null)
 						{
@@ -344,7 +365,7 @@ namespace SuperTransp.Core
 								Remarks = (string)dr["Remarks"],
 								UserFullName = (string)dr["UserFullName"],
 								DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"],
-								Pictures = GetPicturesByPTGIdAndPartnerNumber((int)dr["PublicTransportGroupId"], (int)dr["PartnerNumber"]),
+								Pictures = GetPicturesByPTGIdAndDriverPublicTransportGroupId((int)dr["PublicTransportGroupId"], (int)dr["DriverPublicTransportGroupId"]),
 							});
 						}
 					}
@@ -426,7 +447,93 @@ namespace SuperTransp.Core
 								Remarks = (string)dr["Remarks"],
 								UserFullName = (string)dr["UserFullName"],
 								SecurityUserId = (int)dr["SecurityUserId"],
-								Pictures = GetPicturesByPTGIdAndPartnerNumber((int)dr["PublicTransportGroupId"], (int)dr["PartnerNumber"])
+								Pictures = GetPicturesByPTGIdAndDriverPublicTransportGroupId((int)dr["PublicTransportGroupId"], (int)dr["DriverPublicTransportGroupId"])
+							});
+						}
+					}
+
+					return ptg.ToList();
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener transportistas {ex.Message}", ex);
+			}
+		}
+
+		public List<PublicTransportGroupViewModel> GetDriverByDriverIdentityDocument(int driverIdentityDocument)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<PublicTransportGroupViewModel> ptg = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE DriverIdentityDocument = @DriverIdentityDocument", sqlConnection);
+					cmd.Parameters.AddWithValue("@DriverIdentityDocument", driverIdentityDocument);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							ptg.Add(new PublicTransportGroupViewModel
+							{
+								PublicTransportGroupId = (int)dr["PublicTransportGroupId"],
+								PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"],
+								DesignationId = (int)dr["DesignationId"],
+								PublicTransportGroupName = (string)dr["PublicTransportGroupName"],
+								PTGCompleteName = (string)dr["PTGCompleteName"],
+								ModeId = (int)dr["ModeId"],
+								UnionId = (int)dr["UnionId"],
+								MunicipalityId = (int)dr["MunicipalityId"],
+								StateId = (int)dr["StateId"],
+								RepresentativeIdentityDocument = (int)dr["RepresentativeIdentityDocument"],
+								RepresentativeName = (string)dr["RepresentativeName"],
+								RepresentativePhone = (string)dr["RepresentativePhone"],
+								DesignationName = (string)dr["DesignationName"],
+								StateName = (string)dr["StateName"],
+								MunicipalityName = (string)dr["MunicipalityName"],
+								ModeName = (string)dr["ModeName"],
+								UnionName = (string)dr["UnionName"],
+								DriverId = (int)dr["DriverId"],
+								DriverFullName = (string)dr["DriverFullName"],
+								DriverIdentityDocument = (int)dr["DriverIdentityDocument"],
+								DriverPhone = (string)dr["DriverPhone"],
+								SexName = (string)dr["SexName"],
+								BirthDate = (DateTime)dr["BirthDate"],
+								PartnerNumber = (int)dr["PartnerNumber"],
+								SupervisionStatusName = (string)dr["SupervisionStatusText"],
+								TotalDrivers = (int)dr["TotalDrivers"],
+								TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"],
+								SupervisionId = (int)dr["SupervisionId"],
+								DriverWithVehicle = (bool)dr["DriverWithVehicle"],
+								WorkingVehicle = (bool)dr["WorkingVehicle"],
+								InPerson = (bool)dr["InPerson"],
+								Plate = (string)dr["Plate"],
+								Year = (int)dr["Year"],
+								Make = (string)dr["Make"],
+								Model = (string)dr["Model"],
+								Passengers = (int)dr["Passengers"],
+								RimName = (string)dr["RimName"],
+								Wheels = (int)dr["Wheels"],
+								MotorOilName = (string)dr["MotorOilName"],
+								Liters = (int)dr["Liters"],
+								FuelTypeName = (string)dr["FuelTypeName"],
+								TankCapacity = (int)dr["TankCapacity"],
+								BatteryName = (string)dr["BatteryName"],
+								NumberOfBatteries = (int)dr["NumberOfBatteries"],
+								FailureTypeName = (string)dr["FailureTypeName"],
+								VehicleImageUrl = (string)dr["VehicleImageUrl"],
+								FingerprintTrouble = (bool)dr["FingerprintTrouble"],
+								Remarks = (string)dr["Remarks"],
+								UserFullName = (string)dr["UserFullName"],
+								SecurityUserId = (int)dr["SecurityUserId"],	
+								DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"],
+								Pictures = GetPicturesByPTGIdAndDriverPublicTransportGroupId((int)dr["PublicTransportGroupId"], (int)dr["DriverPublicTransportGroupId"])
 							});
 						}
 					}
@@ -493,7 +600,7 @@ namespace SuperTransp.Core
 							supervision.FingerprintTrouble = (bool)dr["FingerprintTrouble"];
 							supervision.Remarks = (string)dr["Remarks"];
 							supervision.SecurityUserId = (int)dr["SecurityUserId"];
-							supervision.Pictures = GetPicturesByPTGIdAndPartnerNumber((int)dr["PublicTransportGroupId"], (int)dr["PartnerNumber"]);
+							supervision.Pictures = GetPicturesByPTGIdAndDriverPublicTransportGroupId((int)dr["PublicTransportGroupId"], (int)dr["DriverPublicTransportGroupId"]);
 						}
 					}
 
@@ -571,7 +678,7 @@ namespace SuperTransp.Core
 							supervision.SupervisionStatus = (bool)dr["SupervisionStatus"];
 							supervision.SupervisionDateAdded = (DateTime)dr["SupervisionDateAdded"];
 							supervision.DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"];
-							supervision.Pictures = GetPicturesByPTGIdAndPartnerNumber(publicTransportGroupId, partnerNumber);
+							supervision.Pictures = GetPicturesByPTGIdAndDriverPublicTransportGroupId(publicTransportGroupId, (int)dr["DriverPublicTransportGroupId"]);
 						}
 					}
 
@@ -646,7 +753,7 @@ namespace SuperTransp.Core
 							supervision.VehicleDataId = (int)dr["VehicleDataId"];
 							supervision.SupervisionStatus = (bool)dr["SupervisionStatus"];
 							supervision.SupervisionDateAdded = (DateTime)dr["SupervisionDateAdded"];
-							supervision.Pictures = GetPicturesByPTGIdAndPartnerNumber((int)dr["PublicTransportGroupId"], (int)dr["PartnerNumber"]);
+							supervision.Pictures = GetPicturesByPTGIdAndDriverPublicTransportGroupId((int)dr["PublicTransportGroupId"], (int)dr["DriverPublicTransportGroupId"]);
 						}
 					}
 
@@ -731,7 +838,7 @@ namespace SuperTransp.Core
 								UserFullName = (string)dr["UserFullName"],
 								SecurityUserId = (int)dr["SecurityUserId"],
 								DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"],
-								Pictures = GetPicturesByPTGIdAndPartnerNumber((int)dr["PublicTransportGroupId"], (int)dr["PartnerNumber"]),
+								Pictures = GetPicturesByPTGIdAndDriverPublicTransportGroupId((int)dr["PublicTransportGroupId"], (int)dr["DriverPublicTransportGroupId"]),
 							});
 						}
 					}
@@ -745,7 +852,7 @@ namespace SuperTransp.Core
 			}
 		}
 
-		public List<SupervisionPictures> GetPicturesByPTGIdAndPartnerNumber(int publicTransportGroupId, int partnerNumber)
+		public List<SupervisionPictures> GetPicturesByPTGIdAndDriverPublicTransportGroupId(int publicTransportGroupId, int driverPublicTransportGroupId)
 		{
 			try
 			{
@@ -757,9 +864,9 @@ namespace SuperTransp.Core
 					}
 
 					List<SupervisionPictures> pictures = new();
-					SqlCommand cmd = new("SELECT * FROM SupervisionPicture WHERE PublicTransportGroupId = @PublicTransportGroupId AND PartnerNumber = @PartnerNumber", sqlConnection);
+					SqlCommand cmd = new("SELECT * FROM SupervisionPicture WHERE PublicTransportGroupId = @PublicTransportGroupId AND DriverId = @DriverId", sqlConnection);
 					cmd.Parameters.AddWithValue("@PublicTransportGroupId", publicTransportGroupId);
-					cmd.Parameters.AddWithValue("@PartnerNumber", partnerNumber);
+					cmd.Parameters.AddWithValue("@DriverId", driverPublicTransportGroupId);
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
 					{
@@ -770,7 +877,9 @@ namespace SuperTransp.Core
 								SupervisionPictureId = (int)dr["SupervisionPictureId"],
 								PublicTransportGroupId = (int)dr["PublicTransportGroupId"],
 								PartnerNumber = (int)dr["PartnerNumber"],
-								VehicleImageUrl = (string)dr["VehicleImageUrl"],	
+								DriverId = (int)dr["DriverId"],
+								VehicleImageUrl = (string)dr["VehicleImageUrl"],
+								
 								SupervisionPictureDateAdded = (DateTime)dr["SupervisionPictureDateAdded"],
 							});
 						}
@@ -827,6 +936,8 @@ namespace SuperTransp.Core
 		public int AddOrEditSummary(SupervisionSummaryViewModel model)
 		{
 			int summaryId = 0;
+			int result = 0;
+
 			try
 			{
 				using (SqlConnection sqlConnection = GetConnection())
@@ -850,8 +961,10 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@SupervisionSummaryRemarks", model.SupervisionSummaryRemarks);
 						cmd.Parameters.AddWithValue("@SupervisionStatusId", model.SupervisionStatusId);
 						cmd.Parameters.AddWithValue("@SecurityUserId", model.SecurityUserId);
+						
+						result = Convert.ToInt32(cmd.ExecuteScalar());
 
-						summaryId = Convert.ToInt32(cmd.ExecuteScalar());
+						summaryId = model.SupervisionSummaryId == 0 ? result : model.SupervisionSummaryId;
 
 						// Add pictures process
 						if(model.SupervisionSummaryId == 0)
@@ -1052,9 +1165,6 @@ namespace SuperTransp.Core
 						sqlConnection.Open();
 					}
 
-					SupervisionSummaryViewModel summary = new();
-					List<SupervisionSummaryPictures> images = new List<SupervisionSummaryPictures>();
-
 					SqlCommand cmd = new("SELECT * FROM SuperTransp_SupervisionSummaryDetail WHERE PublicTransportGroupId = @PublicTransportGroupId", sqlConnection);
 					cmd.Parameters.AddWithValue("@PublicTransportGroupId", publicTransportGroupId);
 
@@ -1062,6 +1172,37 @@ namespace SuperTransp.Core
 					{
 						return dr.HasRows;
 					}
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener los transportistas {ex.Message}", ex);
+			}
+		}
+
+		public int IsSupervisionSummaryDoneByRIF(string publicTransportGroupRif)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_SupervisionSummaryDetail WHERE PublicTransportGroupRif = @PublicTransportGroupRif", sqlConnection);
+					cmd.Parameters.AddWithValue("@PublicTransportGroupRif", publicTransportGroupRif);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							return (int)dr["SupervisionSummaryId"];
+						}
+					}
+
+					return 0;
 				}
 			}
 			catch (Exception ex)

@@ -34,6 +34,16 @@
             overflow-x: hidden;
             z-index: 10000 !important;
         }
+
+        .logo-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+            .logo-container img {
+                display: block;
+            }
     </style>
     <!-- jQuery UI CSS -->
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css" />
@@ -57,12 +67,16 @@
             <!-- Header -->
             <header id="header">
                 <div class="inner">
-
                     <!-- Logo -->
-                    <a href="#" class="logo">
-                        <span><img src="~/images/Logo.png" width="100px" height="100px" alt="" /></span>
-                        <br />
-                        <span class="title">@ViewBag.EmployeeName</span>
+                    <div class="logo-container">
+                        <!-- Logo izquierdo -->
+                        <img src="~/images/Logo.png" width="100px" height="100px" alt="Logo principal" />
+
+                        <!-- Logo derecho -->
+                        <img src="~/images/super-transp-logo.png" width="150px" height="150px" alt="Logo SuperTransp" />
+                    </div>
+                    <div class="logo">
+                        <span>@ViewBag.EmployeeName</span>
                         <br />
                         @if (TempData["SuccessMessage"] != null)
                         {
@@ -70,7 +84,7 @@
                                 @TempData["SuccessMessage"]
                             </div>
                         }
-                    </a>
+                    </div>
                 </div>
                 <!-- Nav -->
                 <nav>

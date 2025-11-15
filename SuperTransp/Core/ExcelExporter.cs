@@ -28,7 +28,7 @@ namespace SuperTransp.Core
 		{
 			var dt = new DataTable();
 
-			var whereClause = stateId > 0 ? "WHERE StateId = @StateId" : string.Empty;
+			var whereClause = stateId > 0 ? "WHERE [Codigo Estado] = @StateId" : string.Empty;
 
 			using (var con = (GetConnection()))
 			using (var cmd = new SqlCommand($"SELECT * FROM SuperTransp_PublicTransportGroupAndDrivers {whereClause} ORDER BY Estado, Municipio, Organizacion", con))
@@ -61,7 +61,7 @@ namespace SuperTransp.Core
 			var whereClause = stateId > 0 ? "WHERE StateId = @StateId" : string.Empty;
 
 			using (var con = (GetConnection()))
-			using (var cmd = new SqlCommand($"SELECT * FROM SuperTransp_SupervisionDetail {whereClause} ORDER BY Estado, Municipio, Organizacion, Cedula", con))
+			using (var cmd = new SqlCommand($"SELECT * FROM SuperTransp_SupervisionDetail {whereClause} ORDER BY Estado, Municipio, Organizacion", con))
 			{
 				if (stateId > 0)
 				{

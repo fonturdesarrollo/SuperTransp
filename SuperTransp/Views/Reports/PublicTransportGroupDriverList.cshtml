@@ -48,22 +48,36 @@
 			z-index: 1050 !important;
 		}
 
+		.logo-container {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+
+			.logo-container img {
+				display: block;
+			}
 	</style>
 
 </head>
 <body class="is-preload">
-	<div id="wrapper">
+	<div style="width:100%; max-width: 75em; margin: 0 auto; padding: 0 1em;">
 		<!-- Header -->
 		<header id="header">
 			<div class="inner">
 				<!-- Logo -->
-				<a href="#" class="logo">
-					<span><img src="~/images/Logo.png" width="100px" height="100px" alt="" /></span>
-					<br />
-					<span>@ViewBag.EmployeeName</span>					
+				<div class="logo-container">
+					<!-- Logo izquierdo -->
+					<img src="~/images/Logo.png" width="100px" height="100px" alt="Logo principal" />
+
+					<!-- Logo derecho -->
+					<img src="~/images/super-transp-logo.png" width="150px" height="150px" alt="Logo SuperTransp" />
+				</div>
+				<div class="logo">
+					<span>@ViewBag.EmployeeName</span>
 					<br />
 					<span>Reportes - Consultar socios</span>
-				</a>
+				</div>
 			</div>
 			<!-- Nav -->
 			<nav>
@@ -102,12 +116,13 @@
 					<table id="inventory" class="table table-striped table-bordered dt-responsive dt-nowrap">
 						<thead>
 							<tr>
+								<th>Cedula</th>
 								<th>Nombre</th>
 								<th># Socio</th>
-								<th>Estatus</th>
 								<th>Presente en supervisión</th>
 								<th>Con vehículo</th>
 								<th>Vehículo operativo</th>
+								<th>Estatus</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -118,10 +133,22 @@
 									{
 										<tr>
 											<td>
+												@ptg.DriverIdentityDocument
+											</td>
+											<td>
 												@ptg.DriverFullName
 											</td>
 											<td>
 												@ptg.PartnerNumber
+											</td>
+											<td>
+												@ptg.InPerson.ToSpanishYesNo()
+											</td>
+											<td>
+												@ptg.DriverWithVehicle.ToSpanishYesNo()
+											</td>
+											<td>
+												@ptg.WorkingVehicle.ToSpanishYesNo()
 											</td>
 											<td>
 												@ptg.SupervisionStatusName
@@ -154,15 +181,6 @@
 													}
 												}
 											</td>
-											<td>
-												@ptg.InPerson.ToSpanishYesNo()
-											</td>
-											<td>
-												@ptg.DriverWithVehicle.ToSpanishYesNo()
-											</td>
-											<td>
-												@ptg.WorkingVehicle.ToSpanishYesNo()
-											</td>
 										</tr>
 									}
 								}
@@ -186,8 +204,8 @@
 					<p><strong>Nombre:</strong> <span id="modalDriver"></span></p>
 					<p><strong># Socio:</strong> <span id="modalPartner"></span></p>
 					<p><strong>¿Tiene vehículo:</strong> <span id="modalDriverWithVehicle"></span></p>
+					<p><strong>¿Socio presente?:</strong> <span id="modalDriverInPerson"></span></p>
 					<div class="modal-vehicle-data">
-						<p><strong>¿Socio presente?:</strong> <span id="modalDriverInPerson"></span></p>
 						<p><strong>¿Vehículo en funcionamiento?:</strong> <span id="modalDriverWithWorkingVehicle"></span></p>
 						<p><strong>Placa:</strong> <span id="modalVehiclePlate"></span></p>
 						<p><strong>Año:</strong> <span id="modalVehicleYear"></span></p>
@@ -244,15 +262,31 @@
 				$('#modalDriver').text($(this).data('driver'));
 				$('#modalPartner').text($(this).data('partner'));
 
-				if($(this).data('driver-with-vehicle') == "True"){
+				if ($(this).data('driver-with-vehicle') == "True") {
 					$('#modalDriverWithVehicle').text('Sí')
-					$(".modal-vehicle-data").show();
-					$(".modal-image").show();
-				}else {
+					if($(this).data('driver-in-person') == "False") {
+						$(".modal-vehicle-data").hide();
+						$(".modal-image").hide();
+					}else{
+						$(".modal-vehicle-data").show();
+						$(".modal-image").show();
+					}
+				} else {
 					$('#modalDriverWithVehicle').text('No')
-				    $(".modal-vehicle-data").hide();
-					$(".modal-image").show().hide();
+					$('#modalDriverInPerson').text('No')
+					$(".modal-vehicle-data").hide();
+					$(".modal-image").hide();
 				}
+
+				// if($(this).data('driver-with-vehicle') == "True"){
+				// 	$('#modalDriverWithVehicle').text('Sí')
+				// 	$(".modal-vehicle-data").show();
+				// 	$(".modal-image").show();
+				// }else {
+				// 	$('#modalDriverWithVehicle').text('No')
+				//     $(".modal-vehicle-data").hide();
+				// 	$(".modal-image").show().hide();
+				// }
 
 				if($(this).data('driver-with-working-vehicle') == "True"){
 					$('#modalDriverWithWorkingVehicle').text('Sí')

@@ -94,10 +94,11 @@ namespace SuperTransp.Core
 			public List<DriverViewModel> GetByPublicTransportGroupId(int publicTransportGroupId);
 			public DriverViewModel GetByDriverPublicTransportGroupId(int driverPublicTransportGroupId);
 			public DriverViewModel GetByIdentityDocument(int driverIdentityDocument);
+			public List<DriverViewModel> GetAllByIdentityDocument(int driverIdentityDocument);
 			public bool RegisteredDocumentId(int driverIdentityDocument, int publicTransportGroupId);
 			public bool RegisteredPhone(string driverPhone, int publicTransportGroupId);
 			public bool RegisteredPartnerNumber(int partnerNumber, int publicTransportGroupId);
-			public DriverViewModel GetById(int driverId);
+			public DriverViewModel GetById(int driverId, int publicTransportGroupId);
 			public DriverViewModel GetPartnerById(int driverPublicTransportGroupId);
 			public bool DeletePartner(int driverId, int driverPublicTransportGroupId, int partnerNumber);
 			public int TotalDriversByPublicTransportGroupId(int publicTransportGroupId);
@@ -113,6 +114,7 @@ namespace SuperTransp.Core
 			public SupervisionViewModel GetByPublicTransportGroupGUIDAndPartnerNumber(string publicTransportGroupGUID, int partnerNumber);
 			public List<PublicTransportGroupViewModel> GetDriverPublicTransportGroupByStateIdAndPTGRif(int stateId, string ptgRif);
 			public List<PublicTransportGroupViewModel> GetDriverPublicTransportGroupByPtgId(int publicTransportGroupId);
+			public List<PublicTransportGroupViewModel> GetDriverByDriverIdentityDocument(int driverIdentityDocument);
 			public List<PublicTransportGroupViewModel> GetAllDriverPublicTransportGroup(string ptgRif);
 			public List<PublicTransportGroupViewModel> RegisteredPlate(string plate);
 			public int AddOrEditSummary(SupervisionSummaryViewModel model);
@@ -124,9 +126,10 @@ namespace SuperTransp.Core
 			public bool IsFinishedSupervisionRoundByStateMonthAndYear(int stateId, int month, int year);
 			public bool IsActiveSupervisionRoundByStateId(int stateId);
 			public bool IsSupervisionSummaryDoneByPtgId(int publicTransportGroupId);
+			public int IsSupervisionSummaryDoneByRIF(string publicTransportGroupRif);
 			public bool IsUserSupervisingPublicTransportGroup(int securityUserId, int publicTransportGroupId);
 			public bool DeletePicturesByPTGIdAndPartnerNumber(int publicTransportGroupId, int partnerNumber);
-			public List<SupervisionPictures> GetPicturesByPTGIdAndPartnerNumber(int publicTransportGroupId, int partnerNumber);
+			public List<SupervisionPictures> GetPicturesByPTGIdAndDriverPublicTransportGroupId(int publicTransportGroupId, int driverPublicTransportGroupId);
 		}
 
 		public interface ICommonData
@@ -182,6 +185,13 @@ namespace SuperTransp.Core
 		{
 			public int AddOrEdit(UniverseViewModel model);
 			public UniverseViewModel GetByStateId(int stateId);
+		}
+
+		public interface IApiCore
+		{
+			public DriversModel? MapToDriversModel(int idCard);
+			public RoutesModel? MapToRoutesModel();
+			public RoutesByRifModel? MapToRoutesByRifModel(string publicTransportGroupRif);
 		}
 	}
 }

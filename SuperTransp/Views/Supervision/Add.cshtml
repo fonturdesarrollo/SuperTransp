@@ -31,6 +31,16 @@
         .custom-textbox {
             border: 2px solid;
         }
+
+        .logo-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+            .logo-container img {
+                display: block;
+            }
     </style>
 </head>
 <body class="is-preload">
@@ -57,9 +67,14 @@
         <header id="header">
             <div class="inner">
                 <!-- Logo -->
-                <a href="#" class="logo">
-                    <span><img src="~/images/Logo.png" width="100px" height="100px" alt="" /></span>
-                    <br />
+                <div class="logo-container">
+                    <!-- Logo izquierdo -->
+                    <img src="~/images/Logo.png" width="100px" height="100px" alt="Logo principal" />
+
+                    <!-- Logo derecho -->
+                    <img src="~/images/super-transp-logo.png" width="150px" height="150px" alt="Logo SuperTransp" />
+                </div>
+                <div class="logo">
                     <span class="title">@ViewBag.EmployeeName</span>
                     <br />
                     @if (TempData["SuccessMessage"] != null)
@@ -68,7 +83,7 @@
                             @TempData["SuccessMessage"]
                         </div>
                     }
-                </a>
+                </div>
             </div>
             <!-- Nav -->
             <nav>
@@ -125,11 +140,14 @@
                             @Html.HiddenFor(x => x.DriverPublicTransportGroupId)
                             @Html.DropDownList("DriverWithVehicle", (IEnumerable<SelectListItem>)ViewBag.DriverWithVehicle, "Seleccione", new { @class = "form-control" })
                         </div>
-                        <div class="row" id="additionalFields" style="visibility: hidden; opacity: 0; height: 0; overflow: hidden; transition: opacity 0.3s ease-in-out;">
-                            <div class="col-4">
-                                <strong>¿Socio presente?:</strong>
-                                @Html.DropDownListFor(t => t.InPerson, (SelectList)ViewBag.InPerson, "-- Seleccione --", new { @class = "form-control" })
+                            <div class="row" id="additionalFieldsX" style="visibility: hidden; opacity: 0; height: 0; overflow: hidden; transition: opacity 0.3s ease-in-out;">
+                                <div class="col-12">
+                                    <strong>¿Socio presente?:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</strong>
+                                    @Html.DropDownListFor(t => t.InPerson, (SelectList)ViewBag.InPerson, "-- Seleccione --", new { @class = "form-control" })
+                                </div>
                             </div>
+                        <div class="row" id="additionalFields" style="visibility: hidden; opacity: 0; height: 0; overflow: hidden; transition: opacity 0.3s ease-in-out;">
+
                             <div class="col-4">
                                 <strong>¿Vehículo operativo?:</strong>
                                 @Html.DropDownListFor(t => t.WorkingVehicle, (SelectList)ViewBag.WorkingVehicle, "-- Seleccione --", new { @class = "form-control" })

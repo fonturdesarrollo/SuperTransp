@@ -32,6 +32,16 @@
 			border: 2px solid;
 			height: 100px !important;
 		}
+
+		.logo-container {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+
+			.logo-container img {
+				display: block;
+			}
 	</style>
 </head>
 <body class="is-preload">
@@ -48,11 +58,15 @@
 			<!-- Header -->
 			<header id="header">
 				<div class="inner">
-
 					<!-- Logo -->
-					<a href="#" class="logo">
-						<span><img src="~/images/Logo.png" width="100px" height="100px" alt="" /></span>
-						<br />
+					<div class="logo-container">
+						<!-- Logo izquierdo -->
+						<img src="~/images/Logo.png" width="100px" height="100px" alt="Logo principal" />
+
+						<!-- Logo derecho -->
+						<img src="~/images/super-transp-logo.png" width="150px" height="150px" alt="Logo SuperTransp" />
+					</div>
+					<div class="logo">
 						<span class="title">@ViewBag.EmployeeName</span>
 						<br />
 						@if (TempData["SuccessMessage"] != null)
@@ -61,7 +75,7 @@
 								@TempData["SuccessMessage"]
 							</div>
 						}
-					</a>
+					</div>
 				</div>
 				<!-- Nav -->
 				<nav>
@@ -251,6 +265,8 @@
 			},
 
 			init: function () {
+				let hasServerError = false;
+
 				this.on("addedfile", function (file) {
 					console.log("Archivo agregado:", file);
 				});
@@ -259,16 +275,38 @@
 					console.log("Archivo eliminado:", file);
 				});
 
-				this.on("error", function (file, errorMessage) {
-					console.log("Hubo un error al subir la imagen: " + errorMessage);
+				this.on("success", function (file, response) {
+					console.log("Respuesta exitosa del servidor:", response);
+				});
+
+				this.on("error", function (file, errorMessage, xhr) {
+					hasServerError = true;
+
+					let serverMessage = errorMessage;
+					if (xhr && xhr.responseText) {
+						try {
+							serverMessage = xhr.responseText;
+						} catch (e) {
+							console.warn("No se pudo parsear el error del servidor.");
+						}
+					}
+
+					alert("Error al subir archivo: " + serverMessage);
+					console.error("Error Dropzone:", serverMessage);
 				});
 
 				this.on("queuecomplete", function () {
-					alert("Todas las imágenes han sido cargadas correctamente.");
+					if (hasServerError) {
+						alert("Uno o más archivos no se cargaron correctamente. Por favor revise los errores.");
+				 } else {
+						alert("Todas las imágenes o documentos han sido cargados correctamente.");
+					}
+					hasServerError = false;
 				});
 			}
 		});
 
+		dropzone.hiddenFileInput.removeAttribute("multiple");
 
 		$("body").on("click", "#saveRequest", function (event) {
 			event.preventDefault();
@@ -306,6 +344,9 @@
 		// });
 
 		function isOkToSave() {
+			const dzInstance = Dropzone.forElement("#myDropzone");
+			const uploaded = dzInstance.getAcceptedFiles().filter(f => f.status === Dropzone.SUCCESS);
+
 			let firstInvalidField = null;
 			let message = "";
 
@@ -317,6 +358,11 @@
 			if ($("#SupervisionSummaryRemarks").val() == "" && !firstInvalidField) {
 				firstInvalidField = "#SupervisionSummaryRemarks";
 				message = "Debe colocar las observaciones";
+			}
+
+			if (uploaded.length == 0) {
+				firstInvalidField = "#myDropzone";
+				message = "Debe agregar alguna imagen o documento para poder actualizar";
 			}
 
 			if (firstInvalidField) {

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using SuperTransp.Models;
 using System.Diagnostics;
 using static SuperTransp.Core.Interfaces;
@@ -9,11 +10,13 @@ namespace SuperTransp.Controllers
 	{
 		private readonly ILogger<HomeController> _logger;
 		private readonly ISecurity _security;
+		private readonly IOptionsSnapshot<MaintenanceSettings> _settings;
 
-		public HomeController(ILogger<HomeController> logger, ISecurity security)
+		public HomeController(ILogger<HomeController> logger, ISecurity security, IOptionsSnapshot<MaintenanceSettings> settings)
 		{
 			_logger = logger;
 			_security = security;
+			_settings = settings;
 		}
 
 		public IActionResult Index()
@@ -32,6 +35,11 @@ namespace SuperTransp.Controllers
 					else
 					{
 						ViewBag.ModulesInGroup = _security.GetAllModules();
+					}
+
+					if (_settings.Value.IsActive)
+					{
+						ViewBag.MaintenanceMessage = _settings.Value.Message;
 					}
 
 					return View();
@@ -56,18 +64,18 @@ namespace SuperTransp.Controllers
 		}
 
 
-		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-		public IActionResult Error()
-		{
-			// Puedes pasar información adicional, como el ID del error
-			return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-		}
-
 		//[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-		//public IActionResult Error(string errorMessage)
+		//public IActionResult Error()
 		//{
-		//	ViewBag.ErrorMessage = errorMessage;
-		//	return View();
+		//	// Puedes pasar información adicional, como el ID del error
+		//	return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
 		//}
+
+		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+		public IActionResult Error(string errorMessage)
+		{
+			ViewBag.ErrorMessage = errorMessage;
+			return View();
+		}
 	}
 }

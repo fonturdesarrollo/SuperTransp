@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Options;
 using SuperTransp.Core;
 using SuperTransp.Models;
 using System.Net;
@@ -22,8 +23,10 @@ namespace SuperTransp.Controllers
 		private readonly IGeography _geography;
 		private readonly IFtpService _ftpService;
 		private readonly IDriver _driver;
+		private readonly IOptionsSnapshot<MaintenanceSettings> _settings;
 
-		public SupervisionController(ISupervision supervision, ISecurity security, IPublicTransportGroup publicTransportGroup, ICommonData commonData, IConfiguration configuration, IGeography geography, IFtpService ftpService, IDriver driver)
+		public SupervisionController(ISupervision supervision, ISecurity security, IPublicTransportGroup publicTransportGroup, 
+			ICommonData commonData, IConfiguration configuration, IGeography geography, IFtpService ftpService, IDriver driver, IOptionsSnapshot<MaintenanceSettings> settings)
 		{
 			_supervision = supervision;
 			_security = security;
@@ -33,6 +36,7 @@ namespace SuperTransp.Controllers
 			_geography = geography;
 			_ftpService = ftpService;
 			_driver = driver;
+			_settings = settings;
 		}
 
 		public IActionResult Index()
@@ -83,6 +87,11 @@ namespace SuperTransp.Controllers
 				}
 
 				ViewBag.RoundMessage = ViewBag.RoundActive  ? $"Vuelta {ViewBag.CurrentRoundStartDate}" : "No existe vuelta de supervisión abierta";
+			}
+
+			if (_settings.Value.IsActive)
+			{
+				ViewBag.MaintenanceMessage = _settings.Value.Message;
 			}
 
 			return View();
@@ -183,7 +192,7 @@ namespace SuperTransp.Controllers
 
 				int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
 				int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
-				var driver = _driver.GetById(driverId);
+				var driver = _driver.GetByDriverPublicTransportGroupId(driverPublicTransportGroupId);
 
 				ViewBag.IsTotalAccess = false;
 
@@ -191,8 +200,11 @@ namespace SuperTransp.Controllers
 				{
 					if (!_supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId))
 					{
-						TempData["SuccessMessage"] = "Esta organización está siendo supervisada por otro supervisor";
-						return RedirectToAction("PublicTransportGroupDriverList", new { ptgRifName = publicTransportGroupRif });
+						if (!_security.GroupHasAccessToModule((int)securityGroupId, 28))
+						{
+							TempData["SuccessMessage"] = "Esta organización está siendo supervisada por otro supervisor";
+							return RedirectToAction("PublicTransportGroupDriverList", new { ptgRifName = publicTransportGroupRif });
+						}
 					}
 
 					if (_supervision.IsSupervisionSummaryDoneByPtgId(publicTransportGroupId))
@@ -285,14 +297,17 @@ namespace SuperTransp.Controllers
 					if (_security.IsTotalAccess(3) || securityGroupId == 1)
 					{
 						int supervisionId = 0;
-						var driver = _driver.GetById(model.DriverId);
+						var driver = _driver.GetByDriverPublicTransportGroupId(model.DriverPublicTransportGroupId);
 						model.StateId = driver.StateId;
 
-						if (!model.DriverWithVehicle)
+						if (!model.DriverWithVehicle || !model.InPerson)
 						{
+							model.InPerson = !model.DriverWithVehicle ? false : model.InPerson;
+
 							supervisionId = _supervision.AddSimple(model);
+
 							var ftpBaseUrl = _configuration["FtpSettings:BaseUrl"];
-							var folderName = $"{model.PublicTransportGroupRif}-{model.DriverId}-supervision";
+							var folderName = $"{model.PublicTransportGroupRif}-{model.DriverPublicTransportGroupId}-supervision";
 							string ftpFolderPath = Path.Combine(ftpBaseUrl, model.StateName.ToUpper().Trim(), folderName).Replace("\\", "/");
 
 							await _ftpService.DeleteFilesInFolderAsync(ftpFolderPath);
@@ -352,15 +367,18 @@ namespace SuperTransp.Controllers
 
 				int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
 				int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
-				var driver = _driver.GetById(driverId);
+				var driver = _driver.GetByDriverPublicTransportGroupId(driverPublicTransportGroupId);
 				ViewBag.IsTotalAccess = false;
 
 				if (securityGroupId != null && _security.GroupHasAccessToModule((int)securityGroupId,3) || securityGroupId == 1)
 				{
 					if (!_supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId))
 					{
-						TempData["SuccessMessage"] = "Esta organización está siendo supervisada por otro supervisor";
-						return RedirectToAction("PublicTransportGroupDriverList" , new { ptgRifName = publicTransportGroupRif });
+						if (!_security.GroupHasAccessToModule((int)securityGroupId, 28))
+						{
+							TempData["SuccessMessage"] = "Esta organización está siendo supervisada por otro supervisor";
+							return RedirectToAction("PublicTransportGroupDriverList", new { ptgRifName = publicTransportGroupRif });
+						}
 					}
 
 					if (_supervision.IsSupervisionSummaryDoneByPtgId(publicTransportGroupId))
@@ -466,6 +484,8 @@ namespace SuperTransp.Controllers
 		}
 
 		[HttpPost]
+		[RequestSizeLimit(20_000_000)]
+		[RequestFormLimits(MultipartBodyLengthLimit = 20_000_000)]
 		public async Task<IActionResult> SaveFiles(IFormFile file, string stateName, string driverIdentityDocument, string partnerNumber, string publicTransportGroupRif, string driverId, int driverPublicTransportGroupId)
 		{
 			if (file?.Length > 0 &&
@@ -728,19 +748,20 @@ namespace SuperTransp.Controllers
 					}
 				}
 
-				var plateRule = _commonData.GetCommonDataValueByName("ValidPlateRule");
+				//Esto esta en espera de que se avance mas con la supervision 22-10-2025
+				//var plateRule = _commonData.GetCommonDataValueByName("ValidPlateRule");
 
-				if (plateRule != null)
-				{
-					string regexPlatePattern = plateRule.CommonDataValue;
+				//if (plateRule != null)
+				//{
+				//	string regexPlatePattern = plateRule.CommonDataValue;
 
-					Regex regexPlate = new Regex(regexPlatePattern);
+				//	Regex regexPlate = new Regex(regexPlatePattern);
 
-					if (!regexPlate.IsMatch(paramValue2))
-					{
-						return Json($"El número de placa {paramValue2} debe tener un formato válido.");
-					}
-				}
+				//	if (!regexPlate.IsMatch(paramValue2))
+				//	{
+				//		return Json($"El número de placa {paramValue2} debe tener un formato válido.");
+				//	}
+				//}
 
 				return Json("OK");
 			}
@@ -851,18 +872,23 @@ namespace SuperTransp.Controllers
 				if (result != null) return result;
 
 				int supervisionSummaryId = 0;
+				int supervisionSummaryIdExisting = 0;
 				int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
 				int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
 
 				if (_security.IsTotalAccess(3) || securityGroupId == 1)
 				{
+					supervisionSummaryIdExisting = _supervision.IsSupervisionSummaryDoneByRIF(model.PublicTransportGroupRif);
+
 					model.Pictures = await SupervisionSummaryPictureUrlAsync(model.StateName, model.PublicTransportGroupRif);
+
+					model.SupervisionSummaryId = supervisionSummaryIdExisting;					
 
 					supervisionSummaryId = _supervision.AddOrEditSummary(model);
 
-					if (supervisionSummaryId > 0)
+					if (supervisionSummaryId > 0 || supervisionSummaryIdExisting > 0)
 					{
-						return RedirectToAction("SummaryList");
+						return RedirectToAction("PublicTransportGroupList");
 					}
 				}
 
@@ -918,7 +944,7 @@ namespace SuperTransp.Controllers
 			if (_security.IsTotalAccess(3) || securityGroupId == 1)
 			{
 				List<SupervisionSummaryPictures> pictures = new List<SupervisionSummaryPictures>();
-
+				// TODO FIX THIS
 				foreach (var key in form.Keys)
 				{
 					if (key.StartsWith("Pictures["))
@@ -937,7 +963,10 @@ namespace SuperTransp.Controllers
 
 				_supervision.AddOrEditSummary(model);
 
-				return RedirectToAction("EditSummary", new { supervisionSummaryId = model.SupervisionSummaryId });
+				TempData["SuccessMessage"] = "Datos actualizados correctamente";
+
+				//return RedirectToAction("EditSummary", new { supervisionSummaryId = model.SupervisionSummaryId });
+				return RedirectToAction("PublicTransportGroupList");
 			}
 
 			return RedirectToAction("Login", "Security");
@@ -984,7 +1013,10 @@ namespace SuperTransp.Controllers
 
 			if (!hasPermission)
 			{
-				return Json(new { hasPermission, message = "Esta organización está siendo supervisada por otro supervisor." });
+				if (!_security.GroupHasAccessToModule((int)securityGroupId, 28))
+				{
+					return Json(new { hasPermission, message = "Esta organización está siendo supervisada por otro supervisor." });
+				}
 			}
 
 			summaryDone = _supervision.IsSupervisionSummaryDoneByPtgId(publicTransportGroupId);

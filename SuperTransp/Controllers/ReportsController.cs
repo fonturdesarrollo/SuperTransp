@@ -1,9 +1,12 @@
-﻿using DocumentFormat.OpenXml.EMMA;
+﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.EMMA;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Options;
 using SuperTransp.Core;
 using SuperTransp.Models;
+using System.ComponentModel;
 using static SuperTransp.Core.Interfaces;
 
 namespace SuperTransp.Controllers
@@ -16,8 +19,10 @@ namespace SuperTransp.Controllers
 		private readonly IReport _report;
 		private readonly IGeography _geography;
 		private readonly IExcelExporter _excelExporter;
+		private readonly IOptionsSnapshot<MaintenanceSettings> _settings;
 
-		public ReportsController(ISupervision supervision, IPublicTransportGroup publicTransportGroup, ISecurity security, IReport report, IGeography geography, IExcelExporter excelExporter)
+		public ReportsController(ISupervision supervision, IPublicTransportGroup publicTransportGroup, ISecurity security, 
+			IReport report, IGeography geography, IExcelExporter excelExporter, IOptionsSnapshot<MaintenanceSettings> settings)
 		{
 			_security = security;
 			_supervision = supervision;
@@ -25,6 +30,7 @@ namespace SuperTransp.Controllers
 			_report = report;
 			_geography = geography;
 			_excelExporter = excelExporter;
+			_settings = settings;
 		}
 
 		public IActionResult Index()
@@ -91,6 +97,11 @@ namespace SuperTransp.Controllers
 				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 				ViewBag.SecurityGroupId = (int)HttpContext.Session.GetInt32("SecurityGroupId");
 				ViewBag.UserStateId = (int)stateId;
+
+				if (_settings.Value.IsActive)
+				{
+					ViewBag.MaintenanceMessage = _settings.Value.Message;
+				}
 
 				return View();
 			}
@@ -292,6 +303,71 @@ namespace SuperTransp.Controllers
 			}
 		}
 
+		public IActionResult SummaryList()
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+				{
+					int? groupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+					if (groupId is null ||
+						(groupId != 1 && !_security.GroupHasAccessToModule(groupId.Value, 4)) ||
+						(groupId == 1 ? false : !_security.GroupHasAccessToModule(groupId.Value, 21)))
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
+					List<SupervisionSummaryViewModel> model = new();
+					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+					int? stateId = HttpContext.Session.GetInt32("StateId");
+
+					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
+					{
+						model = _supervision.GetSupervisionSummaryByStateId((int)stateId);
+					}
+					else
+					{
+						model = _supervision.GetAllSupervisionSummary();
+					}
+
+					return View(model);
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
+
+		public IActionResult EditSummary(int supervisionSummaryId, int publicTransportGroupId)
+		{
+			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+			{
+				int? groupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+				if (groupId is null ||
+					(groupId != 1 && !_security.GroupHasAccessToModule(groupId.Value, 4)) ||
+					(groupId == 1 ? false : !_security.GroupHasAccessToModule(groupId.Value, 21)))
+				{
+					return RedirectToAction("Login", "Security");
+				}
+
+				int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
+				int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
+				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+
+				var model = _supervision.GetSupervisionSummaryById(supervisionSummaryId);
+
+				return View(model);
+			}
+
+			return RedirectToAction("Login", "Security");
+		}
+
 		[HttpGet]
 		public IActionResult GetPublicTransportGroupSupervisedDriversStatistics()
 		{
@@ -427,41 +503,126 @@ namespace SuperTransp.Controllers
 		[HttpGet]
 		public async Task<IActionResult> ExportSupervisionDetail()
 		{
-			try
-			{
-				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+			try 
+			{ 
+				if (string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 				{
-					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 4))
-					{
-						return RedirectToAction("Login", "Security");
-					}
-
-					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
-					int? stateId = HttpContext.Session.GetInt32("StateId");
-
-					byte[] content = Array.Empty<byte>();
-
-					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
-					{
-						content = await _excelExporter.GenerateExcelSupervisionDetailAsync((int)stateId);
-					}
-					else
-					{
-						content = await _excelExporter.GenerateExcelSupervisionDetailAsync(0);
-					}
-
-					return File(content,
-								"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-								"DetalleDeSupervisión.xlsx");
-
+					return RedirectToAction("Login", "Security");
 				}
 
-				return RedirectToAction("Login", "Security");
+				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+				int? stateId = HttpContext.Session.GetInt32("StateId");
+
+				if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 4))
+				{
+					return RedirectToAction("Login", "Security");
+				}
+
+				int idParam = 0;
+				if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
+				{
+					idParam = (int)stateId;
+				}
+
+				var content = await _excelExporter.GenerateExcelSupervisionDetailAsync(idParam);
+
+				return File(content,
+							"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+							"DetalleDeSupervisión.xlsx");
 			}
 			catch (Exception ex)
 			{
-				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message });
 			}
+		}
+
+		public async Task<IActionResult> ExportCurrentAdvance()
+		{
+			var data = await GetDataForCurrentAdvanceExport();
+
+			using (var workbook = new XLWorkbook())
+			{
+				var worksheet = workbook.Worksheets.Add("Avance de la Carga");
+
+				worksheet.Cell(1, 1).Value = "Estado";
+				worksheet.Cell(1, 2).Value = "Organizaciones Cargadas";
+				worksheet.Cell(1, 3).Value = "Universo Organizaciones";
+				worksheet.Cell(1, 4).Value = "Socios Totales";
+				worksheet.Cell(1, 5).Value = "Socios Cargados";
+				worksheet.Cell(1, 6).Value = "Universo Socios";
+
+				var headerRange = worksheet.Range("A1:F1");
+				headerRange.Style.Font.Bold = true;
+				headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
+
+				int row = 2;
+				foreach (var item in data)
+				{
+					worksheet.Cell(row, 1).Value = item.StateName;
+
+					worksheet.Cell(row, 2).Value = item.TotalPTGInState;
+					worksheet.Cell(row, 2).Style.NumberFormat.Format = "#,##0";
+
+					worksheet.Cell(row, 3).Value = item.TotalUniversePTGInState;
+					worksheet.Cell(row, 3).Style.NumberFormat.Format = "#,##0";
+
+					worksheet.Cell(row, 4).Value = item.TotaPartnersByPTG;
+					worksheet.Cell(row, 4).Style.NumberFormat.Format = "#,##0";
+
+					worksheet.Cell(row, 5).Value = item.TotalAddedPartners;
+					worksheet.Cell(row, 5).Style.NumberFormat.Format = "#,##0";
+
+					worksheet.Cell(row, 6).Value = item.TotalUniverseDriversInState;
+					worksheet.Cell(row, 6).Style.NumberFormat.Format = "#,##0";
+
+					row++;
+				}
+
+				worksheet.Columns().AdjustToContents();
+
+				using (var stream = new MemoryStream())
+				{
+					workbook.SaveAs(stream);
+					var content = stream.ToArray();
+
+					return File(content,
+								"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+								$"AvanceDeLaCarga{DateTime.Now:yyyyMMdd}.xlsx");
+				}
+			}
+		}
+
+		private async Task<List<PublicTransportGroupViewModel>> GetDataForCurrentAdvanceExport()
+		{
+			List<PublicTransportGroupViewModel> model = new();
+
+			ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+			int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+			int? stateId = HttpContext.Session.GetInt32("StateId");
+
+			if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
+			{
+				model = _publicTransportGroup.GetAllStatisticsByStateId((int)stateId);
+			}
+			else
+			{
+				model = _publicTransportGroup.GetAllStatistics();				
+			}
+
+			return model;
+		}
+
+		private IActionResult? CheckSessionAndPermission(int requiredModuleId)
+		{
+			var securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+			if (securityGroupId == null)
+				return RedirectToAction("Login", "Security");
+
+			if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, requiredModuleId))
+				return RedirectToAction("Login", "Security");
+
+			return null;
 		}
 	}
 }

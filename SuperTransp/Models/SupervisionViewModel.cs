@@ -60,6 +60,7 @@ namespace SuperTransp.Models
 		public int SupervisionPictureId { get; set; }
 		public int PublicTransportGroupId { get; set; }
 		public int PartnerNumber { get; set; }
+		public int DriverId { get; set; }
 		public string? VehicleImageUrl { get; set; }
 		public DateTime SupervisionPictureDateAdded { get; set; }
 	}
