@@ -83,7 +83,6 @@
 					<br />
 					<div id="loadingSpinner" style="text-align:center; padding:1em;">
 						<div class="spinner-border text-info" role="status">
-							<span class="sr-only">Cargando...</span>
 						</div>
 					</div>
 					<table id="publicTransportGroupListDetail" class="table table-striped table-bordered dt-responsive dt-nowrap">
@@ -127,22 +126,28 @@
 		var checkExistingUrl = '@Url.Action("GetLogbookDataServerSide", "Security")';
 
 		$(document).ready(function () {
-			let selectedStateName = $('#selectedStateName').val() || "";
-			let filterType = $('#filterType').val() || "currentMonth";
+			const $spinner = $('#loadingSpinner');
 
-			$('#loadingSpinner').show();
+			// Mostrar spinner al cargar la página por primera vez
+			$spinner.show();
 
 			$('#publicTransportGroupListDetail').DataTable({
 				destroy: true,
-				processing: true,
-				serverSide: true, 
+				processing: false,        // desactivamos el mensaje interno
+				serverSide: true,
 				ajax: {
-						url: checkExistingUrl,
-						type: 'POST',
-						data: function (d) {
-							d.selectedStateName = $('#selectedStateName').val() || "";
-							d.filterType        = $('#filterType').val() || "currentMonth";
-						}
+					url: checkExistingUrl,
+					type: 'POST',
+					data: function (d) {
+						d.selectedStateName = $('#selectedStateName').val() || "";
+						d.filterType = $('#filterType').val() || "currentMonth";
+					},
+					beforeSend: function () {
+						$spinner.fadeIn(200);   // aparece en cada petición
+					},
+					complete: function () {
+						$spinner.fadeOut(300);  // desaparece con fade suave
+					}
 				},
 				pageLength: 10,
 				lengthMenu: [10, 25, 50, 100, 500],
@@ -160,23 +165,17 @@
 					{ data: 'accion' }
 				],
 				language: {
-					sProcessing: "Procesando...",
-					sLengthMenu: "Mostrar _MENU_ registros",
-					sZeroRecords: "No se encontraron resultados",
-					sEmptyTable: "Ningún dato disponible en esta tabla",
-					sInfo: "Mostrando _START_ a _END_ de _TOTAL_ registros",
-					sInfoEmpty: "Mostrando 0 a 0 de 0 registros",
-					sInfoFiltered: "(filtrado de _MAX_ registros totales)",
-					sSearch: "Buscar en toda la tabla:",
+					sProcessing:   "",
+					sZeroRecords:  "No se encontraron resultados",
+					sInfo:         "Mostrando _START_ a _END_ de _TOTAL_",
+					sSearch:       "Buscar:",
 					oPaginate: {
-						sFirst: "Primero",
-						sLast: "Último",
-						sNext: "Siguiente",
+						sNext:     "Siguiente",
 						sPrevious: "Anterior"
 					}
 				},
 				initComplete: function () {
-					$('#loadingSpinner').fadeOut();
+					$spinner.fadeOut(400);   // primera carga terminada
 				}
 			});
 		});
