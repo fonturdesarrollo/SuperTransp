@@ -39,9 +39,12 @@ namespace SuperTransp.Core
 			public bool IsInactiveLogin(string login);
 			public string GeneratePublicKey();
 			public bool ValidateKey(string key, byte[] sign);
-			public List<SecurityLogbookModel> GetLogbookByStateName(string userState, string filterType);
-			public List<SecurityLogbookModel> GetLogbookAllExceptAdminByStateName(string selectStateName, string filterType);
-			public List<SecurityLogbookModel> GetLogbookAllBySelectedStateName(string selectedStateName, string filterType);
+			// Cambiados por: GetLogbookServerSideAsync() para que lea directamente del servidor
+			//public List<SecurityLogbookModel> GetLogbookByStateName(string userState, string filterType);
+			//public List<SecurityLogbookModel> GetLogbookAllExceptAdminByStateName(string selectStateName, string filterType);
+			//public List<SecurityLogbookModel> GetLogbookAllBySelectedStateName(string selectedStateName, string filterType);
+			//**********************************************
+			public Task<object> GetLogbookServerSideAsync(int draw, int start, int length, string searchValue, string selectedStateName, string filterType, int securityGroupId);
 		}
 		public interface IGeography
 		{
