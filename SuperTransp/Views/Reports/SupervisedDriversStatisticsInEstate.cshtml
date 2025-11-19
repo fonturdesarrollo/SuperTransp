@@ -133,17 +133,21 @@
             <h2>Estadísticas de vehículos supervisados por estado</h2>
             <h3>
                 @{
+                    int totalSupervised = 0;
                     int totalWorking = 0;
                     int totalNotWorking = 0;
                     int totalWithoutVehicle = 0;
 
                     if (Model != null && Model.Any())
                     {
+                        totalSupervised = Model.Sum(x => x.TotalSupervisedDrivers);
                         totalWorking = Model.Sum(x => x.TotalWorkingVehicles);
                         totalNotWorking = Model.Sum(x => x.TotalNotWorkingVehicles);
                         totalWithoutVehicle = Model.Sum(x => x.TotalWithoutVehicle);
                     }
                 }
+                Total global socios supervisados: @totalSupervised.ToString("N0", new System.Globalization.CultureInfo("de-DE"))
+                <br />
                 Total global vehículos operativos: @totalWorking.ToString("N0", new System.Globalization.CultureInfo("de-DE"))
                 <br />
                 Total global vehículos inoperativos: @totalNotWorking.ToString("N0", new System.Globalization.CultureInfo("de-DE"))

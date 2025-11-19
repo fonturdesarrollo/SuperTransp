@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DocumentFormat.OpenXml.Wordprocessing;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
@@ -682,6 +683,7 @@ namespace SuperTransp.Controllers
 
 		private async Task<List<SupervisionSummaryPictures>> SupervisionSummaryPictureUrlAsync(string stateName, string publicTransportGroupRif)
 		{
+			int? stateId = HttpContext.Session.GetInt32("StateId");
 			var ftpBaseUrl = _configuration["FtpSettings:BaseUrl"];
 			var ftpUsername = _configuration["FtpSettings:Username"];
 			var ftpPassword = _configuration["FtpSettings:Password"];
@@ -691,37 +693,59 @@ namespace SuperTransp.Controllers
 			var ftpFolderPath = $"{ftpBaseUrl}/{newFolderName}";
 			var subFolderName = $"{publicTransportGroupRif}-resumen_supervision_temp";
 			var subFinalFolderName = $"{publicTransportGroupRif}-resumen_supervision";
+			var supervisionFolderName = "RESUMEN_DE_SUPERVISION";
+			var roundFolderName = string.Empty;
 			var ftpSubFolderPath = $"{ftpFolderPath}/{subFolderName}";
-			var ftpfinalFolderPath = $"{ftpFolderPath}/{subFinalFolderName}";
-
+			var ftpFinalFolderPath = $"{ftpFolderPath}/{subFinalFolderName}";
 			var images = new List<SupervisionSummaryPictures>();
-
-			// Paso 1: Verificar si la carpeta destino existe antes de crearla
-			if (!await _ftpService.FolderExistsAsync(ftpfinalFolderPath))
-			{
-				await _ftpService.CreateFolderAsync(ftpfinalFolderPath);
-			}
 
 			try
 			{
+				roundFolderName = $"VUELTA_{_supervision.GetActiveSupervisionRoundByStateId((int)stateId).SupervisionRoundStartDate.ToString("MM-yyyy")}";
+
+				// Verificar si la carpeta RESUMEN_DE_SUPERVISION existe antes de crearla
+				if (!await _ftpService.FolderExistsAsync($"{ftpFolderPath}/{supervisionFolderName}"))
+				{
+					await _ftpService.CreateFolderAsync($"{ftpFolderPath}/{supervisionFolderName}");
+				}
+
+				// Verificar si la carpeta VUELTA existe antes de crearla
+				if (!await _ftpService.FolderExistsAsync($"{ftpFolderPath}/{supervisionFolderName}/{roundFolderName}"))
+				{
+					await _ftpService.CreateFolderAsync($"{ftpFolderPath}/{supervisionFolderName}/{roundFolderName}");
+				}
+
+				ftpFinalFolderPath = $"{ftpFolderPath}/{supervisionFolderName}/{roundFolderName}/{subFinalFolderName}";
+				// Paso 1: Verificar si la carpeta destino existe antes de crearla
+				if (!await _ftpService.FolderExistsAsync(ftpFinalFolderPath))
+				{
+					await _ftpService.CreateFolderAsync(ftpFinalFolderPath);
+				}
+
 				// Paso 2: Obtener lista de archivos
 				var fileList = await _ftpService.ListFilesAsync(ftpSubFolderPath);
 				if (fileList.Count == 0) return images;
 
 				// Paso 3: Transferir archivos a la carpeta final
 				var transferTasks = fileList.Select(fileName =>
-					_ftpService.TransferFileAsync($"{ftpSubFolderPath}/{fileName}", $"{ftpfinalFolderPath}/{fileName}"));
+					_ftpService.TransferFileAsync($"{ftpSubFolderPath}/{fileName}", $"{ftpFinalFolderPath}/{fileName}"));
 				await Task.WhenAll(transferTasks);
 
-				// Paso 4: Eliminar archivos de la carpeta temporal
+				// Paso 4: Registrar imágenes
+				foreach (var fileName in await _ftpService.ListFilesAsync(ftpSubFolderPath))
+				{
+					var filePath = $"{ftpFinalFolderPath}/{fileName}".Replace(ftpBaseUrl, baseImagesUrl);
+					images.Add(new SupervisionSummaryPictures { SupervisionSummaryPictureUrl = filePath });
+				}
+
+				// Paso 5: Eliminar archivos de la carpeta temporal
 				var deleteTasks = fileList.Select(fileName => _ftpService.DeleteFileAsync($"{ftpSubFolderPath}/{fileName}"));
 				await Task.WhenAll(deleteTasks);
 
-				// Paso 5: Registrar imágenes
-				foreach (var fileName in await _ftpService.ListFilesAsync(ftpfinalFolderPath))
+				// Paso 6: Eliminar la carpeta temporal
+				if (await _ftpService.FolderExistsAsync(ftpSubFolderPath))
 				{
-					var filePath = $"{ftpfinalFolderPath}/{fileName}".Replace(ftpBaseUrl, baseImagesUrl);
-					images.Add(new SupervisionSummaryPictures { SupervisionSummaryPictureUrl = filePath });
+					await _ftpService.DeleteFolderAsync(ftpSubFolderPath);
 				}
 			}
 			catch (WebException ex)
@@ -908,6 +932,7 @@ namespace SuperTransp.Controllers
 			int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
 			int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
 			ViewBag.IsTotalAccess = false;
+			ViewBag.DeleteSummary = false;
 
 			if (!_supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId))
 			{
@@ -918,22 +943,27 @@ namespace SuperTransp.Controllers
 
 			if (securityGroupId != 1)
 			{
-				if(_security.IsTotalAccess(3) || _security.IsUpdateAccess(3))
+				if (_security.IsTotalAccess(3) || _security.IsUpdateAccess(3))
 				{
 					ViewBag.IsTotalAccess = true;
+
+					if (_security.GroupHasAccessToModule((int)securityGroupId, 29))
+					{
+						ViewBag.DeleteSummary = true;
+					}
 				}
 			}
 			else
 			{
-
 				ViewBag.IsTotalAccess = true;
+				ViewBag.DeleteSummary = true;
 			}
 
 			return View(model);
 		}
 
 		[HttpPost]
-		public IActionResult EditSummary(IFormCollection form, SupervisionSummaryViewModel model)
+		public IActionResult EditSummary(IFormCollection form, SupervisionSummaryViewModel model, string actionType)
 		{
 			var result = CheckSessionAndPermission(3);
 			if (result != null) return result;
@@ -943,6 +973,11 @@ namespace SuperTransp.Controllers
 
 			if (_security.IsTotalAccess(3) || securityGroupId == 1)
 			{
+				if (actionType == "delete")
+				{
+					return RedirectToAction("DeleteSummary", new { supervisionSummaryId = model.SupervisionSummaryId });
+				}
+
 				List<SupervisionSummaryPictures> pictures = new List<SupervisionSummaryPictures>();
 				// TODO FIX THIS
 				foreach (var key in form.Keys)
@@ -965,11 +1000,61 @@ namespace SuperTransp.Controllers
 
 				TempData["SuccessMessage"] = "Datos actualizados correctamente";
 
-				//return RedirectToAction("EditSummary", new { supervisionSummaryId = model.SupervisionSummaryId });
 				return RedirectToAction("PublicTransportGroupList");
 			}
 
 			return RedirectToAction("Login", "Security");
+		}
+
+		[HttpGet]
+		public async Task<IActionResult> DeleteSummary(int supervisionSummaryId)
+		{
+			var summaryData = _supervision.GetSupervisionSummaryById(supervisionSummaryId);
+			var summaryFolderName = string.Empty;
+			string ftpFilesFolderPath = string.Empty;
+
+			if (summaryData != null)
+			{
+				var ftpBaseUrl = _configuration["FtpSettings:BaseUrl"];
+				var stateName = summaryData.StateName.ToUpper();
+				var summaryParentFolderName = "RESUMEN_DE_SUPERVISION";
+				summaryFolderName = $"{summaryData.PublicTransportGroupRif}-resumen_supervision";
+
+				if (summaryData.Pictures.Any())
+				{
+					if (summaryData.Pictures.Any(p =>
+						!string.IsNullOrEmpty(p.SupervisionSummaryPictureUrl) &&
+						p.SupervisionSummaryPictureUrl.Contains(summaryParentFolderName)))
+					{
+						string url = summaryData.Pictures
+							.FirstOrDefault(p => !string.IsNullOrEmpty(p.SupervisionSummaryPictureUrl))?
+							.SupervisionSummaryPictureUrl;
+
+						if (!string.IsNullOrEmpty(url))
+						{
+							var match = Regex.Match(url, @"RESUMEN_DE_SUPERVISION/VUELTA_\d{2}-\d{4}");
+							if (match.Success)
+							{
+								ftpFilesFolderPath = Path.Combine(
+									ftpBaseUrl,
+									stateName.ToUpper().Trim(),
+									match.Value,
+									summaryFolderName
+								).Replace("\\", "/");
+							}
+						}
+					}
+				}
+
+				if (!string.IsNullOrEmpty(ftpFilesFolderPath))
+				{
+					await _ftpService.DeleteFilesInFolderAsync(ftpFilesFolderPath);
+				}
+
+				_supervision.DeleteSupervisionSummaryById(supervisionSummaryId);
+			}
+
+			return RedirectToAction("SummaryList");
 		}
 
 		public IActionResult SummaryList()

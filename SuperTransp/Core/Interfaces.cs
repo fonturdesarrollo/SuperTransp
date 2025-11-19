@@ -133,6 +133,7 @@ namespace SuperTransp.Core
 			public bool IsUserSupervisingPublicTransportGroup(int securityUserId, int publicTransportGroupId);
 			public bool DeletePicturesByPTGIdAndPartnerNumber(int publicTransportGroupId, int partnerNumber);
 			public List<SupervisionPictures> GetPicturesByPTGIdAndDriverPublicTransportGroupId(int publicTransportGroupId, int driverPublicTransportGroupId);
+			public bool DeleteSupervisionSummaryById(int supervisionSummaryId);
 		}
 
 		public interface ICommonData

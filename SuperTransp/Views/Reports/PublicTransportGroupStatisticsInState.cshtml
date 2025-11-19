@@ -175,7 +175,8 @@
             return {
                 ptg: `ptg-checkbox-${chartId}`,
                 partners: `partners-checkbox-${chartId}`,
-                totalPartnersByPTG: `total-partners-by-ptg-checkbox-${chartId}`,
+                // Muestra Socios Totales
+                //totalPartnersByPTG: `total-partners-by-ptg-checkbox-${chartId}`,
                 universePtg: `universe-ptg-checkbox-${chartId}`,
                 universePartners: `universe-partners-checkbox-${chartId}`
             };
@@ -190,11 +191,10 @@
             const ids = getCheckboxIds(item.ChartId);
 
             const picks = [
-                { show: document.getElementById(ids.ptg).checked, value: item.TotalPTGInState, label: 'Organizaciones Cargadas', color: COLORS[0] },
-                { show: document.getElementById(ids.partners).checked, value: item.TotalAddedPartners, label: 'Socios Cargados', color: COLORS[1] },
-                { show: document.getElementById(ids.totalPartnersByPTG).checked, value: item.TotaPartnersByPTG, label: 'Socios Totales', color: COLORS[2] },
                 { show: document.getElementById(ids.universePtg).checked, value: item.TotalUniversePTGInState, label: 'Universo Organizaciones', color: COLORS[3] },
-                { show: document.getElementById(ids.universePartners).checked, value: item.TotalUniverseDriversInState, label: 'Universo Socios', color: COLORS[4] }
+                { show: document.getElementById(ids.ptg).checked, value: item.TotalPTGInState, label: 'Organizaciones Cargadas', color: COLORS[0] },
+                { show: document.getElementById(ids.universePartners).checked, value: item.TotalUniverseDriversInState, label: 'Universo Socios', color: COLORS[4] },
+                { show: document.getElementById(ids.partners).checked, value: item.TotalAddedPartners, label: 'Socios Cargados', color: COLORS[1] }
             ];
 
             picks.forEach(p => {
@@ -355,8 +355,6 @@
             `;
             card.appendChild(progressDiv);
 
-
-
             const controlsDiv = document.createElement('div');
             controlsDiv.className = 'controls';
 
@@ -371,10 +369,11 @@
                 <input type="checkbox" id="${ids.partners}" checked>
                 <label for="${ids.partners}">Socios Cargados</label>
             `;
-            controlsDiv.innerHTML += `
-                <input type="checkbox" id="${ids.totalPartnersByPTG}">
-                <label for="${ids.totalPartnersByPTG}">Socios Totales</label>
-            `;
+            // Muestra Socios Totales
+            // controlsDiv.innerHTML += `
+            //     <input type="checkbox" id="${ids.totalPartnersByPTG}">
+            //     <label for="${ids.totalPartnersByPTG}">Socios Totales</label>
+            // `;
             controlsDiv.innerHTML += `
                 <input type="checkbox" id="${ids.universePtg}">
                 <label for="${ids.universePtg}">Universo Orgs.</label>
@@ -400,7 +399,7 @@
             renderChart(item, 'bar');
 
             // Eventos de checkboxes => actualizar
-            Object.values(ids).forEach(cid => {
+            Object.values(ids).forEach(cid => { 
                 document.getElementById(cid).addEventListener('change', () => updateChart(item.ChartId));
             });
         });

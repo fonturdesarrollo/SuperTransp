@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using Microsoft.Data.SqlClient;
 using SuperTransp.Extensions;
 using SuperTransp.Models;
 using System.Data;
@@ -1252,6 +1253,47 @@ namespace SuperTransp.Core
 			catch (Exception ex)
 			{
 				throw new Exception($"Error al obtener todos los resumenes de supervision {ex.Message}", ex);
+			}
+		}
+
+		public bool DeleteSupervisionSummaryById(int supervisionSummaryId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					var supervision = GetSupervisionSummaryById(supervisionSummaryId);
+
+					SqlCommand cmd = new("DELETE FROM SupervisionSummary WHERE SupervisionSummaryId = @SupervisionSummaryId", sqlConnection);
+					cmd.Parameters.AddWithValue("@SupervisionSummaryId", supervisionSummaryId);
+
+					int rowsAffected = cmd.ExecuteNonQuery();
+
+					if (rowsAffected > 0)
+					{
+						if (supervision != null)
+						{
+							_security.AddLogbook(supervision.SupervisionSummaryId, true,
+								$" Resumen de Supervision " +
+								$" Fecha {supervision.SupervisionDate.ToString("dd/MM/yyyy")}" +
+								$" organizacion {supervision.PTGCompleteName}" +
+								$" RIF {supervision.PublicTransportGroupRif}" +
+								$" direccion {supervision.SupervisionAddress.ToUpper().Trim()}" +
+								$" observaciones {supervision.SupervisionSummaryRemarks}");
+						}
+					}
+
+					return true;
+				}
+			}
+			catch (Exception ex)			
+			{
+				throw new Exception($"Error al eliminar resumen de supervision {ex.Message}", ex);
 			}
 		}
 

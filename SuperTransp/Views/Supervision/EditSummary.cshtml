@@ -14,7 +14,7 @@
 	<link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
 
 	@* Air DatePicker ******************************************************************************* *@
-    <link href="~/plugins/airdatepicker/air-datepicker.min.css" rel="stylesheet" />
+	<link href="~/plugins/airdatepicker/air-datepicker.min.css" rel="stylesheet" />
 	@* *************************************************************************************************** *@
 
 	@* DropZone************************************************************************************ *@
@@ -122,23 +122,23 @@
 								<br />
 								<strong>Dirección:</strong>
 								@Html.TextAreaFor(x => x.SupervisionAddress, new
-									{
-										@class = "custom-textarea",
-										placeholder = "Dirección",
-										maxlength = "150"
-									})
-							</div>
-							<div class="col-12">
-								<br />
-								<strong>Observaciones:</strong>
-								@Html.TextAreaFor(x => x.SupervisionSummaryRemarks, new
-									{
-										@class = "custom-textarea",
-										placeholder = "Observaciones",
-										maxlength = "150"
-									})
-							</div>
-@* 							<div class="col-12">
+								{
+									@class = "custom-textarea",
+														placeholder = "Dirección",
+														maxlength = "150"
+														})
+						</div>
+						<div class="col-12">
+							<br />
+							<strong>Observaciones:</strong>
+							@Html.TextAreaFor(x => x.SupervisionSummaryRemarks, new
+														{
+									@class = "custom-textarea",
+														placeholder = "Observaciones",
+														maxlength = "150"
+														})
+						</div>
+						@* 							<div class="col-12">
 								<br />
 								<strong>Cargar imagenes:</strong>
 								<div id="myDropzone" class="dropzone dz-clickable">
@@ -147,19 +147,31 @@
 									</div>
 								</div>
 							</div> *@
-							<div class="col-12">
-								<br />
-								<strong>Imagenes o PDF:</strong>
-								<div id="thumbnail-container"></div>
-							</div>
-							<div class="col-12">
-								<ul class="actions">
-									@{
+						<div class="col-12">
+							<br />
+							<strong>Imagenes o PDF:</strong>
+							<div id="thumbnail-container"></div>
+						</div>
+						<div class="col-12">
+							<ul class="actions">
+								@{
 										if (ViewBag.IsTotalAccess)
 										{
-											<li><button type="submit" id="saveRequest" class="primary">Modificar resumen</button></li>
+											<li>
+												<button type="submit" id="saveRequest" class="primary">
+													Modificar resumen
+												</button>
+											</li>
 										}
-									}									
+										if (ViewBag.DeleteSummary)
+										{
+											<li>
+												<button type="submit" name="actionType" value="delete" id="deleteRequest" class="primary">
+													Eliminar resumen
+												</button>
+											</li>
+										}
+									}
 								</ul>
 							</div>
 						</div>
@@ -176,7 +188,7 @@
 	<script src="~/assets/js/main.js"></script>
 
 	@* Air DatePicker ******************************************************************************* *@
-    <script src="~/plugins/airdatepicker/air-datepicker.min.js"></script>
+	<script src="~/plugins/airdatepicker/air-datepicker.min.js"></script>
 	@* *********************************************************************************************** *@
 
 	@* DropZone************************************************************************************ *@
@@ -340,6 +352,20 @@
 			$(this).closest("form").trigger("submit");
 		});
 
+		$("body").on("click", "#deleteRequest", function (event) {
+			event.preventDefault();
+
+			if (!confirm("¿Está seguro de que desea eliminar el resumen de supervisión? se eliminarán las imagenes y documentos también")) {
+				return false;
+			}
+
+			// Agregar input oculto con el valor del botón
+			const form = $(this).closest("form");
+			form.append('<input type="hidden" name="actionType" value="delete" />');
+
+			form.trigger("submit");
+		});
+
 		// $("form").on("submit", function (e) {
 		// 	e.preventDefault();
 
@@ -435,5 +461,4 @@
 	</script>
 </body>
 </html>
-
 
