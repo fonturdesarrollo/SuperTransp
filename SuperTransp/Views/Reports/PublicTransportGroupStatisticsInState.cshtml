@@ -9,7 +9,7 @@
         StateName = item.StateName,
         TotalPTGInState = item.TotalPTGInState,
         TotalUniversePTGInState = item.TotalUniversePTGInState,
-        TotaPartnersByPTG = item.TotaPartnersByPTG,
+        TotalSupervisedDrivers = item.TotalSupervisedDrivers,
         TotalAddedPartners = item.TotalAddedPartners,
         TotalUniverseDriversInState = item.TotalUniverseDriversInState
     });
@@ -161,11 +161,11 @@
         const currentTypes = {};
 
         // Paleta consistente entre dona/torta y barras (mismo orden que los checkboxes)
-        // 0: Orgs. Cargadas, 1: Socios Cargados, 2: Socios Totales, 3: Universo Orgs., 4: Universo Socios
+        // 0: Orgs. Cargadas, 1: Socios Cargados, 2: Socios Supervisados, 3: Universo Orgs., 4: Universo Socios
         const COLORS = [
             '#4CAF50', // Orgs. Cargadas
             '#2196F3', // Socios Cargados
-            '#FF9800', // Socios Totales
+            '#FF9800', // Socios Supervisados
             '#9C27B0', // Universo Orgs.
             '#E91E63'  // Universo Socios
         ];
@@ -175,8 +175,8 @@
             return {
                 ptg: `ptg-checkbox-${chartId}`,
                 partners: `partners-checkbox-${chartId}`,
-                // Muestra Socios Totales
-                //totalPartnersByPTG: `total-partners-by-ptg-checkbox-${chartId}`,
+                // Muestra Socios Supervisados
+                totalSupervisedDrivers: `total-partners-by-ptg-checkbox-${chartId}`,
                 universePtg: `universe-ptg-checkbox-${chartId}`,
                 universePartners: `universe-partners-checkbox-${chartId}`
             };
@@ -194,7 +194,8 @@
                 { show: document.getElementById(ids.universePtg).checked, value: item.TotalUniversePTGInState, label: 'Universo Organizaciones', color: COLORS[3] },
                 { show: document.getElementById(ids.ptg).checked, value: item.TotalPTGInState, label: 'Organizaciones Cargadas', color: COLORS[0] },
                 { show: document.getElementById(ids.universePartners).checked, value: item.TotalUniverseDriversInState, label: 'Universo Socios', color: COLORS[4] },
-                { show: document.getElementById(ids.partners).checked, value: item.TotalAddedPartners, label: 'Socios Cargados', color: COLORS[1] }
+                { show: document.getElementById(ids.partners).checked, value: item.TotalAddedPartners, label: 'Socios Cargados', color: COLORS[1] },
+                { show: document.getElementById(ids.totalSupervisedDrivers).checked, value: item.TotalSupervisedDrivers, label: 'Socios Supervisados', color: COLORS[2] }
             ];
 
             picks.forEach(p => {
@@ -369,11 +370,11 @@
                 <input type="checkbox" id="${ids.partners}" checked>
                 <label for="${ids.partners}">Socios Cargados</label>
             `;
-            // Muestra Socios Totales
-            // controlsDiv.innerHTML += `
-            //     <input type="checkbox" id="${ids.totalPartnersByPTG}">
-            //     <label for="${ids.totalPartnersByPTG}">Socios Totales</label>
-            // `;
+            // Muestra Socios Supervisados
+            controlsDiv.innerHTML += `
+                <input type="checkbox" id="${ids.totalSupervisedDrivers}" checked>
+                <label for="${ids.totalSupervisedDrivers}">Socios Supervisados</label>
+            `;
             controlsDiv.innerHTML += `
                 <input type="checkbox" id="${ids.universePtg}">
                 <label for="${ids.universePtg}">Universo Orgs.</label>

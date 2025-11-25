@@ -857,7 +857,8 @@ namespace SuperTransp.Controllers
 						PublicTransportGroupRif = ptg.PublicTransportGroupRif,
 						StateName = ptg.StateName,
 						SupervisionDate = DateTime.Now,
-						SecurityUserId = (int)HttpContext.Session.GetInt32("SecurityUserId")
+						SecurityUserId = (int)HttpContext.Session.GetInt32("SecurityUserId"),
+						StateId = ptg.StateId
 					};
 
 					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
@@ -934,9 +935,12 @@ namespace SuperTransp.Controllers
 			ViewBag.IsTotalAccess = false;
 			ViewBag.DeleteSummary = false;
 
-			if (!_supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId))
+			if (securityGroupId > 2)
 			{
-				return RedirectToAction("SummaryList");
+				if (!_supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId))
+				{
+					return RedirectToAction("SummaryList");
+				}
 			}
 
 			var model = _supervision.GetSupervisionSummaryById(supervisionSummaryId);
@@ -1122,13 +1126,17 @@ namespace SuperTransp.Controllers
 		public JsonResult CheckPermissionSummary(int publicTransportGroupId)
 		{
 			int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
+			int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
 			bool hasPermission = true;
 
-			hasPermission = _supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId);
-
-			if (!hasPermission)
+			if(securityGroupId > 2)
 			{
-				return Json(new { hasPermission, message = "Esta organización está siendo supervisada por otro supervisor." });
+				hasPermission = _supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId);
+
+				if (!hasPermission)
+				{
+					return Json(new { hasPermission, message = "Esta organización está siendo supervisada por otro supervisor." });
+				}
 			}
 
 			return Json(new { hasPermission, message = "" });

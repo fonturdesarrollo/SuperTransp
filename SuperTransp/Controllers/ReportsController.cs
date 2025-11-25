@@ -238,6 +238,7 @@ namespace SuperTransp.Controllers
 					}
 
 					List<PublicTransportGroupViewModel> model = new();
+					List<PublicTransportGroupViewModel> modelSupervised = new();
 
 					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
@@ -251,17 +252,25 @@ namespace SuperTransp.Controllers
 					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
 					{
 						model = _publicTransportGroup.GetAllStatisticsByStateId((int)stateId);
+						modelSupervised = _report.GetAllSupervisedDriversStatisticsInEstateByStateId((int)stateId);
 					}
 					else
 					{
 						if(selectedStatisticsStateId == 0)
 						{
 							model = _publicTransportGroup.GetAllStatistics();
+							modelSupervised = _report.GetAllSupervisedDriversStatisticsInEstate();
 						}
 						else
 						{
 							model = _publicTransportGroup.GetAllStatisticsByStateId((int)stateId);
+							modelSupervised = _report.GetAllSupervisedDriversStatisticsInEstateByStateId((int)stateId);
 						}						
+					}
+
+					foreach (var supervisionNumbers in modelSupervised)
+					{
+						model.Where(s => s.StateId == supervisionNumbers.StateId).FirstOrDefault().TotalSupervisedDrivers = supervisionNumbers.TotalSupervisedDrivers;
 					}
 
 					return View(model);
@@ -488,7 +497,7 @@ namespace SuperTransp.Controllers
 
 					return File(content,
 								"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-								"OrganizacionesYSocios.xlsx");
+								$"Estadisticas_OrganizacionesSocios_{DateTime.Now:yyyyMMdd}.xlsx");
 
 				}
 
@@ -528,7 +537,7 @@ namespace SuperTransp.Controllers
 
 				return File(content,
 							"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-							"DetalleDeSupervisión.xlsx");
+							$"Estadisticas_Supervisiones_{DateTime.Now:yyyyMMdd}.xlsx");
 			}
 			catch (Exception ex)
 			{
@@ -549,9 +558,11 @@ namespace SuperTransp.Controllers
 				worksheet.Cell(1, 3).Value = "Universo Organizaciones";
 				worksheet.Cell(1, 4).Value = "Socios Totales";
 				worksheet.Cell(1, 5).Value = "Socios Cargados";
-				worksheet.Cell(1, 6).Value = "Universo Socios";
+				worksheet.Cell(1, 6).Value = "Socios Supervisados";
+				worksheet.Cell(1, 7).Value = "Universo Socios";
 
-				var headerRange = worksheet.Range("A1:F1");
+
+				var headerRange = worksheet.Range("A1:G1");
 				headerRange.Style.Font.Bold = true;
 				headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
 
@@ -572,8 +583,11 @@ namespace SuperTransp.Controllers
 					worksheet.Cell(row, 5).Value = item.TotalAddedPartners;
 					worksheet.Cell(row, 5).Style.NumberFormat.Format = "#,##0";
 
-					worksheet.Cell(row, 6).Value = item.TotalUniverseDriversInState;
+					worksheet.Cell(row, 6).Value = item.TotalSupervisedDrivers;
 					worksheet.Cell(row, 6).Style.NumberFormat.Format = "#,##0";
+
+					worksheet.Cell(row, 7).Value = item.TotalUniverseDriversInState;
+					worksheet.Cell(row, 7).Style.NumberFormat.Format = "#,##0";
 
 					row++;
 				}
@@ -587,7 +601,7 @@ namespace SuperTransp.Controllers
 
 					return File(content,
 								"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-								$"AvanceDeLaCarga{DateTime.Now:yyyyMMdd}.xlsx");
+								$"EstadisticasOrganizaciones_{DateTime.Now:yyyyMMdd}.xlsx");
 				}
 			}
 		}
@@ -595,6 +609,7 @@ namespace SuperTransp.Controllers
 		private async Task<List<PublicTransportGroupViewModel>> GetDataForCurrentAdvanceExport()
 		{
 			List<PublicTransportGroupViewModel> model = new();
+			List<PublicTransportGroupViewModel> modelSupervised = new();
 
 			ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 			int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
@@ -603,10 +618,17 @@ namespace SuperTransp.Controllers
 			if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
 			{
 				model = _publicTransportGroup.GetAllStatisticsByStateId((int)stateId);
+				modelSupervised = _report.GetAllSupervisedDriversStatisticsInEstateByStateId((int)stateId);
 			}
 			else
 			{
-				model = _publicTransportGroup.GetAllStatistics();				
+				model = _publicTransportGroup.GetAllStatistics();
+				modelSupervised = _report.GetAllSupervisedDriversStatisticsInEstate();
+			}
+
+			foreach (var supervisionNumbers in modelSupervised)
+			{
+				model.Where(s => s.StateId == supervisionNumbers.StateId).FirstOrDefault().TotalSupervisedDrivers = supervisionNumbers.TotalSupervisedDrivers;
 			}
 
 			return model;

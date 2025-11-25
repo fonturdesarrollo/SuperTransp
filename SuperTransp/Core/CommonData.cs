@@ -283,6 +283,8 @@ namespace SuperTransp.Core
 				capacity.Add(new CommonDataViewModel { TankCapacityId = i, TankCapacity = i });
 			}
 
+			capacity.Add(new CommonDataViewModel { TankCapacityId = 650, TankCapacity = 600 });
+
 			return capacity;
 		}
 

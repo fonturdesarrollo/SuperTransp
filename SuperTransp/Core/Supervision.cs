@@ -1,4 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Drawing;
 using Microsoft.Data.SqlClient;
 using SuperTransp.Extensions;
 using SuperTransp.Models;
@@ -950,6 +951,8 @@ namespace SuperTransp.Core
 
 					if (model != null)
 					{
+						var round = GetActiveSupervisionRoundByStateId(model.StateId);
+
 						SqlCommand cmd = new("SuperTransp_SupervisionSummaryAddOrEdit", sqlConnection)
 						{
 							CommandType = System.Data.CommandType.StoredProcedure
@@ -962,7 +965,18 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@SupervisionSummaryRemarks", model.SupervisionSummaryRemarks);
 						cmd.Parameters.AddWithValue("@SupervisionStatusId", model.SupervisionStatusId);
 						cmd.Parameters.AddWithValue("@SecurityUserId", model.SecurityUserId);
-						
+						cmd.Parameters.AddWithValue("@SupervisionRoundId", round.SupervisionRoundId);
+						cmd.Parameters.AddWithValue("@SupervisionRoundStartDate", round.SupervisionRoundStartDate);
+						cmd.Parameters.AddWithValue("@SupervisionRoundStartDescription", round.SupervisionRoundStartDescription);
+
+						//Nullable parameters
+						var param = cmd.Parameters.Add("@SupervisionRoundEndDate", SqlDbType.SmallDateTime);
+						param.Value = round.SupervisionRoundEndDate ?? (object)DBNull.Value;
+						param = cmd.Parameters.Add("@SupervisionRoundEndDescription", SqlDbType.VarChar);
+						param.Value = round.SupervisionRoundEndDescription ?? (object)DBNull.Value;
+
+						cmd.Parameters.AddWithValue("@SupervisionRoundStatus", round.SupervisionRoundStatus);
+
 						result = Convert.ToInt32(cmd.ExecuteScalar());
 
 						summaryId = model.SupervisionSummaryId == 0 ? result : model.SupervisionSummaryId;
@@ -1320,6 +1334,7 @@ namespace SuperTransp.Core
 							round.StateId = (int)dr["StateId"];
 							round.SupervisionRoundStartDate = (DateTime)dr["SupervisionRoundStartDate"];
 							round.SupervisionRoundStartDescription = (string)dr["SupervisionRoundStartDescription"];
+							round.SupervisionRoundStatus = (bool)dr["SupervisionRoundStatus"];
 						}
 					}
 

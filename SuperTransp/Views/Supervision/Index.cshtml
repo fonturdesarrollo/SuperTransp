@@ -175,19 +175,22 @@
 								<h3>Supervisión</h3>
 								<h4>@ViewBag.RoundMessage</h4>
 								@{
+									var modulesInGroup = (IEnumerable<SecurityModuleModel>)ViewBag.ModulesInGroup;
+
 									if (ViewBag.RoundActive == true)
 									{
 										<ul>
 											<li><a href="#" id="openModal">Supervisar organizaciones de transporte</a></li>
-											<li>@Html.ActionLink("Agregar resumen de supervisión", "PublicTransportGroupList", "Supervision")</li>
-											<li>@Html.ActionLink("Modificar resumen de supervisión", "SummaryList", "Supervision")</li>
+											@if (ViewBag.SecurityGroupId == 1 || !modulesInGroup.Any(x => x.SecurityModuleId == 30))
+											{
+												<li>@Html.ActionLink("Agregar resumen de supervisión", "PublicTransportGroupList", "Supervision")</li>
+												<li>@Html.ActionLink("Modificar resumen de supervisión", "SummaryList", "Supervision")</li>
+											}
 										</ul>
 									}
 								}
 							</div>
-							@{
-								var modulesInGroup = (IEnumerable<SecurityModuleModel>)ViewBag.ModulesInGroup;								
-
+							@{					
 								if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 24))
 								{
 									if (ViewBag.RoundActive == false)
