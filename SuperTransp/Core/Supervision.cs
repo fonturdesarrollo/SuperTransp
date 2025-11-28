@@ -276,6 +276,63 @@ namespace SuperTransp.Core
 			}
 		}
 
+		public int CloseRound(SupervisionRoundModel model)
+		{
+			int result = 0;
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					if (model != null)
+					{
+						SqlCommand cmd = new("SuperTransp_SupervisionCloseRound", sqlConnection)
+						{
+							CommandType = System.Data.CommandType.StoredProcedure
+						};
+
+						cmd.Parameters.AddWithValue("@SupervisionRoundId", model.SupervisionRoundId);
+						cmd.Parameters.AddWithValue("@StateId", model.StateId);
+						cmd.Parameters.AddWithValue("@SupervisionRoundEndDate", DateTime.Now);
+						cmd.Parameters.AddWithValue("@SupervisionRoundEndDescription", model.SupervisionRoundEndDescription);
+						cmd.Parameters.AddWithValue("@TotalPTG", model.TotalPTG);
+						cmd.Parameters.AddWithValue("@TotalPartners", model.TotalPartners);
+						cmd.Parameters.AddWithValue("@TotalSupervisedDrivers", model.TotalSupervisedDrivers);
+						cmd.Parameters.AddWithValue("@TotalWorkingVehicles", model.TotalWorkingVehicles);
+						cmd.Parameters.AddWithValue("@TotalNotInOperationVehicles", model.TotalNotInOperationVehicles);
+						cmd.Parameters.AddWithValue("@TotalPartersWithoutVehicle", model.TotalPartersWithoutVehicle);
+						cmd.Parameters.AddWithValue("@TotalAbsentDrivers", model.TotalAbsentDrivers);
+
+						result = Convert.ToInt32(cmd.ExecuteScalar());
+
+						_security.AddLogbook(0, false,
+							$" cierrre vuelta de supervisión," +
+							$" mes: {DateTime.Now.ToString("MMMM").ToUpper()} -" +
+							$" año: {DateTime.Now.ToString("yyyy")} -" +
+							$" descripcion: {model.SupervisionRoundEndDescription} " +
+							$" total organizaciones: {model.TotalPTG}" +
+							$" total socios: {model.TotalPTG}" +
+							$" total supervisados: {model.TotalSupervisedDrivers}" +
+							$" total vehiculos en funcionamiento {model.TotalWorkingVehicles}" +
+							$" total vehicuslos inoperativos {model.TotalNotInOperationVehicles}" +
+							$" total socios sin vehiculos {model.TotalPartersWithoutVehicle}" +
+							$" total socios ausentes {model.TotalAbsentDrivers}");
+						
+					}
+				}
+
+				return result;
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al añadir la supervisión {ex.Message}", ex);
+			}
+		}
+
 		public bool DeletePicturesByPTGIdAndPartnerNumber(int publicTransportGroupId, int partnerNumber)
 		{
 			using (SqlConnection sqlConnection = GetConnection())
@@ -342,6 +399,7 @@ namespace SuperTransp.Core
 								DriverIdentityDocument = (int)dr["DriverIdentityDocument"],
 								PartnerNumber = (int)dr["PartnerNumber"],
 								SupervisionStatusName = (string)dr["SupervisionStatusText"],
+								SupervisionPostCloseStatusName = (string)dr["PostCloseStatusText"],
 								TotalDrivers = (int)dr["TotalDrivers"],
 								TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"],
 								SupervisionId = (int)dr["SupervisionId"],
@@ -424,6 +482,7 @@ namespace SuperTransp.Core
 								DriverIdentityDocument = (int)dr["DriverIdentityDocument"],
 								PartnerNumber = (int)dr["PartnerNumber"],
 								SupervisionStatusName = (string)dr["SupervisionStatusText"],
+								SupervisionPostCloseStatusName = (string)dr["PostCloseStatusText"],
 								TotalDrivers = (int)dr["TotalDrivers"],
 								TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"],
 								SupervisionId = (int)dr["SupervisionId"],
@@ -1434,7 +1493,7 @@ namespace SuperTransp.Core
 		public bool IsUserSupervisingPublicTransportGroup(int securityUserId, int publicTransportGroupId)
 		{
 			var pTGs = GetDriverPublicTransportGroupByPtgId(publicTransportGroupId);
-			var isSupervised = pTGs.Where(x => x.SupervisionStatusName == "SUPERVISADO");
+			var isSupervised = pTGs.Where(x => x.SupervisionPostCloseStatusName == "SUPERVISADO");
 
 			if(isSupervised.Any())
 			{

@@ -112,13 +112,13 @@
         @@keyframes spin {
             0%
 
-        {
-            transform: rotate(0deg);
-        }
+            {
+                transform: rotate(0deg);
+            }
 
-        100% {
-            transform: rotate(360deg);
-        }
+            100% {
+                transform: rotate(360deg);
+            }
 
         }
 
@@ -212,8 +212,12 @@
                                         }
                                         if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 21))
                                         {
-                                            <li>@Html.ActionLink("Resúmenes de supervisión", "SummaryList", "Reports")</li>
+                                            <li>@Html.ActionLink("Resúmenes de supervisión (vuelta activa)", "SummaryList", "Reports")</li>
                                         }
+                                        // if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 21))
+                                        // {
+                                        //     <li>@Html.ActionLink("Resúmenes de supervisión (históricos)", "SummaryList", "Reports")</li>
+                                        // }
                                         if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 22))
                                         {
                                             if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 6))

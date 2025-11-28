@@ -42,6 +42,7 @@ namespace SuperTransp.Models
 		public DateTime? BirthDate { get; set; }
 		public bool? SupervisionStatus { get; set; }
 		public string? SupervisionStatusName { get; set; }
+		public string? SupervisionPostCloseStatusName { get; set; }
 		public int TotalDrivers { get; set; }
 		public int TotalSupervisedDrivers { get; set; }
 		public int? SupervisionId { get; set; }

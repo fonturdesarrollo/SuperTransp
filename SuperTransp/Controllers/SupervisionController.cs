@@ -24,10 +24,12 @@ namespace SuperTransp.Controllers
 		private readonly IGeography _geography;
 		private readonly IFtpService _ftpService;
 		private readonly IDriver _driver;
+		private readonly IReport _report;
+		private readonly IExcelExporter _excelExporter;
 		private readonly IOptionsSnapshot<MaintenanceSettings> _settings;
 
 		public SupervisionController(ISupervision supervision, ISecurity security, IPublicTransportGroup publicTransportGroup, 
-			ICommonData commonData, IConfiguration configuration, IGeography geography, IFtpService ftpService, IDriver driver, IOptionsSnapshot<MaintenanceSettings> settings)
+			ICommonData commonData, IConfiguration configuration, IGeography geography, IFtpService ftpService, IDriver driver, IReport report, IExcelExporter excelExporter, IOptionsSnapshot<MaintenanceSettings> settings)
 		{
 			_supervision = supervision;
 			_security = security;
@@ -38,6 +40,8 @@ namespace SuperTransp.Controllers
 			_ftpService = ftpService;
 			_driver = driver;
 			_settings = settings;
+			_report = report;
+			_excelExporter = excelExporter;
 		}
 
 		public IActionResult Index()
@@ -756,6 +760,79 @@ namespace SuperTransp.Controllers
 			return images;
 		}
 
+		public IActionResult CloseRound()
+		{
+			int? stateId = HttpContext.Session.GetInt32("StateId");
+			ViewBag.RoundActive = _supervision.IsActiveSupervisionRoundByStateId((int)stateId);
+
+			var currentRound = _supervision.GetActiveSupervisionRoundByStateId((int)stateId);
+
+			if (currentRound != null)
+			{
+				ViewBag.CurrentRoundStartDate = $"{currentRound.SupervisionRoundStartDate.ToString("MMMM").ToUpper()} {currentRound.SupervisionRoundStartDate.ToString("yyyy")}";
+			}
+			else
+			{
+				ViewBag.CurrentRoundStartDate = "No existe vuelta de supervisión abierta";
+			}
+
+			ViewBag.RoundMessage = ViewBag.RoundActive ? $"Vuelta {ViewBag.CurrentRoundStartDate}" : "No existe vuelta de supervisión abierta";
+			ViewBag.SecurityGroupId = (int)HttpContext.Session.GetInt32("SecurityGroupId");
+			ViewBag.ModulesInGroup = _security.GetModulesByGroupId(ViewBag.SecurityGroupId);
+
+			return View();
+		}
+
+		public IActionResult CloseSupervisionRound(string supervisionRoundEndDescription)
+		{
+			int? stateId = HttpContext.Session.GetInt32("StateId");
+			var result = CheckSessionAndPermission(24);
+			if (result != null) return result;
+
+			try
+			{
+				List<PublicTransportGroupViewModel> ptgStatistics = new();
+				List<PublicTransportGroupViewModel> partnerstatistics = new();
+				var currentRound = _supervision.GetActiveSupervisionRoundByStateId((int)stateId);
+
+				if (currentRound != null)
+				{
+					ptgStatistics = _publicTransportGroup.GetAllStatisticsByStateId((int)stateId);
+					partnerstatistics = _report.GetAllSupervisedDriversStatisticsInEstateByStateId((int)stateId);
+
+					SupervisionRoundModel model = new SupervisionRoundModel
+					{
+						StateId = (int)stateId,
+						SupervisionRoundId = currentRound.SupervisionRoundId,
+						SupervisionRoundEndDate = DateTime.Now,
+						SupervisionRoundEndDescription = supervisionRoundEndDescription.ToUpper(),
+						SupervisionRoundStatus = false,
+						TotalPTG = ptgStatistics.FirstOrDefault().TotalPTGInState,
+						TotalPartners = ptgStatistics.FirstOrDefault().TotalAddedPartners,
+						TotalSupervisedDrivers = partnerstatistics.FirstOrDefault().TotalSupervisedDrivers,
+						TotalWorkingVehicles = partnerstatistics.FirstOrDefault().TotalNotWorkingVehicles,
+						TotalNotInOperationVehicles = partnerstatistics.FirstOrDefault().TotalNotWorkingVehicles,
+						TotalAbsentDrivers = partnerstatistics.FirstOrDefault().TotalDriverNotInPerson,
+						TotalPartersWithoutVehicle = partnerstatistics.FirstOrDefault().TotalWithoutVehicle,
+					};
+
+					_supervision.CloseRound(model);
+
+					TempData["SuccessMessage"] = "Datos actualizados correctamente";
+
+					return RedirectToAction("Index");
+				}
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+
+			TempData["SuccessMessage"] = "No existe vuelta de supervisión abierta";
+
+			return RedirectToAction("Index");
+		}
+
 		public JsonResult CheckExistingPlate(int paramValue1, string paramValue2)
 		{
 			var result = CheckSessionAndPermission(3);
@@ -1194,6 +1271,48 @@ namespace SuperTransp.Controllers
 				return RedirectToAction("Login", "Security");
 
 			return null;
+		}
+
+		public async Task<IActionResult> ExportSupervisionDetail()
+		{
+			try
+			{
+				if (string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+				{
+					return RedirectToAction("Login", "Security");
+				}
+
+				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+				int? stateId = HttpContext.Session.GetInt32("StateId");
+
+				var currentRound = _supervision.GetActiveSupervisionRoundByStateId((int)stateId);
+
+				if(currentRound == null)
+				{
+					return RedirectToAction("Error", "Home", new { errorMessage = "No existe vuelta de supervisión abierta" });
+				}
+
+				if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 4))
+				{
+					return RedirectToAction("Login", "Security");
+				}
+
+				int idParam = 0;
+				if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
+				{
+					idParam = (int)stateId;
+				}
+
+				var content = await _excelExporter.GenerateExcelSupervisionDetailAsync(idParam);
+
+				return File(content,
+							"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+							$"Supervisiones_Vuelta_{currentRound.SupervisionRoundStartDate.ToString("MM-yyyy")}_{DateTime.Now:yyyyMMdd}.xlsx");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message });
+			}
 		}
 	}
 }

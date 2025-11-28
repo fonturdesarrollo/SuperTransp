@@ -1,0 +1,354 @@
+﻿@{
+	Layout = "";
+}
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Cerrar Vuelta de Supervisión</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+	<link rel="stylesheet" href="~/assets/css/main.css" />
+	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
+	<link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
+
+	<style>
+		.modal {
+			display: none;
+			position: fixed;
+			z-index: 999;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 100%;
+			overflow: auto;
+			background-color: rgba(0,0,0,0.5);
+		}
+
+		.modal-content {
+			background-color: #fff;
+			margin: 10% auto;
+			padding: 20px;
+			border-radius: 8px;
+			width: 50%;
+		}
+
+		.close {
+			color: #aaa;
+			float: right;
+			font-size: 28px;
+			cursor: pointer;
+		}
+
+		.btn-align-right {
+			margin-top: 15px;
+			float: right;
+		}
+
+		.is-invalid {
+			border: 2px solid red;
+			background-color: #ffe6e6;
+		}
+
+		.custom-success {
+            background-color: green; /* fondo verde */
+			color: #ffffff; /* letras blancas */
+			padding: 15px;
+			border-radius: 5px;
+			margin-top: 10px;
+			text-align: center;
+			font-weight: bold;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+		}
+
+		.logo-container {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+
+		.logo-container img {
+			display: block;
+		}
+
+		/* Estilos del spinner */
+		.spinner-container {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(0, 0, 0, 0.5);
+			z-index: 1000;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+
+		.spinner {
+			border: 8px solid #f3f3f3;
+			border-top: 8px solid #3498db;
+			border-radius: 50%;
+			width: 60px;
+			height: 60px;
+			animation: spin 2s linear infinite;
+		}
+
+		@@keyframes spin {
+			0% {
+				transform: rotate(0deg);
+			}
+
+			100% {
+				transform: rotate(360deg);
+			}
+		}
+
+		.hidden {
+			display: none;
+		}
+	</style>
+</head>
+<body class="is-preload">
+
+		@Html.AntiForgeryToken()
+		<!-- Wrapper -->
+		<div id="wrapper"
+			 data-check-valid-round-url="@Url.Action("CheckValidRound", "Supervision")">			
+
+			<!-- Header -->
+			<header id="header">
+				<div class="inner">
+					<!-- Logo -->
+					<div class="logo-container">
+						<!-- Logo izquierdo -->
+						<img src="~/images/Logo.png" width="100px" height="100px" alt="Logo principal" />
+
+						<!-- Logo derecho -->
+						<img src="~/images/super-transp-logo.png" width="150px" height="150px" alt="Logo SuperTransp" />
+					</div>
+					<div class="logo">
+						<span>@ViewBag.EmployeeName</span>
+						<br />
+						<span>Cerrar Vuelta de Supervisión</span>
+						<br />
+						@if (TempData["SuccessMessage"] != null)
+						{
+							<div id="successMessage" class="custom-success">
+								@TempData["SuccessMessage"]
+							</div>
+						}
+					</div>
+				</div>
+
+				<!-- Nav -->
+				<nav>
+					<ul>
+						<li><a href="#menu">Menu</a></li>
+					</ul>
+				</nav>
+			</header>
+
+			<!-- Menu -->
+			<nav id="menu">
+				<h2>Menu</h2>
+				<ul>
+					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
+					<li>@Html.ActionLink("Supervisión", "Index", "Supervision")</li>
+					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
+				</ul>
+			</nav>
+
+			<div id="main">
+				<div class="inner">
+					<!-- Form -->
+					<br />
+					<section>
+						<h3>Opciones</h3>
+						<div class="row">
+							<div class="col-6 col-12-medium">
+								<h4>@ViewBag.RoundMessage</h4>
+								@{
+									var modulesInGroup = (IEnumerable<SecurityModuleModel>)ViewBag.ModulesInGroup;
+
+									if (ViewBag.RoundActive == true)
+									{
+										<ul>
+											@if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 25))
+											{			
+												<li>
+													<a href="#" id="exportExcelSupervisionsLink" data-url="@Url.Action("ExportSupervisionDetail", "Supervision")">
+														1) Respaldar vehículos
+													</a>
+												</li>										
+												<li><a href="#" id="closeRoundModal">2) Cerrar vuelta de supervisión</a></li>									
+											}
+										</ul>
+									}
+								}
+							</div>
+						</div>
+					<iframe id="downloadFrame" style="display:none;"></iframe>
+					</section>
+				</div>
+			</div>
+			<!-- Footer -->
+			<footer id="footer">
+				<label style="text-align:center">
+					Sistema para la Supervisión de Organizaciones de Transporte
+					<br>Diseñado y Desarrollado por la División de Desarrollo de Software - Gerencia de Tecnología de la Información &copy; @DateTime.Now.Year
+				</label>
+			</footer>
+		</div>
+
+	<div id="modalRoundForm" class="modal">
+		<div class="modal-content">
+			<span class="close">&times;</span>
+			<h3>Indique los datos de cierre</h3>
+			@using (Html.BeginForm(FormMethod.Post))
+			{
+				@Html.AntiForgeryToken()
+				<section>
+					<div class="row">
+
+						<div class="col-12 col-12-medium">
+							<br />
+							<label>Descripción</label>
+							@Html.TextBox("SupervisionRoundEndDescription", "", new { maxlength = "50", placeholder = $"Ejemplo: Fin de la primera vuelta de supervisiones año: {DateTime.Now.Year}" })
+						</div>
+					</div>
+				</section>
+
+				<input type="submit" value="Cerrar" id="sendCloseRoundRequest" class="btn-align-right" />
+			}
+		</div>
+	</div>
+	<div id="loading-spinner" class="spinner-container hidden">
+		<div class="spinner"></div>
+	</div>
+	<!-- Scripts -->
+	<script src="~/assets/js/jquery.min.js"></script>
+	<script src="~/assets/js/browser.min.js"></script>
+	<script src="~/assets/js/breakpoints.min.js"></script>
+	<script src="~/assets/js/util.js"></script>
+	<script src="~/assets/js/main.js"></script>
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+</body>
+</html>
+<script type="text/javascript">
+
+	document.addEventListener("DOMContentLoaded", function () {
+		const link = document.getElementById("exportExcelSupervisionsLink");
+		const downloadFrame = document.getElementById("downloadFrame");
+		const spinner = document.getElementById("loading-spinner");
+
+		link.addEventListener("click", function (event) {
+			event.preventDefault();
+
+			const url = this.getAttribute("data-url");
+			const mensaje = "¿Desea exportar los registros de supervisión de la vuelta actual?";
+
+			if (confirm(mensaje)) {
+				spinner.classList.remove("hidden");
+
+				downloadFrame.src = url;
+
+				setTimeout(() => {
+					spinner.classList.add("hidden");
+				}, 5000);
+			}
+		});
+	});
+
+	$("body").on("click", "#sendCloseRoundRequest", function (event) {
+		event.preventDefault();
+
+		if (!isOkToCloseRound()) {
+			return false;
+		}
+
+		if (!confirm("¿Está seguro de que desea cerrar la vuelta actual?")) return false;
+
+		var $button = $(this);
+		var controllerUrl = '@Url.Action("CloseSupervisionRound", "Supervision")';
+		var supervisionRoundEndDescription = $("#SupervisionRoundEndDescription").val();
+
+		$.ajax({
+			url: controllerUrl,
+			type: "GET",
+			data: {
+				supervisionRoundEndDescription: supervisionRoundEndDescription,
+			},
+			success: function (response) {
+				$button.closest("form").trigger("submit");
+			},
+			error: function () {
+				alert("Error al validar permisos.");
+			}
+		});
+	});
+
+	function isOkToCloseRound() {
+		let firstInvalidField = null;
+		let message = "";
+		const supervisionRoundEndDescription = $("#SupervisionRoundEndDescription").val();
+
+		if (!supervisionRoundEndDescription && !firstInvalidField) {
+			firstInvalidField = "#supervisionRoundEndDescription";
+			message = "Debe indicar la descripción";
+		}
+
+		if (firstInvalidField) {
+			showAlert(message, firstInvalidField);
+			return false;
+		}
+
+		return true;
+	}
+
+	function showAlert(message, selector) {
+		alert(message);
+
+		if (selector) {
+			const $field = $(selector);
+			$field.addClass("is-invalid");
+
+			$field.on("input", function () {
+				$(this).removeClass("is-invalid");
+			});
+
+			setTimeout(function () {
+				$field.focus();
+			}, 100);
+		}
+	}
+
+	$(document).ready(function () {
+		setTimeout(function(){
+			$("#successMessage").fadeOut("slow");
+		}, 2500);
+
+		$("#closeRoundModal").click(function (e) {
+			e.preventDefault();
+			$("#modalRoundForm").fadeIn(function () {
+				$("#txtFecha").focus();
+			});
+		});
+
+		$(".close").click(function () {
+			$("#modalForm").fadeOut();
+			$("#modalRoundForm").fadeOut();
+		});
+
+		$(window).click(function (e) {
+			if ($(e.target).is("#modalForm")) {
+				$("#modalForm").fadeOut();
+			}
+
+			if ($(e.target).is("#modalRoundForm")) {
+				$("#modalRoundForm").fadeOut();
+			}
+		});
+	});
+</script>

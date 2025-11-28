@@ -112,6 +112,7 @@ namespace SuperTransp.Core
 			public int AddOrEdit(SupervisionViewModel model);
 			public int AddSimple(SupervisionViewModel model);
 			public int AddOrEditRound(SupervisionRoundModel model);
+			public int CloseRound(SupervisionRoundModel model);
 			public SupervisionViewModel GetById(int supervisionId);
 			public SupervisionViewModel GetByPublicTransportGroupIdAndDriverIdAndPartnerNumberStateId(int publicTransportGroupId, int driverId, int partnerNumber, int stateId);
 			public SupervisionViewModel GetByPublicTransportGroupGUIDAndPartnerNumber(string publicTransportGroupGUID, int partnerNumber);

@@ -75,6 +75,13 @@ namespace SuperTransp.Models
 		public DateTime? SupervisionRoundEndDate { get; set; }
 		public string? SupervisionRoundEndDescription { get; set; }
 		public bool SupervisionRoundStatus { get; set; }
+		public int TotalPTG { get; set; }
+		public int TotalPartners { get; set; }
+		public int TotalSupervisedDrivers { get; set; }
+		public int TotalWorkingVehicles { get; set; }
+		public int TotalNotInOperationVehicles { get; set; }
+		public int TotalPartersWithoutVehicle { get; set; }
+		public int TotalAbsentDrivers { get; set; }
 	}
 
 	public class PublicTransportGroupDriverListPageVM

@@ -254,7 +254,7 @@
 				{
 					data: "driverFullName",
 					render: function (data, type, row) {
-						var statusColorDriver = row.supervisionStatusName === "PENDIENTE" ? "red" : "green";
+						var statusColorDriver = row.supervisionPostCloseStatusName === "PENDIENTE" ? "red" : "green";
 						var url = buildSupervisionUrl(row);
 						return `<a href="${url}" class="action-link" style="color:${statusColorDriver};" data-group-id="${row.publicTransportGroupId}">${data}</a>`;
 					}
@@ -263,7 +263,7 @@
 				{
 					data: "driverIdentityDocument",
 					render: function (data, type, row) {
-						var statusColorDriver = row.supervisionStatusName === "PENDIENTE" ? "red" : "green";
+						var statusColorDriver = row.supervisionPostCloseStatusName === "PENDIENTE" ? "red" : "green";
 						var url = buildSupervisionUrl(row);
 						return `<a href="${url}" class="action-link" style="color:${statusColorDriver};" data-group-id="${row.publicTransportGroupId}">${data}</a>`;
 					}
@@ -271,7 +271,7 @@
 				{ data: "stateName" },
 				{ data: "userFullName" },
 				{
-				data: "supervisionStatusName",
+				data: "supervisionPostCloseStatusName",
 				render: function (data, type, row) {
 					if (data === "SUPERVISADO") {
 							return `${data}
@@ -299,7 +299,7 @@
 									data-vehicle-image-url='${JSON.stringify(row.pictures?.map(p => p.vehicleImageUrl) || [])}'
 									data-fingerprint-trouble="${row.fingerprintTrouble}"
 									data-remarks="${row.remarks}"
-									data-status="${row.supervisionStatusName}">
+									data-status="${row.supervisionPostCloseStatusName}">
 									<i class="fas fa-eye" style="font-size:14px;"></i>
 								</button>`;
 						}
@@ -327,7 +327,7 @@
 	});
 
 	function buildSupervisionUrl(row) {
-		var addEdit = row.supervisionStatusName === "PENDIENTE" ? "Add" : "Edit";
+			var addEdit = row.supervisionStatusName === "PENDIENTE" ? "Add" : "Edit";
 		var url = '@Url.Action("__ACTION__", "Supervision")'.replace("__ACTION__", addEdit);
 
 		var params = {
