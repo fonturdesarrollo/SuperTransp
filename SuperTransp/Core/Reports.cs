@@ -214,6 +214,7 @@ namespace SuperTransp.Core
 								TotalNotWorkingVehicles = (int)dr["TotalNotWorkingVehicles"],
 								TotalDriverInPerson = (int)dr["TotalDriverInPerson"],
 								TotalDriverNotInPerson = (int)dr["TotalDriverNotInPerson"],
+								TotalShowedUpDrivers = (int)dr["TotalDriverInPerson"],
 							});
 						}
 					}

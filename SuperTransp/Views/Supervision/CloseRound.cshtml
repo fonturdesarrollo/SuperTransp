@@ -176,9 +176,10 @@
 											@if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 25))
 											{			
 												<li>
-													<a href="#" id="exportExcelSupervisionsLink" data-url="@Url.Action("ExportSupervisionDetail", "Supervision")">
+													<a href="#" id="exportExcelSupervisionsLink" data-url="@Url.Action("ExportSupervisionDetail", "Reports")">
 														1) Respaldar vehículos
 													</a>
+
 												</li>										
 												<li><a href="#" id="closeRoundModal">2) Cerrar vuelta de supervisión</a></li>									
 											}

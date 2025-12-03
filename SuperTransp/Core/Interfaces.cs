@@ -122,10 +122,12 @@ namespace SuperTransp.Core
 			public List<PublicTransportGroupViewModel> GetAllDriverPublicTransportGroup(string ptgRif);
 			public List<PublicTransportGroupViewModel> RegisteredPlate(string plate);
 			public int AddOrEditSummary(SupervisionSummaryViewModel model);
-			public List<SupervisionSummaryViewModel> GetAllSupervisionSummary();
-			public List<SupervisionSummaryViewModel> GetSupervisionSummaryByStateId(int stateId);
-			public SupervisionSummaryViewModel GetSupervisionSummaryById(int supervisionSummaryId);
+			public List<SupervisionSummaryViewModel> GetAllSupervisionSummary(int stateId = 0, int supervisionRoundId = 0);
+			public List<SupervisionSummaryViewModel> GetSupervisionSummaryByStateId(int stateId, int supervisionRoundId = 0);
+			public SupervisionSummaryViewModel GetSupervisionSummaryById(int supervisionSummaryId, bool isClosed = false);
 			public SupervisionRoundModel GetActiveSupervisionRoundByStateId(int stateId);
+			public List<SupervisionRoundModel> GetClosedRoundsByStateId(int stateId);
+			public SupervisionRoundModel GetClosedRoundsBySupervisionRoundIdAndStateId(int supervisionRoundId, int stateId);
 			public bool IsActiveSupervisionRoundByStateMonthAndYear(int stateId, int month, int year);
 			public bool IsFinishedSupervisionRoundByStateMonthAndYear(int stateId, int month, int year);
 			public bool IsActiveSupervisionRoundByStateId(int stateId);

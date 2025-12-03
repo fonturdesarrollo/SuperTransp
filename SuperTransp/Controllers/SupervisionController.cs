@@ -810,10 +810,11 @@ namespace SuperTransp.Controllers
 						TotalPTG = ptgStatistics.FirstOrDefault().TotalPTGInState,
 						TotalPartners = ptgStatistics.FirstOrDefault().TotalAddedPartners,
 						TotalSupervisedDrivers = partnerstatistics.FirstOrDefault().TotalSupervisedDrivers,
-						TotalWorkingVehicles = partnerstatistics.FirstOrDefault().TotalNotWorkingVehicles,
+						TotalWorkingVehicles = partnerstatistics.FirstOrDefault().TotalWorkingVehicles,
 						TotalNotInOperationVehicles = partnerstatistics.FirstOrDefault().TotalNotWorkingVehicles,
 						TotalAbsentDrivers = partnerstatistics.FirstOrDefault().TotalDriverNotInPerson,
 						TotalPartersWithoutVehicle = partnerstatistics.FirstOrDefault().TotalWithoutVehicle,
+						TotalShowedUpDrivers = partnerstatistics.FirstOrDefault().TotalShowedUpDrivers,
 					};
 
 					_supervision.CloseRound(model);

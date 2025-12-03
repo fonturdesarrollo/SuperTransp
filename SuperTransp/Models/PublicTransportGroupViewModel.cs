@@ -84,5 +84,6 @@ namespace SuperTransp.Models
 		public int TotalUniversePTGInState { get; set; }
 		public int TotalUniverseDriversInState { get; set; }
 		public int DriverPublicTransportGroupId { get; set; }
+		public int TotalShowedUpDrivers { get; set; }
 	}
 }

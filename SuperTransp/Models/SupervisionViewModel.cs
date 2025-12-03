@@ -82,6 +82,9 @@ namespace SuperTransp.Models
 		public int TotalNotInOperationVehicles { get; set; }
 		public int TotalPartersWithoutVehicle { get; set; }
 		public int TotalAbsentDrivers { get; set; }
+		public int TotalShowedUpDrivers { get; set; }
+		public string? OpenRoundDate { get; set; }
+		public string? CloseRoundDate { get; set; }
 	}
 
 	public class PublicTransportGroupDriverListPageVM

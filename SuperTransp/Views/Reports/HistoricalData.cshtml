@@ -1,0 +1,302 @@
+﻿@using SuperTransp.Utils
+@model SuperTransp.Models.PublicTransportGroupViewModel
+@{
+    Layout = "";
+}
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Histórico de Supervisiones</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="stylesheet" href="~/assets/css/main.css" />
+    <noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
+    <link rel="stylesheet" href="~/datatable/css/bootstrap.css" />
+    <link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
+
+    @*DataTable************************************************************************@
+    <link rel="stylesheet" href="~/datatable/css/bootstrap.css" />
+    <link rel="stylesheet" href="~/datatable/css/dataTables.bootstrap4.min.css" />
+    <link rel="stylesheet" href="~/datatable/css/responsive.bootstrap4.min.css" />
+    @*************************************************************************************@
+
+    <style>
+        .is-invalid {
+            border: 2px solid red;
+            background-color: #ffe6e6;
+        }
+
+        .ui-autocomplete {
+            max-height: 200px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            z-index: 10000 !important;
+        }
+
+        .logo-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+            .logo-container img {
+                display: block;
+            }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+    <!-- jQuery UI CSS -->
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css" />
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- jQuery UI -->
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+</head>
+<body class="is-preload">
+    @using (Html.BeginForm(FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        <!-- Wrapper -->
+        <div id="wrapper">
+
+            <!-- Header -->
+            <header id="header">
+                <div class="inner">
+                    <!-- Logo -->
+                    <div class="logo-container">
+                        <!-- Logo izquierdo -->
+                        <img src="~/images/Logo.png" width="100px" height="100px" alt="Logo principal" />
+
+                        <!-- Logo derecho -->
+                        <img src="~/images/super-transp-logo.png" width="150px" height="150px" alt="Logo SuperTransp" />
+                    </div>
+                    <div class="logo">
+                        <span>@ViewBag.EmployeeName</span>
+                        <br />
+                        <br />
+                        @if (TempData["SuccessMessage"] != null)
+                        {
+                            <div id="successMessage" class="alert alert-success">
+                                @TempData["SuccessMessage"]
+                            </div>
+                        }
+                    </div>
+                </div>
+                <!-- Nav -->
+                <nav>
+                    <ul>
+                        <li><a href="#menu">Menu</a></li>
+                    </ul>
+                </nav>
+            </header>
+
+            <!-- Menu -->
+            <nav id="menu">
+                <h2>Menu</h2>
+                <ul>
+                    <li>@Html.ActionLink("Inicio", "Index", "Home")</li>
+                    <li>@Html.ActionLink("Salir", "Login", "Security")</li>
+                </ul>
+            </nav>
+
+            <!-- Main -->
+            <div id="main">
+                <div class="inner">
+                    <!-- Form -->
+                    <section>
+                        <h1 style="color:#4cbece">Histórico de Supervisiones</h1>
+                        <br />
+                        <div class="row gtr-uniform">
+                            <div class="col-6 col-12-xsmall">
+                                <strong>Estado:</strong>
+                                @Html.DropDownListFor(t => t.StateId, (SelectList)ViewBag.States, "-- Seleccione --", new { @class = "form-control" })
+                            </div>
+                            <div class="col-6 col-12-xsmall">
+                                <strong>Vuelta:</strong>
+                                <select id="RoundId" name="RoundId" class="form-control">
+                                    <option value="">Seleccione</option>
+                                </select>
+                            </div>
+                            <div id="totalesContainer" class="container hidden">
+                                <div class="row mb-2">
+                                    <div class="col-12">
+                                        <span class="fw-bold">Totales:</span>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <span>Organizaciones: <strong id="TotalPTG"></strong></span><br>
+                                        <span>Socios: <strong id="TotalPartners"></strong></span><br>
+                                        <span>Supervisados: <strong id="TotalSupervisedDrivers"></strong></span><br>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <span>Operativos: <strong id="TotalWorkingVehicles"></strong></span><br>
+                                        <span>Inoperativos: <strong id="TotalNotInOperationVehicles"></strong></span><br>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <span>Sin Vehículo: <strong id="TotalPartersWithoutVehicle"></strong></span><br>
+                                        <span>Presentes: <strong id="TotalShowedUpDrivers"></strong></span><br>
+                                        <span>Ausentes: <strong id="TotalAbsentDrivers"></strong></span><br>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <br />
+                        <br />
+                        <br />
+                        <table id="inventory" class="table table-striped table-bordered dt-responsive dt-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>Línea</th>
+                                    <th>Rif</th>
+                                    <th>Estado</th>
+                                    <th>Supervisor</th>
+                                    <th>Fecha Supervisión</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </section>
+                </div>
+            </div>
+        </div>
+    }
+    <!-- Scripts -->
+    <script src="~/assets/js/jquery.min.js"></script>
+    <script src="~/assets/js/browser.min.js"></script>
+    <script src="~/assets/js/breakpoints.min.js"></script>
+    <script src="~/assets/js/util.js"></script>
+    <script src="~/assets/js/main.js"></script>
+
+    @*DataTable*******************************************@
+    <script src="~/datatable/js/jquery-3.5.1.js"></script>
+    <script src="~/datatable/js/jquery.dataTables.min.js"></script>
+    <script src="~/datatable/js/dataTables.bootstrap4.js"></script>
+    <script src="~/datatable/js/dataTables.responsive.min.js"></script>
+    <script src="~/datatable/js/responsive.bootstrap4.min.js"></script>
+
+    <script>
+        const nfVE = new Intl.NumberFormat('es-VE');
+
+        function formatNumber(value) {
+            if (value === null || value === undefined) return '0';
+            const num = typeof value === 'number' ? value : Number(String(value).replace(/[^0-9.-]/g, ''));
+            if (!isFinite(num)) return '0';
+            const formatted = nfVE.format(num);
+            if (formatted === String(num)) {
+                return Math.floor(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            }
+            return formatted;
+        }
+        $(document).ready(function () {
+
+            $('#StateId').change(function () {
+                var stateId = $(this).val();
+                var getClosedRoundsUrl = '@Url.Action("GetClosedRounds", "Reports")';
+
+                $('#RoundId').empty().append('<option value="">Seleccione</option>');
+
+                if (stateId) {
+                    $.getJSON(getClosedRoundsUrl, { stateId: stateId }, function (data) {
+                        if (data.length === 0) {
+                            $('#RoundId').empty().append('<option value="">NO EXISTEN VUELTAS CERRADAS PARA ESTE ESTADO</option>');
+                            table.clear().draw();
+                            $('#totalesContainer').addClass('hidden');
+                        } else {
+                            $.each(data, function (index, round) {
+                                $('#RoundId').append($('<option>', {
+                                    value: round.supervisionRoundId,
+                                    text: round.openRoundDate
+                                }));
+                            });
+                        }
+                    });
+                }
+            });
+
+            $('#RoundId').change(function () {
+                var stateId = $('#StateId').val();
+                var supervisionRoundId = $(this).val();
+
+                if (stateId && supervisionRoundId) {
+                    $.get('@Url.Action("SummaryClosedListAjax", "Reports")',
+                        { stateId: stateId, supervisionRoundId: supervisionRoundId },
+                        function (response) { 
+                            table.clear().rows.add(response.data).draw();
+
+                            if (response.totals) {
+                                $('#TotalPTG').text(formatNumber(response.totals.totalPTG));
+                                $('#TotalPartners').text(formatNumber(response.totals.totalPartners));
+                                $('#TotalSupervisedDrivers').text(formatNumber(response.totals.totalSupervisedDrivers));
+                                $('#TotalWorkingVehicles').text(formatNumber(response.totals.totalWorkingVehicles));
+                                $('#TotalAbsentDrivers').text(formatNumber(response.totals.totalAbsentDrivers));
+                                $('#TotalShowedUpDrivers').text(formatNumber(response.totals.totalShowedUpDrivers));
+                                $('#TotalNotInOperationVehicles').text(formatNumber(response.totals.totalNotInOperationVehicles));
+                                $('#TotalPartersWithoutVehicle').text(formatNumber(response.totals.totalPartersWithoutVehicle));
+
+                                $('#totalesContainer').removeClass('hidden');
+                            } else {
+                                $('#totalesContainer').addClass('hidden');
+                            }
+                        }
+                    );
+                }
+            });
+
+            var table = $('#inventory').DataTable({
+                "processing": true,
+                "serverSide": false,
+                "ajax": {
+                "url": '@Url.Action("SummaryClosedListAjax", "Reports")?stateId=0&supervisionRoundId=0',
+                "dataSrc": ""
+                },
+
+                "columns": [
+                    {
+                        "data": "ptgCompleteName",
+                        "render": function (data, type, row) {
+                        return '<a href="/Reports/EditSummary?supervisionSummaryId=' + row.supervisionSummaryId +
+                               '&publicTransportGroupId=' + row.publicTransportGroupId +
+                               '&isClosed=true" target="_blank">' + data + '</a>';
+                        }
+                    },
+                    {
+                        "data": "publicTransportGroupRif",
+                        "render": function (data, type, row) {
+                            return '<a href="/Reports/EditSummary?supervisionSummaryId=' + row.supervisionSummaryId +
+                                   '&publicTransportGroupId=' + row.publicTransportGroupId + '">' + data + '</a>';
+                        }
+                    },
+                    { "data": "stateName" },
+                    { "data": "userFullName" },
+                    {
+                        "data": "supervisionDate",
+                        "render": function (data) {
+                            return new Date(data).toLocaleDateString();
+                        }
+                    }
+                ],
+                "language": {
+                    "sProcessing": "Procesando...",
+                    "sZeroRecords": "No se encontraron resultados",
+                    "sEmptyTable": "Ningún dato disponible en esta tabla",
+                    "sInfo": "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+                    "sInfoEmpty": "Mostrando registros del 0 al 0 de un total de 0 registros",
+                    "sInfoFiltered": "(filtrado de un total de _MAX_ registros)",
+                    "sSearch": "Buscar:",
+                    "sLoadingRecords": "Cargando...",
+                    "oPaginate": {
+                        "sFirst": "Primero",
+                        "sLast": "Último",
+                        "sNext": "Siguiente",
+                        "sPrevious": "Anterior"
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

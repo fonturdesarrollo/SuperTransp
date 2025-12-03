@@ -93,12 +93,28 @@
 							{
 								<tr>
 									<td>
-										@Html.ActionLink(@ptg.PTGCompleteName, "EditSummary", "Reports",
-										new { supervisionSummaryId = ptg.SupervisionSummaryId, publicTransportGroupId = ptg.PublicTransportGroupId })
+										@Html.ActionLink(
+											ptg.PTGCompleteName, 
+											"EditSummary", 
+											"Reports", 
+											new { 
+												supervisionSummaryId = ptg.SupervisionSummaryId, 
+												publicTransportGroupId = ptg.PublicTransportGroupId 
+											}, 
+											new { target = "_blank" }
+										)
 									</td>
 									<td>
-										@Html.ActionLink(@ptg.PublicTransportGroupRif, "EditSummary", "Reports",
-																			new { supervisionSummaryId = ptg.SupervisionSummaryId, publicTransportGroupId = ptg.PublicTransportGroupId })
+										@Html.ActionLink(
+											ptg.PublicTransportGroupRif, 
+											"EditSummary", 
+											"Reports", 
+											new { 
+												supervisionSummaryId = ptg.SupervisionSummaryId, 
+												publicTransportGroupId = ptg.PublicTransportGroupId 
+											}, 
+											new { target = "_blank" }
+										)
 									</td>
 									<td>@ptg.StateName</td>
 									<td>@ptg.UserFullName</td>
