@@ -629,6 +629,12 @@ namespace SuperTransp.Controllers
 
 			var images = new List<SupervisionPictures>();
 
+			// Paso 1.0: Verificar si la carpeta del estado existe antes de crearla
+			if (!await _ftpService.FolderExistsAsync(ftpFolderPath))
+			{
+				await _ftpService.CreateFolderAsync(ftpFolderPath);
+			}
+
 			// Paso 1: Verificar si la carpeta destino existe antes de crearla
 			if (!await _ftpService.FolderExistsAsync(ftpfinalFolderPath))
 			{

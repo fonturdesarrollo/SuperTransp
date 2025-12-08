@@ -183,7 +183,8 @@ namespace SuperTransp.Core
 		}
 
 		public interface IExcelExporter
-		{			
+		{
+			public Task<byte[]> GenerateExcelPublicTransportGroupAsync(int stateId);
 			public Task<byte[]> GenerateExcelPublicTransportGroupAndDriversAsync(int stateId);
 			public Task<byte[]> GenerateExcelSupervisionDetailAsync(int stateId);
 		}

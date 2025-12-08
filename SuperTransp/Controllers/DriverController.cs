@@ -367,10 +367,11 @@ namespace SuperTransp.Controllers
 				try
 				{
 					var fileList = await _ftpService.ListFilesAsync(ftpSubFolderPath);
-					if (fileList.Count == 0) return false;
-
-					var deleteTasks = fileList.Select(fileName => _ftpService.DeleteFileAsync($"{ftpSubFolderPath}/{fileName}"));
-					await Task.WhenAll(deleteTasks);
+					if (fileList.Count > 0)
+					{
+						var deleteTasks = fileList.Select(fileName => _ftpService.DeleteFileAsync($"{ftpSubFolderPath}/{fileName}"));
+						await Task.WhenAll(deleteTasks);
+					}
 
 					try
 					{
