@@ -141,7 +141,10 @@
 					{
 						data: 'nombre',
 						render: function (data, type, row) {
-							return `<a href="${urlPtg}?publicTransportGroupId=${row.id}" style="color:${row.color};">${data}</a>`;
+						  return `<a href="${urlPtg}?publicTransportGroupId=${row.id}"
+									 style="color:${row.color};"
+									 target="_blank"
+									 rel="noopener noreferrer">${data}</a>`;
 						}
 					},
 					{ data: 'estado' },

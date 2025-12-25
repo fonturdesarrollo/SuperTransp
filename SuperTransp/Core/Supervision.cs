@@ -427,6 +427,7 @@ namespace SuperTransp.Core
 								Remarks = (string)dr["Remarks"],
 								UserFullName = (string)dr["UserFullName"],
 								DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"],
+								SupervisionLastRoundDate = dr.IsDBNull(dr.GetOrdinal("SupervisionLastRoundDate")) ? (DateTime?)null : dr.GetDateTime(dr.GetOrdinal("SupervisionLastRoundDate")),
 								Pictures = GetPicturesByPTGIdAndDriverPublicTransportGroupId((int)dr["PublicTransportGroupId"], (int)dr["DriverPublicTransportGroupId"]),
 							});
 						}
@@ -510,6 +511,7 @@ namespace SuperTransp.Core
 								Remarks = (string)dr["Remarks"],
 								UserFullName = (string)dr["UserFullName"],
 								SecurityUserId = (int)dr["SecurityUserId"],
+								SupervisionLastRoundDate = dr.IsDBNull(dr.GetOrdinal("SupervisionLastRoundDate"))? (DateTime?)null: dr.GetDateTime(dr.GetOrdinal("SupervisionLastRoundDate")),
 								Pictures = GetPicturesByPTGIdAndDriverPublicTransportGroupId((int)dr["PublicTransportGroupId"], (int)dr["DriverPublicTransportGroupId"])
 							});
 						}
@@ -901,6 +903,7 @@ namespace SuperTransp.Core
 								UserFullName = (string)dr["UserFullName"],
 								SecurityUserId = (int)dr["SecurityUserId"],
 								DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"],
+								SupervisionLastRoundDate = dr.IsDBNull(dr.GetOrdinal("SupervisionLastRoundDate")) ? (DateTime?)null : dr.GetDateTime(dr.GetOrdinal("SupervisionLastRoundDate")),
 								Pictures = GetPicturesByPTGIdAndDriverPublicTransportGroupId((int)dr["PublicTransportGroupId"], (int)dr["DriverPublicTransportGroupId"]),
 							});
 						}

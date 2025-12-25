@@ -85,5 +85,6 @@ namespace SuperTransp.Models
 		public int TotalUniverseDriversInState { get; set; }
 		public int DriverPublicTransportGroupId { get; set; }
 		public int TotalShowedUpDrivers { get; set; }
+		public DateTime? SupervisionLastRoundDate { get; set; }
 	}
 }

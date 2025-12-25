@@ -122,6 +122,7 @@
 								<th>Presente en supervisión</th>
 								<th>Con vehículo</th>
 								<th>Vehículo operativo</th>
+								<th>Vuelta</th>
 								<th>Estatus</th>
 							</tr>
 						</thead>
@@ -151,6 +152,9 @@
 												@ptg.WorkingVehicle.ToSpanishYesNo()
 											</td>
 											<td>
+												@(ptg.SupervisionLastRoundDate.HasValue ? ptg.SupervisionLastRoundDate.Value.ToString("MMM yyyy").ToUpper() : "N/D")
+											</td>
+											<td>
 												@ptg.SupervisionStatusName
 												@{
 													if (@ptg.SupervisionStatusName == "SUPERVISADO")
@@ -175,6 +179,7 @@
 																data-vehicle-image-url='@Html.Raw(Json.Serialize(ptg.Pictures.Select(p => p.VehicleImageUrl)))'
 																data-fingerprint-trouble="@ptg.FingerprintTrouble"
 																data-remarks="@ptg.Remarks"
+																data-last-round="@ptg.SupervisionLastRoundDate"
 																data-status="@ptg.SupervisionStatusName">
 															<i class="fas fa-eye" style="font-size: 14px;"></i>
 														</button>
@@ -201,6 +206,7 @@
 					<button type="button" class="close" data-dismiss="modal">&times;</button>
 				</div>
 				<div class="modal-body">
+					<p><strong>Vuelta:</strong> <span id="modalLastRound"></span></p>
 					<p><strong>Nombre:</strong> <span id="modalDriver"></span></p>
 					<p><strong># Socio:</strong> <span id="modalPartner"></span></p>
 					<p><strong>¿Tiene vehículo:</strong> <span id="modalDriverWithVehicle"></span></p>
@@ -278,16 +284,6 @@
 					$(".modal-image").hide();
 				}
 
-				// if($(this).data('driver-with-vehicle') == "True"){
-				// 	$('#modalDriverWithVehicle').text('Sí')
-				// 	$(".modal-vehicle-data").show();
-				// 	$(".modal-image").show();
-				// }else {
-				// 	$('#modalDriverWithVehicle').text('No')
-				//     $(".modal-vehicle-data").hide();
-				// 	$(".modal-image").show().hide();
-				// }
-
 				if($(this).data('driver-with-working-vehicle') == "True"){
 					$('#modalDriverWithWorkingVehicle').text('Sí')
 				}else {
@@ -354,8 +350,13 @@
 				}
 
 				$('#modalRemarks').text($(this).data('remarks'));
+				$('#modalRemarks').text($(this).data('remarks'));
 
-				$('#modalStatus').text($(this).data('status'));
+				//Show lastRound
+				$('#modalLastRound').text(
+					formatMonthYear($(this).data('last-round'))
+				);
+
 				$('#infoModal').modal('show');
 			});
 
@@ -390,6 +391,39 @@
 					}
 				}
 			});
+
+			function formatMonthYear(dateInput) {
+				if (!dateInput) return "N/D";
+
+				let date;
+
+				if (dateInput instanceof Date) {
+					date = dateInput;
+				} else {
+					date = new Date(dateInput);
+
+					if (isNaN(date.getTime())) {
+						let onlyDate = dateInput.split(" ")[0];
+						let parts = onlyDate.split("/");
+
+						if (parts.length === 3) {
+							let day = parseInt(parts[0], 10);
+							let month = parseInt(parts[1], 10) - 1;
+							let year = parseInt(parts[2], 10);
+							date = new Date(year, month, day);
+						}
+					}
+				}
+
+				if (isNaN(date.getTime())) return "N/D";
+
+				let formatted = new Intl.DateTimeFormat('es-ES', {
+					month: 'long',
+					year: 'numeric'
+				}).format(date);
+
+				return formatted.replace(" de ", " ").toUpperCase();
+			}
 		});
 	</script>
 </body>
