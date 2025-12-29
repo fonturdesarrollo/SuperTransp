@@ -137,6 +137,7 @@
 								<th>Cédula</th>
 								<th>Estado</th>
 								<th>Supervisor</th>
+								<th>Vuelta</th>
 								<th>Estatus</th>
 							</tr>
 						</thead>
@@ -271,6 +272,12 @@
 				},
 				{ data: "stateName" },
 				{ data: "userFullName" },
+				{
+					data: "supervisionLastRoundDate",
+					render: function (data, type, row) {
+						return formatMonthYear(data);
+					}
+				},
 				{
 				data: "supervisionPostCloseStatusName",
 				render: function (data, type, row) {
@@ -461,7 +468,7 @@
 			if (isNaN(date.getTime())) return "N/D";
 
 			let formatted = new Intl.DateTimeFormat('es-ES', {
-				month: 'long',
+				month: 'short',
 				year: 'numeric'
 			}).format(date);
 

@@ -367,7 +367,7 @@ namespace SuperTransp.Core
 
 					List<PublicTransportGroupViewModel> ptg = new();
 					//ESTO PERMITE QUE SOLO LAS ORGANIZACIONES CON SOCIOS IGUALES A CUPOS SEAN MOSTRADOS EN LA LISTA, SE OMITE ESTA VALIDACION PORQUE 
-					//EXISTEN ORGANIZACIONES CON CUPOS VACIOS QUE DEDEN SUPERVISARSE
+					//EXISTEN ORGANIZACIONES CON CUPOS VACIOS QUE DEBEN SUPERVISARSE
 					//SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE StateId = @StateId AND PublicTransportGroupRif = @PublicTransportGroupRif AND Partners = TotalDrivers", sqlConnection);
 					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE StateId = @StateId AND PublicTransportGroupRif = @PublicTransportGroupRif", sqlConnection);
 					cmd.Parameters.AddWithValue("@StateId", stateId);
