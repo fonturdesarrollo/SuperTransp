@@ -13,6 +13,10 @@ using static SuperTransp.Core.Interfaces;
 var builder = WebApplication.CreateBuilder(args);
 
 var jwtKey = builder.Configuration["Jwt:SecretKey"];
+if (string.IsNullOrEmpty(jwtKey))
+{
+	throw new InvalidOperationException("JWT SecretKey no está configurada en appsettings.json. Por favor verifica la sección 'Jwt:SecretKey'.");
+}
 var key = Encoding.ASCII.GetBytes(jwtKey);
 
 builder.Services.AddAuthentication(options =>
@@ -55,10 +59,6 @@ builder.Services.Configure<FormOptions>(options =>
 
 builder.Services.Configure<MaintenanceSettings>(
 	builder.Configuration.GetSection("Maintenance"));
-
-builder.Configuration
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true);
 
 builder.Services.AddTransient<ISecurity, Security>();
 builder.Services.AddTransient<IGeography, SuperTransp.Core.Geography>();

@@ -1,0 +1,658 @@
+@model List<SuperTransp.Models.PublicTransportGroupViewModel>
+@using System.Text.Json
+@{
+    Layout = null;
+
+    var chartItems = Model.Select((item, index) => new
+    {
+        ChartId = $"chart{index}",
+        StateName = item.StateName,
+        TotalSupervisedDrivers = item.TotalSupervisedDrivers,
+        TotalWorkingVehicles = item.TotalWorkingVehicles,
+        TotalNotWorkingVehicles = item.TotalNotWorkingVehicles,
+        TotalWithVehicle = item.TotalWithVehicle,
+        TotalWithoutVehicle = item.TotalWithoutVehicle,
+        TotalDriverInPerson = item.TotalDriverInPerson,
+        TotalDriverNotInPerson = item.TotalDriverNotInPerson
+    });
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <title>Estadísticas de Supervisión</title>
+    <link rel="stylesheet" href="~/assets/css/main.css" />
+    <link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background-color: #f2f4f8;
+            margin: 0;
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            background: white;
+            padding: 5px;
+        }
+
+        .header-text h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .header-text p {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+        }
+
+        .back-button {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-left: 4px solid;
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+
+        .stat-card.supervised { border-color: #4CAF50; }
+        .stat-card.working { border-color: #2196F3; }
+        .stat-card.not-working { border-color: #FF9800; }
+        .stat-card.without-vehicle { border-color: #E91E63; }
+        .stat-card.absent { border-color: #FFC107; }
+
+        .stat-card h3 {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card .value {
+            margin: 10px 0 0 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .filter-selector {
+            margin-bottom: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .filter-selector h3 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+
+        .export-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .export-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .filter-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-option input[type="checkbox"] {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+
+        .filter-option label {
+            font-size: 0.95rem;
+            color: #666;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .states-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow-x: auto;
+        }
+
+        .states-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        .states-table th,
+        .states-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+            white-space: nowrap;
+        }
+
+        .states-table th {
+            background-color: #f8f9fa;
+            color: #2c3e50;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        .states-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .states-table td {
+            color: #555;
+        }
+
+        .states-table td:first-child {
+            font-weight: 600;
+            color: #2c3e50;
+            position: sticky;
+            left: 0;
+            background-color: white;
+            z-index: 1;
+        }
+
+        .states-table tbody tr:hover td:first-child {
+            background-color: #f8f9fa;
+        }
+
+        .states-table td:not(:first-child) {
+            text-align: center;
+        }
+
+        .total-value {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .modal {
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 400px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border-radius: 10px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        @@media screen and (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .header-text h1 {
+                font-size: 1.5rem;
+            }
+
+            .stat-card .value {
+                font-size: 2rem;
+            }
+
+            .stats-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .export-button {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .states-container {
+                padding: 15px;
+            }
+
+            .states-table th,
+            .states-table td {
+                padding: 8px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    @* Maintenance Message Modal *@
+    @if (ViewBag.MaintenanceMessage != null)
+    {
+        <div id="modalMaintenanceMessage" class="modal" style="display:none;">
+            <div class="modal-content">
+                <span class="close" onclick="$('#modalMaintenanceMessage').fadeOut();">&times;</span>
+                <h3>Aviso del sistema</h3>
+                <p>@ViewBag.MaintenanceMessage</p>
+                <div style="text-align:right;">
+                    <button onclick="$('#modalMaintenanceMessage').fadeOut();" class="back-button">Entendido</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="dashboard-header">
+        <div class="header-content">
+            <div class="header-left">
+                <img src="~/images/Logo.png" alt="Logo" class="logo-img" />
+                <div class="header-text">
+                    <h1>Estadísticas de Supervisión</h1>
+                    <p>Usuario: @ViewBag.EmployeeName</p>
+                </div>
+            </div>
+            <a href="@Url.Action("Index", "Reports")" class="back-button">← Menú Reportes</a>
+        </div>
+    </div>
+
+    <div class="stats-cards">
+        @{
+            int totalSupervised = 0;
+            int totalWorking = 0;
+            int totalNotWorking = 0;
+            int totalWithoutVehicle = 0;
+            int totalAbsent = 0;
+
+            if (Model != null && Model.Any())
+            {
+                totalSupervised = Model.Sum(x => x.TotalSupervisedDrivers);
+                totalWorking = Model.Sum(x => x.TotalWorkingVehicles);
+                totalNotWorking = Model.Sum(x => x.TotalNotWorkingVehicles);
+                totalWithoutVehicle = Model.Sum(x => x.TotalWithoutVehicle);
+                totalAbsent = Model.Sum(x => x.TotalDriverNotInPerson);
+            }
+        }
+
+        <div class="stat-card supervised">
+            <h3>Socios Supervisados</h3>
+            <div class="value">@totalSupervised.ToString("N0", new System.Globalization.CultureInfo("de-DE"))</div>
+        </div>
+
+        <div class="stat-card working">
+            <h3>Vehículos Operativos</h3>
+            <div class="value">@totalWorking.ToString("N0", new System.Globalization.CultureInfo("de-DE"))</div>
+        </div>
+
+        <div class="stat-card not-working">
+            <h3>Vehículos Inoperativos</h3>
+            <div class="value">@totalNotWorking.ToString("N0", new System.Globalization.CultureInfo("de-DE"))</div>
+        </div>
+
+        <div class="stat-card without-vehicle">
+            <h3>Socios sin Vehículo</h3>
+            <div class="value">@totalWithoutVehicle.ToString("N0", new System.Globalization.CultureInfo("de-DE"))</div>
+        </div>
+
+        <div class="stat-card absent">
+            <h3>Socios Ausentes</h3>
+            <div class="value">@totalAbsent.ToString("N0", new System.Globalization.CultureInfo("de-DE"))</div>
+        </div>
+    </div>
+
+    <div class="filter-selector">
+        <div class="filter-header">
+            <h3>Filtros de Visualización</h3>
+            <button class="export-button" id="exportExcelBtn">
+                Exportar a Excel
+            </button>
+        </div>
+        <div class="filter-options">
+            <div class="filter-option">
+                <input type="checkbox" id="filter-supervisados" checked>
+                <label for="filter-supervisados">Supervisados</label>
+            </div>
+            <div class="filter-option">
+                <input type="checkbox" id="filter-operativos" checked>
+                <label for="filter-operativos">Operativos</label>
+            </div>
+            <div class="filter-option">
+                <input type="checkbox" id="filter-no-operativos" checked>
+                <label for="filter-no-operativos">No Operativos</label>
+            </div>
+            <div class="filter-option">
+                <input type="checkbox" id="filter-con-vehiculo">
+                <label for="filter-con-vehiculo">Con Vehículo</label>
+            </div>
+            <div class="filter-option">
+                <input type="checkbox" id="filter-sin-vehiculo">
+                <label for="filter-sin-vehiculo">Sin Vehículo</label>
+            </div>
+            <div class="filter-option">
+                <input type="checkbox" id="filter-presentes">
+                <label for="filter-presentes">Presentes</label>
+            </div>
+            <div class="filter-option">
+                <input type="checkbox" id="filter-ausentes">
+                <label for="filter-ausentes">Ausentes</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="states-container">
+        <table class="states-table" id="statesTable">
+            <thead>
+                <tr>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody id="statesTableBody">
+            </tbody>
+        </table>
+    </div>
+
+    <script src="~/assets/js/jquery.min.js"></script>
+    <script>
+        const statesData = @Html.Raw(JsonSerializer.Serialize(chartItems));
+
+        const filterMapping = {
+            'filter-supervisados': { label: 'Supervisados', field: 'TotalSupervisedDrivers' },
+            'filter-operativos': { label: 'Operativos', field: 'TotalWorkingVehicles' },
+            'filter-no-operativos': { label: 'No Operativos', field: 'TotalNotWorkingVehicles' },
+            'filter-con-vehiculo': { label: 'Con Vehículo', field: 'TotalWithVehicle' },
+            'filter-sin-vehiculo': { label: 'Sin Vehículo', field: 'TotalWithoutVehicle' },
+            'filter-presentes': { label: 'Presentes', field: 'TotalDriverInPerson' },
+            'filter-ausentes': { label: 'Ausentes', field: 'TotalDriverNotInPerson' }
+        };
+
+        // Save checkbox state to localStorage
+        function saveFilterState() {
+            const state = {};
+            for (const filterId of Object.keys(filterMapping)) {
+                const checkbox = document.getElementById(filterId);
+                if (checkbox) {
+                    state[filterId] = checkbox.checked;
+                }
+            }
+            localStorage.setItem('dashboardFilterState', JSON.stringify(state));
+        }
+
+        // Restore checkbox state from localStorage
+        function restoreFilterState() {
+            const savedState = localStorage.getItem('dashboardFilterState');
+            if (savedState) {
+                const state = JSON.parse(savedState);
+                for (const [filterId, checked] of Object.entries(state)) {
+                    const checkbox = document.getElementById(filterId);
+                    if (checkbox) {
+                        checkbox.checked = checked;
+                    }
+                }
+            }
+        }
+
+        function getActiveFilters() {
+            const activeFilters = [];
+            for (const [filterId, filterInfo] of Object.entries(filterMapping)) {
+                const checkbox = document.getElementById(filterId);
+                if (checkbox && checkbox.checked) {
+                    activeFilters.push({ id: filterId, ...filterInfo });
+                }
+            }
+            return activeFilters;
+        }
+
+        function formatNumber(value) {
+            return (value ?? 0).toLocaleString('de-DE');
+        }
+
+        function renderTable() {
+            const activeFilters = getActiveFilters();
+            const tableHead = document.querySelector('#statesTable thead tr');
+            const tableBody = document.getElementById('statesTableBody');
+
+            // Clear existing content
+            tableHead.innerHTML = '<th>Estado</th>';
+            tableBody.innerHTML = '';
+
+            // Add header columns for active filters
+            activeFilters.forEach(filter => {
+                const th = document.createElement('th');
+                th.textContent = filter.label;
+                tableHead.appendChild(th);
+            });
+
+            // Check if there are states to display
+            if (!statesData || statesData.length === 0) {
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.colSpan = activeFilters.length + 1;
+                td.textContent = 'No existen datos de supervisión disponibles';
+                td.style.textAlign = 'center';
+                td.style.color = '#888';
+                tr.appendChild(td);
+                tableBody.appendChild(tr);
+                return;
+            }
+
+            // Add rows for each state
+            statesData.forEach(state => {
+                const tr = document.createElement('tr');
+
+                // State name column
+                const tdState = document.createElement('td');
+                tdState.textContent = state.StateName;
+                tr.appendChild(tdState);
+
+                // Data columns for active filters
+                activeFilters.forEach(filter => {
+                    const td = document.createElement('td');
+                    const value = state[filter.field] ?? 0;
+                    td.innerHTML = `<span class="total-value">${formatNumber(value)}</span>`;
+                    tr.appendChild(td);
+                });
+
+                tableBody.appendChild(tr);
+            });
+        }
+
+        // Export table to Excel
+        function exportToExcel() {
+            const activeFilters = getActiveFilters();
+
+            if (activeFilters.length === 0) {
+                alert('Debe seleccionar al menos un filtro para exportar.');
+                return;
+            }
+
+            // Create workbook and worksheet
+            const wb = XLSX.utils.book_new();
+            const wsData = [];
+
+            // Add headers
+            const headers = ['Estado'];
+            activeFilters.forEach(filter => headers.push(filter.label));
+            wsData.push(headers);
+
+            // Add data rows
+            statesData.forEach(state => {
+                const row = [state.StateName];
+                activeFilters.forEach(filter => {
+                    row.push(state[filter.field] ?? 0);
+                });
+                wsData.push(row);
+            });
+
+            // Create worksheet from data
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+            // Set column widths
+            const colWidths = [{ wch: 25 }];
+            activeFilters.forEach(() => colWidths.push({ wch: 15 }));
+            ws['!cols'] = colWidths;
+
+            // Add worksheet to workbook
+            XLSX.utils.book_append_sheet(wb, ws, 'Dashboard Supervisión');
+
+            // Generate filename with current date
+            const now = new Date();
+            const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+            const timeStr = now.toTimeString().slice(0, 5).replace(/:/g, '');
+            const filename = `Dashboard_Supervision_${dateStr}_${timeStr}.xlsx`;
+
+            // Save file
+            XLSX.writeFile(wb, filename);
+        }
+
+        // Auto-refresh page every 5 minutes
+        function setupAutoRefresh() {
+            setInterval(function() {
+                saveFilterState();
+                location.reload();
+            }, 5 * 60 * 1000); // 5 minutes in milliseconds
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Restore filter state
+            restoreFilterState();
+
+            // Render table
+            renderTable();
+
+            // Add event listeners to all filter checkboxes
+            for (const filterId of Object.keys(filterMapping)) {
+                const checkbox = document.getElementById(filterId);
+                if (checkbox) {
+                    checkbox.addEventListener('change', function() {
+                        renderTable();
+                        saveFilterState();
+                    });
+                }
+            }
+
+            // Add export button listener
+            document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
+
+            // Setup auto-refresh
+            setupAutoRefresh();
+
+            @if (ViewBag.MaintenanceMessage != null)
+            {
+                <text>
+                $("#modalMaintenanceMessage").fadeIn();
+                </text>
+            }
+        });
+    </script>
+</body>
+</html>

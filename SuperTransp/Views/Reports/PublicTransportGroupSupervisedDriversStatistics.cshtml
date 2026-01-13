@@ -63,8 +63,8 @@
 			<ul>
 				<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
 				<li>@Html.ActionLink("Organizaciones y Transportistas", "PublicTransportGroupList", "Reports")</li>
-				<li>@Html.ActionLink("Gráficos Organizaciones por estado", "PublicTransportGroupStatisticsInState", "Reports")</li>
-				<li>@Html.ActionLink("Gráficos vehículos supervisados por estado", "SupervisedDriversStatisticsInEstate", "Reports")</li>
+				<li>@Html.ActionLink("Estadísticas Organizaciones por estado", "DashboardPTG", "Reports")</li>
+				<li>@Html.ActionLink("Estadísticas de Supervisión", "Dashboard", "Reports")</li>
 				<li>@Html.ActionLink("Reportes/Consultas", "Index", "Reports")</li>
 				<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 			</ul>
@@ -88,11 +88,13 @@
 								<th>Estado</th>
 								<th>Modalidad</th>
 								<th>Rif</th>
+								<th>Cupos</th>
 								<th>Supervisados</th>
 								<th>Operativos</th>
 								<th>No operativos</th>
 								<th>Sin vehículo</th>
 								<th>Ausentes</th>
+								<th>Estatus</th>
 							</tr>
 						</thead>
 					</table>
@@ -150,11 +152,18 @@
 					{ data: 'estado' },
 					{ data: 'modalidad' },
 					{ data: 'rif' },
+					{ data: 'socios' },
 					{ data: 'supervisados' },
 					{ data: 'operativos' },
 					{ data: 'noOperativos' },
 					{ data: 'sinVehiculo' },
-					{ data: 'ausentes' }
+					{ data: 'ausentes' },
+					{
+					  data: 'estatus',
+					  render: function (data, type, row) {
+						return `<span style="color:${row.color};">${data}</span>`;
+					  }
+					}
 				],
 				stateSave: true,
 				language: {

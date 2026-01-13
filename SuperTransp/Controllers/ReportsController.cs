@@ -413,7 +413,9 @@ namespace SuperTransp.Controllers
 						sinVehiculo = ptg.TotalWithoutVehicle,
 						presentes = ptg.TotalDriverInPerson,
 						ausentes = ptg.TotalDriverNotInPerson,
+						socios = ptg.Partners,
 						color = ptg.Partners == ptg.TotalSupervisedDrivers ? "green" : "red",
+						estatus = ptg.Partners == ptg.TotalSupervisedDrivers ? "SUPERVISADA" : "PENDIENTE",
 						id = ptg.PublicTransportGroupId
 					});
 
@@ -428,6 +430,110 @@ namespace SuperTransp.Controllers
 			}
 		}
 
+		public IActionResult Dashboard()
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+				{
+					int? groupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+					if (groupId is null ||
+						(groupId != 1 && !_security.GroupHasAccessToModule(groupId.Value, 4)) ||
+						(groupId == 1 ? false : !_security.GroupHasAccessToModule(groupId.Value, 23)))
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
+					List<PublicTransportGroupViewModel> model = new();
+
+					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+					int? stateId = HttpContext.Session.GetInt32("StateId");
+
+					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
+					{
+						model = _report.GetAllSupervisedDriversStatisticsInEstateByStateId((int)stateId);
+					}
+					else
+					{
+						model = _report.GetAllSupervisedDriversStatisticsInEstate();
+					}
+
+					return View(model);
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
+
+		public IActionResult DashboardPTG(int selectedStatisticsStateId)
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+				{
+					int? groupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+					if (groupId is null ||
+						(groupId != 1 && !_security.GroupHasAccessToModule(groupId.Value, 4)) ||
+						(groupId == 1 ? false : !_security.GroupHasAccessToModule(groupId.Value, 22)))
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
+					List<PublicTransportGroupViewModel> model = new();
+					List<PublicTransportGroupViewModel> modelSupervised = new();
+
+					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+					int? stateId = 0;
+
+					if (selectedStatisticsStateId != 0)
+					{
+						stateId = selectedStatisticsStateId;
+					}
+
+					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
+					{
+						model = _publicTransportGroup.GetAllStatisticsByStateId((int)stateId);
+						modelSupervised = _report.GetAllSupervisedDriversStatisticsInEstateByStateId((int)stateId);
+					}
+					else
+					{
+						if (selectedStatisticsStateId == 0)
+						{
+							model = _publicTransportGroup.GetAllStatistics();
+							modelSupervised = _report.GetAllSupervisedDriversStatisticsInEstate();
+						}
+						else
+						{
+							model = _publicTransportGroup.GetAllStatisticsByStateId((int)stateId);
+							modelSupervised = _report.GetAllSupervisedDriversStatisticsInEstateByStateId((int)stateId);
+						}
+					}
+
+					foreach (var supervisionNumbers in modelSupervised)
+					{
+						model.Where(s => s.StateId == supervisionNumbers.StateId).FirstOrDefault().TotalSupervisedDrivers = supervisionNumbers.TotalSupervisedDrivers;
+					}
+
+					return View(model);
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
+
+		//Sustiuido por el Dashboard
 		public IActionResult SupervisedDriversStatisticsInEstate()
 		{
 			try

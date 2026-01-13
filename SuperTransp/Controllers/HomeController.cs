@@ -11,12 +11,14 @@ namespace SuperTransp.Controllers
 		private readonly ILogger<HomeController> _logger;
 		private readonly ISecurity _security;
 		private readonly IOptionsSnapshot<MaintenanceSettings> _settings;
+		private readonly IReport _report;
 
-		public HomeController(ILogger<HomeController> logger, ISecurity security, IOptionsSnapshot<MaintenanceSettings> settings)
+		public HomeController(ILogger<HomeController> logger, ISecurity security, IOptionsSnapshot<MaintenanceSettings> settings, IReport report)
 		{
 			_logger = logger;
 			_security = security;
 			_settings = settings;
+			_report = report;
 		}
 
 		public IActionResult Index()
@@ -67,7 +69,7 @@ namespace SuperTransp.Controllers
 		//[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 		//public IActionResult Error()
 		//{
-		//	// Puedes pasar información adicional, como el ID del error
+		//	// Puedes pasar informaciï¿½n adicional, como el ID del error
 		//	return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
 		//}
 
