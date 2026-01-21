@@ -209,12 +209,16 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             padding: 25px;
             overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+            position: relative;
         }
 
         .states-table {
             width: 100%;
             border-collapse: collapse;
             min-width: 600px;
+            table-layout: fixed;
         }
 
         .states-table th,
@@ -222,7 +226,16 @@
             padding: 12px;
             text-align: left;
             border-bottom: 1px solid #e0e0e0;
+            border-right: 1px solid #e0e0e0;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            position: relative;
+        }
+
+        .states-table th:last-child,
+        .states-table td:last-child {
+            border-right: none;
         }
 
         .states-table th {
@@ -231,6 +244,33 @@
             font-weight: 600;
             position: sticky;
             top: 0;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* Resize handle for columns */
+        .resize-handle {
+            position: absolute;
+            top: 0;
+            right: -3px;
+            width: 8px;
+            height: 100%;
+            cursor: col-resize;
+            background-color: transparent;
+            z-index: 20;
+        }
+
+        .resize-handle:hover {
+            background-color: rgba(102, 126, 234, 0.3);
+        }
+
+        .resize-handle:active {
+            background-color: #667eea;
+        }
+
+        .resizing {
+            cursor: col-resize;
+            user-select: none;
         }
 
         .states-table tbody tr:hover {
@@ -241,13 +281,20 @@
             color: #555;
         }
 
+        .states-table th:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 11;
+            background-color: #f8f9fa;
+        }
+
         .states-table td:first-child {
             font-weight: 600;
             color: #2c3e50;
             position: sticky;
             left: 0;
             background-color: white;
-            z-index: 1;
+            z-index: 9;
         }
 
         .states-table tbody tr:hover td:first-child {
@@ -562,6 +609,59 @@
                 });
 
                 tableBody.appendChild(tr);
+            });
+
+            // Add resize handles to column headers
+            setupColumnResize();
+        }
+
+        // Column resize functionality
+        function setupColumnResize() {
+            const table = document.getElementById('statesTable');
+            const ths = table.querySelectorAll('thead th');
+
+            ths.forEach((th, index) => {
+                // Create resize handle
+                const resizeHandle = document.createElement('div');
+                resizeHandle.className = 'resize-handle';
+                th.appendChild(resizeHandle);
+
+                // Store original widths
+                if (!th.style.width) {
+                    th.style.width = th.offsetWidth + 'px';
+                }
+
+                let startX, startWidth;
+
+                resizeHandle.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    startX = e.pageX;
+                    startWidth = th.offsetWidth;
+
+                    document.body.classList.add('resizing');
+
+                    const mouseMoveHandler = function(e) {
+                        const width = startWidth + (e.pageX - startX);
+                        if (width > 50) { // Minimum width
+                            th.style.width = width + 'px';
+
+                            // Update corresponding cells in the body
+                            const cells = table.querySelectorAll(`tbody tr td:nth-child(${index + 1})`);
+                            cells.forEach(cell => {
+                                cell.style.width = width + 'px';
+                            });
+                        }
+                    };
+
+                    const mouseUpHandler = function() {
+                        document.body.classList.remove('resizing');
+                        document.removeEventListener('mousemove', mouseMoveHandler);
+                        document.removeEventListener('mouseup', mouseUpHandler);
+                    };
+
+                    document.addEventListener('mousemove', mouseMoveHandler);
+                    document.addEventListener('mouseup', mouseUpHandler);
+                });
             });
         }
 
