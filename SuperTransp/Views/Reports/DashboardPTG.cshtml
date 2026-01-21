@@ -388,12 +388,22 @@
             }
         }
 
+        <div class="stat-card universe-orgs">
+            <h3>Universo Organizaciones</h3>
+            <div class="value">@totalUniversePTG.ToString("N0", new System.Globalization.CultureInfo("de-DE"))</div>
+        </div>
+
         <div class="stat-card orgs-loaded">
             <h3>Organizaciones Cargadas</h3>
             <div class="value">
                 @totalPTGLoaded.ToString("N0", new System.Globalization.CultureInfo("de-DE"))
                 <span style="font-size: 1rem; color: #4CAF50; font-weight: 600;">(avance @porcentajeOrgs.ToString("F2", new System.Globalization.CultureInfo("de-DE"))%)</span>
             </div>
+        </div>
+
+        <div class="stat-card universe-partners">
+            <h3>Universo Socios</h3>
+            <div class="value">@totalUniversePartners.ToString("N0", new System.Globalization.CultureInfo("de-DE"))</div>
         </div>
 
         <div class="stat-card partners-loaded">
@@ -409,15 +419,6 @@
             <div class="value">@totalSupervised.ToString("N0", new System.Globalization.CultureInfo("de-DE"))</div>
         </div>
 
-        <div class="stat-card universe-orgs">
-            <h3>Universo Organizaciones</h3>
-            <div class="value">@totalUniversePTG.ToString("N0", new System.Globalization.CultureInfo("de-DE"))</div>
-        </div>
-
-        <div class="stat-card universe-partners">
-            <h3>Universo Socios</h3>
-            <div class="value">@totalUniversePartners.ToString("N0", new System.Globalization.CultureInfo("de-DE"))</div>
-        </div>
     </div>
 
     <div class="filter-selector">

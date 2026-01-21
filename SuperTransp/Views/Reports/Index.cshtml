@@ -218,23 +218,23 @@
                                         {
                                              <li>@Html.ActionLink("Resúmenes de supervisión (históricos)", "HistoricalData", "Reports")</li>
                                         }
-                                        // if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 22))
-                                        // {
-                                        //     if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 6))
-                                        //     {
-                                        //         <li><a href="#" id="openStatisticsModal">Gráficos Organizaciones por estado</a></li>
-                                        //     }
-                                        //     else
-                                        //     {
-                                        //         <li>
-                                        //             @Html.ActionLink(
-                                        //             "Gráficos organizaciones por estado",
-                                        //             "PublicTransportGroupStatisticsInState",
-                                        //             "Reports",
-                                        //             new { selectedStatisticsStateId = ViewBag.UserStateId }, null)
-                                        //         </li>
-                                        //     }
-                                        // }
+                                        if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 22))
+                                        {
+                                            if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 6))
+                                            {
+                                                <li><a href="#" id="openStatisticsModal">Gráficos Organizaciones por estado</a></li>
+                                            }
+                                            else
+                                            {
+                                                <li>
+                                                    @Html.ActionLink(
+                                                    "Gráficos organizaciones por estado",
+                                                    "PublicTransportGroupStatisticsInState",
+                                                    "Reports",
+                                                    new { selectedStatisticsStateId = ViewBag.UserStateId }, null)
+                                                </li>
+                                            }
+                                        }
                                         if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 22))
                                         {
                                             if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 6))
@@ -254,9 +254,11 @@
                                         }
                                         if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 23))
                                         {
-
-                                            // <li>@Html.ActionLink("Gráficos vehículos supervisados por estado", "SupervisedDriversStatisticsInEstate", "Reports")</li>
-                                        <li>@Html.ActionLink("Estadísticas de supervisión", "Dashboard", "Reports")</li>
+                                            <li>@Html.ActionLink("Gráficos vehículos supervisados por estado", "SupervisedDriversStatisticsInEstate", "Reports")</li>
+                                        }
+                                        if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 23))
+                                        {  
+                                            <li>@Html.ActionLink("Estadísticas vehículos supervisados por estado", "Dashboard", "Reports")</li>
                                         }
                                         if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 27))
                                         {
