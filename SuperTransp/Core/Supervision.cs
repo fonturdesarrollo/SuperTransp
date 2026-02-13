@@ -832,7 +832,7 @@ namespace SuperTransp.Core
 		}
 
 		public List<PublicTransportGroupViewModel> GetAllDriverPublicTransportGroup(string ptgRif)
-			{
+		{
 			try
 			{
 				using (SqlConnection sqlConnection = GetConnection())
@@ -957,6 +957,97 @@ namespace SuperTransp.Core
 			catch (Exception ex)
 			{
 				throw new Exception($"Error al obtener las imagenes de los vehiculos {ex.Message}", ex);
+			}
+		}
+
+
+		public List<PublicTransportGroupViewModel> GetSupervisionPlate(string plate, int stateId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<PublicTransportGroupViewModel> ptg = new();
+					string whereCondition = stateId == 0 ? " WHERE Plate = @Plate" : " WHERE Plate = @Plate AND StateId = @StateId";
+					SqlCommand cmd = new($"SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail {whereCondition} ORDER BY StateName, PTGCompleteName, PartnerNumber", sqlConnection);
+					cmd.Parameters.AddWithValue("@Plate", plate);
+
+					if(stateId != 0)
+					{
+						cmd.Parameters.AddWithValue("@StateId", stateId);
+					}
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							ptg.Add(new PublicTransportGroupViewModel
+							{
+								PublicTransportGroupId = (int)dr["PublicTransportGroupId"],
+								PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"],
+								DesignationId = (int)dr["DesignationId"],
+								PublicTransportGroupName = (string)dr["PublicTransportGroupName"],
+								PTGCompleteName = (string)dr["PTGCompleteName"],
+								ModeId = (int)dr["ModeId"],
+								UnionId = (int)dr["UnionId"],
+								MunicipalityId = (int)dr["MunicipalityId"],
+								StateId = (int)dr["StateId"],
+								RepresentativeIdentityDocument = (int)dr["RepresentativeIdentityDocument"],
+								RepresentativeName = (string)dr["RepresentativeName"],
+								RepresentativePhone = (string)dr["RepresentativePhone"],
+								DesignationName = (string)dr["DesignationName"],
+								StateName = (string)dr["StateName"],
+								MunicipalityName = (string)dr["MunicipalityName"],
+								ModeName = (string)dr["ModeName"],
+								UnionName = (string)dr["UnionName"],
+								DriverId = (int)dr["DriverId"],
+								DriverFullName = (string)dr["DriverFullName"],
+								DriverIdentityDocument = (int)dr["DriverIdentityDocument"],
+								PartnerNumber = (int)dr["PartnerNumber"],
+								SupervisionStatusName = (string)dr["SupervisionStatusText"],
+								TotalDrivers = (int)dr["TotalDrivers"],
+								TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"],
+								SupervisionId = (int)dr["SupervisionId"],
+								DriverWithVehicle = (bool)dr["DriverWithVehicle"],
+								WorkingVehicle = (bool)dr["WorkingVehicle"],
+								InPerson = (bool)dr["InPerson"],
+								Plate = (string)dr["Plate"],
+								Year = (int)dr["Year"],
+								Make = (string)dr["Make"],
+								Model = (string)dr["Model"],
+								Passengers = (int)dr["Passengers"],
+								RimName = (string)dr["RimName"],
+								Wheels = (int)dr["Wheels"],
+								MotorOilName = (string)dr["MotorOilName"],
+								Liters = (int)dr["Liters"],
+								FuelTypeName = (string)dr["FuelTypeName"],
+								TankCapacity = (int)dr["TankCapacity"],
+								BatteryName = (string)dr["BatteryName"],
+								NumberOfBatteries = (int)dr["NumberOfBatteries"],
+								FailureTypeName = (string)dr["FailureTypeName"],
+								VehicleImageUrl = (string)dr["VehicleImageUrl"],
+								FingerprintTrouble = (bool)dr["FingerprintTrouble"],
+								Remarks = (string)dr["Remarks"],
+								UserFullName = (string)dr["UserFullName"],
+								SecurityUserId = (int)dr["SecurityUserId"],
+								DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"],
+								SupervisionLastRoundDate = dr.IsDBNull(dr.GetOrdinal("SupervisionLastRoundDate")) ? (DateTime?)null : dr.GetDateTime(dr.GetOrdinal("SupervisionLastRoundDate")),
+								Pictures = GetPicturesByPTGIdAndDriverPublicTransportGroupId((int)dr["PublicTransportGroupId"], (int)dr["DriverPublicTransportGroupId"]),
+							});
+						}
+					}
+
+					return ptg.ToList();
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener todas las líneas {ex.Message}", ex);
 			}
 		}
 
@@ -1616,10 +1707,10 @@ namespace SuperTransp.Core
 					}
 
 					List<SupervisionRoundModel> round = new();
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_SupervisionRoundDetail WHERE StateId = @StateId AND EndMonth = @EndMonth AND EndYear = @EndYear AND SupervisionRoundStatus = 0", sqlConnection);
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_SupervisionRoundDetail WHERE StateId = @StateId AND StartMonth = @StartMonth AND StartYear = @StartYear AND SupervisionRoundStatus = 1", sqlConnection);
 					cmd.Parameters.AddWithValue("@StateId", stateId);
-					cmd.Parameters.AddWithValue("@EndMonth", month);
-					cmd.Parameters.AddWithValue("@EndYear", year);
+					cmd.Parameters.AddWithValue("@StartMonth", month);
+					cmd.Parameters.AddWithValue("@StartYear", year);
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
 					{

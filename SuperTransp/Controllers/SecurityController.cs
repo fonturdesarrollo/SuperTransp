@@ -202,6 +202,15 @@ namespace SuperTransp.Controllers
                     ViewBag.Groups = new SelectList(_security.GetAllGroups(), "SecurityGroupId", "SecurityGroupName");
                 }
                 ViewBag.Status = new SelectList(_security.GetAllUsersStatus(), "SecurityStatusId", "SecurityStatusName");
+
+                if (_security.GroupHasAccessToModule(groupId.Value, 31) || groupId.Value == 1)
+                {
+                    ViewBag.ResetPassword = true;
+                }
+                else
+                {
+                    ViewBag.ResetPassword = false;
+                }
             }
 
             return View(model);
@@ -633,7 +642,26 @@ namespace SuperTransp.Controllers
             }
         }
 
-        public JsonResult CheckOldPasswordExist(string paramValue1)
+		public JsonResult ResetPassword(int securityUserId)
+		{
+			try
+			{
+				if (!IsUserLoggedIn() || !ModelState.IsValid)
+					RedirectToAction("Login", "Security");
+
+				int securityGroupModuleId = _security.ResetPassword(securityUserId);
+
+				TempData["SuccessMessage"] = "Clave restablecida correctamente a: 1";
+
+				return Json("OK");
+			}
+			catch (Exception ex)
+			{
+				return Json(ex.Message);
+			}
+		}
+
+		public JsonResult CheckOldPasswordExist(string paramValue1)
         {
             if (!IsUserLoggedIn())
                 return Json("ERROR");

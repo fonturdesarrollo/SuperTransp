@@ -202,6 +202,11 @@
                                     @{
                                         var modulesInGroup = (IEnumerable<SecurityModuleModel>)ViewBag.ModulesInGroup; 
 
+                                        if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 32))
+                                        {
+                                            <li><a href="#" id="openPlateModal">Consultar placa</a></li>
+                                        }
+
                                         if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 20))
                                         {
                                             <li>@Html.ActionLink("Organizaciones y socios", "PublicTransportGroupList", "Reports")</li>
@@ -222,7 +227,7 @@
                                         {
                                             if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 6))
                                             {
-                                                <li><a href="#" id="openStatisticsModal">Gráficos Organizaciones por estado</a></li>
+                                                <li><a href="#" id="openStatisticsModal">Gráficos organizaciones por estado</a></li>
                                             }
                                             else
                                             {
@@ -365,6 +370,22 @@
         </div>
     </div>
 
+    <div id="modalPlateForm" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Indique la placa</h3>
+            @using (Html.BeginForm("SupervisionPlate", "Reports", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <label>Placa</label>
+
+                @Html.TextBox("supervisionPlate", "", new { maxlength = "12", placeholder = "Indique la placa", required = "required" })
+
+                <input type="submit" value="Buscar" id="sendPlateRequest" class="btn-align-right" />
+            }
+        </div>
+    </div>
+
     <div id="loading-spinner" class="spinner-container hidden">
         <div class="spinner"></div>
     </div>
@@ -412,6 +433,19 @@
 
             if (state === "") {
                 alert("Debe indicar el estado");
+                return false;
+            }
+
+            $(this).closest("form")[0].submit();
+        });
+
+        $("body").on("click", "#sendPlateRequest", function (event) {
+            event.preventDefault();
+
+            const state = $("#supervisionPlate").val();
+
+            if (state === "") {
+                alert("Debe indicar la placa");
                 return false;
             }
 
@@ -511,6 +545,12 @@
                 });
             });
 
+            $("#openPlateModal").click(function (e) {
+                e.preventDefault();
+                $("#modalPlateForm").fadeIn(function () {
+                });
+            });
+
             $(".close").click(function () {
                 $("#modalForm").fadeOut();
             });
@@ -521,6 +561,10 @@
 
             $(".close").click(function () {
                 $("#modalDashboardPTGForm").fadeOut();
+            });
+
+            $(".close").click(function () {
+                $("#modalPlateForm").fadeOut();
             });
 
             $(window).click(function (e) {

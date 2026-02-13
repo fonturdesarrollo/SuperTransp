@@ -262,7 +262,7 @@
                     {
                         "data": "ptgCompleteName",
                         "render": function (data, type, row) {
-                        return '<a href="/Reports/EditSummary?supervisionSummaryId=' + row.supervisionSummaryId +
+                        return '<a href="@Url.Content("~/")Reports/EditSummary?supervisionSummaryId=' + row.supervisionSummaryId +
                                '&publicTransportGroupId=' + row.publicTransportGroupId +
                                '&isClosed=true" target="_blank">' + data + '</a>';
                         }
@@ -270,8 +270,9 @@
                     {
                         "data": "publicTransportGroupRif",
                         "render": function (data, type, row) {
-                            return '<a href="/Reports/EditSummary?supervisionSummaryId=' + row.supervisionSummaryId +
-                                   '&publicTransportGroupId=' + row.publicTransportGroupId + '">' + data + '</a>';
+                        return '<a href="@Url.Content("~/")Reports/EditSummary?supervisionSummaryId=' + row.supervisionSummaryId +
+                               '&publicTransportGroupId=' + row.publicTransportGroupId +
+                               '&isClosed=true" target="_blank">' + data + '</a>';
                         }
                     },
                     { "data": "stateName" },

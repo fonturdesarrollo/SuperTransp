@@ -967,7 +967,40 @@ namespace SuperTransp.Core
 			}
 			catch (Exception ex)
 			{
-				throw new Exception("Error al añadir o editar el usuario", ex);
+				throw new Exception("Error al cambiar el password", ex);
+			}
+		}
+
+		public int ResetPassword(int securityUserId)
+		{
+			int result = 0;
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					if (securityUserId != 0)
+					{
+						SqlCommand cmd = new("Security_ResetPassword", sqlConnection)
+						{
+							CommandType = System.Data.CommandType.StoredProcedure
+						};
+
+						cmd.Parameters.AddWithValue("@SecurityUserId", securityUserId);
+
+						result = Convert.ToInt32(cmd.ExecuteScalar());
+					}
+				}
+
+				return result;
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Error al restablecer el password", ex);
 			}
 		}
 

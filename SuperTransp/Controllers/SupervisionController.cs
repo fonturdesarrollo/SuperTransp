@@ -288,7 +288,7 @@ namespace SuperTransp.Controllers
 
 		[HttpPost]
 		public async Task<IActionResult> Add(SupervisionViewModel model)
-		{
+			{
 			try
 			{
 				var result = CheckSessionAndPermission(3);
@@ -305,7 +305,7 @@ namespace SuperTransp.Controllers
 						var driver = _driver.GetByDriverPublicTransportGroupId(model.DriverPublicTransportGroupId);
 						model.StateId = driver.StateId;
 
-						if (!model.DriverWithVehicle || !model.InPerson)
+						if (!model.DriverWithVehicle || (!model.InPerson && !IsPartnerWithSupervisedVehicle(model.SupervisionId, model.VehicleDataId)))
 						{
 							model.InPerson = !model.DriverWithVehicle ? false : model.InPerson;
 
@@ -1320,6 +1320,11 @@ namespace SuperTransp.Controllers
 			{
 				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message });
 			}
+		}
+
+		private bool IsPartnerWithSupervisedVehicle(int supervisionId, int? vehicleDataId)
+		{
+			return supervisionId > 0 && vehicleDataId > 0 || vehicleDataId != null;
 		}
 	}
 }

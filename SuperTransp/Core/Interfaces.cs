@@ -28,6 +28,7 @@ namespace SuperTransp.Core
 			public int AddOrEditGroupModules(SecurityGroupModuleModel model);
 			public int DeleteGroupModules(int securityGroupModuleId);
 			public int ChangePassword(SecurityUserViewModel model);
+			public int ResetPassword(int securityUserId);
 			public bool OldPasswordValid(int securityUserId, string oldPassword);
 			public string? Encrypt(string plainText);
 			public string? Decrypt(string encryptedText);
@@ -120,6 +121,7 @@ namespace SuperTransp.Core
 			public List<PublicTransportGroupViewModel> GetDriverPublicTransportGroupByPtgId(int publicTransportGroupId);
 			public List<PublicTransportGroupViewModel> GetDriverByDriverIdentityDocument(int driverIdentityDocument);
 			public List<PublicTransportGroupViewModel> GetAllDriverPublicTransportGroup(string ptgRif);
+			public List<PublicTransportGroupViewModel> GetSupervisionPlate(string plate, int stateId);
 			public List<PublicTransportGroupViewModel> RegisteredPlate(string plate);
 			public int AddOrEditSummary(SupervisionSummaryViewModel model);
 			public List<SupervisionSummaryViewModel> GetAllSupervisionSummary(int stateId = 0, int supervisionRoundId = 0);

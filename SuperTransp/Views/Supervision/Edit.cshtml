@@ -138,11 +138,15 @@
 								@Html.HiddenFor(x => x.StateId)
 								@Html.HiddenFor(x => x.DriverPublicTransportGroupId)
 								@Html.DropDownListFor(t => t.DriverWithVehicle, (SelectList)ViewBag.DriverWithVehicle, "-- Seleccione --", new { @class = "form-control" })
+								<br />
+								<button type="submit" id="saveRequestXX" class="primary">Actualizar</button>
 							</div>
 							<div class="row" id="additionalFieldsX" style="visibility: hidden; opacity: 0; height: 0; overflow: hidden; transition: opacity 0.3s ease-in-out;">
 								<div class="col-12">
 									<strong>¿Socio presente?:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</strong>
 									@Html.DropDownListFor(t => t.InPerson, (SelectList)ViewBag.InPerson, "-- Seleccione --", new { @class = "form-control" })
+									<br />
+									<button type="submit" id="saveRequestX" class="primary">Actualizar</button>
 								</div>
 							</div>
 							<div class="row" id="additionalFields" style="visibility: hidden; opacity: 0; height: 0; overflow: hidden; transition: opacity 0.3s ease-in-out;">

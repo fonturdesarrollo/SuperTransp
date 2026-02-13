@@ -185,6 +185,22 @@
 		handleSaveRequest(event);
 	});
 
+	$("body").on("click", "#saveRequestX", function (event) {
+		if (confirm("¿Está seguro de que desea actualizar los registros?")) {
+			$(this).closest("form")[0].submit();
+		} else {
+			return false;
+		}
+	});
+
+	$("body").on("click", "#saveRequestXX", function (event) {
+		if (confirm("¿Está seguro de que desea actualizar los registros?")) {
+			$(this).closest("form")[0].submit();
+		} else {
+			return false;
+		}
+	});
+
 	$("form").on("submit", function (e) {
 		e.preventDefault();
 		if ($(this).valid()) {
@@ -374,20 +390,37 @@
 		});
 
 		if ($('#DriverWithVehicle').val() == "True") {
+			const btn = document.getElementById('saveRequestXX');
+			btn.style.display = 'none';
 			$('#additionalFieldsX').css({ visibility: 'visible', opacity: '1', height: 'auto', overflow: 'visible' });
 			$('#additionalFields').css({ visibility: 'visible', opacity: '1', height: 'auto', overflow: 'visible' });
 		} else {
 			if ($('#InPerson').val() === "False") {
 				$('#InPerson').val("");
 			}
+			const btn = document.getElementById('saveRequestXX');
+			btn.style.display = '';
 		}
 
 		if ($('#InPerson').val() == "False") {
-			$('#additionalFields').css({ opacity: '0', visibility: 'hidden', height: '0', overflow: 'hidden' });
+			const btn = document.getElementById('saveRequestX');
+			if ($('#VehicleDataId').val() == "" || $('#VehicleDataId').val() == null) {
+				$('#additionalFields').css({ opacity: '0', visibility: 'hidden', height: '0', overflow: 'hidden' });
+				btn.style.display = '';
+			} else {
+				btn.style.display = 'none';
+				$('#additionalFieldsX').css({ visibility: 'visible', opacity: '1', height: 'auto', overflow: 'visible' });
+				$('#additionalFields').css({ visibility: 'visible', opacity: '1', height: 'auto', overflow: 'visible' });
+			}
+		} else {
+			const btn = document.getElementById('saveRequestX');
+			btn.style.display = 'none';
 		}
 
 		$('#DriverWithVehicle').change(function (event) {
 			if ($(this).val() === "True") {
+				const btn = document.getElementById('saveRequestXX');
+				btn.style.display = 'none';
 				$('#additionalFieldsX').css({ visibility: 'visible', opacity: '1', height: 'auto', overflow: 'visible' });
 			} else if ($(this).val() === "False") {
 				$('#additionalFieldsX').css({ opacity: '0', visibility: 'hidden', height: '0', overflow: 'hidden' });
