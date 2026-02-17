@@ -6,6 +6,7 @@ namespace SuperTransp.Models
 	{
 		[Key]
 		public int DriverId { get; set; }
+		public int NewPlateDriverId { get; set; }
 		public int PublicTransportGroupId { get; set; }
 		public int DriverPublicTransportGroupId { get; set; }
 		[Required(ErrorMessage = "La cédula es requerida")]

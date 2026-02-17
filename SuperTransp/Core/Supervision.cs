@@ -678,7 +678,7 @@ namespace SuperTransp.Core
 			}
 		}
 
-		public SupervisionViewModel GetByPublicTransportGroupIdAndDriverIdAndPartnerNumberStateId(int publicTransportGroupId, int driverId, int partnerNumber, int stateId)
+		public SupervisionViewModel GetByPublicTransportGroupIdAndDriverPublicTransportGroupIdAndPartnerNumberStateId(int publicTransportGroupId, int driverId, int partnerNumber, int stateId)
 		{
 			try
 			{
@@ -703,12 +703,16 @@ namespace SuperTransp.Core
 							supervision.PublicTransportGroupId = (int)dr["PublicTransportGroupId"];
 							supervision.PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"];
 							supervision.PTGCompleteName = (string)dr["PTGCompleteName"];
+							supervision.PublicTransportGroupGUID = (string)dr["PublicTransportGroupGUID"];
 							supervision.ModeId = (int)dr["ModeId"];
 							supervision.StateName = (string)dr["StateName"];
 							supervision.ModeName = (string)dr["ModeName"];
 							supervision.DriverId = (int)dr["DriverId"];
 							supervision.DriverFullName = (string)dr["DriverFullName"];
 							supervision.DriverIdentityDocument = (int)dr["DriverIdentityDocument"];
+							supervision.DriverPhone = (string)dr["DriverPhone"];
+							supervision.SexName = (string)dr["SexName"];
+							supervision.Birthdate = (DateTime)dr["Birthdate"];
 							supervision.PartnerNumber = (int)dr["PartnerNumber"];
 							supervision.SupervisionStatusName = (string)dr["SupervisionStatusText"];
 							supervision.TotalDrivers = (int)dr["TotalDrivers"];
@@ -739,6 +743,89 @@ namespace SuperTransp.Core
 							supervision.VehicleImageUrl = (string)dr["VehicleImageUrl"];
 							supervision.FingerprintTrouble = (bool)dr["FingerprintTrouble"];
 							supervision.Remarks = (string)dr["Remarks"];							
+							supervision.VehicleDataId = (int)dr["VehicleDataId"];
+							supervision.SupervisionStatus = (bool)dr["SupervisionStatus"];
+							supervision.SupervisionDateAdded = (DateTime)dr["SupervisionDateAdded"];
+							supervision.DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"];
+							supervision.Pictures = GetPicturesByPTGIdAndDriverPublicTransportGroupId(publicTransportGroupId, (int)dr["DriverPublicTransportGroupId"]);
+						}
+					}
+
+					return supervision;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener los datos del transportista y el vehiculo {ex.Message}", ex);
+			}
+		}
+
+
+		public SupervisionViewModel GetByPublicTransportGroupIdAndDriverIdAndPartnerNumberStateId(int publicTransportGroupId, int driverId, int partnerNumber, int stateId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SupervisionViewModel supervision = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE PublicTransportGroupId = @PublicTransportGroupId AND DriverId = @DriverId AND PartnerNumber = @PartnerNumber AND StateId = @StateId", sqlConnection);
+					cmd.Parameters.AddWithValue("@PublicTransportGroupId", publicTransportGroupId);
+					cmd.Parameters.AddWithValue("@DriverId", driverId);
+					cmd.Parameters.AddWithValue("@PartnerNumber", partnerNumber);
+					cmd.Parameters.AddWithValue("@StateId", stateId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							supervision.PublicTransportGroupId = (int)dr["PublicTransportGroupId"];
+							supervision.PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"];
+							supervision.PTGCompleteName = (string)dr["PTGCompleteName"];
+							supervision.PublicTransportGroupGUID = (string)dr["PublicTransportGroupGUID"];
+							supervision.ModeId = (int)dr["ModeId"];
+							supervision.StateName = (string)dr["StateName"];
+							supervision.ModeName = (string)dr["ModeName"];
+							supervision.DriverId = (int)dr["DriverId"];
+							supervision.DriverFullName = (string)dr["DriverFullName"];
+							supervision.DriverIdentityDocument = (int)dr["DriverIdentityDocument"];
+							supervision.DriverPhone = (string)dr["DriverPhone"];
+							supervision.SexName = (string)dr["SexName"];
+							supervision.Birthdate = (DateTime)dr["Birthdate"];
+							supervision.PartnerNumber = (int)dr["PartnerNumber"];
+							supervision.SupervisionStatusName = (string)dr["SupervisionStatusText"];
+							supervision.TotalDrivers = (int)dr["TotalDrivers"];
+							supervision.TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"];
+							supervision.SupervisionId = (int)dr["SupervisionId"];
+							supervision.DriverWithVehicle = (bool)dr["DriverWithVehicle"];
+							supervision.WorkingVehicle = (bool)dr["WorkingVehicle"];
+							supervision.InPerson = (bool)dr["InPerson"];
+							supervision.Plate = (string)dr["Plate"];
+							supervision.Year = (int)dr["Year"];
+							supervision.Make = (string)dr["Make"];
+							supervision.Model = (string)dr["Model"];
+							supervision.Passengers = (int)dr["Passengers"];
+							supervision.RimName = (string)dr["RimName"];
+							supervision.RimId = (int)dr["RimId"];
+							supervision.Wheels = (int)dr["Wheels"];
+							supervision.MotorOilName = (string)dr["MotorOilName"];
+							supervision.MotorOilId = (int)dr["MotorOilId"];
+							supervision.Liters = (int)dr["Liters"];
+							supervision.FuelTypeName = (string)dr["FuelTypeName"];
+							supervision.FuelTypeId = (int)dr["FuelTypeId"];
+							supervision.TankCapacity = (int)dr["TankCapacity"];
+							supervision.BatteryName = (string)dr["BatteryName"];
+							supervision.BatteryId = (int)dr["BatteryId"];
+							supervision.NumberOfBatteries = (int)dr["NumberOfBatteries"];
+							supervision.FailureTypeName = (string)dr["FailureTypeName"];
+							supervision.FailureTypeId = (int)dr["FailureTypeId"];
+							supervision.VehicleImageUrl = (string)dr["VehicleImageUrl"];
+							supervision.FingerprintTrouble = (bool)dr["FingerprintTrouble"];
+							supervision.Remarks = (string)dr["Remarks"];
 							supervision.VehicleDataId = (int)dr["VehicleDataId"];
 							supervision.SupervisionStatus = (bool)dr["SupervisionStatus"];
 							supervision.SupervisionDateAdded = (DateTime)dr["SupervisionDateAdded"];

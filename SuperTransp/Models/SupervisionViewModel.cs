@@ -11,6 +11,9 @@ namespace SuperTransp.Models
 		public bool DriverWithVehicle { get; set; }
 		public bool WorkingVehicle { get; set; }
 		public int DriverId { get; set; }
+		public string? DriverPhone { get; set; }
+		public string? SexName { get; set; }
+		public DateTime Birthdate { get; set; }
 		public string? Plate { get; set; }
 		public int? VehicleDataId { get; set; }
 		public int? Passengers { get; set; }
@@ -29,6 +32,7 @@ namespace SuperTransp.Models
 		public int SecurityUserId { get; set; }
 		public string? PTGCompleteName { get; set; }
 		public int PublicTransportGroupId { get; set; }
+		public string? PublicTransportGroupGUID { get; set; }
 		public int DriverIdentityDocument { get; set; }
 		public string? DriverFullName { get; set; }
 		public int PartnerNumber { get; set; }

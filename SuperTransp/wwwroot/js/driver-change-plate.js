@@ -67,7 +67,7 @@ $("body").on("click", "#saveRequest", function (event) {
 
     if (!isOkToSave()) return false;
 
-    if (!confirm("¿Está seguro de que desea actualizar los registros?")) return false;
+    if (!confirm("¿Está seguro de que desea realizar el cambio de socio?")) return false;
 
     $(this).closest("form").trigger("submit");
 });
@@ -102,10 +102,9 @@ $("form").on("submit", function (e) {
 
                 if (response.canContinue) {
                     let formData = $("form").serialize();
-                    //formData += "&DriverId=" + (Number.isInteger(window.driverId) ? window.driverId : 0);
 
                     $.ajax({
-                        url: window.editWithAjaxUrl,
+                        url: window.changePlateWithAjaxUrl,
                         type: 'POST',
                         data: formData,
                         success: function (data) {
@@ -180,11 +179,6 @@ function isOkToSave() {
         message = "Debe colocar el número de socio";
     }
 
-    //if ($("#RepresentativePhone").val() == "" && !firstInvalidField) {
-    //    firstInvalidField = "#RepresentativePhone";
-    //    message = "Debe colocar el número de teléfono del representante";
-    //}
-
     if (!firstInvalidField) {
         const identityValue = $("#DriverPhone").val();
 
@@ -230,4 +224,110 @@ $(document).ready(function () {
     setTimeout(function () {
         $("#successMessage").fadeOut("slow");
     }, 2500);
+
+    $("#DriverIdentityDocument").on("blur keypress", function (event) {
+        if (event.type === "blur" || (event.type === "keypress" && event.which === 13)) {
+            event.preventDefault();
+            let inputValue = $(this).val();
+            GetDriverByIdentifierIdNumber(inputValue);
+        }
+    });	
+
+    function GetDriverByIdentifierIdNumber(value) {
+        $.ajax({
+            url: window.getDriverDataByIdDocumentUrl,
+            type: 'POST',
+            headers: {
+                "RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val()
+            },
+            data: { driverIdentityDocument: value },
+            success: function (response) {
+                if (response && response.driverFullName && response.driverPhone) {
+                    window.newPlateDriverId = response.driverId;
+
+                    if (response.driverId == $("#DriverId").val()) {
+                        $("#saveRequest").prop("disabled", true);
+                    } else {
+                        $("#saveRequest").prop("disabled", false);
+                    }
+
+                    $("#NewPlateDriverId").val(response.driverId);
+                    $("#DriverFullName").val(response.driverFullName);
+                    $("#DriverPhone").val(response.driverPhone);
+                    $("#SexId").val(response.driverSexId);
+                    $("#Birthdate").val(response.driverBirthDate);
+
+                    $("#SexId").addClass("readonly-style");
+                    $("#SexId").on("click", e => e.preventDefault());
+
+                    $("#DriverFullName").prop("readonly", true);
+                    $("#DriverPhone").prop("readonly", true);
+                    $("#Birthdate").prop("readonly", true);
+
+                    $("#PartnerNumber").focus();
+                }
+                else {
+                    window.newPlateDriverId = 0;
+                    $("#NewPlateDriverId").val(0);
+                    $("#saveRequest").prop("disabled", false);
+                    $('#SexId').removeClass('readonly-style');
+                    $("#DriverFullName").prop("readonly", false);
+                    $("#DriverPhone").prop("readonly", false);
+
+                    $("#DriverFullName").val("");
+                    $("#DriverPhone").val("");
+
+                    $("#DriverFullName").focus();
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error("Error en la petición:", error);
+
+                $("#DriverFullName").prop("readonly", false);
+                $("#DriverPhone").prop("readonly", false);
+
+                $("#DriverFullName").val("");
+                $("#DriverPhone").val("");
+            },
+        });
+    }
+
+    var controllerUrl = window.getDriverByPTGDriverIdAndPartnerNumber +
+        `?publicTransportGroupId=${window.publicTransportGroupId}&driverId=${window.driverId}&partnerNumber=${window.partnerNumber}&stateId=${window.stateId}`;
+
+    $('#inventory').DataTable({
+        ajax: {
+            url: controllerUrl,
+            dataSrc: 'data'
+        },
+        columns: [
+            { data: 'nombre' },
+            { data: 'cedula' },
+            { data: 'socio' },
+            { data: 'telefono' },
+            { data: 'sexo' },
+            { data: 'nacimiento' },
+            { data: 'año' },
+            { data: 'marca' },
+            { data: 'modelo' },
+            { data: 'placa' },
+        ],
+        stateSave: true,
+        language: {
+            sProcessing: "Procesando...",
+            sLengthMenu: "Mostrar _MENU_ registros",
+            sZeroRecords: "No se encontraron resultados",
+            sEmptyTable: "Ningún dato disponible en esta tabla",
+            sInfo: "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+            sInfoEmpty: "Mostrando registros del 0 al 0 de un total de 0 registros",
+            sInfoFiltered: "(filtrado de un total de _MAX_ registros)",
+            sSearch: "Buscar:",
+            oPaginate: {
+                sFirst: "Primero",
+                sLast: "Último",
+                sNext: "Siguiente",
+                sPrevious: "Anterior"
+            }
+        }
+    });
 });

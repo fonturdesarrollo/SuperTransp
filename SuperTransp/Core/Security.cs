@@ -993,6 +993,8 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@SecurityUserId", securityUserId);
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
+
+						AddLogbook(0, false, "Restablecio la clave a su version inicial");
 					}
 				}
 

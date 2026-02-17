@@ -369,6 +369,10 @@ $(document).ready(function () {
     }
 
     var controllerUrl = window.getDriversByPTGUrl + `?publicTransportGroupId=${window.publicTransportGroupId}`;
+    $('#loadingSpinner').show();
+    var controllerUrl = window.getDriversByPTGUrl + `?publicTransportGroupId=${window.publicTransportGroupId}`;
+
+    $('#loadingSpinner').show();
 
     $('#inventory').DataTable({
         ajax: {
@@ -384,11 +388,15 @@ $(document).ready(function () {
             { data: 'nacimiento' },
             { data: 'modificar' },
             { data: 'eliminar' },
-            { data: 'qr' }
+            { data: 'cambiarPlaca' },
+            { data: 'qr' },
         ],
         createdRow: function (row, data, dataIndex) {
             let ptgGUID = `${data.ptgGUID}`;
             $(row).attr('data-ptgguid', ptgGUID);
+        },
+        initComplete: function (settings, json) {
+            $('#loadingSpinner').hide();
         },
         stateSave: true,
         language: {

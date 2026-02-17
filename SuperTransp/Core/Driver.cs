@@ -20,7 +20,7 @@ namespace SuperTransp.Core
 			return sqlConnection;
 		}
 
-		public int AddOrEdit(DriverViewModel model)
+		public int AddOrEdit(DriverViewModel model, bool updatePlate = false, bool updatePlateAddDriver = false)
 		{
 			int result = 0;
 			int? beforeDriverIdentityDocument = 0;
@@ -35,7 +35,7 @@ namespace SuperTransp.Core
 
 			try
 			{
-				if(model.DriverPublicTransportGroupId > 0 && model.DriverPublicTransportGroupId > 0)
+				if(model.DriverPublicTransportGroupId > 0 && !updatePlate)
 				{
 					driverValues = GetByDriverPublicTransportGroupId(model.DriverPublicTransportGroupId);
 					var existingBefore = GetAllByIdentityDocument((int)model.DriverIdentityDocument);
@@ -82,7 +82,6 @@ namespace SuperTransp.Core
 
 								model.DriverId = existingDriverId;
 								model.DriverPublicTransportGroupId = 0;
-
 							}
 						}
 						else
@@ -136,6 +135,8 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@SexId", model.SexId);
 						cmd.Parameters.AddWithValue("@Birthdate", model.Birthdate);
 						cmd.Parameters.AddWithValue("@DriverPublicTransportGroupId", model.DriverPublicTransportGroupId);
+						cmd.Parameters.AddWithValue("@IsUpdatePlate", updatePlate);
+						cmd.Parameters.AddWithValue("@IsUpdatePlateAddDriver", updatePlateAddDriver);			
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
 
@@ -187,6 +188,34 @@ namespace SuperTransp.Core
 			}
 		}
 
+		public int UpdateDriverPlate(DriverViewModel model)
+		{
+			int result = 0;
+
+			if (model != null)
+			{
+				if (model.NewPlateDriverId != 0)
+				{
+
+					model.DriverId = model.NewPlateDriverId;
+					AddOrEdit(model, true, false);
+				}
+				else
+				{
+					model.DriverId = 0;
+					AddOrEdit(model, true, true);
+				}
+			}
+			try
+			{
+				return result;
+			}
+			catch (Exception ex)
+			{
+				throw new Exception(ex.Message, ex);
+			}
+		}
+
 		public List<DriverViewModel> GetByPublicTransportGroupId(int publicTransportGroupId)
 		{
 			try
@@ -220,6 +249,7 @@ namespace SuperTransp.Core
 								SexId = (int)dr["SexId"],
 								SexName = (string)dr["SexName"],
 								Birthdate = (DateTime)dr["Birthdate"],
+								StateId = (int)dr["StateId"]
 							});
 						}
 					}

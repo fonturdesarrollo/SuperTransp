@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Office.PowerPoint.Y2023.M02.Main;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Options;
 using QRCoder;
@@ -17,13 +19,14 @@ namespace SuperTransp.Controllers
 		private readonly IGeography _geography;
 		private readonly IPublicTransportGroup _publicTransportGroup;
 		private readonly IDriver _driver;
+		private readonly ISupervision _supervision;
 		private readonly IConfiguration _configuration;
 		private readonly ICommonData _commonData;
 		private readonly IFtpService _ftpService;
 		private readonly IOptionsSnapshot<MaintenanceSettings> _settings;
 
 		public DriverController(IDriver driver, IPublicTransportGroup publicTransportGroup, ISecurity security, IGeography geography, 
-			IConfiguration configuration, ICommonData commonData, IFtpService ftpService, IOptionsSnapshot<MaintenanceSettings> settings)
+			IConfiguration configuration, ICommonData commonData, IFtpService ftpService, IOptionsSnapshot<MaintenanceSettings> settings, ISupervision supervision)
 		{
 			_driver = driver;
 			_publicTransportGroup = publicTransportGroup;
@@ -33,6 +36,7 @@ namespace SuperTransp.Controllers
 			_commonData = commonData;
 			_ftpService = ftpService;
 			_settings = settings;
+			_supervision = supervision;
 		}
 
 		public IActionResult Index()
@@ -174,6 +178,7 @@ namespace SuperTransp.Controllers
 				var isTotalAccess = securityGroupId == 1 || _security.IsTotalAccess(2) || _security.IsUpdateAccess(2);
 				var isDeleteAccess = securityGroupId == 1 || _security.IsTotalAccess(2);
 				var editControllerUrl = $"{Url.Action("Edit", "Driver")}?driverPublicTransportGroupId=";
+				var changePlateControllerUrl = $"{Url.Action("ChangePlate", "Driver")}?driverPublicTransportGroupId=";
 
 				var data = drivers.Select(driver => new
 				{
@@ -185,12 +190,67 @@ namespace SuperTransp.Controllers
 					driverId = driver.DriverId,
 					ptgGUID = $"{driver.PublicTransportGroupGUID}|{driver.PartnerNumber}",
 					nacimiento = driver.Birthdate.ToString("dd/MM/yyyy"),
-					modificar = isTotalAccess ? $@"<a id='btnEdit' href='{editControllerUrl}{driver.DriverPublicTransportGroupId}'>MODIFICAR</a>" : "<span>SOLO LECTURA</span>",
-					eliminar = isDeleteAccess ? $@"<a id='btnDelete' href='javascript:void(0);' onclick=""confirmDeletion('/Driver/Delete?driverId={driver.DriverId}&driverPublicTransportGroupId={driver.DriverPublicTransportGroupId}&partnerNumber={driver.PartnerNumber}&publicTransportGroupId={driver.PublicTransportGroupId}&pTGCompleteName={driver.PTGCompleteName}')"">ELIMINAR</a>" : "<span>SOLO LECTURA</span>",
+					modificar = isTotalAccess ? $@"<a id='btnEdit' href='{editControllerUrl}{driver.DriverPublicTransportGroupId}'>CORREGIR</a>" : "<span>SOLO LECTURA</span>",
+					eliminar = isDeleteAccess ? $@"<a id='btnDelete' href='javascript:void(0);' onclick=""confirmDeletion('/Driver/Delete?driverId={driver.DriverId}&driverPublicTransportGroupId={driver.DriverPublicTransportGroupId}&partnerNumber={driver.PartnerNumber}&publicTransportGroupId={driver.PublicTransportGroupId}&pTGCompleteName={driver.PTGCompleteName}')"">ELIMINAR TODO</a>" : "<span>SOLO LECTURA</span>",
+					cambiarPlaca = ShowValidUrl(publicTransportGroupId, driver.DriverPublicTransportGroupId, driver.PartnerNumber, driver.StateId, isTotalAccess, changePlateControllerUrl),
 					qr = "<button class='generateQR view-info p-1' type='button'><i class='bi bi-qr-code'></i></button>"
 				});
 
 				return Json(new { data });
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(new { error = ex.Message });
+			}
+		}
+
+		private string ShowValidUrl(int publicTransportGroupId, int driverPublicTransportGroupId, int? partnerNumber, int stateId, bool isTotalAccess, string changePlateControllerUrl)
+		{
+			var supervision = _supervision.GetByPublicTransportGroupIdAndDriverPublicTransportGroupIdAndPartnerNumberStateId(publicTransportGroupId, driverPublicTransportGroupId, (int)partnerNumber, stateId);
+			string columnText = "SUSTITUIR SOCIO MANTENER UNIDAD";
+
+			if (supervision != null)
+			{
+				if(string.IsNullOrEmpty(supervision.Plate))
+				{
+					columnText = "SIN VEHICULO";
+					return columnText;
+				}
+				else
+				{
+					return isTotalAccess ? $@"<a id='btnChangePlate' href='{changePlateControllerUrl}{driverPublicTransportGroupId}'>{columnText}</a>" : "<span>SOLO LECTURA</span>";
+				}
+			}
+
+			columnText = "SIN SUPERVISION";
+			return columnText;
+		}
+
+		public IActionResult GetDriverByPTGDriverIdAndPartnerNumber(int publicTransportGroupId, int driverId, int partnerNumber, int stateId)
+		{
+			try
+			{
+				var result = CheckSessionAndPermission(2);
+				if (result != null) return result;
+
+				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+				var driver = _supervision.GetByPublicTransportGroupIdAndDriverIdAndPartnerNumberStateId(publicTransportGroupId, driverId, partnerNumber, stateId);
+
+				var data = new
+				{
+					nombre = driver.DriverFullName,
+					cedula = driver.DriverIdentityDocument,
+					socio = driver.PartnerNumber,
+					telefono = driver.DriverPhone,
+					sexo = driver.SexName,
+					nacimiento = driver.Birthdate.ToString("dd/MM/yyyy"),
+					año = driver.Year,
+					marca = driver.Make = string.IsNullOrEmpty(driver.Make) ? "SIN VEHICULO" : driver.Make,
+					modelo = string.IsNullOrEmpty(driver.Model) ? "SIN VEHICULO" : driver.Model,
+					placa = string.IsNullOrEmpty(driver.Plate) ? "SIN VEHICULO" : driver.Plate,
+				};
+
+				return Json(new { data = new[] { data } });
 			}
 			catch (Exception ex)
 			{
@@ -286,6 +346,93 @@ namespace SuperTransp.Controllers
 					if (_security.IsTotalAccess(2) || _security.IsUpdateAccess(2) || securityGroupId == 1)
 					{
 						_driver.AddOrEdit(model);
+
+						return Json(new
+						{
+							success = true,
+							message = "Datos actualizados correctamente",
+							redirectUrl = Url.Action("Add", new { publicTransportGroupId = model.PublicTransportGroupId, pTGCompleteName = model.PTGCompleteName })
+						});
+					}
+				}
+
+				return Json(new
+				{
+					success = false,
+					redirectUrl = Url.Action("Login", "Security")
+				});
+			}
+			catch (Exception ex)
+			{
+				return Json(new { success = false, message = ex.Message });
+			}
+		}
+
+		[HttpGet]
+		public IActionResult ChangePlate(int driverPublicTransportGroupId)
+		{
+			var result = CheckSessionAndPermission(2);
+			if (result != null) return result;
+
+			ViewBag.IsTotalAccess = false;
+			ViewBag.IsDeleteAccess = false;
+			var driver = _driver.GetByDriverPublicTransportGroupId(driverPublicTransportGroupId);
+			var ptg = _publicTransportGroup.GetPublicTransportGroupById(driver.PublicTransportGroupId);
+			int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+			var model = new DriverViewModel
+			{
+				PublicTransportGroupId = driver.PublicTransportGroupId,
+				PTGCompleteName = driver.PTGCompleteName,
+				DriverModifiedDate = DateTime.Now,
+				Birthdate = DateTime.Now.AddYears(-20),
+				DriverId = driver.DriverId,
+				PartnerNumber = driver.PartnerNumber,
+				StateId = driver.StateId,
+				DriverPhone = string.Empty,
+			};
+
+			ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+			ViewBag.Partners = ptg.Partners;
+
+			if (securityGroupId != 1)
+			{
+				if (_security.IsTotalAccess(2) || _security.IsUpdateAccess(2))
+				{
+					ViewBag.IsTotalAccess = true;
+				}
+			}
+			else
+			{
+				ViewBag.IsTotalAccess = true;
+			}
+
+			ViewBag.Sex = new SelectList(_commonData.GetSex(), "SexId", "SexName");
+
+			return View(model);
+		}
+
+
+		[HttpPost]
+		public JsonResult ChangePlateWithAjax(DriverViewModel model)
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
+				{
+					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 2))
+					{
+						return Json(new
+						{
+							success = false,
+							redirectUrl = Url.Action("Login", "Security")
+						});
+					}
+
+					if (_security.IsTotalAccess(2) || _security.IsUpdateAccess(2) || securityGroupId == 1)
+					{
+						_driver.UpdateDriverPlate(model);				
 
 						return Json(new
 						{

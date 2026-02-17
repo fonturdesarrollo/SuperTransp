@@ -94,7 +94,8 @@ namespace SuperTransp.Core
 		}
 		public interface IDriver
 		{
-			public int AddOrEdit(DriverViewModel model);
+			public int AddOrEdit(DriverViewModel model, bool updatePlate = false, bool updatePlateAddDriver = false);
+			public int UpdateDriverPlate(DriverViewModel model);
 			public List<DriverViewModel> GetByPublicTransportGroupId(int publicTransportGroupId);
 			public DriverViewModel GetByDriverPublicTransportGroupId(int driverPublicTransportGroupId);
 			public DriverViewModel GetByIdentityDocument(int driverIdentityDocument);
@@ -115,6 +116,7 @@ namespace SuperTransp.Core
 			public int AddOrEditRound(SupervisionRoundModel model);
 			public int CloseRound(SupervisionRoundModel model);
 			public SupervisionViewModel GetById(int supervisionId);
+			public SupervisionViewModel GetByPublicTransportGroupIdAndDriverPublicTransportGroupIdAndPartnerNumberStateId(int publicTransportGroupId, int driverId, int partnerNumber, int stateId);
 			public SupervisionViewModel GetByPublicTransportGroupIdAndDriverIdAndPartnerNumberStateId(int publicTransportGroupId, int driverId, int partnerNumber, int stateId);
 			public SupervisionViewModel GetByPublicTransportGroupGUIDAndPartnerNumber(string publicTransportGroupGUID, int partnerNumber);
 			public List<PublicTransportGroupViewModel> GetDriverPublicTransportGroupByStateIdAndPTGRif(int stateId, string ptgRif);

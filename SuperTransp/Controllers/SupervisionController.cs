@@ -395,7 +395,7 @@ namespace SuperTransp.Controllers
 						}
 					}
 
-					var model = _supervision.GetByPublicTransportGroupIdAndDriverIdAndPartnerNumberStateId(publicTransportGroupId, driverPublicTransportGroupId, partnerNumber, (int)stateId);
+					var model = _supervision.GetByPublicTransportGroupIdAndDriverPublicTransportGroupIdAndPartnerNumberStateId(publicTransportGroupId, driverPublicTransportGroupId, partnerNumber, (int)stateId);
 
 					if(model != null)
 					{
