@@ -388,8 +388,8 @@ $(document).ready(function () {
             { data: 'nacimiento' },
             { data: 'modificar' },
             { data: 'eliminar' },
-            { data: 'cambiarPlaca' },
-            { data: 'qr' },
+            { data: 'cambiarPlaca' }
+/*            { data: 'qr' },*/
         ],
         createdRow: function (row, data, dataIndex) {
             let ptgGUID = `${data.ptgGUID}`;

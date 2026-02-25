@@ -5,7 +5,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-	<title>Vehículo Supervisado</title>
+	<title>Socio Supervisado</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 	<link rel="stylesheet" href="~/assets/css/main.css" />
@@ -112,7 +112,7 @@
 				<div class="inner">
 					<!-- Form -->
 					<section>
-						<h1 style="color:#4cbece">Vehículo Supervisado</h1>
+						<h1 style="color:#4cbece">Socio Supervisado</h1>
 						<label>Vuelta: @ViewBag.CurrentRoundStartDate</label><br />
 						<label>Organización: @Model.PublicTransportGroupRif @Model.PTGCompleteName</label><br />
 						<label>Tipo: @Model.ModeName</label><br />
@@ -139,14 +139,14 @@
 								@Html.HiddenFor(x => x.DriverPublicTransportGroupId)
 								@Html.DropDownListFor(t => t.DriverWithVehicle, (SelectList)ViewBag.DriverWithVehicle, "-- Seleccione --", new { @class = "form-control" })
 								<br />
-								<button type="submit" id="saveRequestXX" class="primary">Actualizar</button>
+								<button type="button" id="saveRequestXX" class="primary">Actualizar</button>
 							</div>
 							<div class="row" id="additionalFieldsX" style="visibility: hidden; opacity: 0; height: 0; overflow: hidden; transition: opacity 0.3s ease-in-out;">
 								<div class="col-12">
 									<strong>¿Socio presente?:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</strong>
 									@Html.DropDownListFor(t => t.InPerson, (SelectList)ViewBag.InPerson, "-- Seleccione --", new { @class = "form-control" })
 									<br />
-									<button type="submit" id="saveRequestX" class="primary">Actualizar</button>
+									<button type="button" id="saveRequestX" class="primary">Actualizar</button>
 								</div>
 							</div>
 							<div class="row" id="additionalFields" style="visibility: hidden; opacity: 0; height: 0; overflow: hidden; transition: opacity 0.3s ease-in-out;">

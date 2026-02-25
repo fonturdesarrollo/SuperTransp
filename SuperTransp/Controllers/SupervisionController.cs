@@ -288,7 +288,7 @@ namespace SuperTransp.Controllers
 
 		[HttpPost]
 		public async Task<IActionResult> Add(SupervisionViewModel model)
-			{
+		{
 			try
 			{
 				var result = CheckSessionAndPermission(3);
@@ -842,6 +842,7 @@ namespace SuperTransp.Controllers
 
 		public JsonResult CheckExistingPlate(int paramValue1, string paramValue2)
 		{
+			var returnResult =  string.IsNullOrEmpty(paramValue2) ? "OK" : "ERROR";
 			var result = CheckSessionAndPermission(3);
 			if (result != null) return Json("ERROR");
 
@@ -874,7 +875,7 @@ namespace SuperTransp.Controllers
 				return Json("OK");
 			}
 
-			return Json("ERROR");
+			return Json(returnResult);
 		}
 
 		public IActionResult PublicTransportGroupList()

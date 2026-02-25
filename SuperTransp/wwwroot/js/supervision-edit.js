@@ -186,18 +186,16 @@
 	});
 
 	$("body").on("click", "#saveRequestX", function (event) {
+		event.preventDefault();
 		if (confirm("¿Está seguro de que desea actualizar los registros?")) {
 			$(this).closest("form")[0].submit();
-		} else {
-			return false;
 		}
 	});
 
 	$("body").on("click", "#saveRequestXX", function (event) {
+		event.preventDefault();
 		if (confirm("¿Está seguro de que desea actualizar los registros?")) {
 			$(this).closest("form")[0].submit();
-		} else {
-			return false;
 		}
 	});
 
