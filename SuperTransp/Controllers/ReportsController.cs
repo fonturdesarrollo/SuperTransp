@@ -20,9 +20,11 @@ namespace SuperTransp.Controllers
 		private readonly IGeography _geography;
 		private readonly IExcelExporter _excelExporter;
 		private readonly IOptionsSnapshot<MaintenanceSettings> _settings;
+		private readonly ICommonData _commonData;
 
-		public ReportsController(ISupervision supervision, IPublicTransportGroup publicTransportGroup, ISecurity security, 
-			IReport report, IGeography geography, IExcelExporter excelExporter, IOptionsSnapshot<MaintenanceSettings> settings)
+		public ReportsController(ISupervision supervision, IPublicTransportGroup publicTransportGroup, ISecurity security,
+			IReport report, IGeography geography, IExcelExporter excelExporter, IOptionsSnapshot<MaintenanceSettings> settings,
+			ICommonData commonData)
 		{
 			_security = security;
 			_supervision = supervision;
@@ -31,6 +33,7 @@ namespace SuperTransp.Controllers
 			_geography = geography;
 			_excelExporter = excelExporter;
 			_settings = settings;
+			_commonData = commonData;
 		}
 
 		public IActionResult Index()
@@ -572,6 +575,52 @@ namespace SuperTransp.Controllers
 			{
 				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
 			}
+		}
+
+		public IActionResult GasStationsMap()
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+				{
+					int? groupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+					if (groupId is null ||
+						(groupId != 1 && !_security.GroupHasAccessToModule(groupId.Value, 4)) ||
+						(groupId == 1 ? false : !_security.GroupHasAccessToModule(groupId.Value, 23)))
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
+					List<GeographyViewModel> model = new();
+
+					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+					int? stateId = HttpContext.Session.GetInt32("StateId");
+
+					model = _geography.GetAllStates();
+
+					var gasStats = _commonData.GetGasStationsGlobalStats();
+					ViewBag.TotalStatesWithStations        = gasStats.TotalStates;
+					ViewBag.TotalMunicipalitiesWithStations = gasStats.TotalMunicipalities;
+					ViewBag.TotalStations                  = gasStats.TotalStations;
+
+					return View(model);
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
+		[HttpGet]
+		public JsonResult GetGasStationsByStateId(int stateId)
+		{
+			var data = _commonData.GetGasStationsByStateId(stateId);
+			return Json(data.Select(m => new { m.MunicipalityId, m.MunicipalityName, m.GasStationId, m.GasStationName, m.GasStationAddress, m.TotalByMunicipality })
+			               .OrderBy(m => m.MunicipalityName).ThenBy(m => m.GasStationName));
 		}
 
 		//Sustiuido por el Dashboard

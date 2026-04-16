@@ -86,5 +86,7 @@ namespace SuperTransp.Models
 		public int DriverPublicTransportGroupId { get; set; }
 		public int TotalShowedUpDrivers { get; set; }
 		public DateTime? SupervisionLastRoundDate { get; set; }
+		public int GasStationId { get; set; }
+		public List<int> GasStationIds { get; set; } = new List<int>();
 	}
 }

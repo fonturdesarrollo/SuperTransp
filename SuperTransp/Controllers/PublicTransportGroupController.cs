@@ -26,10 +26,11 @@ namespace SuperTransp.Controllers
 		private IPublicTransportGroup _publicTransportGroup;
 		private IDriver _driver;
 		private IConfiguration _configuration;
+		private readonly ICommonData _commonData;
 		private readonly IOptionsSnapshot<MaintenanceSettings> _settings;
 
 		public PublicTransportGroupController(IPublicTransportGroup publicTransportGroup, ISecurity security, IGeography geography, IDesignation designation, 
-			IUnion union, IMode mode, IDriver driver, IConfiguration configuration, IOptionsSnapshot<MaintenanceSettings> settings)
+			IUnion union, IMode mode, IDriver driver, IConfiguration configuration, IOptionsSnapshot<MaintenanceSettings> settings, ICommonData commonData)
 		{
 			_publicTransportGroup = publicTransportGroup;
 			_security = security;
@@ -40,6 +41,7 @@ namespace SuperTransp.Controllers
 			_driver = driver;
 			_configuration = configuration;
 			_settings = settings;
+			_commonData = commonData;
 		}
 
 		public IActionResult Index()
@@ -80,6 +82,7 @@ namespace SuperTransp.Controllers
 						{
 							ViewBag.States = new SelectList(_geography.GetAllStates(), "StateId", "StateName");
 							ViewBag.Union = new SelectList(_union.GetAll(), "UnionId", "UnionName");
+							ViewBag.GasStations = new SelectList(_commonData.GetGasStationsAll(), "GasStationId", "GasStationName");
 
 							if (_security.IsTotalAccess(1) || _security.IsUpdateAccess(1))
 							{
@@ -92,8 +95,9 @@ namespace SuperTransp.Controllers
 							{
 								ViewBag.States = new SelectList(_geography.GetStateById((int)stateId), "StateId", "StateName");
 								ViewBag.Union = new SelectList(_union.GetByStateId((int)stateId), "UnionId", "UnionName");
+								ViewBag.GasStations = new SelectList(_commonData.GetGasStationsByStateId((int)stateId), "GasStationId", "GasStationName");
 
-								if(_security.IsTotalAccess(1) || _security.IsUpdateAccess(1))
+								if (_security.IsTotalAccess(1) || _security.IsUpdateAccess(1))
 								{
 									ViewBag.IsTotalAccess = true;
 								}
@@ -104,13 +108,14 @@ namespace SuperTransp.Controllers
 					{
 						ViewBag.States = new SelectList(_geography.GetAllStates(), "StateId", "StateName");
 						ViewBag.Union = new SelectList(_union.GetAll(), "UnionId", "UnionName");
+						ViewBag.GasStations = new SelectList(_commonData.GetGasStationsAll(), "GasStationId", "GasStationName");
 						ViewBag.IsTotalAccess = true;
 					}
 				}
 
 				List <DesignationViewModel> designations = _designation.GetAll();
 
-				ViewBag.Designation = new SelectList(designations, "DesignationId", "DesignationName");
+				ViewBag.Designation = new SelectList(designations, "DesignationId", "DesignationName");				
 				ViewBag.Mode = new SelectList(_mode.GetAll(), "ModeId", "ModeName");
 				ViewBag.DesignationList = Designations(designations);
 
@@ -182,6 +187,7 @@ namespace SuperTransp.Controllers
 					{
 						ViewBag.States = new SelectList(_geography.GetAllStates(), "StateId", "StateName");
 						ViewBag.Union = new SelectList(_union.GetByStateId((int)model.StateId), "UnionId", "UnionName");
+						ViewBag.GasStations = new SelectList(_commonData.GetGasStationsByStateId((int)model.StateId), "GasStationId", "GasStationName");
 
 						if (_security.IsTotalAccess(1) || _security.IsUpdateAccess(1))
 						{
@@ -194,6 +200,7 @@ namespace SuperTransp.Controllers
 						{
 							ViewBag.States = new SelectList(_geography.GetStateById((int)stateId), "StateId", "StateName");
 							ViewBag.Union = new SelectList(_union.GetByStateId((int)model.StateId), "UnionId", "UnionName");
+							ViewBag.GasStations = new SelectList(_commonData.GetGasStationsByStateId((int)model.StateId), "GasStationId", "GasStationName");
 
 							if (_security.IsTotalAccess(1) || _security.IsUpdateAccess(1))
 							{
@@ -206,6 +213,7 @@ namespace SuperTransp.Controllers
 				{
 					ViewBag.States = new SelectList(_geography.GetAllStates(), "StateId", "StateName");
 					ViewBag.Union = new SelectList(_union.GetByStateId((int)model.StateId), "UnionId", "UnionName");
+					ViewBag.GasStations = new SelectList(_commonData.GetGasStationsByStateId(model.StateId), "GasStationId", "GasStationName");
 					ViewBag.IsTotalAccess = true;
 				}
 
@@ -215,6 +223,8 @@ namespace SuperTransp.Controllers
 				ViewBag.DesignationList = Designations(designations);
 				ViewBag.Mode = new SelectList(_mode.GetAll(), "ModeId", "ModeName");
 				ViewBag.Municipality = new SelectList(_geography.GetMunicipalityByStateId(model.StateId), "MunicipalityId", "MunicipalityName");
+				ViewBag.ExistingGasStations = _commonData.GetGasStationsByPTGId(publicTransportGroupId);
+				ViewBag.GasStationsFull = _commonData.GetGasStationsByStateId(model.StateId);
 			}
 
 			return View(model);

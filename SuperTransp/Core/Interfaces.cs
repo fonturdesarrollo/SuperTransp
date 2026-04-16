@@ -165,6 +165,11 @@ namespace SuperTransp.Core
 			public int AddOrEditMakeModel(CommonDataViewModel model);
 			public CommonDataViewModel GetCommonDataValueByName(string commonDataName);
 			public List<CommonDataViewModel> GetSex();
+			public List<GastStationViewModel> GetGasStationsAll();
+			public List<GastStationViewModel> GetGasStationsByStateId(int stateId);
+			public List<GastStationViewModel> GetGasStationsByPTGId(int publicTransportGroupId);
+			public (int TotalStates, int TotalMunicipalities, int TotalStations) GetGasStationsGlobalStats();
+			public int GasStationAddOrEdit(GastStationViewModel model);
 		}
 
 		public interface IReport

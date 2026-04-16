@@ -92,8 +92,32 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@RepresentativePhone", model.RepresentativePhone);
 						cmd.Parameters.AddWithValue("@PublicTransportGroupIdModifiedDate", DateTime.Now);
 						cmd.Parameters.AddWithValue("@Partners", model.Partners);
+						cmd.Parameters.AddWithValue("@GasStationId", model.GasStationId);
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
+
+						var ptgId = model.PublicTransportGroupId == 0 ? result : model.PublicTransportGroupId;
+
+						SqlCommand cmdDeleteGS = new("SuperTransp_GasStationPTGDelete", sqlConnection)
+						{
+							CommandType = System.Data.CommandType.StoredProcedure
+						};
+						cmdDeleteGS.Parameters.AddWithValue("@PublicTransportGroupId", ptgId);
+						cmdDeleteGS.ExecuteNonQuery();
+
+						if (model.GasStationIds != null && model.GasStationIds.Any())
+						{
+							foreach (int gsId in model.GasStationIds)
+							{
+								SqlCommand cmdAddGS = new("SuperTransp_GasStationPTGAddOrEdit", sqlConnection)
+								{
+									CommandType = System.Data.CommandType.StoredProcedure
+								};
+								cmdAddGS.Parameters.AddWithValue("@GasStationId", gsId);
+								cmdAddGS.Parameters.AddWithValue("@PublicTransportGroupId", ptgId);
+								cmdAddGS.ExecuteScalar();
+							}
+						}						
 
 						if (!isEditing)
 						{
@@ -184,6 +208,7 @@ namespace SuperTransp.Core
 							publicTransportGroup.PublicTransportGroupGUID = (string)dr["PublicTransportGroupGUID"];
 							publicTransportGroup.SupervisionSummaryId = (int)dr["SupervisionSummaryId"];
 							publicTransportGroup.DesignationName = (string)dr["DesignationName"];
+							publicTransportGroup.GasStationId = (int)dr["GasStationId"];
 
 							if (dr["PublicTransportGroupIdModifiedDate"] != DBNull.Value)
 							{

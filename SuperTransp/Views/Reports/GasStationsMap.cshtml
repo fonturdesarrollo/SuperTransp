@@ -1,0 +1,1133 @@
+@model List<SuperTransp.Models.GeographyViewModel>
+@{
+    Layout = "";
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <title>Estados y Municipios con Estación de Servicio</title>
+    <link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f2f4f8;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Header ────────────────────────────────────────── */
+        .dashboard-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px 32px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .logo-img {
+            width: 70px;
+            height: 70px;
+            border-radius: 10px;
+            background: white;
+            padding: 5px;
+            object-fit: contain;
+        }
+
+        .header-text h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .header-text p {
+            margin: 4px 0 0;
+            opacity: 0.85;
+            font-size: 0.95rem;
+        }
+
+        .back-button {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 11px 22px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.25s;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        /* ── Map card ───────────────────────────────────────── */
+        .map-section {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 28px 20px 32px;
+        }
+
+        .map-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.10);
+            padding: 24px 28px 28px;
+            width: 90vw;
+        }
+
+        .map-card-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f0f0f5;
+        }
+
+        .map-card-header .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            flex-shrink: 0;
+            margin-top: 6px;
+        }
+
+        .map-card-header-text {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .map-card-title-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .map-card-header h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .map-card-header span.subtitle {
+            font-size: 0.85rem;
+            color: #999;
+            margin-left: 4px;
+        }
+
+        .map-stats-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .map-stat {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: #f4f5fd;
+            border: 1px solid #e0e4f7;
+            border-radius: 8px;
+            padding: 5px 12px;
+        }
+
+        .map-stat-label {
+            font-size: 0.78rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .map-stat-value {
+            font-size: 0.95rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ── Map image + labels ─────────────────────────────── */
+        .map-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+        }
+
+        .map-inner {
+            position: relative;
+            display: inline-block;
+        }
+
+        .map-inner img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .state-label {
+            position: absolute;
+            font-size: clamp(6px, 0.85vw, 12px);
+            font-weight: 700;
+            color: #fff;
+            text-shadow:
+                 1px  1px 3px rgba(0,0,0,0.95),
+                -1px -1px 3px rgba(0,0,0,0.95),
+                 1px -1px 3px rgba(0,0,0,0.95),
+                -1px  1px 3px rgba(0,0,0,0.95);
+            white-space: nowrap;
+            pointer-events: auto;
+            cursor: pointer;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            letter-spacing: 0.03em;
+            line-height: 1.2;
+            padding: 1px 4px;
+            border-radius: 3px;
+            transition: background 0.15s;
+        }
+
+        .state-label:hover,
+        .state-label.active {
+            background: rgba(102, 126, 234, 0.55);
+            text-shadow: none;
+        }
+
+        /* ── Panel de municipios ─────────────────────────────── */
+        .muni-panel {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 220px;
+            background: #f8f9ff;
+            border: 1.5px solid #e0e4f7;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+            opacity: 0;
+            transform: translateX(8px);
+            transition: opacity 0.22s, transform 0.22s;
+            pointer-events: none;
+        }
+
+        .muni-panel.visible {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
+        }
+
+        .muni-panel-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 14px;
+        }
+
+        .muni-panel-header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+        }
+
+        .muni-panel-header h3 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+        }
+
+        .muni-panel-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 0.85rem;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background 0.2s;
+            line-height: 1;
+        }
+
+        .muni-panel-close:hover {
+            background: rgba(255,255,255,0.38);
+        }
+
+        .muni-panel-header p {
+            font-size: 0.72rem;
+            opacity: 0.85;
+            margin: 4px 0 0;
+        }
+
+        .muni-list {
+            list-style: none;
+            max-height: 360px;
+            overflow-y: auto;
+            padding: 6px 0;
+        }
+
+        .muni-list::-webkit-scrollbar { width: 4px; }
+        .muni-list::-webkit-scrollbar-track { background: #f0f0f0; }
+        .muni-list::-webkit-scrollbar-thumb { background: #c5cbf0; border-radius: 4px; }
+
+        .muni-list li {
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            color: #444;
+            border-bottom: 1px solid #eef0fa;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .muni-list li:last-child { border-bottom: none; }
+
+        .muni-list li::before {
+            content: '';
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            flex-shrink: 0;
+        }
+
+        .muni-name { flex: 1; }
+
+        .muni-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 10px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .muni-hint {
+            padding: 24px 14px;
+            font-size: 0.8rem;
+            color: #bbb;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .muni-hint svg {
+            display: block;
+            margin: 0 auto 8px;
+            opacity: 0.3;
+        }
+
+        @@media (max-width: 600px) {
+            .header-text h1 { font-size: 1.2rem; }
+            .map-card { padding: 16px; }
+
+            /* En móvil: mapa arriba, lista debajo */
+            .state-map-inner {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .state-station-panel {
+                position: static;
+                width: 100%;
+                max-height: 260px;
+                border-radius: 10px;
+            }
+
+            .state-modal-body {
+                padding: 12px;
+            }
+        }
+
+        /* ── Modal estado ────────────────────────────────────── */
+        .state-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(3px);
+        }
+
+        .state-modal-overlay.open {
+            display: flex;
+        }
+
+        .state-modal {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: min(820px, 92vw);
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: modalIn 0.22s ease;
+        }
+
+        @@keyframes modalIn {
+            from { transform: scale(0.93); opacity: 0; }
+            to   { transform: scale(1);   opacity: 1; }
+        }
+
+        .state-modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .state-modal-header h2 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .state-modal-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 1.3rem;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .state-modal-close:hover {
+            background: rgba(255,255,255,0.38);
+        }
+
+        .state-modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* ── Mapa del estado en el modal ───────────────────── */
+        .state-map-inner {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .state-map-inner img {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        /* ── Panel flotante de estaciones sobre el mapa ────── */
+        .state-station-panel {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            width: 200px;
+            background: #f8f9ff;
+            border: 1.5px solid #e0e4f7;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.22);
+            max-height: calc(100% - 20px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .state-station-panel-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 14px;
+            flex-shrink: 0;
+        }
+
+        .state-station-panel-header h4 {
+            font-size: 0.82rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .state-station-panel-header p {
+            font-size: 0.70rem;
+            opacity: 0.85;
+            margin: 2px 0 0;
+        }
+
+        .station-search-wrap {
+            padding: 7px 9px;
+            background: #eef0fa;
+            border-bottom: 1px solid #e0e4f7;
+            flex-shrink: 0;
+        }
+
+        .station-search-wrap input {
+            width: 100%;
+            padding: 5px 8px;
+            border: 1.5px solid #d0d4f0;
+            border-radius: 7px;
+            font-size: 0.74rem;
+            font-family: inherit;
+            color: #2c3e50;
+            background: white;
+            outline: none;
+            transition: border-color 0.18s;
+            box-sizing: border-box;
+        }
+
+        .station-search-wrap input:focus {
+            border-color: #667eea;
+        }
+
+        .station-list-scroll {
+            overflow-y: auto;
+            flex: 1;
+            padding: 4px 0;
+        }
+
+        .station-list-scroll::-webkit-scrollbar { width: 4px; }
+        .station-list-scroll::-webkit-scrollbar-track { background: #f0f0f0; }
+        .station-list-scroll::-webkit-scrollbar-thumb { background: #c5cbf0; border-radius: 4px; }
+
+        .station-muni-label {
+            padding: 5px 10px 3px;
+            font-size: 0.70rem;
+            font-weight: 700;
+            color: #667eea;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            border-bottom: 1px solid #eef0fa;
+        }
+
+        .station-item {
+            padding: 5px 10px 5px 14px;
+            border-bottom: 1px solid #f0f0f8;
+        }
+
+        .station-item:last-child { border-bottom: none; }
+
+        .station-name {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .station-address {
+            font-size: 0.69rem;
+            color: #9aa0b8;
+            margin-top: 1px;
+        }
+
+        .station-panel-empty {
+            padding: 20px 10px;
+            font-size: 0.78rem;
+            color: #bbb;
+            text-align: center;
+        }
+
+        /* ── Iconos estación de servicio sobre mapa del estado ── */
+        .muni-gas-icon {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            z-index: 20;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.55));
+            transition: transform 0.18s, filter 0.18s;
+            pointer-events: auto;
+            line-height: 0;
+        }
+
+        .muni-gas-icon:hover {
+            transform: translate(-50%, -50%) scale(1.45);
+            filter: drop-shadow(0 3px 8px rgba(102,126,234,0.85));
+            z-index: 30;
+        }
+
+        .gas-tooltip {
+            position: absolute;
+            bottom: calc(100% + 4px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(28,28,58,0.93);
+            color: #fff;
+            font-size: 0.67rem;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 3px 8px;
+            border-radius: 5px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        .muni-gas-icon:hover .gas-tooltip {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="header-content">
+            <div class="header-left">
+                <img src="~/images/Logo.png" alt="Logo" class="logo-img" />
+                <div class="header-text">
+                    <h1>Estados y Municipios con Estación de Servicio</h1>
+                    <p>Usuario: @ViewBag.EmployeeName</p>
+                </div>
+            </div>
+            <a href="@Url.Action("Index", "Reports")" class="back-button">&#8592; Menú Reportes</a>
+        </div>
+    </div>
+
+    <!-- Map -->
+    <div class="map-section">
+        <div class="map-card">
+            <div class="map-card-header">
+                <div class="dot"></div>
+                <div class="map-card-header-text">
+                    <div class="map-card-title-row">
+                        <h2>Estados y Municipios con Estación de Servicio</h2>
+                        <span class="subtitle">— Estados</span>
+                    </div>
+                    <div class="map-stats-row">
+                        <div class="map-stat">
+                            <span class="map-stat-label">Total estados atendidos</span>
+                            <span class="map-stat-value">@ViewBag.TotalStatesWithStations</span>
+                        </div>
+                        <div class="map-stat">
+                            <span class="map-stat-label">Total municipios subsidiados</span>
+                            <span class="map-stat-value">@ViewBag.TotalMunicipalitiesWithStations</span>
+                        </div>
+                        <div class="map-stat">
+                            <span class="map-stat-label">Total estaciones de servicio</span>
+                            <span class="map-stat-value">@ViewBag.TotalStations</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="map-wrapper">
+                <div class="map-inner" id="mapInner">
+                    <img src="~/images/mapa_venezuela.png" id="mapImage" alt="Mapa Venezuela" />
+                </div>
+
+                <!-- Panel de municipios: posición absoluta en el espacio blanco a la derecha -->
+                <div class="muni-panel" id="muniPanel">
+                    <div class="muni-panel-header">
+                        <div class="muni-panel-header-top">
+                            <h3 id="muniPanelTitle"></h3>
+                            <button class="muni-panel-close" id="muniPanelClose">&#x2715;</button>
+                        </div>
+                        <p id="muniPanelCount"></p>
+                    </div>
+                    <ul class="muni-list" id="muniList"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal mapa del estado -->
+    <div class="state-modal-overlay" id="stateModalOverlay">
+        <div class="state-modal">   
+            <div class="state-modal-header">
+                <h2 id="stateModalTitle"></h2>
+                <button class="state-modal-close" id="stateModalClose">&#x2715;</button>
+            </div>
+            <div class="state-modal-body">
+                <div class="state-map-inner" id="stateMapInner">
+                    <img id="stateMapImg" src="" alt="" />
+                    <div class="state-station-panel" id="stateStationPanel">
+                        <div class="state-station-panel-header">
+                            <h4>Estaciones de Combustible</h4>
+                            <p id="stationPanelCount"></p>
+                        </div>
+                        <div class="station-search-wrap">
+                            <input type="text" id="stationSearch" placeholder="Buscar municipio o estación..." />
+                        </div>
+                        <div class="station-list-scroll" id="stationsList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var statesFromModel = @Html.Raw(
+            System.Text.Json.JsonSerializer.Serialize(
+                Model.Select(s => new { s.StateId, s.StateName }).Distinct().ToList()
+            )
+        );
+
+        var muniApiUrl      = '@Url.Action("GetGasStationsByStateId", "Reports")';
+        var imagesBasePath  = '@Url.Content("~/images/")';
+        var muniCache       = {};
+        var activeLabel     = null;
+        var currentModalData = [];
+
+        // Posiciones en % (left, top) relativas a la imagen
+        var statePositions = {
+            'amazonas':               { left: 50,  top: 80 },
+            'anzoategui':             { left: 59,  top: 28 },
+            'apure':                  { left: 32,  top: 48 },
+            'aragua':                 { left: 41,  top: 22 },
+            'barinas':                { left: 24,  top: 37 },
+            'bolivar':                { left: 64,  top: 55 },
+            'carabobo':               { left: 35,  top: 21 },
+            'cojedes':                { left: 34,  top: 28 },
+            'delta amacuro':          { left: 78,  top: 36 },
+            'dependencias federales': { left: 52,  top:  5 },
+            'distrito capital':       { left: 40,  top: 18 },
+            'falcon':                 { left: 25,  top: 13 },
+            'guayana esequiba':       { left: 88,  top: 55 },
+            'guarico':                { left: 45,  top: 32 },
+            'lara':                   { left: 25,  top: 21 },
+            'merida':                 { left: 15,  top: 35 },
+            'miranda':                { left: 46,  top: 20 },
+            'monagas':                { left: 67,  top: 25 },
+            'nueva esparta':          { left: 68,  top: 13 },
+            'portuguesa':             { left: 28,  top: 30 },
+            'sucre':                  { left: 65,  top: 18 },
+            'tachira':                { left: 11,  top: 39 },
+            'trujillo':               { left: 20,  top: 28 },
+            'vargas':                 { left: 40,  top: 15 },
+            'la guaira':              { left: 44,  top: 16 },
+            'yaracuy':                { left: 31,  top: 18 },
+            'zulia':                  { left:  8,  top: 25 }
+        };
+
+        function normalize(name) {
+            return name.toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .trim();
+        }
+
+        // ── Iconos estación de servicio ──────────────────────
+        function halton(index, base) {
+            var result = 0, f = 1, i = index;
+            while (i > 0) { f /= base; result += f * (i % base); i = Math.floor(i / base); }
+            return result;
+        }
+
+        var _gasIconSvg =
+            '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="24" viewBox="0 0 22 24">' +
+              '<rect x="0" y="5" width="20" height="3" fill="#764ba2" rx="1"/>' +
+              '<rect x="0" y="8" width="2" height="13" fill="#5a4eaa"/>' +
+              '<rect x="12" y="8" width="8" height="14" fill="#667eea" rx="1"/>' +
+              '<rect x="13" y="10" width="3" height="2.5" fill="#c8d0ff" rx="0.4"/>' +
+              '<rect x="15" y="17" width="4" height="5" fill="#c8d0ff" rx="0.4"/>' +
+              '<rect x="5" y="10" width="5" height="9" fill="#5a6fd6" rx="1"/>' +
+              '<rect x="5.5" y="11.5" width="4" height="2" fill="white" rx="0.3"/>' +
+              '<path d="M5 16.5 Q3 17.5 3 19" stroke="#3d50c4" stroke-width="1.3" fill="none" stroke-linecap="round"/>' +
+            '</svg>';
+
+        function placeGasStationIcons(data, mapContainer) {
+            mapContainer.querySelectorAll('.muni-gas-icon').forEach(function(el) { el.remove(); });
+
+            if (!data || data.length === 0) return;
+
+            var muniMap = {}, muniOrder = [];
+            data.forEach(function(s) {
+                if (!muniMap[s.municipalityId]) {
+                    muniMap[s.municipalityId] = { name: s.municipalityName, total: s.totalByMunicipality || 0 };
+                    muniOrder.push(s.municipalityId);
+                }
+            });
+
+            var munis = muniOrder.map(function(id) { return muniMap[id]; })
+                                 .filter(function(m) { return m.total > 0; });
+
+            if (munis.length === 0) return;
+
+            // ── Escaneo único del canvas para obtener posiciones dentro del territorio ──
+            // Se usa un canvas reducido (≤ 400 px) para eficiencia.
+            // Se detecta el color de fondo a partir de las 4 esquinas (adaptativo por estado).
+            // Se construye la lista validPos UNA sola vez; luego se indexa con Halton.
+            var validPos = [];
+
+            try {
+                var mapImg = mapContainer.querySelector('img');
+                var cw  = Math.min(mapImg.naturalWidth  || 400, 400);
+                var ch  = Math.min(mapImg.naturalHeight || 400, 400);
+                var cvs = document.createElement('canvas');
+                cvs.width = cw; cvs.height = ch;
+                var ctx = cvs.getContext('2d');
+                ctx.drawImage(mapImg, 0, 0, cw, ch);
+
+                // Una sola llamada a getImageData para todos los píxeles
+                var raw = ctx.getImageData(0, 0, cw, ch).data; // lanza si está tainted
+
+                // Luminancia de un píxel (transparente → asumir blanco = fondo)
+                function lumAt(cx, cy) {
+                    var i = (cy * cw + cx) * 4;
+                    if (raw[i + 3] < 50) return 255;
+                    return 0.299 * raw[i] + 0.587 * raw[i + 1] + 0.114 * raw[i + 2];
+                }
+
+                // Promedio de las 4 esquinas = luminancia del fondo del mapa
+                var bgLum = (lumAt(0, 0) + lumAt(cw - 1, 0) + lumAt(0, ch - 1) + lumAt(cw - 1, ch - 1)) / 4;
+                // Un píxel pertenece al territorio si es al menos 18 unidades más oscuro que el fondo
+                var thresh = bgLum - 18;
+
+                // Escanear en cuadrícula; limitar x al 63 % para evitar el panel de estaciones
+                var step  = Math.max(3, Math.floor(Math.min(cw, ch) / 60));
+                var maxCx = Math.floor(cw * 0.63);
+
+                for (var cy = step; cy < ch - step; cy += step) {
+                    for (var cx = step; cx < maxCx; cx += step) {
+                        var i = (cy * cw + cx) * 4;
+                        var a = raw[i + 3];
+                        var l = 0.299 * raw[i] + 0.587 * raw[i + 1] + 0.114 * raw[i + 2];
+                        if (a > 60 && l < thresh) {
+                            validPos.push({ x: (cx / cw) * 100, y: (cy / ch) * 100 });
+                        }
+                    }
+                }
+            } catch (e) { /* canvas tainted u otro error → validPos vacío → fallback */ }
+
+            munis.forEach(function(muni, idx) {
+                var x, y;
+
+                if (validPos.length > 3) {
+                    // Halton base-2 sobre el array en orden de escaneo (fila × fila ≈ orden espacial)
+                    // → la distribución bit-reversal (0.5, 0.25, 0.75, 0.125…) reparte
+                    //   los íconos uniformemente dentro del territorio real del mapa
+                    var posIdx = Math.floor(halton(idx + 1, 2) * validPos.length);
+                    posIdx = Math.max(0, Math.min(validPos.length - 1, posIdx));
+                    x = validPos[posIdx].x;
+                    y = validPos[posIdx].y;
+                } else {
+                    // Fallback: Halton con límites conservadores (sin canvas)
+                    x = 15 + halton(idx * 37 + 1, 2) * 45;
+                    y = 15 + halton(idx * 37 + 1, 3) * 65;
+                }
+
+                var marker = document.createElement('div');
+                marker.className = 'muni-gas-icon';
+                marker.style.left = x.toFixed(1) + '%';
+                marker.style.top  = y.toFixed(1) + '%';
+                marker.innerHTML  = _gasIconSvg +
+                    '<span class="gas-tooltip">' + muni.name + ' &middot; ' + muni.total + ' est.</span>';
+
+                mapContainer.appendChild(marker);
+            });
+        }
+
+        // ── Modal ────────────────────────────────────────────
+        function stateFileName(stateName) {
+            return normalize(stateName).replace(/\s+/g, '_');
+        }
+
+        function renderStationList(data, container, countEl) {
+            container.innerHTML = '';
+            if (!data || data.length === 0) {
+                container.innerHTML = '<p class="station-panel-empty">Sin estaciones registradas</p>';
+                countEl.textContent = '';
+                return;
+            }
+
+            // Conteo para el header: sumar TotalByMunicipality de municipios distintos donde > 0
+            var muniTotals = {};
+            data.forEach(function(s) {
+                if (!muniTotals.hasOwnProperty(s.municipalityId)) {
+                    muniTotals[s.municipalityId] = s.totalByMunicipality || 0;
+                }
+            });
+            var muniCount = Object.keys(muniTotals).length;
+            var totalStations = Object.values(muniTotals)
+                                      .filter(function(v) { return v > 0; })
+                                      .reduce(function(a, b) { return a + b; }, 0);
+            countEl.textContent = muniCount + ' municipio' + (muniCount !== 1 ? 's' : '') +
+                                  ' · ' + totalStations + ' estación' + (totalStations !== 1 ? 'es' : '');
+
+            // Agrupar por municipio
+            var muniMap = {};
+            var muniOrder = [];
+            data.forEach(function(s) {
+                if (!muniMap[s.municipalityId]) {
+                    muniMap[s.municipalityId] = { name: s.municipalityName, stations: [] };
+                    muniOrder.push(s.municipalityId);
+                }
+                muniMap[s.municipalityId].stations.push(s);
+            });
+
+            muniOrder.forEach(function(mId) {
+                var muni = muniMap[mId];
+
+                var muniLabel = document.createElement('div');
+                muniLabel.className = 'station-muni-label';
+                muniLabel.textContent = muni.name;
+                container.appendChild(muniLabel);
+
+                muni.stations.forEach(function(s) {
+                    var item = document.createElement('div');
+                    item.className = 'station-item';
+
+                    var name = document.createElement('div');
+                    name.className = 'station-name';
+                    name.textContent = s.gasStationName || '(Sin nombre)';
+                    item.appendChild(name);
+
+                    if (s.gasStationAddress) {
+                        var addr = document.createElement('div');
+                        addr.className = 'station-address';
+                        addr.textContent = s.gasStationAddress;
+                        item.appendChild(addr);
+                    }
+
+                    container.appendChild(item);
+                });
+            });
+        }
+
+        function openStateModal(stateId, stateName) {
+            var overlay   = document.getElementById('stateModalOverlay');
+            var title     = document.getElementById('stateModalTitle');
+            var mapImg    = document.getElementById('stateMapImg');
+            var container = document.getElementById('stationsList');
+            var countEl   = document.getElementById('stationPanelCount');
+            var search    = document.getElementById('stationSearch');
+            var mapInner  = document.getElementById('stateMapInner');
+
+            title.textContent   = 'Estado ' + stateName;
+            container.innerHTML = '<p class="station-panel-empty">Cargando\u2026</p>';
+            countEl.textContent = '';
+            search.value        = '';
+            currentModalData    = [];
+            overlay.classList.add('open');
+
+            // Limpiar íconos del estado anterior
+            mapInner.querySelectorAll('.muni-gas-icon').forEach(function(el) { el.remove(); });
+
+            var pendingIconData = null;
+            var imgReady        = false;
+
+            function tryPlaceIcons() {
+                if (pendingIconData !== null && imgReady) {
+                    placeGasStationIcons(pendingIconData, mapInner);
+                    pendingIconData = null;
+                }
+            }
+
+            // Cargar imagen del estado
+            var newSrc = imagesBasePath + stateFileName(stateName) + '.png';
+            if (!mapImg.src.endsWith(stateFileName(stateName) + '.png')) {
+                mapImg.alt    = 'Mapa ' + stateName;
+                mapImg.onload = function() { imgReady = true; tryPlaceIcons(); };
+                mapImg.src    = newSrc;
+            } else {
+                imgReady = mapImg.complete && mapImg.naturalWidth > 0;
+                if (!imgReady) {
+                    mapImg.onload = function() { imgReady = true; tryPlaceIcons(); };
+                }
+            }
+
+            function afterDataLoad(data) {
+                renderStationList(data, container, countEl);
+                pendingIconData = data;
+                tryPlaceIcons();
+            }
+
+            // Cargar estaciones (independiente de la imagen)
+            if (muniCache[stateId]) {
+                currentModalData = muniCache[stateId];
+                afterDataLoad(currentModalData);
+            } else {
+                fetch(muniApiUrl + '?stateId=' + stateId)
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        muniCache[stateId] = data;
+                        currentModalData   = data;
+                        afterDataLoad(data);
+                    })
+                    .catch(function() {
+                        container.innerHTML = '<p class="station-panel-empty" style="color:#e74c3c;">Error al cargar</p>';
+                    });
+            }
+        }
+
+        document.getElementById('stationSearch').addEventListener('input', function() {
+            var container = document.getElementById('stationsList');
+            var countEl   = document.getElementById('stationPanelCount');
+            var term      = this.value.trim().toLowerCase();
+
+            if (!term) {
+                renderStationList(currentModalData, container, countEl);
+                return;
+            }
+
+            var filtered = currentModalData.filter(function(s) {
+                return (s.municipalityName || '').toLowerCase().includes(term) ||
+                       (s.gasStationName   || '').toLowerCase().includes(term);
+            });
+
+            renderStationList(filtered, container, countEl);
+        });
+
+        function closeStateModal() {
+            document.getElementById('stateModalOverlay').classList.remove('open');
+        }
+
+        document.getElementById('stateModalClose').addEventListener('click', closeStateModal);
+
+        document.getElementById('muniPanelClose').addEventListener('click', function() {
+            document.getElementById('muniPanel').classList.remove('visible');
+            if (activeLabel) { activeLabel.classList.remove('active'); activeLabel = null; }
+        });
+
+        document.getElementById('stateModalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeStateModal();
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeStateModal();
+        });
+        // ─────────────────────────────────────────────────────
+
+        function showMuniPanel(stateId, stateName) {
+            var panel   = document.getElementById('muniPanel');
+            var title   = document.getElementById('muniPanelTitle');
+            var countEl = document.getElementById('muniPanelCount');
+            var list    = document.getElementById('muniList');
+
+            title.textContent   = stateName;
+            countEl.textContent = 'Cargando\u2026';
+            list.innerHTML      = '';
+            panel.classList.add('visible');
+
+            if (muniCache[stateId]) {
+                renderMuniList(muniCache[stateId], countEl, list);
+                return;
+            }
+
+            fetch(muniApiUrl + '?stateId=' + stateId)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    muniCache[stateId] = data;
+                    renderMuniList(data, countEl, list);
+                })
+                .catch(function() {
+                    countEl.textContent = 'Error al cargar';
+                });
+        }
+
+        function renderMuniList(data, countEl, list) {
+            // Agrupar por municipio usando TotalByMunicipality de la BD
+            var muniMap = {};
+            data.forEach(function(s) {
+                if (!muniMap[s.municipalityId]) {
+                    muniMap[s.municipalityId] = { name: s.municipalityName, total: s.totalByMunicipality || 0 };
+                }
+            });
+            var munis = Object.values(muniMap);
+            var totalStations = munis.filter(function(m) { return m.total > 0; })
+                                     .reduce(function(acc, m) { return acc + m.total; }, 0);
+            countEl.textContent = munis.length + ' municipio' + (munis.length !== 1 ? 's' : '') +
+                                  ' · ' + totalStations + ' estación' + (totalStations !== 1 ? 'es' : '');
+            list.innerHTML = '';
+            munis.forEach(function(m) {
+                var li = document.createElement('li');
+
+                var name = document.createElement('span');
+                name.className   = 'muni-name';
+                name.textContent = m.name;
+
+                var badge = document.createElement('span');
+                badge.className   = 'muni-badge';
+                badge.textContent = m.total;
+
+                li.appendChild(name);
+                li.appendChild(badge);
+                list.appendChild(li);
+            });
+        }
+
+        function placeLabels() {
+            var inner = document.getElementById('mapInner');
+
+            inner.querySelectorAll('.state-label').forEach(function(el) { el.remove(); });
+
+            statesFromModel.forEach(function(state) {
+                var key = normalize(state.StateName);
+                var pos = statePositions[key];
+                if (!pos) return;
+
+                var span = document.createElement('span');
+                span.className   = 'state-label';
+                span.textContent = state.StateName;
+                span.style.left  = pos.left + '%';
+                span.style.top   = pos.top  + '%';
+
+                span.addEventListener('pointerenter', function(e) {
+                    if (e.pointerType !== 'mouse') return;
+                    if (activeLabel) activeLabel.classList.remove('active');
+                    activeLabel = span;
+                    span.classList.add('active');
+                    showMuniPanel(state.StateId, state.StateName);
+                });
+
+                span.addEventListener('click', function() {
+                    openStateModal(state.StateId, state.StateName);
+                });
+
+                inner.appendChild(span);
+            });
+        }
+
+        var img = document.getElementById('mapImage');
+        if (img.complete && img.naturalWidth > 0) {
+            placeLabels();
+        } else {
+            img.addEventListener('load', placeLabels);
+        }
+        window.addEventListener('resize', placeLabels);
+    </script>
+</body>
+</html>

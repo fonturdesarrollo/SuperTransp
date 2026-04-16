@@ -520,5 +520,202 @@ namespace SuperTransp.Core
 				throw new Exception($"Error al obtener los tipos de sexo {ex.Message}", ex);
 			}
 		}
+
+		public List<GastStationViewModel> GetGasStationsAll()
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<GastStationViewModel> gas = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_GasStationsDetail ORDER BY StateName", sqlConnection);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							gas.Add(new GastStationViewModel
+							{
+								GasStationId = dr["GasStationId"] == DBNull.Value ? 0 : (int)dr["GasStationId"],
+								StateId = dr["StateId"] == DBNull.Value ? 0 : (int)dr["StateId"],
+								MunicipalityId = dr["MunicipalityId"] == DBNull.Value ? 0 : (int)dr["MunicipalityId"],
+								GasStationName = dr["GasStationName"] as string,
+								GasStationAddress = dr["GasStationAddress"] as string,
+								StateName = dr["StateName"] as string,
+								MunicipalityName = dr["MunicipalityName"] as string,
+								TotalByMunicipality = dr["TotalByMunicipality"] == DBNull.Value ? 0 : (int)dr["TotalByMunicipality"],
+							});
+						}
+					}
+
+					return gas.ToList();
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener los municipios {ex.Message}", ex);
+			}
+		}
+
+		public List<GastStationViewModel> GetGasStationsByStateId(int stateId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<GastStationViewModel> gas = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_GasStationsDetail WHERE StateId = @StateId ORDER BY StateName", sqlConnection);
+					cmd.Parameters.AddWithValue("@StateId", stateId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							gas.Add(new GastStationViewModel
+							{
+								GasStationId        = dr["GasStationId"]        == DBNull.Value ? 0    : (int)dr["GasStationId"],
+								StateId             = dr["StateId"]             == DBNull.Value ? 0    : (int)dr["StateId"],
+								MunicipalityId      = dr["MunicipalityId"]      == DBNull.Value ? 0    : (int)dr["MunicipalityId"],
+								GasStationName      = dr["GasStationName"]      as string,
+								GasStationAddress   = dr["GasStationAddress"]   as string,
+								StateName			= dr["StateName"]			 as string,
+								MunicipalityName   = dr["MunicipalityName"]   as string,
+								TotalByMunicipality = dr["TotalByMunicipality"] == DBNull.Value ? 0    : (int)dr["TotalByMunicipality"],
+							});
+						}
+					}
+
+					return gas.ToList();
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener los municipios {ex.Message}", ex);
+			}
+		}
+
+		public int GasStationAddOrEdit(GastStationViewModel model)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SqlCommand cmd = new("SuperTransp_GasStationAddOrEdit", sqlConnection);
+					cmd.CommandType = CommandType.StoredProcedure;
+					cmd.Parameters.AddWithValue("@GasStationId", model.GasStationId);
+					cmd.Parameters.AddWithValue("@MunicipalityId", model.MunicipalityId);
+					cmd.Parameters.AddWithValue("@GasStationName", model.GasStationName ?? string.Empty);
+					cmd.Parameters.AddWithValue("@GasStationAddress", model.GasStationAddress ?? string.Empty);
+
+					var result = cmd.ExecuteScalar();
+
+					if (model.GasStationId == 0)
+					{
+						return result != null ? Convert.ToInt32(result) : 0;
+					}
+
+					return model.GasStationId;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al guardar la estación de servicio: {ex.Message}", ex);
+			}
+		}
+
+		public List<GastStationViewModel> GetGasStationsByPTGId(int publicTransportGroupId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<GastStationViewModel> gas = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_GasStationsPTGDetail WHERE PublicTransportGroupId = @PublicTransportGroupId ORDER BY StateName", sqlConnection);
+					cmd.Parameters.AddWithValue("@PublicTransportGroupId", publicTransportGroupId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							gas.Add(new GastStationViewModel
+							{
+								GasStationId = dr["GasStationId"] == DBNull.Value ? 0 : (int)dr["GasStationId"],
+								StateId = dr["StateId"] == DBNull.Value ? 0 : (int)dr["StateId"],
+								MunicipalityId = dr["MunicipalityId"] == DBNull.Value ? 0 : (int)dr["MunicipalityId"],
+								GasStationName = dr["GasStationName"] as string,
+								GasStationAddress = dr["GasStationAddress"] as string,
+								StateName = dr["StateName"] as string,
+								MunicipalityName = dr["MunicipalityName"] as string,
+								PublicTransportGroupId = dr["PublicTransportGroupId"] == DBNull.Value ? 0 : (int)dr["PublicTransportGroupId"],
+							});
+						}
+					}
+
+					return gas.ToList();
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener las estaciones por organización {ex.Message}", ex);
+			}
+		}
+
+		public (int TotalStates, int TotalMunicipalities, int TotalStations) GetGasStationsGlobalStats()
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					const string sql = @"
+						SELECT
+							COUNT(DISTINCT StateId)        AS TotalStates,
+							COUNT(DISTINCT MunicipalityId) AS TotalMunicipalities,
+							COUNT(DISTINCT GasStationId)   AS TotalStations
+						FROM SuperTransp_GasStationsDetail";
+
+					using SqlCommand cmd = new(sql, sqlConnection);
+					using SqlDataReader dr = cmd.ExecuteReader();
+
+					if (dr.Read())
+					{
+						int states        = dr["TotalStates"]        == DBNull.Value ? 0 : (int)dr["TotalStates"];
+						int municipalities = dr["TotalMunicipalities"] == DBNull.Value ? 0 : (int)dr["TotalMunicipalities"];
+						int stations      = dr["TotalStations"]      == DBNull.Value ? 0 : (int)dr["TotalStations"];
+						return (states, municipalities, stations);
+					}
+
+					return (0, 0, 0);
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener estadísticas globales de estaciones {ex.Message}", ex);
+			}
+		}
 	}
 }

@@ -179,6 +179,26 @@
                                 <span asp-validation-for="Partners" class="text-danger"></span>
                             </div>
                             <div class="col-12">
+                                <strong>Estación:</strong>
+                                <div style="display:flex; gap:8px; align-items:center;">
+                                    @Html.DropDownListFor(t => t.GasStationId, (SelectList)ViewBag.GasStations, "-- Seleccione --", new { @class = "form-control" })
+                                    <button type="button" id="btnAddGasStation" class="primary" style="white-space:nowrap; padding:0 14px; height:36px; cursor:pointer;">Agregar estación</button>
+                                </div>
+                                <div id="gasStationTableContainer" style="margin-top:10px; display:none;">
+                                    <table id="gasStationTable" style="width:100%; border-collapse:collapse; background:#fff; border:1px solid #ddd;">
+                                        <thead>
+                                            <tr style="background:#f2f4f8;">
+                                                <th style="padding:8px 12px; text-align:left; border-bottom:1px solid #ddd; font-weight:600;">Municipio</th>
+                                                <th style="padding:8px 12px; text-align:left; border-bottom:1px solid #ddd; font-weight:600;">Estación de servicio</th>
+                                                <th style="width:50px; padding:8px; border-bottom:1px solid #ddd;"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="gasStationTableBody">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="col-12">
                                 <ul class="actions">
                                     @{
                                         if (ViewBag.IsTotalAccess)
@@ -231,6 +251,8 @@
         window.getMunicipalityUrl = '@Url.Action("GetMunicipality", "PublicTransportGroup")';
         window.getUnionUrl = '@Url.Action("GetUnion", "PublicTransportGroup")';
         window.generateQRUrl = '@Url.Action("GenerateQR", "PublicTransportGroup")';
+        window.initialGasStations = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ExistingGasStations ?? new List<SuperTransp.Models.GastStationViewModel>()));
+        window.gasStationsFull = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.GasStationsFull ?? new List<SuperTransp.Models.GastStationViewModel>()));
     </script>
 </body>
 </html>
