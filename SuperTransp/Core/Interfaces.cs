@@ -168,7 +168,8 @@ namespace SuperTransp.Core
 			public List<GastStationViewModel> GetGasStationsAll();
 			public List<GastStationViewModel> GetGasStationsByStateId(int stateId);
 			public List<GastStationViewModel> GetGasStationsByPTGId(int publicTransportGroupId);
-			public (int TotalStates, int TotalMunicipalities, int TotalStations) GetGasStationsGlobalStats();
+			public List<PublicTransportGroupViewModel> GetPTGsByGasStationId(int gasStationId);
+			public (int TotalStates, int TotalMunicipalities, int TotalStations, int TotalPTG) GetGasStationsGlobalStats();
 			public int GasStationAddOrEdit(GastStationViewModel model);
 		}
 

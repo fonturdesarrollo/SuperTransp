@@ -339,6 +339,18 @@
             flex-shrink: 0;
         }
 
+        .muni-ptg-badge {
+            background: white;
+            color: #764ba2;
+            border: 1.5px solid #764ba2;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 10px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
         .muni-hint {
             padding: 24px 14px;
             font-size: 0.8rem;
@@ -610,6 +622,294 @@
         .muni-gas-icon:hover .gas-tooltip {
             opacity: 1;
         }
+
+        /* ── Modal de organizaciones por estación ─────────────── */
+        .ptg-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 1100;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(3px);
+        }
+
+        .ptg-modal-overlay.open {
+            display: flex;
+        }
+
+        .ptg-modal {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: min(620px, 92vw);
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: modalIn 0.22s ease;
+        }
+
+        .ptg-modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 22px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .ptg-modal-header-text {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .ptg-modal-header h3 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin: 0;
+            line-height: 1.25;
+        }
+
+        .ptg-modal-header p {
+            font-size: 0.78rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .ptg-modal-count {
+            font-size: 0.72rem;
+            opacity: 0.85;
+            margin-top: 4px;
+        }
+
+        .ptg-modal-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 1.05rem;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .ptg-modal-close:hover {
+            background: rgba(255,255,255,0.38);
+        }
+
+        .ptg-modal-body {
+            overflow-y: auto;
+            flex: 1;
+            padding: 6px 0;
+        }
+
+        .ptg-modal-body::-webkit-scrollbar { width: 5px; }
+        .ptg-modal-body::-webkit-scrollbar-track { background: #f0f0f0; }
+        .ptg-modal-body::-webkit-scrollbar-thumb { background: #c5cbf0; border-radius: 4px; }
+
+        .ptg-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 10px 22px;
+            border-bottom: 1px solid #f0f0f8;
+        }
+
+        .ptg-item:last-child { border-bottom: none; }
+
+        .ptg-rif-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 4px 9px;
+            border-radius: 8px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .ptg-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .ptg-name {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #2c3e50;
+            line-height: 1.3;
+            cursor: pointer;
+            transition: color 0.15s;
+        }
+
+        .ptg-name:hover {
+            color: #667eea;
+            text-decoration: underline;
+        }
+
+        .ptg-meta {
+            font-size: 0.72rem;
+            color: #9aa0b8;
+            margin-top: 2px;
+        }
+
+        .ptg-empty {
+            padding: 30px 22px;
+            font-size: 0.85rem;
+            color: #bbb;
+            text-align: center;
+        }
+
+        /* ── Modal de drivers por organización ────────────────── */
+        .driver-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 1200;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(3px);
+        }
+
+        .driver-modal-overlay.open {
+            display: flex;
+        }
+
+        .driver-modal {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: min(680px, 92vw);
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: modalIn 0.22s ease;
+        }
+
+        .driver-modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 22px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .driver-modal-header-text {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .driver-modal-header h3 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin: 0;
+            line-height: 1.25;
+        }
+
+        .driver-modal-header p {
+            font-size: 0.78rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .driver-modal-count {
+            font-size: 0.72rem;
+            opacity: 0.85;
+            margin-top: 4px;
+        }
+
+        .driver-modal-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 1.05rem;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .driver-modal-close:hover {
+            background: rgba(255,255,255,0.38);
+        }
+
+        .driver-modal-body {
+            overflow-y: auto;
+            flex: 1;
+            padding: 6px 0;
+        }
+
+        .driver-modal-body::-webkit-scrollbar { width: 5px; }
+        .driver-modal-body::-webkit-scrollbar-track { background: #f0f0f0; }
+        .driver-modal-body::-webkit-scrollbar-thumb { background: #c5cbf0; border-radius: 4px; }
+
+        .driver-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 10px 22px;
+            border-bottom: 1px solid #f0f0f8;
+        }
+
+        .driver-item:last-child { border-bottom: none; }
+
+        .driver-partner-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-size: 0.72rem;
+            font-weight: 700;
+            min-width: 38px;
+            padding: 4px 9px;
+            border-radius: 8px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-top: 2px;
+            text-align: center;
+        }
+
+        .driver-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .driver-name {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #2c3e50;
+            line-height: 1.3;
+        }
+
+        .driver-meta {
+            font-size: 0.72rem;
+            color: #9aa0b8;
+            margin-top: 2px;
+        }
     </style>
 </head>
 <body>
@@ -651,6 +951,10 @@
                             <span class="map-stat-label">Total estaciones de servicio</span>
                             <span class="map-stat-value">@ViewBag.TotalStations</span>
                         </div>
+                        <div class="map-stat">
+                            <span class="map-stat-label">Total organizaciones</span>
+                            <span class="map-stat-value">@ViewBag.TotalPTG</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -667,9 +971,44 @@
                             <button class="muni-panel-close" id="muniPanelClose">&#x2715;</button>
                         </div>
                         <p id="muniPanelCount"></p>
+                        <p id="muniPanelOrgs"></p>
                     </div>
                     <ul class="muni-list" id="muniList"></ul>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal conductores por organización -->
+    <div class="driver-modal-overlay" id="driverModalOverlay">
+        <div class="driver-modal">
+            <div class="driver-modal-header">
+                <div class="driver-modal-header-text">
+                    <h3 id="driverModalTitle"></h3>
+                    <p id="driverModalSubtitle"></p>
+                    <p class="driver-modal-count" id="driverModalCount"></p>
+                </div>
+                <button class="driver-modal-close" id="driverModalClose">&#x2715;</button>
+            </div>
+            <div class="driver-modal-body" id="driverModalBody">
+                <p class="ptg-empty">Cargando&hellip;</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal organizaciones por estación -->
+    <div class="ptg-modal-overlay" id="ptgModalOverlay">
+        <div class="ptg-modal">
+            <div class="ptg-modal-header">
+                <div class="ptg-modal-header-text">
+                    <h3 id="ptgModalTitle"></h3>
+                    <p id="ptgModalSubtitle"></p>
+                    <p class="ptg-modal-count" id="ptgModalCount"></p>
+                </div>
+                <button class="ptg-modal-close" id="ptgModalClose">&#x2715;</button>
+            </div>
+            <div class="ptg-modal-body" id="ptgModalBody">
+                <p class="ptg-empty">Cargando&hellip;</p>
             </div>
         </div>
     </div>
@@ -688,6 +1027,7 @@
                         <div class="state-station-panel-header">
                             <h4>Estaciones de Combustible</h4>
                             <p id="stationPanelCount"></p>
+                            <p id="stationPanelOrgs"></p>
                         </div>
                         <div class="station-search-wrap">
                             <input type="text" id="stationSearch" placeholder="Buscar municipio o estación..." />
@@ -707,8 +1047,12 @@
         );
 
         var muniApiUrl      = '@Url.Action("GetGasStationsByStateId", "Reports")';
+        var ptgApiUrl       = '@Url.Action("GetPTGsByGasStationId",  "Reports")';
+        var driverApiUrl    = '@Url.Action("GetDriversByPTGId",      "Reports")';
         var imagesBasePath  = '@Url.Content("~/images/")';
         var muniCache       = {};
+        var ptgCache        = {};
+        var driverCache     = {};
         var activeLabel     = null;
         var currentModalData = [];
 
@@ -773,18 +1117,9 @@
 
             if (!data || data.length === 0) return;
 
-            var muniMap = {}, muniOrder = [];
-            data.forEach(function(s) {
-                if (!muniMap[s.municipalityId]) {
-                    muniMap[s.municipalityId] = { name: s.municipalityName, total: s.totalByMunicipality || 0 };
-                    muniOrder.push(s.municipalityId);
-                }
-            });
-
-            var munis = muniOrder.map(function(id) { return muniMap[id]; })
-                                 .filter(function(m) { return m.total > 0; });
-
-            if (munis.length === 0) return;
+            // Un ícono por estación individual (no por municipio)
+            var stations = data.filter(function(s) { return s.gasStationId; });
+            if (stations.length === 0) return;
 
             // ── Escaneo único del canvas para obtener posiciones dentro del territorio ──
             // Se usa un canvas reducido (≤ 400 px) para eficiencia.
@@ -832,7 +1167,7 @@
                 }
             } catch (e) { /* canvas tainted u otro error → validPos vacío → fallback */ }
 
-            munis.forEach(function(muni, idx) {
+            stations.forEach(function(station, idx) {
                 var x, y;
 
                 if (validPos.length > 3) {
@@ -853,8 +1188,18 @@
                 marker.className = 'muni-gas-icon';
                 marker.style.left = x.toFixed(1) + '%';
                 marker.style.top  = y.toFixed(1) + '%';
-                marker.innerHTML  = _gasIconSvg +
-                    '<span class="gas-tooltip">' + muni.name + ' &middot; ' + muni.total + ' est.</span>';
+
+                var stationName = station.gasStationName || '(Sin nombre)';
+                var muniName    = station.municipalityName || '';
+                var tooltipText = stationName + (muniName ? ' &middot; ' + muniName : '');
+
+                marker.innerHTML = _gasIconSvg +
+                    '<span class="gas-tooltip">' + tooltipText + '</span>';
+
+                marker.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    openStationPTGsModal(station);
+                });
 
                 mapContainer.appendChild(marker);
             });
@@ -873,19 +1218,22 @@
                 return;
             }
 
-            // Conteo para el header: sumar TotalByMunicipality de municipios distintos donde > 0
+            // Conteo para el header: sumar TotalByMunicipality y TotalByPTG de municipios distintos
             var muniTotals = {};
             data.forEach(function(s) {
                 if (!muniTotals.hasOwnProperty(s.municipalityId)) {
-                    muniTotals[s.municipalityId] = s.totalByMunicipality || 0;
+                    muniTotals[s.municipalityId] = { stations: s.totalByMunicipality || 0, ptg: s.totalByPTG || 0 };
                 }
             });
             var muniCount = Object.keys(muniTotals).length;
-            var totalStations = Object.values(muniTotals)
-                                      .filter(function(v) { return v > 0; })
-                                      .reduce(function(a, b) { return a + b; }, 0);
+            var muniValues = Object.values(muniTotals);
+            var totalStations = muniValues.filter(function(v) { return v.stations > 0; })
+                                          .reduce(function(a, b) { return a + b.stations; }, 0);
+            var totalPTG = muniValues.reduce(function(a, b) { return a + b.ptg; }, 0);
             countEl.textContent = muniCount + ' municipio' + (muniCount !== 1 ? 's' : '') +
                                   ' · ' + totalStations + ' estación' + (totalStations !== 1 ? 'es' : '');
+            var orgsEl = document.getElementById('stationPanelOrgs');
+            if (orgsEl) orgsEl.textContent = totalPTG + ' organización' + (totalPTG !== 1 ? 'es' : '');
 
             // Agrupar por municipio
             var muniMap = {};
@@ -936,9 +1284,11 @@
             var search    = document.getElementById('stationSearch');
             var mapInner  = document.getElementById('stateMapInner');
 
+            var orgsEl = document.getElementById('stationPanelOrgs');
             title.textContent   = 'Estado ' + stateName;
             container.innerHTML = '<p class="station-panel-empty">Cargando\u2026</p>';
             countEl.textContent = '';
+            if (orgsEl) orgsEl.textContent = '';
             search.value        = '';
             currentModalData    = [];
             overlay.classList.add('open');
@@ -1015,6 +1365,192 @@
             document.getElementById('stateModalOverlay').classList.remove('open');
         }
 
+        // ── Modal organizaciones por estación ────────────────
+        function renderPTGList(data, body, countEl) {
+            if (!data || data.length === 0) {
+                body.innerHTML = '<p class="ptg-empty">No hay organizaciones asociadas a esta estación</p>';
+                countEl.textContent = '';
+                return;
+            }
+
+            countEl.textContent = data.length + ' organización' + (data.length !== 1 ? 'es' : '') + ' asociada' + (data.length !== 1 ? 's' : '');
+
+            body.innerHTML = '';
+            data.forEach(function(p) {
+                var row = document.createElement('div');
+                row.className = 'ptg-item';
+
+                var rif = document.createElement('span');
+                rif.className   = 'ptg-rif-badge';
+                rif.textContent = p.publicTransportGroupRif || 'S/RIF';
+
+                var info = document.createElement('div');
+                info.className = 'ptg-info';
+
+                var name = document.createElement('div');
+                name.className   = 'ptg-name';
+                name.textContent = p.publicTransportGroupName || '(Sin nombre)';
+                name.title       = 'Ver conductores';
+                name.addEventListener('click', function() {
+                    openPTGDriversModal(p);
+                });
+                info.appendChild(name);
+
+                var metaParts = [];
+                if (p.modeName)         metaParts.push(p.modeName);
+                if (p.designationName)  metaParts.push(p.designationName);
+                if (p.municipalityName) metaParts.push(p.municipalityName);
+                if (metaParts.length) {
+                    var meta = document.createElement('div');
+                    meta.className   = 'ptg-meta';
+                    meta.textContent = metaParts.join(' · ');
+                    info.appendChild(meta);
+                }
+
+                row.appendChild(rif);
+                row.appendChild(info);
+                body.appendChild(row);
+            });
+        }
+
+        function openStationPTGsModal(station) {
+            var overlay   = document.getElementById('ptgModalOverlay');
+            var title     = document.getElementById('ptgModalTitle');
+            var subtitle  = document.getElementById('ptgModalSubtitle');
+            var countEl   = document.getElementById('ptgModalCount');
+            var body      = document.getElementById('ptgModalBody');
+
+            title.textContent    = station.gasStationName || '(Sin nombre)';
+            subtitle.textContent = station.municipalityName || '';
+            countEl.textContent  = '';
+            body.innerHTML       = '<p class="ptg-empty">Cargando&hellip;</p>';
+            overlay.classList.add('open');
+
+            var gsId = station.gasStationId;
+            if (ptgCache[gsId]) {
+                renderPTGList(ptgCache[gsId], body, countEl);
+                return;
+            }
+
+            fetch(ptgApiUrl + '?gasStationId=' + gsId)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    ptgCache[gsId] = data;
+                    renderPTGList(data, body, countEl);
+                })
+                .catch(function() {
+                    body.innerHTML = '<p class="ptg-empty" style="color:#e74c3c;">Error al cargar</p>';
+                });
+        }
+
+        function closePTGModal() {
+            document.getElementById('ptgModalOverlay').classList.remove('open');
+        }
+
+        document.getElementById('ptgModalClose').addEventListener('click', closePTGModal);
+        document.getElementById('ptgModalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closePTGModal();
+        });
+
+        // ── Modal conductores por organización ───────────────
+        function formatBirthdate(value) {
+            if (!value) return '';
+            var d = new Date(value);
+            if (isNaN(d.getTime())) return '';
+            var dd = String(d.getDate()).padStart(2, '0');
+            var mm = String(d.getMonth() + 1).padStart(2, '0');
+            var yy = d.getFullYear();
+            return dd + '/' + mm + '/' + yy;
+        }
+
+        function renderDriverList(data, body, countEl) {
+            if (!data || data.length === 0) {
+                body.innerHTML = '<p class="ptg-empty">No hay conductores registrados</p>';
+                countEl.textContent = '';
+                return;
+            }
+
+            countEl.textContent = data.length + ' conductor' + (data.length !== 1 ? 'es' : '');
+
+            body.innerHTML = '';
+            data.forEach(function(d) {
+                var row = document.createElement('div');
+                row.className = 'driver-item';
+
+                var badge = document.createElement('span');
+                badge.className   = 'driver-partner-badge';
+                badge.textContent = '#' + (d.partnerNumber || '—');
+
+                var info = document.createElement('div');
+                info.className = 'driver-info';
+
+                var name = document.createElement('div');
+                name.className   = 'driver-name';
+                name.textContent = d.driverFullName || '(Sin nombre)';
+                info.appendChild(name);
+
+                var metaParts = [];
+                if (d.driverIdentityDocument) metaParts.push('C.I. ' + d.driverIdentityDocument);
+                if (d.driverPhone)            metaParts.push(d.driverPhone);
+                if (d.sexName)                metaParts.push(d.sexName);
+                var bd = formatBirthdate(d.birthdate);
+                if (bd)                       metaParts.push(bd);
+                if (metaParts.length) {
+                    var meta = document.createElement('div');
+                    meta.className   = 'driver-meta';
+                    meta.textContent = metaParts.join(' · ');
+                    info.appendChild(meta);
+                }
+
+                row.appendChild(badge);
+                row.appendChild(info);
+                body.appendChild(row);
+            });
+        }
+
+        function openPTGDriversModal(ptg) {
+            var overlay  = document.getElementById('driverModalOverlay');
+            var title    = document.getElementById('driverModalTitle');
+            var subtitle = document.getElementById('driverModalSubtitle');
+            var countEl  = document.getElementById('driverModalCount');
+            var body     = document.getElementById('driverModalBody');
+
+            title.textContent    = ptg.publicTransportGroupName || '(Sin nombre)';
+            var subtitleParts = [];
+            if (ptg.publicTransportGroupRif) subtitleParts.push('RIF ' + ptg.publicTransportGroupRif);
+            if (ptg.municipalityName)        subtitleParts.push(ptg.municipalityName);
+            subtitle.textContent = subtitleParts.join(' · ');
+            countEl.textContent  = '';
+            body.innerHTML       = '<p class="ptg-empty">Cargando&hellip;</p>';
+            overlay.classList.add('open');
+
+            var ptgId = ptg.publicTransportGroupId;
+            if (driverCache[ptgId]) {
+                renderDriverList(driverCache[ptgId], body, countEl);
+                return;
+            }
+
+            fetch(driverApiUrl + '?publicTransportGroupId=' + ptgId)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    driverCache[ptgId] = data;
+                    renderDriverList(data, body, countEl);
+                })
+                .catch(function() {
+                    body.innerHTML = '<p class="ptg-empty" style="color:#e74c3c;">Error al cargar</p>';
+                });
+        }
+
+        function closeDriverModal() {
+            document.getElementById('driverModalOverlay').classList.remove('open');
+        }
+
+        document.getElementById('driverModalClose').addEventListener('click', closeDriverModal);
+        document.getElementById('driverModalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeDriverModal();
+        });
+        // ─────────────────────────────────────────────────────
+
         document.getElementById('stateModalClose').addEventListener('click', closeStateModal);
 
         document.getElementById('muniPanelClose').addEventListener('click', function() {
@@ -1027,7 +1563,16 @@
         });
 
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeStateModal();
+            if (e.key !== 'Escape') return;
+            if (document.getElementById('driverModalOverlay').classList.contains('open')) {
+                closeDriverModal();
+                return;
+            }
+            if (document.getElementById('ptgModalOverlay').classList.contains('open')) {
+                closePTGModal();
+                return;
+            }
+            closeStateModal();
         });
         // ─────────────────────────────────────────────────────
 
@@ -1037,8 +1582,10 @@
             var countEl = document.getElementById('muniPanelCount');
             var list    = document.getElementById('muniList');
 
+            var orgsEl = document.getElementById('muniPanelOrgs');
             title.textContent   = stateName;
             countEl.textContent = 'Cargando\u2026';
+            if (orgsEl) orgsEl.textContent = '';
             list.innerHTML      = '';
             panel.classList.add('visible');
 
@@ -1063,14 +1610,17 @@
             var muniMap = {};
             data.forEach(function(s) {
                 if (!muniMap[s.municipalityId]) {
-                    muniMap[s.municipalityId] = { name: s.municipalityName, total: s.totalByMunicipality || 0 };
+                    muniMap[s.municipalityId] = { name: s.municipalityName, total: s.totalByMunicipality || 0, ptg: s.totalByPTG || 0 };
                 }
             });
             var munis = Object.values(muniMap);
             var totalStations = munis.filter(function(m) { return m.total > 0; })
                                      .reduce(function(acc, m) { return acc + m.total; }, 0);
+            var totalPTG = munis.reduce(function(acc, m) { return acc + m.ptg; }, 0);
             countEl.textContent = munis.length + ' municipio' + (munis.length !== 1 ? 's' : '') +
                                   ' · ' + totalStations + ' estación' + (totalStations !== 1 ? 'es' : '');
+            var orgsEl = document.getElementById('muniPanelOrgs');
+            if (orgsEl) orgsEl.textContent = totalPTG + ' organización' + (totalPTG !== 1 ? 'es' : '');
             list.innerHTML = '';
             munis.forEach(function(m) {
                 var li = document.createElement('li');
@@ -1083,8 +1633,13 @@
                 badge.className   = 'muni-badge';
                 badge.textContent = m.total;
 
+                var ptgBadge = document.createElement('span');
+                ptgBadge.className   = 'muni-ptg-badge';
+                ptgBadge.textContent = m.ptg + ' org.';
+
                 li.appendChild(name);
                 li.appendChild(badge);
+                li.appendChild(ptgBadge);
                 list.appendChild(li);
             });
         }

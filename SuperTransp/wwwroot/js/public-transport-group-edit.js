@@ -361,14 +361,18 @@ $(document).ready(function () {
         }
 
         var municipalityName = '';
+        var cleanStationName = stationName;
         if (window.gasStationsFull) {
             var found = window.gasStationsFull.find(function (s) { return s.GasStationId == stationId; });
-            if (found) municipalityName = found.MunicipalityName || '';
+            if (found) {
+                municipalityName = found.MunicipalityName || '';
+                cleanStationName = found.GasStationName || stationName;
+            }
         }
 
         var row = '<tr data-gas-station-id="' + stationId + '">' +
             '<td style="padding:8px 12px; border-bottom:1px solid #eee;">' + municipalityName + '</td>' +
-            '<td style="padding:8px 12px; border-bottom:1px solid #eee;">' + stationName + '</td>' +
+            '<td style="padding:8px 12px; border-bottom:1px solid #eee;">' + cleanStationName + '</td>' +
             '<td style="padding:8px; text-align:center; border-bottom:1px solid #eee;">' +
             '<button type="button" class="btnRemoveStation" style="background:none; border:none; cursor:pointer; color:#c0392b; padding:2px 6px;" title="Eliminar">' +
             trashIcon + '</button>' +

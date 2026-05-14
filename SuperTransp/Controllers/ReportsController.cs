@@ -21,10 +21,11 @@ namespace SuperTransp.Controllers
 		private readonly IExcelExporter _excelExporter;
 		private readonly IOptionsSnapshot<MaintenanceSettings> _settings;
 		private readonly ICommonData _commonData;
+		private readonly IDriver _driver;
 
 		public ReportsController(ISupervision supervision, IPublicTransportGroup publicTransportGroup, ISecurity security,
 			IReport report, IGeography geography, IExcelExporter excelExporter, IOptionsSnapshot<MaintenanceSettings> settings,
-			ICommonData commonData)
+			ICommonData commonData, IDriver driver)
 		{
 			_security = security;
 			_supervision = supervision;
@@ -34,6 +35,7 @@ namespace SuperTransp.Controllers
 			_excelExporter = excelExporter;
 			_settings = settings;
 			_commonData = commonData;
+			_driver = driver;
 		}
 
 		public IActionResult Index()
@@ -604,6 +606,7 @@ namespace SuperTransp.Controllers
 					ViewBag.TotalStatesWithStations        = gasStats.TotalStates;
 					ViewBag.TotalMunicipalitiesWithStations = gasStats.TotalMunicipalities;
 					ViewBag.TotalStations                  = gasStats.TotalStations;
+					ViewBag.TotalPTG                       = gasStats.TotalPTG;
 
 					return View(model);
 				}
@@ -619,8 +622,41 @@ namespace SuperTransp.Controllers
 		public JsonResult GetGasStationsByStateId(int stateId)
 		{
 			var data = _commonData.GetGasStationsByStateId(stateId);
-			return Json(data.Select(m => new { m.MunicipalityId, m.MunicipalityName, m.GasStationId, m.GasStationName, m.GasStationAddress, m.TotalByMunicipality })
+			return Json(data.Select(m => new { m.MunicipalityId, m.MunicipalityName, m.GasStationId, m.GasStationName, m.GasStationAddress, m.TotalByMunicipality, m.TotalByPTG })
 			               .OrderBy(m => m.MunicipalityName).ThenBy(m => m.GasStationName));
+		}
+
+		[HttpGet]
+		public JsonResult GetPTGsByGasStationId(int gasStationId)
+		{
+			var data = _commonData.GetPTGsByGasStationId(gasStationId);
+			return Json(data.Select(p => new
+			{
+				p.PublicTransportGroupId,
+				p.PublicTransportGroupRif,
+				p.PublicTransportGroupName,
+				p.PTGCompleteName,
+				p.MunicipalityName,
+				p.StateName,
+				p.ModeName,
+				p.DesignationName
+			}));
+		}
+
+		[HttpGet]
+		public JsonResult GetDriversByPTGId(int publicTransportGroupId)
+		{
+			var data = _driver.GetByPublicTransportGroupId(publicTransportGroupId);
+			return Json(data.Select(d => new
+			{
+				d.DriverId,
+				d.DriverIdentityDocument,
+				d.DriverFullName,
+				d.PartnerNumber,
+				d.DriverPhone,
+				d.SexName,
+				d.Birthdate
+			}).OrderBy(d => d.PartnerNumber));
 		}
 
 		//Sustiuido por el Dashboard

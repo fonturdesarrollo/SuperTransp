@@ -548,7 +548,7 @@ namespace SuperTransp.Core
 								GasStationAddress = dr["GasStationAddress"] as string,
 								StateName = dr["StateName"] as string,
 								MunicipalityName = dr["MunicipalityName"] as string,
-								TotalByMunicipality = dr["TotalByMunicipality"] == DBNull.Value ? 0 : (int)dr["TotalByMunicipality"],
+								TotalByPTG = dr["TotalByPTG"] == DBNull.Value ? 0 : (int)dr["TotalByPTG"],
 							});
 						}
 					}
@@ -591,6 +591,7 @@ namespace SuperTransp.Core
 								StateName			= dr["StateName"]			 as string,
 								MunicipalityName   = dr["MunicipalityName"]   as string,
 								TotalByMunicipality = dr["TotalByMunicipality"] == DBNull.Value ? 0    : (int)dr["TotalByMunicipality"],
+								TotalByPTG 			= dr["TotalByPTG"]		 == DBNull.Value ? 0    : (int)dr["TotalByPTG"],
 							});
 						}
 					}
@@ -680,7 +681,63 @@ namespace SuperTransp.Core
 			}
 		}
 
-		public (int TotalStates, int TotalMunicipalities, int TotalStations) GetGasStationsGlobalStats()
+		public List<PublicTransportGroupViewModel> GetPTGsByGasStationId(int gasStationId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					const string sql = @"
+						SELECT DISTINCT
+							p.PublicTransportGroupId,
+							p.PublicTransportGroupRif,
+							p.PublicTransportGroupName,
+							p.PTGCompleteName,
+							p.MunicipalityName,
+							p.StateName,
+							p.ModeName,
+							p.DesignationName
+						FROM dbo.GasStationPTG gsp
+						INNER JOIN dbo.SuperTransp_PublicTransportGroupDetailNoUser p
+							ON p.PublicTransportGroupId = gsp.PublicTransportGroupId
+						WHERE gsp.GasStationId = @GasStationId
+						ORDER BY p.PublicTransportGroupName";
+
+					List<PublicTransportGroupViewModel> result = new();
+					using SqlCommand cmd = new(sql, sqlConnection);
+					cmd.Parameters.AddWithValue("@GasStationId", gasStationId);
+
+					using SqlDataReader dr = cmd.ExecuteReader();
+					while (dr.Read())
+					{
+						result.Add(new PublicTransportGroupViewModel
+						{
+							PublicTransportGroupId = dr["PublicTransportGroupId"] == DBNull.Value ? 0 : (int)dr["PublicTransportGroupId"],
+							PublicTransportGroupRif = dr["PublicTransportGroupRif"] as string,
+							PublicTransportGroupName = dr["PublicTransportGroupName"] as string,
+							PTGCompleteName = dr["PTGCompleteName"] as string,
+							MunicipalityName = dr["MunicipalityName"] as string,
+							StateName = dr["StateName"] as string,
+							ModeName = dr["ModeName"] as string,
+							DesignationName = dr["DesignationName"] as string,
+						});
+					}
+
+					return result;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener las organizaciones de la estación de servicio {ex.Message}", ex);
+			}
+		}
+
+		public (int TotalStates, int TotalMunicipalities, int TotalStations, int TotalPTG) GetGasStationsGlobalStats()
 		{
 			try
 			{
@@ -695,7 +752,8 @@ namespace SuperTransp.Core
 						SELECT
 							COUNT(DISTINCT StateId)        AS TotalStates,
 							COUNT(DISTINCT MunicipalityId) AS TotalMunicipalities,
-							COUNT(DISTINCT GasStationId)   AS TotalStations
+							COUNT(DISTINCT GasStationId)   AS TotalStations,
+							(SELECT COUNT(PublicTransportGroupId) FROM dbo.GasStationPTG) AS TotalPTG
 						FROM SuperTransp_GasStationsDetail";
 
 					using SqlCommand cmd = new(sql, sqlConnection);
@@ -703,13 +761,14 @@ namespace SuperTransp.Core
 
 					if (dr.Read())
 					{
-						int states        = dr["TotalStates"]        == DBNull.Value ? 0 : (int)dr["TotalStates"];
+						int states         = dr["TotalStates"]         == DBNull.Value ? 0 : (int)dr["TotalStates"];
 						int municipalities = dr["TotalMunicipalities"] == DBNull.Value ? 0 : (int)dr["TotalMunicipalities"];
-						int stations      = dr["TotalStations"]      == DBNull.Value ? 0 : (int)dr["TotalStations"];
-						return (states, municipalities, stations);
+						int stations       = dr["TotalStations"]       == DBNull.Value ? 0 : (int)dr["TotalStations"];
+						int ptg            = dr["TotalPTG"]            == DBNull.Value ? 0 : (int)dr["TotalPTG"];
+						return (states, municipalities, stations, ptg);
 					}
 
-					return (0, 0, 0);
+					return (0, 0, 0, 0);
 				}
 			}
 			catch (Exception ex)

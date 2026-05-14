@@ -292,7 +292,10 @@ $(document).ready(function () {
 
     $('#btnAddGasStation').on('click', function () {
         var stationId = $('#GasStationId').val();
-        var stationName = $('#GasStationId option:selected').text();
+        var fullText = $('#GasStationId option:selected').text();
+        var parts = fullText.includes(' - ') ? fullText.split(' - ') : ['', fullText];
+        var municipalityName = parts[0];
+        var stationName = parts.slice(1).join(' - ');
 
         if (!stationId) {
             alert('Debe seleccionar una estación de la lista.');
@@ -319,6 +322,7 @@ $(document).ready(function () {
             '</svg>';
 
         var row = '<tr data-gas-station-id="' + stationId + '">' +
+            '<td style="padding:8px 12px; border-bottom:1px solid #eee;">' + municipalityName + '</td>' +
             '<td style="padding:8px 12px; border-bottom:1px solid #eee;">' + stationName + '</td>' +
             '<td style="padding:8px; text-align:center; border-bottom:1px solid #eee;">' +
             '<button type="button" class="btnRemoveStation" style="background:none; border:none; cursor:pointer; color:#c0392b; padding:2px 6px;" title="Eliminar">' +
