@@ -567,6 +567,13 @@
             font-size: 0.78rem;
             font-weight: 600;
             color: #2c3e50;
+            cursor: pointer;
+            transition: color 0.15s;
+        }
+
+        .station-name:hover {
+            color: #667eea;
+            text-decoration: underline;
         }
 
         .station-address {
@@ -1260,7 +1267,13 @@
 
                     var name = document.createElement('div');
                     name.className = 'station-name';
-                    name.textContent = s.gasStationName || '(Sin nombre)';
+                    var stationLabel = s.gasStationName || '(Sin nombre)';
+                    var orgCount = s.totalByGasStation || 0;
+                    name.textContent = stationLabel + ' (' + orgCount + ' org' + (orgCount !== 1 ? 's' : '') + ')';
+                    name.title = 'Ver organizaciones';
+                    name.addEventListener('click', function() {
+                        openStationPTGsModal(s);
+                    });
                     item.appendChild(name);
 
                     if (s.gasStationAddress) {

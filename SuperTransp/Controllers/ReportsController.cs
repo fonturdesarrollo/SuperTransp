@@ -622,7 +622,7 @@ namespace SuperTransp.Controllers
 		public JsonResult GetGasStationsByStateId(int stateId)
 		{
 			var data = _commonData.GetGasStationsByStateId(stateId);
-			return Json(data.Select(m => new { m.MunicipalityId, m.MunicipalityName, m.GasStationId, m.GasStationName, m.GasStationAddress, m.TotalByMunicipality, m.TotalByPTG })
+			return Json(data.Select(m => new { m.MunicipalityId, m.MunicipalityName, m.GasStationId, m.GasStationName, m.GasStationAddress, m.TotalByMunicipality, m.TotalByPTG, m.TotalByGasStation })
 			               .OrderBy(m => m.MunicipalityName).ThenBy(m => m.GasStationName));
 		}
 

@@ -574,7 +574,12 @@ namespace SuperTransp.Core
 					}
 
 					List<GastStationViewModel> gas = new();
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_GasStationsDetail WHERE StateId = @StateId ORDER BY StateName", sqlConnection);
+					SqlCommand cmd = new(@"
+						SELECT v.*,
+							(SELECT COUNT(*) FROM dbo.GasStationPTG gsp WHERE gsp.GasStationId = v.GasStationId) AS TotalByGasStation
+						FROM SuperTransp_GasStationsDetail v
+						WHERE v.StateId = @StateId
+						ORDER BY v.StateName", sqlConnection);
 					cmd.Parameters.AddWithValue("@StateId", stateId);
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
@@ -592,6 +597,7 @@ namespace SuperTransp.Core
 								MunicipalityName   = dr["MunicipalityName"]   as string,
 								TotalByMunicipality = dr["TotalByMunicipality"] == DBNull.Value ? 0    : (int)dr["TotalByMunicipality"],
 								TotalByPTG 			= dr["TotalByPTG"]		 == DBNull.Value ? 0    : (int)dr["TotalByPTG"],
+								TotalByGasStation   = dr["TotalByGasStation"]   == DBNull.Value ? 0    : (int)dr["TotalByGasStation"],
 							});
 						}
 					}

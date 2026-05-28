@@ -11,6 +11,7 @@
 		public string? MunicipalityName { get; set; }
 		public int TotalByMunicipality { get; set; }
 		public int TotalByPTG { get; set; }
+		public int TotalByGasStation { get; set; }
 		public int PublicTransportGroupId { get; set; }
 		public string GasStationDisplayName => $"{MunicipalityName} - {GasStationName}";
 	}
