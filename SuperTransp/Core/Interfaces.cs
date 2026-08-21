@@ -171,6 +171,8 @@ namespace SuperTransp.Core
 			public List<PublicTransportGroupViewModel> GetPTGsByGasStationId(int gasStationId);
 			public (int TotalStates, int TotalMunicipalities, int TotalStations, int TotalPTG) GetGasStationsGlobalStats();
 			public int GasStationAddOrEdit(GastStationViewModel model);
+			public List<BankViewModel> GetBanksAll();
+			public List<AccounTypeViewModel> GetAccounTypesAll();
 		}
 
 		public interface IReport
@@ -210,6 +212,22 @@ namespace SuperTransp.Core
 			public DriversModel? MapToDriversModel(int idCard);
 			public RoutesModel? MapToRoutesModel();
 			public RoutesByRifModel? MapToRoutesByRifModel(string publicTransportGroupRif);
+		}
+
+		public interface IProcedure
+		{
+			public int AddOrEdit(ProcedureViewModel model);
+			public List<ProcedureViewModel> GetAll();
+			public List<ProcedureByDriverViewModel> GetByDriverByProcedureStatusId(int procedureStatusId);
+			public int AddOrEditByDriver(ProcedureByDriverViewModel model);
+			public List<ProcedureBankAccountViewModel> GetByBankAccounTypeId(int accounTypeId);
+			public List<ProcedureStatusViewModel> GetStatusAll();
+		}
+
+		public interface IExchangeRate
+		{
+			public List<ExchangeRateViewModel> GetAll();
+			public void Save(string currencyCode, decimal rate);
 		}
 	}
 }

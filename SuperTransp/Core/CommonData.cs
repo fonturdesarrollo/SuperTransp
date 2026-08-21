@@ -743,6 +743,77 @@ namespace SuperTransp.Core
 			}
 		}
 
+		public List<BankViewModel> GetBanksAll()
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<BankViewModel> banks = new();
+					SqlCommand cmd = new("SELECT * FROM Bank ORDER BY BankName", sqlConnection);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							banks.Add(new BankViewModel
+							{
+								BankId = dr["BankId"] == DBNull.Value ? 0 : (int)dr["BankId"],
+								BankName = dr["BankName"] == DBNull.Value ? string.Empty : (string)dr["BankName"],
+								SudebanCode = dr["SudebanCode"] == DBNull.Value ? string.Empty : (string)dr["SudebanCode"],
+							});
+						}
+					}
+
+					return banks.ToList();
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener los bancos {ex.Message}", ex);
+			}
+		}
+
+		public List<AccounTypeViewModel> GetAccounTypesAll()
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<AccounTypeViewModel> accounts = new();
+					SqlCommand cmd = new("SELECT * FROM AccounType", sqlConnection);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							accounts.Add(new AccounTypeViewModel
+							{
+								AccounTypeId = dr["AccounTypeId"] == DBNull.Value ? 0 : (int)dr["AccounTypeId"],
+								AccounTypeName = dr["AccounTypeName"] == DBNull.Value ? string.Empty : (string)dr["AccounTypeName"],
+							});
+						}
+					}
+
+					return accounts.ToList();
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener los tipo de cuentas de banco {ex.Message}", ex);
+			}
+		}
+
 		public (int TotalStates, int TotalMunicipalities, int TotalStations, int TotalPTG) GetGasStationsGlobalStats()
 		{
 			try

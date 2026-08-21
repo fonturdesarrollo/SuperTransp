@@ -1,0 +1,381 @@
+@{
+	Layout = "";
+}
+<!DOCTYPE HTML>
+<html>
+
+<head>
+	<title>Consultar Gestiones Realizadas</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+	<link rel="stylesheet" href="~/assets/css/main.css" />
+	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
+	<link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
+
+	@*DataTable************************************************************************@
+	<link rel="stylesheet" href="~/datatable/css/bootstrap.css" />
+	<link rel="stylesheet" href="~/datatable/css/dataTables.bootstrap4.min.css" />
+	<link rel="stylesheet" href="~/datatable/css/responsive.bootstrap4.min.css" />
+	@*************************************************************************************@
+
+	<style>
+		.logo-container {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+
+			.logo-container img {
+				display: block;
+			}
+
+		.status-filter-row {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			margin-bottom: 1em;
+		}
+
+		.status-filter-row label {
+			font-weight: 600;
+			margin: 0;
+		}
+
+		.status-filter-row select {
+			max-width: 280px;
+		}
+
+		.badge-status {
+			padding: 4px 10px;
+			border-radius: 10px;
+			font-size: 0.78rem;
+			font-weight: 700;
+			color: white;
+			white-space: nowrap;
+		}
+
+		.badge-status-1 { background: #f0ad4e; }
+		.badge-status-2 { background: #5cb85c; }
+		.badge-status-3 { background: #d9534f; }
+		.badge-status-default { background: #6c757d; }
+
+		.row-status-select {
+			min-width: 150px;
+			padding: 4px 6px;
+		}
+
+		.update-status-row {
+			margin-top: 1em;
+			display: flex;
+			align-items: center;
+			gap: 12px;
+		}
+
+		#btnUpdateStatus:disabled {
+			opacity: 0.5;
+			cursor: not-allowed;
+		}
+	</style>
+
+</head>
+<body class="is-preload">
+	@Html.AntiForgeryToken()
+	<div style="width:100%; max-width: 100em; margin: 0 auto; padding: 0 1em;">
+		<!-- Header -->
+		<header id="header">
+			<div class="inner">
+				<!-- Logo -->
+				<div class="logo-container">
+					<!-- Logo izquierdo -->
+					<img src="~/images/Logo.png" width="100px" height="100px" alt="Logo principal" />
+
+					<!-- Logo derecho -->
+					<img src="~/images/super-transp-logo.png" width="150px" height="150px" alt="Logo SuperTransp" />
+				</div>
+				<div class="logo">
+					<span>@ViewBag.EmployeeName</span>
+					<br />
+					<span>Consultar gestiones realizadas</span>
+				</div>
+			</div>
+
+			<!-- Nav -->
+			<nav>
+				<ul>
+					<li><a href="#menu">Menu</a></li>
+				</ul>
+			</nav>
+		</header>
+
+		<!-- Menu -->
+		<nav id="menu">
+			<h2>Menu</h2>
+			<ul>
+				<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
+				<li>@Html.ActionLink("Gestiones administrativas", "Index", "Procedures")</li>
+				<li>@Html.ActionLink("Salir", "Login", "Security")</li>
+			</ul>
+		</nav>
+
+		<div id="main">
+			<div class="inner">
+				<!-- Form -->
+				<section>
+					<h4 style="color:#4cbece">Gestiones Realizadas</h4>
+					<br />
+
+					<div class="status-filter-row">
+						<label for="statusFilter">Estatus:</label>
+						<select id="statusFilter">
+							<option value="">Cargando&hellip;</option>
+						</select>
+					</div>
+
+					<div id="loadingSpinner" style="text-align:center; padding:1em;">
+						<div class="spinner-border text-info" role="status">
+							<span class="sr-only">Cargando...</span>
+						</div>
+					</div>
+					<table id="inventory" class="table table-striped table-bordered dt-responsive dt-nowrap">
+						<thead>
+							<tr>
+								<th>Cédula</th>
+								<th>Nombre</th>
+								<th>Teléfono</th>
+								<th>Trámite</th>
+								<th>Tarifa $</th>
+								<th>Tasa BCV</th>
+								<th>Monto Pagado (Bs.)</th>
+								<th>Banco Receptor</th>
+								<th>Banco Pagador</th>
+								<th>Estatus</th>
+							</tr>
+						</thead>
+					</table>
+
+					<div class="update-status-row">
+						<button type="button" id="btnUpdateStatus" class="button" disabled>Actualizar</button>
+						<span id="updateStatusHint" style="color:#888; font-size:0.85rem;"></span>
+					</div>
+				</section>
+			</div>
+		</div>
+	</div>
+
+	<!-- Scripts -->
+	<script src="~/assets/js/jquery.min.js"></script>
+	<script src="~/assets/js/browser.min.js"></script>
+	<script src="~/assets/js/breakpoints.min.js"></script>
+	<script src="~/assets/js/util.js"></script>
+	<script src="~/assets/js/main.js"></script>
+
+	@*DataTable*******************************************@
+	<script src="~/datatable/js/jquery-3.5.1.js"></script>
+	<script src="~/datatable/js/jquery.dataTables.min.js"></script>
+	<script src="~/datatable/js/dataTables.bootstrap4.js"></script>
+	<script src="~/datatable/js/dataTables.responsive.min.js"></script>
+	<script src="~/datatable/js/responsive.bootstrap4.min.js"></script>
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+	@***********************************************************@
+
+	<script type="text/javascript">
+		$(document).ready(function () {
+			var statusApiUrl = '@Url.Action("GetProcedureStatuses", "Procedures")';
+			var dataApiUrl = '@Url.Action("GetProceduresByStatus", "Procedures")';
+			var updateStatusApiUrl = '@Url.Action("UpdateProcedureStatuses", "Procedures")';
+			var defaultStatusId = 1; // Pendientes
+			var allStatuses = [];
+			var pendingStatusChanges = {};
+
+			function formatMoney(value) {
+				if (typeof value !== 'number') return value;
+				return value.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+			}
+
+			function buildStatusSelect(row) {
+				var options = allStatuses.map(function (s) {
+					var selected = s.procedureStatusId === row.procedureStatusId ? ' selected' : '';
+					return '<option value="' + s.procedureStatusId + '"' + selected + '>' + s.procedureStatusName + '</option>';
+				}).join('');
+
+				return '<select class="row-status-select" data-procedure-by-driver-id="' + row.procedureByDriverId + '" data-current-status-id="' + row.procedureStatusId + '">' + options + '</select>';
+			}
+
+			function initTable() {
+				var table = $('#inventory').DataTable({
+					ajax: {
+						url: dataApiUrl,
+						data: function (d) {
+							d.procedureStatusId = $('#statusFilter').val() || defaultStatusId;
+						},
+						dataSrc: function (json) {
+							$('#loadingSpinner').fadeOut();
+							return json.data;
+						}
+					},
+					pageLength: 10,
+					lengthMenu: [10, 25, 50, 100, 500, 1000],
+					columns: [
+						{ data: 'driverIdentityDocument' },
+						{ data: 'driverFullName' },
+						{ data: 'driverPhone' },
+						{
+							data: null,
+							render: function (row) {
+								return (row.procedureCategoryName || '') + ' - ' + (row.procedureConcept || '');
+							}
+						},
+						{
+							data: 'tariff',
+							render: function (data) {
+								return '$ ' + formatMoney(data);
+							}
+						},
+						{
+							data: 'rate',
+							render: function (data) {
+								return formatMoney(data);
+							}
+						},
+						{
+							data: 'bcvPaid',
+							render: function (data) {
+								return 'Bs. ' + formatMoney(data);
+							}
+						},
+						{
+							data: null,
+							render: function (row) {
+								if (row.accounTypeId === 3) {
+									return (row.receiverBankName || '') + ' — Tel: ' + (row.receiverBankCellPhone || '') + ' / C.I. ' + (row.receiverBankIdNumber || '');
+								}
+								return (row.receiverBankName || '') + ' — Cuenta: ' + (row.receiverBankAccountNumber || '');
+							}
+						},
+						{
+							data: null,
+							render: function (row) {
+								if (row.accounTypeId === 3) {
+									return (row.payerBankName || '') + ' — Tel: ' + (row.payerCellPhoneNumber || '') + ' / C.I. ' + (row.payerIdNumber || '');
+								}
+								return (row.payerBankName || '') + ' — Cuenta: ' + (row.payerAccountNumber || '');
+							}
+						},
+						{
+							data: null,
+							render: function (row) {
+								return buildStatusSelect(row);
+							}
+						}
+					],
+					stateSave: true,
+					language: {
+						sProcessing: "Procesando...",
+						sLengthMenu: "Mostrar _MENU_ registros",
+						sZeroRecords: "No se encontraron resultados",
+						sEmptyTable: "Ningún dato disponible en esta tabla",
+						sInfo: "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+						sInfoEmpty: "Mostrando registros del 0 al 0 de un total de 0 registros",
+						sInfoFiltered: "(filtrado de un total de _MAX_ registros)",
+						sSearch: "Buscar:",
+						oPaginate: {
+							sFirst: "Primero",
+							sLast: "Último",
+							sNext: "Siguiente",
+							sPrevious: "Anterior"
+						}
+					}
+				});
+
+				$('#statusFilter').on('change', function () {
+					resetPendingChanges();
+					table.ajax.reload();
+				});
+
+				$('#inventory tbody').on('change', '.row-status-select', function () {
+					var select = $(this);
+					var procedureByDriverId = parseInt(select.data('procedure-by-driver-id'), 10);
+					var newStatusId = parseInt(select.val(), 10);
+					var currentStatusId = parseInt(select.data('current-status-id'), 10);
+
+					if (newStatusId === currentStatusId) {
+						delete pendingStatusChanges[procedureByDriverId];
+					} else {
+						pendingStatusChanges[procedureByDriverId] = newStatusId;
+					}
+
+					updatePendingChangesUi();
+				});
+
+				$('#btnUpdateStatus').on('click', function () {
+					var changes = Object.keys(pendingStatusChanges).map(function (id) {
+						return { procedureByDriverId: parseInt(id, 10), procedureStatusId: pendingStatusChanges[id] };
+					});
+
+					if (changes.length === 0) return;
+
+					var token = $('input[name="__RequestVerificationToken"]').val();
+					$('#btnUpdateStatus').prop('disabled', true);
+
+					$.ajax({
+						url: updateStatusApiUrl,
+						type: 'POST',
+						contentType: 'application/json',
+						data: JSON.stringify(changes),
+						headers: { 'RequestVerificationToken': token },
+						success: function (response) {
+							if (response && response.success) {
+								resetPendingChanges();
+								table.ajax.reload(null, false);
+							} else {
+								alert((response && response.message) || 'No se pudo actualizar el estatus.');
+								$('#btnUpdateStatus').prop('disabled', false);
+							}
+						},
+						error: function () {
+							alert('Ocurrió un error al actualizar el estatus. Intente nuevamente.');
+							$('#btnUpdateStatus').prop('disabled', false);
+						}
+					});
+				});
+			}
+
+			function updatePendingChangesUi() {
+				var count = Object.keys(pendingStatusChanges).length;
+				$('#btnUpdateStatus').prop('disabled', count === 0);
+				$('#updateStatusHint').text(count > 0 ? (count + ' cambio' + (count !== 1 ? 's' : '') + ' pendiente' + (count !== 1 ? 's' : '') + ' por guardar.') : '');
+			}
+
+			function resetPendingChanges() {
+				pendingStatusChanges = {};
+				updatePendingChangesUi();
+			}
+
+			fetch(statusApiUrl, { cache: 'no-store' })
+				.then(function (r) { return r.json(); })
+				.then(function (data) {
+					allStatuses = data || [];
+
+					var select = $('#statusFilter');
+					select.empty();
+
+					allStatuses.forEach(function (s) {
+						select.append($('<option>', {
+							value: s.procedureStatusId,
+							text: s.procedureStatusName,
+							selected: s.procedureStatusId === defaultStatusId
+						}));
+					});
+
+					initTable();
+				})
+				.catch(function () {
+					$('#statusFilter').html('<option value="' + defaultStatusId + '">Pendiente</option>');
+					initTable();
+				});
+		});
+	</script>
+</body>
+</html>

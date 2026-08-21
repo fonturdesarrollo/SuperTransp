@@ -1,0 +1,1331 @@
+﻿@model ProcedureViewModel
+@{
+	Layout = "";
+}
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Agregar Organizaciones</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+	<link rel="stylesheet" href="~/assets/css/main.css" />
+	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
+	<link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
+	<style>
+		.logo-container {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+
+			.logo-container img {
+				display: block;
+			}
+
+		.modal {
+			position: fixed;
+			z-index: 9999;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 100%;
+			overflow: auto;
+			background-color: rgba(0,0,0,0.4);
+		}
+
+		.modal-content {
+			background-color: #fefefe;
+			margin: 10% auto;
+			padding: 20px;
+			border: 1px solid #888;
+			width: 400px;
+			box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+			border-radius: 6px;
+		}
+
+		.close {
+			color: #aaa;
+			float: right;
+			font-size: 28px;
+			font-weight: bold;
+			cursor: pointer;
+		}
+
+		/* ── Wizard: Solicitar trámite ─────────────────────────── */
+		.wizard-overlay {
+			display: none;
+			position: fixed;
+			inset: 0;
+			background: rgba(0,0,0,0.55);
+			z-index: 2000;
+			justify-content: center;
+			align-items: center;
+			backdrop-filter: blur(3px);
+		}
+
+		.wizard-overlay.open {
+			display: flex;
+		}
+
+		.wizard-modal {
+			background: white;
+			border-radius: 16px;
+			box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+			width: min(720px, 94vw);
+			max-height: 88vh;
+			display: flex;
+			flex-direction: column;
+			overflow: hidden;
+		}
+
+		.wizard-modal.wizard-wide {
+			width: min(960px, 96vw);
+		}
+
+		.wizard-header {
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			color: white;
+			padding: 18px 24px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			flex-shrink: 0;
+		}
+
+		.wizard-header h2 {
+			font-size: 1.2rem;
+			font-weight: 700;
+			margin: 0;
+		}
+
+		.wizard-close {
+			background: rgba(255,255,255,0.2);
+			border: none;
+			color: white;
+			font-size: 1.1rem;
+			width: 32px;
+			height: 32px;
+			border-radius: 50%;
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			transition: background 0.2s;
+		}
+
+		.wizard-close:hover {
+			background: rgba(255,255,255,0.38);
+		}
+
+		.wizard-bcv-rate {
+			text-align: center;
+			padding: 8px 24px 0;
+			font-size: 0.8rem;
+			color: #667eea;
+			font-weight: 600;
+			flex-shrink: 0;
+		}
+
+		.wizard-bcv-rate strong {
+			color: #4c3d99;
+		}
+
+		.wizard-steps-indicator {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 8px;
+			padding: 18px 24px 6px;
+			flex-shrink: 0;
+		}
+
+		.wizard-step-dot {
+			width: 28px;
+			height: 28px;
+			border-radius: 50%;
+			background: #e6e8f5;
+			color: #8a8fa8;
+			font-size: 0.85rem;
+			font-weight: 700;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			transition: background 0.2s, color 0.2s;
+		}
+
+		.wizard-step-dot.active,
+		.wizard-step-dot.done {
+			background: linear-gradient(135deg, #667eea, #764ba2);
+			color: white;
+		}
+
+		.wizard-step-line {
+			width: 40px;
+			height: 2px;
+			background: #e6e8f5;
+		}
+
+		.wizard-body {
+			padding: 20px 24px;
+			overflow-y: auto;
+			flex: 1;
+		}
+
+		.wizard-step {
+			display: flex;
+			flex-direction: column;
+			gap: 14px;
+		}
+
+		.wizard-step label {
+			font-size: 0.95rem;
+			font-weight: 600;
+			color: #2c3e50;
+		}
+
+		.wizard-step input[type="text"] {
+			padding: 10px 14px;
+			border: 1.5px solid #d0d4f0;
+			border-radius: 8px;
+			font-size: 1rem;
+			font-family: inherit;
+			color: #2c3e50;
+			outline: none;
+			transition: border-color 0.18s;
+		}
+
+		.wizard-step input[type="text"]:focus {
+			border-color: #667eea;
+		}
+
+		.wizard-error {
+			color: #e74c3c;
+			font-size: 0.85rem;
+			margin: 0;
+			min-height: 1.1em;
+		}
+
+		.wizard-driver-data {
+			display: grid;
+			grid-template-columns: repeat(2, 1fr);
+			gap: 8px 24px;
+			background: #f8f9ff;
+			border: 1.5px solid #e0e4f7;
+			border-radius: 10px;
+			padding: 14px 18px;
+			font-size: 0.9rem;
+			color: #2c3e50;
+		}
+
+		.wizard-driver-data strong {
+			color: #667eea;
+		}
+
+		.wizard-table {
+			width: 100%;
+			border-collapse: collapse;
+			font-size: 0.85rem;
+		}
+
+		.wizard-table th {
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			color: white;
+			text-align: left;
+			padding: 8px 12px;
+			font-weight: 600;
+			font-size: 0.78rem;
+			text-transform: uppercase;
+			letter-spacing: 0.03em;
+		}
+
+		.wizard-table td {
+			padding: 8px 12px;
+			border-bottom: 1px solid #f0f0f8;
+			color: #2c3e50;
+		}
+
+		.wizard-table tbody tr:hover {
+			background: #f8f9ff;
+		}
+
+		.wizard-table-full {
+			width: 100%;
+		}
+
+		.wizard-table td.wizard-select-col,
+		.wizard-table th.wizard-select-col {
+			text-align: center;
+			width: 60px;
+		}
+
+		/* La plantilla base oculta los radio nativos (opacity:0) porque espera un
+		   <label> a continuación con un ícono dibujado por CSS; como aquí no lo usamos,
+		   se restaura la apariencia nativa solo dentro de esta columna. */
+		.wizard-select-col input[type="radio"] {
+			-webkit-appearance: radio;
+			-moz-appearance: radio;
+			appearance: radio;
+			display: inline-block;
+			position: static;
+			float: none;
+			opacity: 1;
+			width: 18px;
+			height: 18px;
+			margin: 0;
+			z-index: auto;
+			cursor: pointer;
+		}
+
+		.wizard-empty {
+			padding: 20px;
+			text-align: center;
+			color: #bbb;
+			font-size: 0.9rem;
+		}
+
+		.wizard-footer {
+			display: flex;
+			justify-content: flex-end;
+			gap: 12px;
+			padding: 16px 24px;
+			border-top: 1px solid #f0f0f5;
+			flex-shrink: 0;
+		}
+
+		.wizard-btn {
+			padding: 10px 22px;
+			border-radius: 8px;
+			font-weight: 600;
+			font-size: 0.9rem;
+			cursor: pointer;
+			border: none;
+			transition: all 0.2s;
+		}
+
+		.wizard-btn-cancel {
+			background: white;
+			color: #764ba2;
+			border: 1.5px solid #764ba2;
+		}
+
+		.wizard-btn-cancel:hover {
+			background: #f8f9ff;
+		}
+
+		.wizard-btn-prev {
+			background: white;
+			color: #6b7280;
+			border: 1.5px solid #d0d4e0;
+		}
+
+		.wizard-btn-prev:hover {
+			background: #f4f5fa;
+		}
+
+		.wizard-btn-prev[hidden] {
+			display: none;
+		}
+
+		.wizard-btn-next {
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			color: white;
+		}
+
+		.wizard-btn-next:hover:not(:disabled) {
+			transform: translateY(-1px);
+			box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+		}
+
+		.wizard-btn-next:disabled {
+			opacity: 0.5;
+			cursor: not-allowed;
+		}
+
+		/* ── Paso 4: Datos de pago ─────────────────────────────── */
+		.wizard-frame {
+			border: 1.5px solid #e0e4f7;
+			border-radius: 10px;
+			overflow: hidden;
+		}
+
+		.wizard-frame-title {
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			color: white;
+			padding: 10px 16px;
+			font-weight: 700;
+			font-size: 0.9rem;
+		}
+
+		.wizard-frame-body {
+			padding: 16px;
+			display: flex;
+			flex-direction: column;
+			gap: 14px;
+		}
+
+		.wizard-form-group {
+			display: flex;
+			flex-direction: column;
+			gap: 6px;
+		}
+
+		.wizard-form-row {
+			display: flex;
+			gap: 14px;
+			flex-wrap: wrap;
+		}
+
+		.wizard-form-row .wizard-form-group {
+			flex: 1;
+			min-width: 180px;
+		}
+
+		.wizard-form-group label {
+			font-size: 0.85rem;
+			font-weight: 600;
+			color: #2c3e50;
+		}
+
+		.wizard-tariff-hint {
+			background: #eef0fa;
+			border: 1px solid #d8ddf5;
+			border-radius: 6px;
+			padding: 6px 10px;
+			font-size: 0.8rem;
+			color: #4c3d99;
+			font-weight: 600;
+			margin: 0;
+		}
+
+		.wizard-form-group select,
+		.wizard-form-group input[type="text"] {
+			padding: 9px 12px;
+			border: 1.5px solid #d0d4f0;
+			border-radius: 8px;
+			font-size: 0.9rem;
+			font-family: inherit;
+			color: #2c3e50;
+			outline: none;
+			background: white;
+			transition: border-color 0.18s;
+		}
+
+		.wizard-form-group select:focus,
+		.wizard-form-group input[type="text"]:focus {
+			border-color: #667eea;
+		}
+
+		.wizard-summary-block {
+			background: #f8f9ff;
+			border: 1.5px solid #e0e4f7;
+			border-radius: 10px;
+			padding: 14px 18px;
+			font-size: 0.88rem;
+			color: #2c3e50;
+		}
+
+		.wizard-summary-block h4 {
+			margin: 0 0 8px;
+			color: #667eea;
+			font-size: 0.85rem;
+			text-transform: uppercase;
+			letter-spacing: 0.03em;
+		}
+
+		.wizard-summary-block p {
+			margin: 3px 0;
+		}
+
+		.wizard-summary-block + .wizard-summary-block {
+			margin-top: 14px;
+		}
+	</style>
+</head>
+<body class="is-preload">
+		@Html.AntiForgeryToken()
+		<!-- Wrapper -->
+		<div id="wrapper">
+
+			<!-- Header -->
+			<header id="header">
+				@* ******* Maintenance Message ************ *@
+				@if (ViewBag.MaintenanceMessage != null)
+				{
+					<div id="modalMaintenanceMessage" class="modal" style="display:none;">
+						<div class="modal-content">
+							<span class="close" onclick="$('#modalMaintenanceMessage').fadeOut();">&times;</span>
+							<h3>Aviso del sistema</h3>
+							<p>@ViewBag.MaintenanceMessage</p>
+							<div style="text-align:right;">
+								<button onclick="$('#modalMaintenanceMessage').fadeOut();" class="btn-align-right">Entendido</button>
+							</div>
+						</div>
+					</div>
+
+					<script>
+						document.addEventListener("DOMContentLoaded", function () {
+							$("#modalMaintenanceMessage").fadeIn();
+						});
+					</script>
+				}
+				@* ******* Maintenance Message ************ *@
+
+				<div class="inner">
+					<!-- Logo -->
+					<div class="logo-container">
+						<!-- Logo izquierdo -->
+						<img src="~/images/Logo.png" width="100px" height="100px" alt="Logo principal" />
+
+						<!-- Logo derecho -->
+						<img src="~/images/super-transp-logo.png" width="150px" height="150px" alt="Logo SuperTransp" />
+					</div>
+					<div class="logo">
+						<span>@ViewBag.EmployeeName</span>
+						<br />
+						<span>Procesos Administrativos y gestión de los transpotistas</span>
+					</div>			
+				</div>
+
+				<!-- Nav -->
+				<nav>
+					<ul>
+						<li><a href="#menu">Menu</a></li>
+					</ul>
+				</nav>
+			</header>
+
+			<!-- Menu -->
+			<nav id="menu">
+				<h2>Menu</h2>
+				<ul>
+					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
+					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
+				</ul>
+			</nav>
+
+			<div id="main">
+				<div class="inner">
+					<!-- Form -->
+					<section>
+						<h2>Opciones</h2>
+						<div class="row">
+							<div class="col-6 col-12-medium">
+								<ul>
+									<li><a href="javascript:void(0);" id="btnSolicitarTramite">Solicitar trámite</a></li>
+									<li>@Html.ActionLink("Gestiones realizadas", "RealizedProcedures", "Procedures")</li>
+									<li>@Html.ActionLink("Administrar gestiones realizadas", "ManagedProcedures", "Procedures")</li>
+								</ul>
+							</div>
+						</div>
+					</section>
+				</div>
+			</div>
+
+			<!-- Footer -->
+			<footer id="footer">
+				<label style="text-align:center">
+					Sistema para la Supervisión de Organizaciones de Transporte
+					<br>Diseñado y Desarrollado por la División de Desarrollo de Software - Gerencia de Tecnología de la Información &copy; @DateTime.Now.Year
+				</label>
+			</footer>
+		</div>
+
+		<!-- Wizard: Solicitar trámite -->
+		<div class="wizard-overlay" id="wizardOverlay">
+			<div class="wizard-modal" id="wizardModal">
+				<div class="wizard-header">
+					<h2 id="wizardTitle">Solicitar Trámite</h2>
+					<button type="button" class="wizard-close" id="wizardClose">&#x2715;</button>
+				</div>
+
+				<div class="wizard-bcv-rate" id="wizardBcvRate" style="display:none;">
+					Tasa BCV: <strong id="wizardBcvRateValue">—</strong> Bs./USD
+				</div>
+
+				<div class="wizard-steps-indicator">
+					<span class="wizard-step-dot" data-step="1">1</span>
+					<span class="wizard-step-line"></span>
+					<span class="wizard-step-dot" data-step="2">2</span>
+					<span class="wizard-step-line"></span>
+					<span class="wizard-step-dot" data-step="3">3</span>
+					<span class="wizard-step-line"></span>
+					<span class="wizard-step-dot" data-step="4">4</span>
+					<span class="wizard-step-line"></span>
+					<span class="wizard-step-dot" data-step="5">5</span>
+				</div>
+
+				<div class="wizard-body">
+					<!-- Paso 1: Cédula -->
+					<div class="wizard-step" id="wizardStep1">
+						<label for="wizardCedula">Indique el número de cédula del socio</label>
+						<input type="text" id="wizardCedula" inputmode="numeric" autocomplete="off" maxlength="9" placeholder="Ej: 12345678" />
+						<p class="wizard-error" id="wizardStep1Error"></p>
+					</div>
+
+					<!-- Paso 2: Datos del transportista -->
+					<div class="wizard-step" id="wizardStep2" style="display:none;">
+						<div class="wizard-driver-data">
+							<div><strong>Cédula:</strong> <span id="driverCedula"></span></div>
+							<div><strong>Nombre:</strong> <span id="driverNombre"></span></div>
+							<div><strong>Sexo:</strong> <span id="driverSexo"></span></div>
+							<div><strong>Fecha de nacimiento:</strong> <span id="driverFechaNacimiento"></span></div>
+							<div><strong>Teléfono:</strong> <span id="driverTelefono"></span></div>
+						</div>
+						<table class="wizard-table">
+							<thead>
+								<tr>
+									<th>Organización</th>
+									<th>Modalidad</th>
+									<th>Placa</th>
+									<th>Marca</th>
+									<th>Modelo</th>
+									<th>Año</th>
+								</tr>
+							</thead>
+							<tbody id="driverOrgTableBody"></tbody>
+						</table>
+					</div>
+
+					<!-- Paso 3: Tipos de trámite -->
+					<div class="wizard-step" id="wizardStep3" style="display:none;">
+						<table class="wizard-table wizard-table-full">
+							<thead>
+								<tr>
+									<th>Categoría</th>
+									<th>Concepto</th>
+									<th>Frecuencia</th>
+									<th>TARIFA $</th>
+									<th>Tarifa BCV</th>
+									<th class="wizard-select-col">Seleccionar</th>
+								</tr>
+							</thead>
+							<tbody id="procedureTableBody"></tbody>
+						</table>
+					</div>
+
+					<!-- Paso 4: Datos de pago -->
+					<div class="wizard-step" id="wizardStep4" style="display:none;">
+						<div class="wizard-frame">
+							<div class="wizard-frame-title">Banco Receptor</div>
+							<div class="wizard-frame-body">
+								<div class="wizard-form-group">
+									<label for="paymentTypeSelect">Tipo de pago</label>
+									<select id="paymentTypeSelect" disabled>
+										<option value="">Cargando&hellip;</option>
+									</select>
+								</div>
+								<table class="wizard-table wizard-table-full" id="receiverBankTable" style="display:none;">
+									<thead id="receiverBankTableHead"></thead>
+									<tbody id="receiverBankTableBody"></tbody>
+								</table>
+							</div>
+						</div>
+
+						<div class="wizard-frame">
+							<div class="wizard-frame-title">Banco Pagador</div>
+							<div class="wizard-frame-body">
+								<div class="wizard-form-group">
+									<label for="payerBankSelect">Banco</label>
+									<select id="payerBankSelect" disabled>
+										<option value="">Seleccione primero el tipo de pago...</option>
+									</select>
+								</div>
+								<div class="wizard-form-row" id="payerAccountFields" style="display:none;">
+									<div class="wizard-form-group">
+										<label for="payerAccountNumber">Número de cuenta</label>
+										<input type="text" id="payerAccountNumber" inputmode="numeric" autocomplete="off" maxlength="20" />
+									</div>
+									<div class="wizard-form-group">
+										<label for="payerAmountPaid1">Monto pagado</label>
+										<p class="wizard-tariff-hint" id="tariffHintAccount">Monto según tarifa: Bs. —</p>
+										<input type="text" id="payerAmountPaid1" inputmode="decimal" autocomplete="off" maxlength="14" />
+									</div>
+								</div>
+								<div class="wizard-form-row" id="payerMobileFields" style="display:none;">
+									<div class="wizard-form-group">
+										<label for="payerCellPhoneNumber">Teléfono</label>
+										<input type="text" id="payerCellPhoneNumber" inputmode="numeric" autocomplete="off" maxlength="11" />
+									</div>
+									<div class="wizard-form-group">
+										<label for="payerIdNumber">Número de cédula</label>
+										<input type="text" id="payerIdNumber" inputmode="numeric" autocomplete="off" maxlength="9" />
+									</div>
+									<div class="wizard-form-group">
+										<label for="payerAmountPaid2">Monto pagado</label>
+										<p class="wizard-tariff-hint" id="tariffHintMobile">Monto según tarifa: Bs. —</p>
+										<input type="text" id="payerAmountPaid2" inputmode="decimal" autocomplete="off" maxlength="14" />
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Paso 5: Resumen -->
+					<div class="wizard-step" id="wizardStep5" style="display:none;">
+						<div class="wizard-summary-block">
+							<h4>Socio</h4>
+							<p id="summarySocio"></p>
+						</div>
+						<div class="wizard-summary-block">
+							<h4>Trámite</h4>
+							<p id="summaryTramite"></p>
+						</div>
+						<div class="wizard-summary-block">
+							<h4>Banco Receptor</h4>
+							<p id="summaryReceptor"></p>
+						</div>
+						<div class="wizard-summary-block">
+							<h4>Banco Pagador</h4>
+							<p id="summaryPagador"></p>
+						</div>
+					</div>
+				</div>
+
+				<div class="wizard-footer">
+					<button type="button" class="wizard-btn wizard-btn-cancel" id="wizardCancel">Cancelar</button>
+					<button type="button" class="wizard-btn wizard-btn-prev" id="wizardPrev" hidden>Anterior</button>
+					<button type="button" class="wizard-btn wizard-btn-next" id="wizardNext" disabled>Siguiente</button>
+				</div>
+			</div>
+		</div>
+
+	<!-- Scripts -->
+	<script src="~/assets/js/jquery.min.js"></script>
+	<script src="~/assets/js/browser.min.js"></script>
+	<script src="~/assets/js/breakpoints.min.js"></script>
+	<script src="~/assets/js/util.js"></script>
+	<script src="~/assets/js/main.js"></script>
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+
+	<script>
+		(function () {
+			var driverApiUrl = '@Url.Action("GetDriverByIdentityDocument", "Procedures")';
+			var procedureApiUrl = '@Url.Action("GetProcedureTypes", "Procedures")';
+			var accounTypesApiUrl = '@Url.Action("GetAccounTypes", "Procedures")';
+			var exchangeRateApiUrl = '@Url.Action("GetExchangeRate", "Procedures")';
+			var bankAccountsApiUrl = '@Url.Action("GetProcedureBankAccounts", "Procedures")';
+			var banksApiUrl = '@Url.Action("GetBanks", "Procedures")';
+			var submitApiUrl = '@Url.Action("SubmitProcedureRequest", "Procedures")';
+
+			var overlay = document.getElementById('wizardOverlay');
+			var modal = document.getElementById('wizardModal');
+			var cedulaInput = document.getElementById('wizardCedula');
+			var step1Error = document.getElementById('wizardStep1Error');
+			var nextBtn = document.getElementById('wizardNext');
+			var prevBtn = document.getElementById('wizardPrev');
+			var cancelBtn = document.getElementById('wizardCancel');
+			var closeBtn = document.getElementById('wizardClose');
+			var paymentTypeSelect = document.getElementById('paymentTypeSelect');
+			var payerBankSelect = document.getElementById('payerBankSelect');
+
+			var currentStep = 1;
+			var driverData = null;
+			var procedureTypes = null;
+			var selectedProcedureId = null;
+			var bankAccountsCache = {};
+			var selectedPaymentTypeId = null;
+			var selectedBankAccount = null;
+			var banksListCache = null;
+			var selectedPayerBankId = null;
+			var currentBcvRate = null;
+
+			function resetWizard() {
+				currentStep = 1;
+				driverData = null;
+				selectedProcedureId = null;
+				procedureTypes = null;
+				bankAccountsCache = {};
+				banksListCache = null;
+				cedulaInput.value = '';
+				step1Error.textContent = '';
+				document.getElementById('driverOrgTableBody').innerHTML = '';
+				document.getElementById('procedureTableBody').innerHTML = '';
+
+				selectedPaymentTypeId = null;
+				selectedBankAccount = null;
+				paymentTypeSelect.value = '';
+				document.getElementById('receiverBankTable').style.display = 'none';
+				document.getElementById('receiverBankTableHead').innerHTML = '';
+				document.getElementById('receiverBankTableBody').innerHTML = '';
+				resetPayerFrame();
+				updateTariffHints();
+
+				nextBtn.textContent = 'Siguiente';
+				nextBtn.disabled = false;
+				prevBtn.disabled = false;
+
+				showStep(1);
+			}
+
+			function resetPayerFrame() {
+				selectedPayerBankId = null;
+				payerBankSelect.disabled = true;
+				payerBankSelect.value = '';
+				payerBankSelect.innerHTML = '<option value="">Seleccione primero el tipo de pago...</option>';
+				document.getElementById('payerAccountFields').style.display = 'none';
+				document.getElementById('payerMobileFields').style.display = 'none';
+				document.getElementById('payerAccountNumber').value = '';
+				document.getElementById('payerAmountPaid1').value = '';
+				document.getElementById('payerCellPhoneNumber').value = '';
+				document.getElementById('payerIdNumber').value = '';
+				document.getElementById('payerAmountPaid2').value = '';
+			}
+
+			function updateStepIndicator() {
+				document.querySelectorAll('.wizard-step-dot').forEach(function (dot) {
+					var step = parseInt(dot.getAttribute('data-step'), 10);
+					dot.classList.remove('active', 'done');
+					if (step === currentStep) {
+						dot.classList.add('active');
+					} else if (step < currentStep) {
+						dot.classList.add('done');
+					}
+				});
+			}
+
+			function showStep(step) {
+				currentStep = step;
+				document.getElementById('wizardStep1').style.display = step === 1 ? 'flex' : 'none';
+				document.getElementById('wizardStep2').style.display = step === 2 ? 'flex' : 'none';
+				document.getElementById('wizardStep3').style.display = step === 3 ? 'flex' : 'none';
+				document.getElementById('wizardStep4').style.display = step === 4 ? 'flex' : 'none';
+				document.getElementById('wizardStep5').style.display = step === 5 ? 'flex' : 'none';
+				modal.classList.toggle('wizard-wide', step === 3 || step === 4);
+				prevBtn.hidden = step === 1;
+				nextBtn.textContent = step === 5 ? 'Actualizar' : 'Siguiente';
+				updateStepIndicator();
+				updateNextButtonState();
+			}
+
+			function updateNextButtonState() {
+				if (currentStep === 1) {
+					nextBtn.disabled = cedulaInput.value.trim().length === 0;
+				} else if (currentStep === 2) {
+					nextBtn.disabled = false;
+				} else if (currentStep === 3) {
+					nextBtn.disabled = selectedProcedureId === null;
+				} else if (currentStep === 4) {
+					nextBtn.disabled = !isPaymentStepValid();
+				} else if (currentStep === 5) {
+					nextBtn.disabled = false;
+				}
+			}
+
+			function isPaymentStepValid() {
+				if (!selectedPaymentTypeId || !selectedBankAccount || !selectedPayerBankId) return false;
+
+				if (selectedPaymentTypeId === 3) {
+					var phone = document.getElementById('payerCellPhoneNumber').value.trim();
+					var idNum = document.getElementById('payerIdNumber').value.trim();
+					var amount = document.getElementById('payerAmountPaid2').value.trim();
+					return !!(phone && idNum && amount && parseFloat(amount) > 0);
+				}
+
+				var accountNumber = document.getElementById('payerAccountNumber').value.trim();
+				var amount1 = document.getElementById('payerAmountPaid1').value.trim();
+				return !!(accountNumber && amount1 && parseFloat(amount1) > 0);
+			}
+
+			cedulaInput.addEventListener('input', function () {
+				this.value = this.value.replace(/\D/g, '');
+				step1Error.textContent = '';
+				updateNextButtonState();
+			});
+
+			function formatFecha(value) {
+				if (!value) return 'No registrada';
+				var d = new Date(value);
+				if (isNaN(d.getTime())) return 'No registrada';
+				var dd = String(d.getDate()).padStart(2, '0');
+				var mm = String(d.getMonth() + 1).padStart(2, '0');
+				var yy = d.getFullYear();
+				return dd + '/' + mm + '/' + yy;
+			}
+
+			function renderDriverStep(data) {
+				document.getElementById('driverCedula').textContent = data.driverIdentityDocument || '';
+				document.getElementById('driverNombre').textContent = data.driverFullName || 'No registrado';
+				document.getElementById('driverSexo').textContent = data.sexName || 'No registrado';
+				document.getElementById('driverFechaNacimiento').textContent = formatFecha(data.birthDate);
+				document.getElementById('driverTelefono').textContent = data.driverPhone || 'No registrado';
+
+				var tbody = document.getElementById('driverOrgTableBody');
+				tbody.innerHTML = '';
+
+				if (!data.organizations || data.organizations.length === 0) {
+					tbody.innerHTML = '<tr><td colspan="6" class="wizard-empty">Sin organizaciones registradas</td></tr>';
+					return;
+				}
+
+				data.organizations.forEach(function (org) {
+					var tr = document.createElement('tr');
+
+					var hasVehicle = org.driverWithVehicle && org.plate;
+
+					tr.innerHTML =
+						'<td>' + (org.ptgCompleteName || 'Sin nombre') + '</td>' +
+						'<td>' + (org.modeName || '') + '</td>' +
+						'<td>' + (hasVehicle ? org.plate : 'Sin vehículo') + '</td>' +
+						'<td>' + (hasVehicle ? (org.make || '') : '-') + '</td>' +
+						'<td>' + (hasVehicle ? (org.model || '') : '-') + '</td>' +
+						'<td>' + (hasVehicle && org.year > 0 ? org.year : '-') + '</td>';
+
+					tbody.appendChild(tr);
+				});
+			}
+
+			function loadProcedureTypes() {
+				var tbody = document.getElementById('procedureTableBody');
+				tbody.innerHTML = '<tr><td colspan="6" class="wizard-empty">Cargando&hellip;</td></tr>';
+
+				if (procedureTypes) {
+					renderProcedureStep(procedureTypes);
+					return;
+				}
+
+				fetch(procedureApiUrl, { cache: 'no-store' })
+					.then(function (r) { return r.json(); })
+					.then(function (data) {
+						procedureTypes = data || [];
+						renderProcedureStep(procedureTypes);
+					})
+					.catch(function () {
+						tbody.innerHTML = '<tr><td colspan="6" class="wizard-empty" style="color:#e74c3c;">Error al cargar los trámites</td></tr>';
+					});
+			}
+
+			function formatBs(amount) {
+				return 'Bs. ' + amount.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+			}
+
+			function renderProcedureStep(data) {
+				var tbody = document.getElementById('procedureTableBody');
+				tbody.innerHTML = '';
+
+				if (!data || data.length === 0) {
+					tbody.innerHTML = '<tr><td colspan="6" class="wizard-empty">No hay trámites disponibles</td></tr>';
+					return;
+				}
+
+				data.forEach(function (p) {
+					var tr = document.createElement('tr');
+
+					var tariffText = (typeof p.tariff === 'number')
+						? p.tariff.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+						: p.tariff;
+
+					var bcvText = (typeof p.tariff === 'number' && currentBcvRate)
+						? formatBs(p.tariff * currentBcvRate)
+						: '—';
+
+					tr.innerHTML =
+						'<td>' + (p.procedureCategoryName || '') + '</td>' +
+						'<td>' + (p.procedureConcept || '') + '</td>' +
+						'<td>' + (p.procedureFrequencyName || '') + '</td>' +
+						'<td>$ ' + tariffText + '</td>' +
+						'<td>' + bcvText + '</td>' +
+						'<td class="wizard-select-col"><input type="radio" name="wizardProcedureSelect" value="' + p.procedureId + '" /></td>';
+
+					tbody.appendChild(tr);
+				});
+
+				tbody.querySelectorAll('input[name="wizardProcedureSelect"]').forEach(function (radio) {
+					radio.addEventListener('change', function () {
+						selectedProcedureId = this.value;
+						updateNextButtonState();
+					});
+				});
+			}
+
+			// ── Paso 4: Tipos de pago (Banco Receptor) ────────────
+			function loadAccounTypes() {
+				fetch(accounTypesApiUrl, { cache: 'no-store' })
+					.then(function (r) { return r.json(); })
+					.then(function (data) {
+						paymentTypeSelect.innerHTML = '<option value="">Seleccione...</option>';
+						(data || []).forEach(function (t) {
+							var opt = document.createElement('option');
+							opt.value = t.accounTypeId;
+							opt.textContent = t.accounTypeName;
+							paymentTypeSelect.appendChild(opt);
+						});
+						paymentTypeSelect.disabled = false;
+					})
+					.catch(function () {
+						paymentTypeSelect.innerHTML = '<option value="">Error al cargar</option>';
+					});
+			}
+
+			loadAccounTypes();
+
+			// ── Tasa BCV (visible en todos los pasos del wizard) ──
+			function loadBcvRate() {
+				var el = document.getElementById('wizardBcvRate');
+				var valueEl = document.getElementById('wizardBcvRateValue');
+
+				fetch(exchangeRateApiUrl, { cache: 'no-store' })
+					.then(function (r) { return r.json(); })
+					.then(function (data) {
+						if (!data || !data.rate) {
+							currentBcvRate = null;
+							el.style.display = 'none';
+							return;
+						}
+
+						currentBcvRate = Number(data.rate);
+						valueEl.textContent = currentBcvRate.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+						el.style.display = 'block';
+
+						if (procedureTypes) renderProcedureStep(procedureTypes);
+						updateTariffHints();
+					})
+					.catch(function () {
+						currentBcvRate = null;
+						el.style.display = 'none';
+					});
+			}
+
+			loadBcvRate();
+
+			function updateTariffHints() {
+				var proc = (procedureTypes || []).find(function (p) { return String(p.procedureId) === String(selectedProcedureId); });
+				var text = 'Monto según tarifa: Bs. —';
+
+				if (proc && typeof proc.tariff === 'number' && currentBcvRate) {
+					text = 'Monto según tarifa: ' + formatBs(proc.tariff * currentBcvRate);
+				}
+
+				document.getElementById('tariffHintAccount').textContent = text;
+				document.getElementById('tariffHintMobile').textContent = text;
+			}
+
+			// ── Paso 4: Banco Receptor ────────────────────────────
+			function loadReceiverBankAccounts(accounTypeId) {
+				var table = document.getElementById('receiverBankTable');
+				var thead = document.getElementById('receiverBankTableHead');
+				var tbody = document.getElementById('receiverBankTableBody');
+
+				table.style.display = 'table';
+				thead.innerHTML = '';
+				tbody.innerHTML = '<tr><td class="wizard-empty">Cargando&hellip;</td></tr>';
+
+				if (bankAccountsCache[accounTypeId]) {
+					renderReceiverBankTable(bankAccountsCache[accounTypeId], accounTypeId);
+					return;
+				}
+
+				fetch(bankAccountsApiUrl + '?accounTypeId=' + accounTypeId, { cache: 'no-store' })
+					.then(function (r) { return r.json(); })
+					.then(function (data) {
+						bankAccountsCache[accounTypeId] = data || [];
+						renderReceiverBankTable(bankAccountsCache[accounTypeId], accounTypeId);
+					})
+					.catch(function () {
+						thead.innerHTML = '';
+						tbody.innerHTML = '<tr><td class="wizard-empty" style="color:#e74c3c;">Error al cargar los bancos</td></tr>';
+					});
+			}
+
+			function renderReceiverBankTable(data, accounTypeId) {
+				var thead = document.getElementById('receiverBankTableHead');
+				var tbody = document.getElementById('receiverBankTableBody');
+				var isMobile = accounTypeId === 3;
+
+				thead.innerHTML = isMobile
+					? '<tr><th>Banco</th><th>Código Sudeban</th><th>Teléfono</th><th>Cédula</th><th class="wizard-select-col">Seleccionar</th></tr>'
+					: '<tr><th>Banco</th><th>Código Sudeban</th><th>Tipo de Cuenta</th><th>Número de Cuenta</th><th class="wizard-select-col">Seleccionar</th></tr>';
+
+				tbody.innerHTML = '';
+
+				if (!data || data.length === 0) {
+					tbody.innerHTML = '<tr><td colspan="5" class="wizard-empty">No hay cuentas registradas para este tipo de pago</td></tr>';
+					return;
+				}
+
+				data.forEach(function (b, idx) {
+					var tr = document.createElement('tr');
+
+					tr.innerHTML =
+						'<td>' + (b.bankName || '') + '</td>' +
+						'<td>' + (b.sudebanCode || '') + '</td>' +
+						(isMobile
+							? '<td>' + (b.cellPhoneNumber || '') + '</td><td>' + (b.idNumber || '') + '</td>'
+							: '<td>' + (b.accounTypeName || '') + '</td><td>' + (b.accountNumber || '') + '</td>') +
+						'<td class="wizard-select-col"><input type="radio" name="wizardReceiverBankSelect" value="' + idx + '" /></td>';
+
+					tbody.appendChild(tr);
+				});
+
+				tbody.querySelectorAll('input[name="wizardReceiverBankSelect"]').forEach(function (radio) {
+					radio.addEventListener('change', function () {
+						selectedBankAccount = data[parseInt(this.value, 10)];
+						updateNextButtonState();
+					});
+				});
+			}
+
+			paymentTypeSelect.addEventListener('change', function () {
+				var typeId = this.value;
+				selectedPaymentTypeId = typeId ? parseInt(typeId, 10) : null;
+				selectedBankAccount = null;
+
+				document.getElementById('receiverBankTable').style.display = 'none';
+				document.getElementById('receiverBankTableHead').innerHTML = '';
+				document.getElementById('receiverBankTableBody').innerHTML = '';
+				resetPayerFrame();
+
+				if (selectedPaymentTypeId) {
+					loadReceiverBankAccounts(selectedPaymentTypeId);
+					loadPayerBanks();
+				}
+
+				updateNextButtonState();
+			});
+
+			// ── Paso 4: Banco Pagador ──────────────────────────────
+			function loadPayerBanks() {
+				if (banksListCache) {
+					populatePayerBankSelect(banksListCache);
+					return;
+				}
+
+				payerBankSelect.disabled = true;
+				payerBankSelect.innerHTML = '<option value="">Cargando&hellip;</option>';
+
+				fetch(banksApiUrl, { cache: 'no-store' })
+					.then(function (r) { return r.json(); })
+					.then(function (data) {
+						banksListCache = data || [];
+						populatePayerBankSelect(banksListCache);
+					})
+					.catch(function () {
+						payerBankSelect.innerHTML = '<option value="">Error al cargar bancos</option>';
+					});
+			}
+
+			function populatePayerBankSelect(banks) {
+				payerBankSelect.innerHTML = '<option value="">Seleccione...</option>';
+				banks.forEach(function (b) {
+					var opt = document.createElement('option');
+					opt.value = b.bankId;
+					opt.textContent = b.bankName;
+					payerBankSelect.appendChild(opt);
+				});
+				payerBankSelect.disabled = false;
+			}
+
+			payerBankSelect.addEventListener('change', function () {
+				selectedPayerBankId = this.value || null;
+				var accountFields = document.getElementById('payerAccountFields');
+				var mobileFields = document.getElementById('payerMobileFields');
+
+				if (!selectedPayerBankId) {
+					accountFields.style.display = 'none';
+					mobileFields.style.display = 'none';
+					updateNextButtonState();
+					return;
+				}
+
+				if (selectedPaymentTypeId === 3) {
+					mobileFields.style.display = 'flex';
+					accountFields.style.display = 'none';
+				} else {
+					accountFields.style.display = 'flex';
+					mobileFields.style.display = 'none';
+				}
+
+				updateNextButtonState();
+			});
+
+			function restrictDigitsInput(el) {
+				el.addEventListener('input', function () {
+					this.value = this.value.replace(/\D/g, '');
+					updateNextButtonState();
+				});
+			}
+
+			function restrictDecimalInput(el) {
+				el.addEventListener('input', function () {
+					var v = this.value.replace(/[^\d.]/g, '');
+					var parts = v.split('.');
+					if (parts.length > 2) v = parts[0] + '.' + parts.slice(1).join('');
+					this.value = v;
+					updateNextButtonState();
+				});
+			}
+
+			restrictDigitsInput(document.getElementById('payerAccountNumber'));
+			restrictDigitsInput(document.getElementById('payerCellPhoneNumber'));
+			restrictDigitsInput(document.getElementById('payerIdNumber'));
+			restrictDecimalInput(document.getElementById('payerAmountPaid1'));
+			restrictDecimalInput(document.getElementById('payerAmountPaid2'));
+
+			// ── Paso 5: Resumen ────────────────────────────────────
+			function buildSummary() {
+				document.getElementById('summarySocio').textContent =
+					'C.I. ' + (driverData.driverIdentityDocument || '') + ' — ' + (driverData.driverFullName || '');
+
+				var proc = (procedureTypes || []).find(function (p) { return String(p.procedureId) === String(selectedProcedureId); });
+				if (proc) {
+					var tariffText = (typeof proc.tariff === 'number')
+						? proc.tariff.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+						: proc.tariff;
+					document.getElementById('summaryTramite').textContent =
+						proc.procedureCategoryName + ' — ' + proc.procedureConcept + ' (' + proc.procedureFrequencyName + ') — Tarifa: ' + tariffText;
+				}
+
+				var paymentTypeLabel = paymentTypeSelect.options[paymentTypeSelect.selectedIndex].text;
+
+				var receptorText = (selectedBankAccount.bankName || '');
+				receptorText += selectedPaymentTypeId === 3
+					? (' — Teléfono: ' + (selectedBankAccount.cellPhoneNumber || '') + ' — Cédula: ' + (selectedBankAccount.idNumber || ''))
+					: (' — Cuenta: ' + (selectedBankAccount.accountNumber || ''));
+				receptorText += ' — Tipo de cuenta: ' + paymentTypeLabel;
+				document.getElementById('summaryReceptor').textContent = receptorText;
+
+				var payerBankName = payerBankSelect.options[payerBankSelect.selectedIndex].text;
+				var pagadorText = payerBankName;
+				if (selectedPaymentTypeId === 3) {
+					pagadorText += ' — Teléfono: ' + document.getElementById('payerCellPhoneNumber').value +
+						' — Cédula: ' + document.getElementById('payerIdNumber').value +
+						' — Monto pagado: ' + document.getElementById('payerAmountPaid2').value;
+				} else {
+					pagadorText += ' — Cuenta: ' + document.getElementById('payerAccountNumber').value +
+						' — Monto pagado: ' + document.getElementById('payerAmountPaid1').value;
+				}
+				pagadorText += ' — Tipo de cuenta: ' + paymentTypeLabel;
+				document.getElementById('summaryPagador').textContent = pagadorText;
+			}
+
+			function submitProcedureRequest() {
+				if (!window.confirm('¿Confirma el registro de este trámite?')) {
+					return;
+				}
+
+				nextBtn.disabled = true;
+				prevBtn.disabled = true;
+
+				var amount = selectedPaymentTypeId === 3
+					? document.getElementById('payerAmountPaid2').value.trim()
+					: document.getElementById('payerAmountPaid1').value.trim();
+
+				var proc = (procedureTypes || []).find(function (p) { return String(p.procedureId) === String(selectedProcedureId); });
+				var tariff = proc && typeof proc.tariff === 'number' ? proc.tariff : 0;
+
+				var params = new URLSearchParams();
+				params.append('ProcedureByDriverId', '0');
+				params.append('ProcedureId', selectedProcedureId);
+				params.append('DriverId', driverData.driverId);
+				params.append('ProcedureBankAccountId', selectedBankAccount.procedureBankAccountId);
+				params.append('AccounTypeId', selectedPaymentTypeId);
+				params.append('BankId', selectedPayerBankId);
+				params.append('PayerCellPhoneNumber', selectedPaymentTypeId === 3 ? document.getElementById('payerCellPhoneNumber').value.trim() : '');
+				params.append('PayerIdNumber', selectedPaymentTypeId === 3 ? document.getElementById('payerIdNumber').value.trim() : '');
+				params.append('PayerAccountNumber', selectedPaymentTypeId === 3 ? '' : document.getElementById('payerAccountNumber').value.trim());
+				params.append('PayerReferenceNumber', '');
+				params.append('BCVPaid', amount);
+				params.append('Tariff', tariff);
+				params.append('Rate', currentBcvRate || 0);
+
+				var token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+				fetch(submitApiUrl, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/x-www-form-urlencoded',
+						'RequestVerificationToken': token
+					},
+					body: params.toString()
+				})
+					.then(function (r) { return r.json(); })
+					.then(function (data) {
+						if (data && data.success) {
+							alert('El trámite se registró correctamente.');
+							closeWizard();
+						} else {
+							alert((data && data.message) || 'No se pudo registrar el trámite.');
+							nextBtn.disabled = false;
+							prevBtn.disabled = false;
+						}
+					})
+					.catch(function () {
+						alert('Ocurrió un error al enviar la solicitud. Intente nuevamente.');
+						nextBtn.disabled = false;
+						prevBtn.disabled = false;
+					});
+			}
+
+			function goToDriverSearch() {
+				var cedula = cedulaInput.value.trim();
+				step1Error.textContent = '';
+				nextBtn.disabled = true;
+
+				fetch(driverApiUrl + '?driverIdentityDocument=' + encodeURIComponent(cedula), { cache: 'no-store' })
+					.then(function (r) { return r.json(); })
+					.then(function (data) {
+						if (!data) {
+							step1Error.textContent = 'No se encontró ningún transportista con esa cédula.';
+							nextBtn.disabled = false;
+							return;
+						}
+
+						driverData = data;
+						renderDriverStep(driverData);
+						showStep(2);
+					})
+					.catch(function () {
+						step1Error.textContent = 'Ocurrió un error al buscar el transportista. Intente nuevamente.';
+						nextBtn.disabled = false;
+					});
+			}
+
+			nextBtn.addEventListener('click', function () {
+				if (currentStep === 1) {
+					goToDriverSearch();
+				} else if (currentStep === 2) {
+					showStep(3);
+					loadProcedureTypes();
+				} else if (currentStep === 3) {
+					showStep(4);
+					updateTariffHints();
+				} else if (currentStep === 4) {
+					buildSummary();
+					showStep(5);
+				} else if (currentStep === 5) {
+					submitProcedureRequest();
+				}
+			});
+
+			prevBtn.addEventListener('click', function () {
+				if (currentStep > 1) {
+					showStep(currentStep - 1);
+				}
+			});
+
+			function closeWizard() {
+				overlay.classList.remove('open');
+				resetWizard();
+			}
+
+			document.getElementById('btnSolicitarTramite').addEventListener('click', function () {
+				resetWizard();
+				loadBcvRate();
+				overlay.classList.add('open');
+			});
+
+			cancelBtn.addEventListener('click', closeWizard);
+			closeBtn.addEventListener('click', closeWizard);
+
+			overlay.addEventListener('click', function (e) {
+				if (e.target === overlay) closeWizard();
+			});
+
+			document.addEventListener('keydown', function (e) {
+				if (e.key === 'Escape' && overlay.classList.contains('open')) closeWizard();
+			});
+		})();
+	</script>
+</body>
+</html>

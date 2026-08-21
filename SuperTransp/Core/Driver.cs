@@ -14,6 +14,7 @@ namespace SuperTransp.Core
 			this._configuration = configuration;
 			this._security = security;
 		}
+
 		private SqlConnection GetConnection()
 		{
 			SqlConnection sqlConnection = new(_configuration.GetConnectionString("connectionString"));
