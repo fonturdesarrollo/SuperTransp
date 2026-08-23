@@ -222,6 +222,9 @@ namespace SuperTransp.Core
 			public int AddOrEditByDriver(ProcedureByDriverViewModel model);
 			public List<ProcedureBankAccountViewModel> GetByBankAccounTypeId(int accounTypeId);
 			public List<ProcedureStatusViewModel> GetStatusAll();
+			public List<ProcedureCategoryViewModel> ProcedureCategoryAll();
+			public List<ProcedureFrequencyViewModel> ProcedureFrequencyAll();
+
 		}
 
 		public interface IExchangeRate

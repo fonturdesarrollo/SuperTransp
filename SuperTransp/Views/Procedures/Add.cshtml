@@ -1,0 +1,134 @@
+@model SuperTransp.Models.ProcedureViewModel
+@{
+    Layout = "";
+}
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Agregar Trámite</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="stylesheet" href="~/assets/css/main.css" />
+    <noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
+    <link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
+
+    <style>
+        .is-invalid {
+            border: 2px solid red;
+            background-color: #ffe6e6;
+        }
+
+        .logo-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+            .logo-container img {
+                display: block;
+            }
+    </style>
+</head>
+<body class="is-preload">
+    @using (Html.BeginForm("Add", "Procedures", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        <!-- Wrapper -->
+        <div id="wrapper">
+
+            <!-- Header -->
+            <header id="header">
+                <div class="inner">
+                    <!-- Logo -->
+                    <div class="logo-container">
+                        <!-- Logo izquierdo -->
+                        <img src="~/images/Logo.png" width="100px" height="100px" alt="Logo principal" />
+
+                        <!-- Logo derecho -->
+                        <img src="~/images/super-transp-logo.png" width="150px" height="150px" alt="Logo SuperTransp" />
+                    </div>
+                    <div class="logo">
+                        <span>@ViewBag.EmployeeName</span>
+                        <br />
+                        <br />
+                        @if (TempData["SuccessMessage"] != null)
+                        {
+                            <div id="successMessage" class="alert alert-success">
+                                @TempData["SuccessMessage"]
+                            </div>
+                        }
+                    </div>
+                </div>
+                <!-- Nav -->
+                <nav>
+                    <ul>
+                        <li><a href="#menu">Menu</a></li>
+                    </ul>
+                </nav>
+            </header>
+
+            <!-- Menu -->
+            <nav id="menu">
+                <h2>Menu</h2>
+                <ul>
+                    <li>@Html.ActionLink("Inicio", "Index", "Home")</li>
+                    <li>@Html.ActionLink("Editar tarifas por gastos administrativos", "List", "Procedures")</li>
+                    <li>@Html.ActionLink("Gestiones administrativas", "Index", "Procedures")</li>
+                    <li>@Html.ActionLink("Salir", "Login", "Security")</li>
+                </ul>
+            </nav>
+
+            <!-- Main -->
+            <div id="main">
+                <div class="inner">
+                    <!-- Form -->
+                    <section>
+                        <h1 style="color:#4cbece">Agregar tarifa por trámite administrativo</h1>
+                        <br />
+                        <div class="row gtr-uniform">
+                            @Html.HiddenFor(x => x.ProcedureId)
+                            <div class="col-6 col-12-xsmall">
+                                <strong>Categoría:</strong>
+                                @Html.DropDownListFor(x => x.ProcedureCategoryId, (SelectList)ViewBag.Categories, "-- Seleccione --", new { @class = "form-control" })
+                                <span asp-validation-for="ProcedureCategoryId" class="text-danger"></span>
+                            </div>
+                            <div class="col-6 col-12-xsmall">
+                                <strong>Frecuencia:</strong>
+                                @Html.DropDownListFor(x => x.ProcedureFrequencyId, (SelectList)ViewBag.Frequencies, "-- Seleccione --", new { @class = "form-control" })
+                                <span asp-validation-for="ProcedureFrequencyId" class="text-danger"></span>
+                            </div>
+                            <div class="col-12">
+                                <strong>Concepto:</strong>
+                                @Html.TextBoxFor(x => x.ProcedureConcept, new { placeholder = "Concepto del trámite", maxlength = "500" })
+                                <span asp-validation-for="ProcedureConcept" class="text-danger"></span>
+                            </div>
+                            <div class="col-6">
+                                <strong>Tarifa:</strong>
+                                @Html.TextBoxFor(x => x.Tariff, new { placeholder = "Tarifa", id = "Tariff", inputmode = "numeric", autocomplete = "off" })
+                                <span asp-validation-for="Tariff" class="text-danger"></span>
+                            </div>
+                            <div class="col-12">
+                                <ul class="actions">
+                                    <li><button type="submit" id="saveRequest" class="primary">Agregar</button></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    }
+    <!-- Scripts -->
+    <script src="~/assets/js/jquery.min.js"></script>
+    <script src="~/assets/js/browser.min.js"></script>
+    <script src="~/assets/js/breakpoints.min.js"></script>
+    <script src="~/assets/js/util.js"></script>
+    <script src="~/assets/js/main.js"></script>
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script>
+        document.getElementById('Tariff').addEventListener('input', function () {
+            this.value = this.value.replace(/\D/g, '');
+        });
+    </script>
+</body>
+</html>

@@ -380,6 +380,25 @@
 			min-width: 180px;
 		}
 
+		.wizard-form-row-compact {
+			flex-wrap: nowrap;
+		}
+
+		.wizard-form-row-compact .wizard-form-group {
+			min-width: 0;
+		}
+
+		.wizard-form-row-compact select,
+		.wizard-form-row-compact input[type="text"] {
+			padding: 7px 8px;
+			font-size: 0.85rem;
+		}
+
+		.wizard-form-row-compact .wizard-tariff-hint {
+			padding: 5px 7px;
+			font-size: 0.72rem;
+		}
+
 		.wizard-form-group label {
 			font-size: 0.85rem;
 			font-weight: 600;
@@ -482,7 +501,7 @@
 					<div class="logo">
 						<span>@ViewBag.EmployeeName</span>
 						<br />
-						<span>Procesos Administrativos y gestión de los transpotistas</span>
+						<span>Procesos Administrativos y gestión de los transportistas</span>
 					</div>			
 				</div>
 
@@ -580,6 +599,7 @@
 									<th>Marca</th>
 									<th>Modelo</th>
 									<th>Año</th>
+									<th class="wizard-select-col">Seleccionar</th>
 								</tr>
 							</thead>
 							<tbody id="driverOrgTableBody"></tbody>
@@ -630,7 +650,7 @@
 										<option value="">Seleccione primero el tipo de pago...</option>
 									</select>
 								</div>
-								<div class="wizard-form-row" id="payerAccountFields" style="display:none;">
+								<div class="wizard-form-row wizard-form-row-compact" id="payerAccountFields" style="display:none;">
 									<div class="wizard-form-group">
 										<label for="payerAccountNumber">Número de cuenta</label>
 										<input type="text" id="payerAccountNumber" inputmode="numeric" autocomplete="off" maxlength="20" />
@@ -640,8 +660,12 @@
 										<p class="wizard-tariff-hint" id="tariffHintAccount">Monto según tarifa: Bs. —</p>
 										<input type="text" id="payerAmountPaid1" inputmode="decimal" autocomplete="off" maxlength="14" />
 									</div>
+									<div class="wizard-form-group">
+										<label for="payerReferenceNumber1">N° de referencia</label>
+										<input type="text" id="payerReferenceNumber1" inputmode="numeric" autocomplete="off" maxlength="20" />
+									</div>
 								</div>
-								<div class="wizard-form-row" id="payerMobileFields" style="display:none;">
+								<div class="wizard-form-row wizard-form-row-compact" id="payerMobileFields" style="display:none;">
 									<div class="wizard-form-group">
 										<label for="payerCellPhoneNumber">Teléfono</label>
 										<input type="text" id="payerCellPhoneNumber" inputmode="numeric" autocomplete="off" maxlength="11" />
@@ -654,6 +678,10 @@
 										<label for="payerAmountPaid2">Monto pagado</label>
 										<p class="wizard-tariff-hint" id="tariffHintMobile">Monto según tarifa: Bs. —</p>
 										<input type="text" id="payerAmountPaid2" inputmode="decimal" autocomplete="off" maxlength="14" />
+									</div>
+									<div class="wizard-form-group">
+										<label for="payerReferenceNumber2">N° de referencia</label>
+										<input type="text" id="payerReferenceNumber2" inputmode="numeric" autocomplete="off" maxlength="20" />
 									</div>
 								</div>
 							</div>
@@ -722,6 +750,7 @@
 
 			var currentStep = 1;
 			var driverData = null;
+			var selectedOrganization = null;
 			var procedureTypes = null;
 			var selectedProcedureId = null;
 			var bankAccountsCache = {};
@@ -734,6 +763,7 @@
 			function resetWizard() {
 				currentStep = 1;
 				driverData = null;
+				selectedOrganization = null;
 				selectedProcedureId = null;
 				procedureTypes = null;
 				bankAccountsCache = {};
@@ -768,9 +798,11 @@
 				document.getElementById('payerMobileFields').style.display = 'none';
 				document.getElementById('payerAccountNumber').value = '';
 				document.getElementById('payerAmountPaid1').value = '';
+				document.getElementById('payerReferenceNumber1').value = '';
 				document.getElementById('payerCellPhoneNumber').value = '';
 				document.getElementById('payerIdNumber').value = '';
 				document.getElementById('payerAmountPaid2').value = '';
+				document.getElementById('payerReferenceNumber2').value = '';
 			}
 
 			function updateStepIndicator() {
@@ -803,7 +835,7 @@
 				if (currentStep === 1) {
 					nextBtn.disabled = cedulaInput.value.trim().length === 0;
 				} else if (currentStep === 2) {
-					nextBtn.disabled = false;
+					nextBtn.disabled = selectedOrganization === null;
 				} else if (currentStep === 3) {
 					nextBtn.disabled = selectedProcedureId === null;
 				} else if (currentStep === 4) {
@@ -820,12 +852,14 @@
 					var phone = document.getElementById('payerCellPhoneNumber').value.trim();
 					var idNum = document.getElementById('payerIdNumber').value.trim();
 					var amount = document.getElementById('payerAmountPaid2').value.trim();
-					return !!(phone && idNum && amount && parseFloat(amount) > 0);
+					var reference2 = document.getElementById('payerReferenceNumber2').value.trim();
+					return !!(phone && idNum && amount && parseFloat(amount) > 0 && reference2);
 				}
 
 				var accountNumber = document.getElementById('payerAccountNumber').value.trim();
 				var amount1 = document.getElementById('payerAmountPaid1').value.trim();
-				return !!(accountNumber && amount1 && parseFloat(amount1) > 0);
+				var reference1 = document.getElementById('payerReferenceNumber1').value.trim();
+				return !!(accountNumber && amount1 && parseFloat(amount1) > 0 && reference1);
 			}
 
 			cedulaInput.addEventListener('input', function () {
@@ -853,13 +887,14 @@
 
 				var tbody = document.getElementById('driverOrgTableBody');
 				tbody.innerHTML = '';
+				selectedOrganization = null;
 
 				if (!data.organizations || data.organizations.length === 0) {
-					tbody.innerHTML = '<tr><td colspan="6" class="wizard-empty">Sin organizaciones registradas</td></tr>';
+					tbody.innerHTML = '<tr><td colspan="7" class="wizard-empty">Sin organizaciones registradas</td></tr>';
 					return;
 				}
 
-				data.organizations.forEach(function (org) {
+				data.organizations.forEach(function (org, idx) {
 					var tr = document.createElement('tr');
 
 					var hasVehicle = org.driverWithVehicle && org.plate;
@@ -870,9 +905,17 @@
 						'<td>' + (hasVehicle ? org.plate : 'Sin vehículo') + '</td>' +
 						'<td>' + (hasVehicle ? (org.make || '') : '-') + '</td>' +
 						'<td>' + (hasVehicle ? (org.model || '') : '-') + '</td>' +
-						'<td>' + (hasVehicle && org.year > 0 ? org.year : '-') + '</td>';
+						'<td>' + (hasVehicle && org.year > 0 ? org.year : '-') + '</td>' +
+						'<td class="wizard-select-col"><input type="radio" name="wizardOrgSelect" value="' + idx + '" /></td>';
 
 					tbody.appendChild(tr);
+				});
+
+				tbody.querySelectorAll('input[name="wizardOrgSelect"]').forEach(function (radio) {
+					radio.addEventListener('change', function () {
+						selectedOrganization = data.organizations[parseInt(this.value, 10)];
+						updateNextButtonState();
+					});
 				});
 			}
 
@@ -1159,13 +1202,16 @@
 			restrictDigitsInput(document.getElementById('payerAccountNumber'));
 			restrictDigitsInput(document.getElementById('payerCellPhoneNumber'));
 			restrictDigitsInput(document.getElementById('payerIdNumber'));
+			restrictDigitsInput(document.getElementById('payerReferenceNumber1'));
+			restrictDigitsInput(document.getElementById('payerReferenceNumber2'));
 			restrictDecimalInput(document.getElementById('payerAmountPaid1'));
 			restrictDecimalInput(document.getElementById('payerAmountPaid2'));
 
 			// ── Paso 5: Resumen ────────────────────────────────────
 			function buildSummary() {
 				document.getElementById('summarySocio').textContent =
-					'C.I. ' + (driverData.driverIdentityDocument || '') + ' — ' + (driverData.driverFullName || '');
+					'C.I. ' + (driverData.driverIdentityDocument || '') + ' — ' + (driverData.driverFullName || '') +
+					(selectedOrganization ? (' — ' + (selectedOrganization.ptgCompleteName || '')) : '');
 
 				var proc = (procedureTypes || []).find(function (p) { return String(p.procedureId) === String(selectedProcedureId); });
 				if (proc) {
@@ -1190,10 +1236,12 @@
 				if (selectedPaymentTypeId === 3) {
 					pagadorText += ' — Teléfono: ' + document.getElementById('payerCellPhoneNumber').value +
 						' — Cédula: ' + document.getElementById('payerIdNumber').value +
-						' — Monto pagado: ' + document.getElementById('payerAmountPaid2').value;
+						' — Monto pagado: ' + document.getElementById('payerAmountPaid2').value +
+						' — N° de referencia: ' + document.getElementById('payerReferenceNumber2').value;
 				} else {
 					pagadorText += ' — Cuenta: ' + document.getElementById('payerAccountNumber').value +
-						' — Monto pagado: ' + document.getElementById('payerAmountPaid1').value;
+						' — Monto pagado: ' + document.getElementById('payerAmountPaid1').value +
+						' — N° de referencia: ' + document.getElementById('payerReferenceNumber1').value;
 				}
 				pagadorText += ' — Tipo de cuenta: ' + paymentTypeLabel;
 				document.getElementById('summaryPagador').textContent = pagadorText;
@@ -1214,17 +1262,27 @@
 				var proc = (procedureTypes || []).find(function (p) { return String(p.procedureId) === String(selectedProcedureId); });
 				var tariff = proc && typeof proc.tariff === 'number' ? proc.tariff : 0;
 
+				var orgHasVehicle = selectedOrganization && selectedOrganization.driverWithVehicle && selectedOrganization.plate;
+
 				var params = new URLSearchParams();
 				params.append('ProcedureByDriverId', '0');
 				params.append('ProcedureId', selectedProcedureId);
 				params.append('DriverId', driverData.driverId);
+				params.append('DriverPTGRif', selectedOrganization.publicTransportGroupRif || '');
+				params.append('DriverPTGName', selectedOrganization.ptgCompleteName || '');
+				params.append('DriverVehiclePlate', orgHasVehicle ? selectedOrganization.plate : '');
+				params.append('DriverVehicleYear', orgHasVehicle && selectedOrganization.year > 0 ? selectedOrganization.year : '0');
+				params.append('DriverVehicleMake', orgHasVehicle ? (selectedOrganization.make || '') : '');
+				params.append('DriverVehicleModel', orgHasVehicle ? (selectedOrganization.model || '') : '');
 				params.append('ProcedureBankAccountId', selectedBankAccount.procedureBankAccountId);
 				params.append('AccounTypeId', selectedPaymentTypeId);
 				params.append('BankId', selectedPayerBankId);
 				params.append('PayerCellPhoneNumber', selectedPaymentTypeId === 3 ? document.getElementById('payerCellPhoneNumber').value.trim() : '');
 				params.append('PayerIdNumber', selectedPaymentTypeId === 3 ? document.getElementById('payerIdNumber').value.trim() : '');
 				params.append('PayerAccountNumber', selectedPaymentTypeId === 3 ? '' : document.getElementById('payerAccountNumber').value.trim());
-				params.append('PayerReferenceNumber', '');
+				params.append('PayerReferenceNumber', selectedPaymentTypeId === 3
+					? document.getElementById('payerReferenceNumber2').value.trim()
+					: document.getElementById('payerReferenceNumber1').value.trim());
 				params.append('BCVPaid', amount);
 				params.append('Tariff', tariff);
 				params.append('Rate', currentBcvRate || 0);
@@ -1317,10 +1375,6 @@
 
 			cancelBtn.addEventListener('click', closeWizard);
 			closeBtn.addEventListener('click', closeWizard);
-
-			overlay.addEventListener('click', function (e) {
-				if (e.target === overlay) closeWizard();
-			});
 
 			document.addEventListener('keydown', function (e) {
 				if (e.key === 'Escape' && overlay.classList.contains('open')) closeWizard();

@@ -28,5 +28,11 @@
 		public int ProcedureStatusId { get; set; }
 		public string? ProcedureConcept { get; set; }
 		public string? ProcedureCategoryName { get; set; }
+		public string? DriverPTGRif { get; set; }
+		public string? DriverPTGName { get; set; }
+		public string? DriverVehiclePlate { get; set; }
+		public int DriverVehicleYear { get; set; }
+		public string? DriverVehicleMake { get; set; }
+		public string? DriverVehicleModel { get; set; }
 	}
 }

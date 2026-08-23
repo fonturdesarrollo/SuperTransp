@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Options;
 using SuperTransp.Models;
 using static SuperTransp.Core.Interfaces;
@@ -60,6 +61,109 @@ namespace SuperTransp.Controllers
 			ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 
 			return View();
+		}
+
+		public IActionResult Add()
+		{
+			var result = CheckSessionAndPermission(ModuleId);
+			if (result != null) return result;
+
+			ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+			ViewBag.Categories = new SelectList(_procedure.ProcedureCategoryAll(), "ProcedureCategoryId", "ProcedureCategoryName");
+			ViewBag.Frequencies = new SelectList(_procedure.ProcedureFrequencyAll(), "ProcedureFrequencyId", "ProcedureFrequencyName");
+
+			var model = new ProcedureViewModel { ProcedureId = 0 };
+
+			return View(model);
+		}
+
+		[HttpPost]
+		public IActionResult Add(ProcedureViewModel model)
+		{
+			var result = CheckSessionAndPermission(ModuleId);
+			if (result != null) return result;
+
+			if (!ModelState.IsValid)
+			{
+				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+				ViewBag.Categories = new SelectList(_procedure.ProcedureCategoryAll(), "ProcedureCategoryId", "ProcedureCategoryName");
+				ViewBag.Frequencies = new SelectList(_procedure.ProcedureFrequencyAll(), "ProcedureFrequencyId", "ProcedureFrequencyName");
+
+				return View(model);
+			}
+
+			try
+			{
+				_procedure.AddOrEdit(model);
+
+				TempData["SuccessMessage"] = "Trámite agregado correctamente";
+			}
+			catch (Exception ex)
+			{
+				TempData["SuccessMessage"] = $"Error al agregar el trámite: {ex.Message}";
+			}
+
+			return RedirectToAction("Add");
+		}
+
+		public IActionResult List()
+		{
+			var result = CheckSessionAndPermission(ModuleId);
+			if (result != null) return result;
+
+			ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+
+			var model = _procedure.GetAll();
+
+			return View(model);
+		}
+
+		[HttpGet]
+		public IActionResult Edit(int procedureId)
+		{
+			var result = CheckSessionAndPermission(ModuleId);
+			if (result != null) return result;
+
+			var model = _procedure.GetAll().FirstOrDefault(p => p.ProcedureId == procedureId);
+
+			if (model == null) return RedirectToAction("List");
+
+			ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+			ViewBag.Categories = new SelectList(_procedure.ProcedureCategoryAll(), "ProcedureCategoryId", "ProcedureCategoryName");
+			ViewBag.Frequencies = new SelectList(_procedure.ProcedureFrequencyAll(), "ProcedureFrequencyId", "ProcedureFrequencyName");
+
+			return View(model);
+		}
+
+		[HttpPost]
+		public IActionResult Edit(ProcedureViewModel model)
+		{
+			var result = CheckSessionAndPermission(ModuleId);
+			if (result != null) return result;
+
+			if (!ModelState.IsValid)
+			{
+				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+				ViewBag.Categories = new SelectList(_procedure.ProcedureCategoryAll(), "ProcedureCategoryId", "ProcedureCategoryName");
+				ViewBag.Frequencies = new SelectList(_procedure.ProcedureFrequencyAll(), "ProcedureFrequencyId", "ProcedureFrequencyName");
+
+				return View(model);
+			}
+
+			try
+			{
+				// El SP solo devuelve el id nuevo al insertar; al actualizar no hay resultado
+				// (no lanzar excepción ya es señal de éxito).
+				_procedure.AddOrEdit(model);
+
+				TempData["SuccessMessage"] = "Trámite actualizado correctamente";
+			}
+			catch (Exception ex)
+			{
+				TempData["SuccessMessage"] = $"Error al actualizar el trámite: {ex.Message}";
+			}
+
+			return RedirectToAction("Edit", new { procedureId = model.ProcedureId });
 		}
 
 		[HttpGet]

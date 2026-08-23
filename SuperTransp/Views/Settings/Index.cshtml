@@ -151,6 +151,18 @@
 									}
 								</ul>
 							</div>
+							<div class="col-3 col-6-medium">
+								<h3>Gestiones Administrativas</h3>
+								<ul>
+									@{
+										if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 34))
+										{
+											<li>@Html.ActionLink("Agregar tarifas por gastos administrativos", "Add", "Procedures")</li>
+											<li>@Html.ActionLink("Editar tarifas por gastos administrativos", "List", "Procedures")</li>
+										}
+									}
+								</ul>
+							</div>	
 						</div>
 					</section>
 				</div>

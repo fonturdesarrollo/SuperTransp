@@ -22,7 +22,33 @@ namespace SuperTransp.Core
 		}
 		public int AddOrEdit(ProcedureViewModel model)
 		{
-			return 0;
+			int result = 0;
+
+			using (SqlConnection sqlConnection = GetConnection())
+			{
+				if (sqlConnection.State == ConnectionState.Closed)
+				{
+					sqlConnection.Open();
+				}
+
+				if (model != null)
+				{
+					SqlCommand cmd = new("SuperTransp_ProcedureAddOrEdit", sqlConnection)
+					{
+						CommandType = System.Data.CommandType.StoredProcedure
+					};
+
+					cmd.Parameters.AddWithValue("@ProcedureId", model.ProcedureId);
+					cmd.Parameters.AddWithValue("@ProcedureCategoryId", (object?)model.ProcedureCategoryId ?? DBNull.Value);
+					cmd.Parameters.AddWithValue("@ProcedureConcept", (object?)model.ProcedureConcept ?? DBNull.Value);
+					cmd.Parameters.AddWithValue("@ProcedureFrequencyId", (object?)model.ProcedureFrequencyId ?? DBNull.Value);
+					cmd.Parameters.AddWithValue("@Tariff", (object?)model.Tariff ?? DBNull.Value);
+
+					result = Convert.ToInt32(cmd.ExecuteScalar());
+				}
+
+				return result;
+			}
 		}
 
 		public int AddOrEditByDriver(ProcedureByDriverViewModel model)
@@ -46,6 +72,12 @@ namespace SuperTransp.Core
 					cmd.Parameters.AddWithValue("@ProcedureByDriverId", model.ProcedureByDriverId);
 					cmd.Parameters.AddWithValue("@ProcedureId", model.ProcedureId);
 					cmd.Parameters.AddWithValue("@DriverId", model.DriverId);
+					cmd.Parameters.AddWithValue("@DriverPTGRif", (object?)model.DriverPTGRif ?? DBNull.Value);
+					cmd.Parameters.AddWithValue("@DriverPTGName", (object?)model.DriverPTGName ?? DBNull.Value);
+					cmd.Parameters.AddWithValue("@DriverVehiclePlate", (object?)model.DriverVehiclePlate ?? DBNull.Value);
+					cmd.Parameters.AddWithValue("@DriverVehicleYear", (object?)model.DriverVehicleYear ?? DBNull.Value);
+					cmd.Parameters.AddWithValue("@DriverVehicleMake", (object?)model.DriverVehicleMake ?? DBNull.Value);
+					cmd.Parameters.AddWithValue("@DriverVehicleModel", (object?)model.DriverVehicleModel ?? DBNull.Value);
 					cmd.Parameters.AddWithValue("@ProcedureBankAccountId", model.ProcedureBankAccountId);
 					cmd.Parameters.AddWithValue("@AccounTypeId", model.AccounTypeId);
 					cmd.Parameters.AddWithValue("@BankId", model.BankId);
@@ -237,6 +269,76 @@ namespace SuperTransp.Core
 			catch (Exception ex)
 			{
 				throw new Exception($"Error al obtener los status {ex.Message}", ex);
+			}
+		}
+
+		public List<ProcedureFrequencyViewModel> ProcedureFrequencyAll()
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<ProcedureFrequencyViewModel> procedureFeq = new();
+					SqlCommand cmd = new("SELECT * FROM ProcedureFrequency Order By ProcedureFrequencyId ", sqlConnection);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							procedureFeq.Add(new ProcedureFrequencyViewModel
+							{
+								ProcedureFrequencyId = (int)dr["ProcedureFrequencyId"],
+								ProcedureFrequencyName = (string)dr["ProcedureFrequencyName"],
+							});
+						}
+					}
+
+					return procedureFeq;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener las frecuencias {ex.Message}", ex);
+			}
+		}
+
+		public List<ProcedureCategoryViewModel> ProcedureCategoryAll()
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<ProcedureCategoryViewModel> procedureCat = new();
+					SqlCommand cmd = new("SELECT * FROM ProcedureCategory Order By ProcedureCategoryId ", sqlConnection);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							procedureCat.Add(new ProcedureCategoryViewModel
+							{
+								ProcedureCategoryId = (int)dr["ProcedureCategoryId"],
+								ProcedureCategoryName = (string)dr["ProcedureCategoryName"],
+							});
+						}
+					}
+
+					return procedureCat;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener las categorias {ex.Message}", ex);
 			}
 		}
 	}
