@@ -219,7 +219,9 @@ namespace SuperTransp.Core
 			public int AddOrEdit(ProcedureViewModel model);
 			public List<ProcedureViewModel> GetAll();
 			public List<ProcedureByDriverViewModel> GetByDriverByProcedureStatusId(int procedureStatusId);
+			public List<ProcedureByPublicTransportGroupViewModel> GetByPTGByProcedureStatusId(int procedureStatusId);
 			public int AddOrEditByDriver(ProcedureByDriverViewModel model);
+			public int AddOrEditByPTG(ProcedureByPublicTransportGroupViewModel model);
 			public List<ProcedureBankAccountViewModel> GetByBankAccounTypeId(int accounTypeId);
 			public List<ProcedureStatusViewModel> GetStatusAll();
 			public List<ProcedureCategoryViewModel> ProcedureCategoryAll();

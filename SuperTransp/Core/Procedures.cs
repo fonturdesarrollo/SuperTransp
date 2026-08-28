@@ -96,6 +96,46 @@ namespace SuperTransp.Core
 				return result;
 			}
 		}
+
+		public int AddOrEditByPTG(ProcedureByPublicTransportGroupViewModel model)
+		{
+			int result = 0;
+
+			using (SqlConnection sqlConnection = GetConnection())
+			{
+				if (sqlConnection.State == ConnectionState.Closed)
+				{
+					sqlConnection.Open();
+				}
+
+				if (model != null)
+				{
+					SqlCommand cmd = new("SuperTransp_ProcedureByPublicTransportGroupAddOrEdit", sqlConnection)
+					{
+						CommandType = System.Data.CommandType.StoredProcedure
+					};
+
+					cmd.Parameters.AddWithValue("@ProcedureByPublicTransportGroupId", model.ProcedureByPublicTransportGroupId);
+					cmd.Parameters.AddWithValue("@ProcedureId", model.ProcedureId);
+					cmd.Parameters.AddWithValue("@PublicTransportGroupId", model.PublicTransportGroupId);
+					cmd.Parameters.AddWithValue("@ProcedureBankAccountId", model.ProcedureBankAccountId);
+					cmd.Parameters.AddWithValue("@AccounTypeId", model.AccounTypeId);
+					cmd.Parameters.AddWithValue("@BankId", model.BankId);
+					cmd.Parameters.AddWithValue("@PayerCellPhoneNumber", (object?)model.PayerCellPhoneNumber ?? DBNull.Value);
+					cmd.Parameters.AddWithValue("@PayerIdNumber", (object?)model.PayerIdNumber ?? DBNull.Value);
+					cmd.Parameters.AddWithValue("@PayerAccountNumber", (object?)model.PayerAccountNumber ?? DBNull.Value);
+					cmd.Parameters.AddWithValue("@PayerReferenceNumber", (object?)model.PayerReferenceNumber ?? DBNull.Value);
+					cmd.Parameters.AddWithValue("@BCVPaid", model.BCVPaid);
+					cmd.Parameters.AddWithValue("@Tariff", model.Tariff);
+					cmd.Parameters.AddWithValue("@Rate", model.Rate);
+					cmd.Parameters.AddWithValue("@ProcedureStatusId", model.ProcedureStatusId);
+
+					result = Convert.ToInt32(cmd.ExecuteScalar());
+				}
+
+				return result;
+			}
+		}
 		public List<ProcedureViewModel> GetAll()
 		{
 			try
@@ -165,6 +205,69 @@ namespace SuperTransp.Core
 								DriverIdentityDocument = (int)dr["DriverIdentityDocument"],
 								DriverFullName = dr["DriverFullName"] == DBNull.Value ? string.Empty : (string)dr["DriverFullName"],
 								DriverPhone = dr["DriverPhone"] == DBNull.Value ? string.Empty : (string)dr["DriverPhone"],
+								ReceiverBankAccountTypeName = dr["ReceiverBankAccountTypeName"] == DBNull.Value ? string.Empty : (string)dr["ReceiverBankAccountTypeName"],
+								ReceiverBankName = dr["ReceiverBankName"] == DBNull.Value ? string.Empty : (string)dr["ReceiverBankName"],
+								ReceiverBankAccountNumber = dr["ReceiverBankAccountNumber"] == DBNull.Value ? string.Empty : (string)dr["ReceiverBankAccountNumber"],
+								ReceiverBankCellPhone = dr["ReceiverBankCellPhone"] == DBNull.Value ? string.Empty : (string)dr["ReceiverBankCellPhone"],
+								ReceiverBankIdNumber = dr["ReceiverBankIdNumber"] == DBNull.Value ? string.Empty : (string)dr["ReceiverBankIdNumber"],
+								PayerBankName = dr["PayerBankName"] == DBNull.Value ? string.Empty : (string)dr["PayerBankName"],
+								PayerCellPhoneNumber = dr["PayerCellPhoneNumber"] == DBNull.Value ? string.Empty : (string)dr["PayerCellPhoneNumber"],
+								PayerIdNumber = dr["PayerIdNumber"] == DBNull.Value ? string.Empty : (string)dr["PayerIdNumber"],
+								PayerAccountNumber = dr["PayerAccountNumber"] == DBNull.Value ? string.Empty : (string)dr["PayerAccountNumber"],
+								PayerReferenceNumber = dr["PayerReferenceNumber"] == DBNull.Value ? string.Empty : (string)dr["PayerReferenceNumber"],
+								Tariff = (decimal)dr["Tariff"],
+								BCVPaid = (decimal)dr["BCVPaid"],
+								Rate = (decimal)dr["Rate"],
+								ProcedureStatusName = dr["ProcedureStatusName"] == DBNull.Value ? string.Empty : (string)dr["ProcedureStatusName"],
+								ProcedureStatusId = (int)dr["ProcedureStatusId"],
+								AccounTypeId = (int)dr["AccounTypeId"],
+							});
+						}
+					}
+
+					return procedure;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener los procedimientos {ex.Message}", ex);
+			}
+		}
+
+		public List<ProcedureByPublicTransportGroupViewModel> GetByPTGByProcedureStatusId(int procedureStatusId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<ProcedureByPublicTransportGroupViewModel> procedure = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_ProcedureByPTGDetail WHERE ProcedureStatusId = @ProcedureStatusId", sqlConnection);
+					cmd.Parameters.AddWithValue("@ProcedureStatusId", procedureStatusId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							procedure.Add(new ProcedureByPublicTransportGroupViewModel
+							{
+								ProcedureByPublicTransportGroupId = (int)dr["ProcedureByPublicTransportGroupId"],
+								ProcedureId = (int)dr["ProcedureId"],
+								ProcedureConcept = dr["ProcedureConcept"] == DBNull.Value ? string.Empty : (string)dr["ProcedureConcept"],
+								ProcedureCategoryName = dr["ProcedureCategoryName"] == DBNull.Value ? string.Empty : (string)dr["ProcedureCategoryName"],
+								PublicTransportGroupId = (int)dr["PublicTransportGroupId"],
+								PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"],
+								PublicTransportGroupNameFullName = dr["PTGCompleteName"] == DBNull.Value ? string.Empty : (string)dr["PTGCompleteName"],
+								RepresentativeIdentityDocument = dr["RepresentativeIdentityDocument"] == DBNull.Value ? string.Empty : dr["RepresentativeIdentityDocument"].ToString(),
+								RepresentativeName = dr["RepresentativeName"] == DBNull.Value ? string.Empty : (string)dr["RepresentativeName"],
+								RepresentativePhone = dr["RepresentativePhone"] == DBNull.Value ? string.Empty : (string)dr["RepresentativePhone"],
+								Partners = dr["Partners"] == DBNull.Value ? 0 : (int)dr["Partners"],
+								TotalDrivers = dr["TotalDrivers"] == DBNull.Value ? 0 : (int)dr["TotalDrivers"],
+								TotalSupervisedDrivers = dr["TotalSupervisedDrivers"] == DBNull.Value ? 0 : (int)dr["TotalSupervisedDrivers"],
 								ReceiverBankAccountTypeName = dr["ReceiverBankAccountTypeName"] == DBNull.Value ? string.Empty : (string)dr["ReceiverBankAccountTypeName"],
 								ReceiverBankName = dr["ReceiverBankName"] == DBNull.Value ? string.Empty : (string)dr["ReceiverBankName"],
 								ReceiverBankAccountNumber = dr["ReceiverBankAccountNumber"] == DBNull.Value ? string.Empty : (string)dr["ReceiverBankAccountNumber"],

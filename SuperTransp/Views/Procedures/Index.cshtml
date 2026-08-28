@@ -574,36 +574,26 @@
 				</div>
 
 				<div class="wizard-body">
-					<!-- Paso 1: Cédula -->
+					<!-- Paso 1: RIF -->
 					<div class="wizard-step" id="wizardStep1">
-						<label for="wizardCedula">Indique el número de cédula del socio</label>
-						<input type="text" id="wizardCedula" inputmode="numeric" autocomplete="off" maxlength="9" placeholder="Ej: 12345678" />
+						<label for="wizardRif">Indique el número de RIF de la organización</label>
+						<input type="text" id="wizardRif" autocomplete="off" maxlength="12" placeholder="Ej: J123456789" />
 						<p class="wizard-error" id="wizardStep1Error"></p>
 					</div>
 
-					<!-- Paso 2: Datos del transportista -->
+					<!-- Paso 2: Datos de la organización -->
 					<div class="wizard-step" id="wizardStep2" style="display:none;">
 						<div class="wizard-driver-data">
-							<div><strong>Cédula:</strong> <span id="driverCedula"></span></div>
-							<div><strong>Nombre:</strong> <span id="driverNombre"></span></div>
-							<div><strong>Sexo:</strong> <span id="driverSexo"></span></div>
-							<div><strong>Fecha de nacimiento:</strong> <span id="driverFechaNacimiento"></span></div>
-							<div><strong>Teléfono:</strong> <span id="driverTelefono"></span></div>
+							<div><strong>RIF:</strong> <span id="ptgRif"></span></div>
+							<div><strong>Nombre:</strong> <span id="ptgNombre"></span></div>
+							<div><strong>Estado:</strong> <span id="ptgEstado"></span></div>
+							<div><strong>Modalidad:</strong> <span id="ptgModalidad"></span></div>
+							<div><strong>Representante:</strong> <span id="ptgRepresentante"></span></div>
+							<div><strong>Cédula representante:</strong> <span id="ptgRepresentanteCedula"></span></div>
+							<div><strong>Teléfono:</strong> <span id="ptgTelefono"></span></div>
+							<div><strong>Cupo:</strong> <span id="ptgCupo"></span></div>
+							<div><strong>Socios:</strong> <span id="ptgSocios"></span></div>
 						</div>
-						<table class="wizard-table">
-							<thead>
-								<tr>
-									<th>Organización</th>
-									<th>Modalidad</th>
-									<th>Placa</th>
-									<th>Marca</th>
-									<th>Modelo</th>
-									<th>Año</th>
-									<th class="wizard-select-col">Seleccionar</th>
-								</tr>
-							</thead>
-							<tbody id="driverOrgTableBody"></tbody>
-						</table>
 					</div>
 
 					<!-- Paso 3: Tipos de trámite -->
@@ -691,7 +681,7 @@
 					<!-- Paso 5: Resumen -->
 					<div class="wizard-step" id="wizardStep5" style="display:none;">
 						<div class="wizard-summary-block">
-							<h4>Socio</h4>
+							<h4>Organización</h4>
 							<p id="summarySocio"></p>
 						</div>
 						<div class="wizard-summary-block">
@@ -729,7 +719,7 @@
 
 	<script>
 		(function () {
-			var driverApiUrl = '@Url.Action("GetDriverByIdentityDocument", "Procedures")';
+			var ptgApiUrl = '@Url.Action("GetDriverByPublicTransportGroupRif", "Procedures")';
 			var procedureApiUrl = '@Url.Action("GetProcedureTypes", "Procedures")';
 			var accounTypesApiUrl = '@Url.Action("GetAccounTypes", "Procedures")';
 			var exchangeRateApiUrl = '@Url.Action("GetExchangeRate", "Procedures")';
@@ -739,7 +729,7 @@
 
 			var overlay = document.getElementById('wizardOverlay');
 			var modal = document.getElementById('wizardModal');
-			var cedulaInput = document.getElementById('wizardCedula');
+			var rifInput = document.getElementById('wizardRif');
 			var step1Error = document.getElementById('wizardStep1Error');
 			var nextBtn = document.getElementById('wizardNext');
 			var prevBtn = document.getElementById('wizardPrev');
@@ -749,8 +739,7 @@
 			var payerBankSelect = document.getElementById('payerBankSelect');
 
 			var currentStep = 1;
-			var driverData = null;
-			var selectedOrganization = null;
+			var ptgData = null;
 			var procedureTypes = null;
 			var selectedProcedureId = null;
 			var bankAccountsCache = {};
@@ -762,15 +751,13 @@
 
 			function resetWizard() {
 				currentStep = 1;
-				driverData = null;
-				selectedOrganization = null;
+				ptgData = null;
 				selectedProcedureId = null;
 				procedureTypes = null;
 				bankAccountsCache = {};
 				banksListCache = null;
-				cedulaInput.value = '';
+				rifInput.value = '';
 				step1Error.textContent = '';
-				document.getElementById('driverOrgTableBody').innerHTML = '';
 				document.getElementById('procedureTableBody').innerHTML = '';
 
 				selectedPaymentTypeId = null;
@@ -833,9 +820,9 @@
 
 			function updateNextButtonState() {
 				if (currentStep === 1) {
-					nextBtn.disabled = cedulaInput.value.trim().length === 0;
+					nextBtn.disabled = rifInput.value.trim().length === 0;
 				} else if (currentStep === 2) {
-					nextBtn.disabled = selectedOrganization === null;
+					nextBtn.disabled = false;
 				} else if (currentStep === 3) {
 					nextBtn.disabled = selectedProcedureId === null;
 				} else if (currentStep === 4) {
@@ -862,61 +849,22 @@
 				return !!(accountNumber && amount1 && parseFloat(amount1) > 0 && reference1);
 			}
 
-			cedulaInput.addEventListener('input', function () {
-				this.value = this.value.replace(/\D/g, '');
+			rifInput.addEventListener('input', function () {
+				this.value = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
 				step1Error.textContent = '';
 				updateNextButtonState();
 			});
 
-			function formatFecha(value) {
-				if (!value) return 'No registrada';
-				var d = new Date(value);
-				if (isNaN(d.getTime())) return 'No registrada';
-				var dd = String(d.getDate()).padStart(2, '0');
-				var mm = String(d.getMonth() + 1).padStart(2, '0');
-				var yy = d.getFullYear();
-				return dd + '/' + mm + '/' + yy;
-			}
-
-			function renderDriverStep(data) {
-				document.getElementById('driverCedula').textContent = data.driverIdentityDocument || '';
-				document.getElementById('driverNombre').textContent = data.driverFullName || 'No registrado';
-				document.getElementById('driverSexo').textContent = data.sexName || 'No registrado';
-				document.getElementById('driverFechaNacimiento').textContent = formatFecha(data.birthDate);
-				document.getElementById('driverTelefono').textContent = data.driverPhone || 'No registrado';
-
-				var tbody = document.getElementById('driverOrgTableBody');
-				tbody.innerHTML = '';
-				selectedOrganization = null;
-
-				if (!data.organizations || data.organizations.length === 0) {
-					tbody.innerHTML = '<tr><td colspan="7" class="wizard-empty">Sin organizaciones registradas</td></tr>';
-					return;
-				}
-
-				data.organizations.forEach(function (org, idx) {
-					var tr = document.createElement('tr');
-
-					var hasVehicle = org.driverWithVehicle && org.plate;
-
-					tr.innerHTML =
-						'<td>' + (org.ptgCompleteName || 'Sin nombre') + '</td>' +
-						'<td>' + (org.modeName || '') + '</td>' +
-						'<td>' + (hasVehicle ? org.plate : 'Sin vehículo') + '</td>' +
-						'<td>' + (hasVehicle ? (org.make || '') : '-') + '</td>' +
-						'<td>' + (hasVehicle ? (org.model || '') : '-') + '</td>' +
-						'<td>' + (hasVehicle && org.year > 0 ? org.year : '-') + '</td>' +
-						'<td class="wizard-select-col"><input type="radio" name="wizardOrgSelect" value="' + idx + '" /></td>';
-
-					tbody.appendChild(tr);
-				});
-
-				tbody.querySelectorAll('input[name="wizardOrgSelect"]').forEach(function (radio) {
-					radio.addEventListener('change', function () {
-						selectedOrganization = data.organizations[parseInt(this.value, 10)];
-						updateNextButtonState();
-					});
-				});
+			function renderPTGStep(data) {
+				document.getElementById('ptgRif').textContent = data.publicTransportGroupRif || '';
+				document.getElementById('ptgNombre').textContent = data.ptgCompleteName || 'No registrado';
+				document.getElementById('ptgEstado').textContent = data.stateName || 'No registrado';
+				document.getElementById('ptgModalidad').textContent = data.modeName || 'No registrado';
+				document.getElementById('ptgRepresentante').textContent = data.representativeName || 'No registrado';
+				document.getElementById('ptgRepresentanteCedula').textContent = data.representativeIdentityDocument || 'No registrado';
+				document.getElementById('ptgTelefono').textContent = data.representativePhone || 'No registrado';
+				document.getElementById('ptgCupo').textContent = data.partners || 0;
+				document.getElementById('ptgSocios').textContent = data.totalDrivers || 0;
 			}
 
 			function loadProcedureTypes() {
@@ -1210,8 +1158,7 @@
 			// ── Paso 5: Resumen ────────────────────────────────────
 			function buildSummary() {
 				document.getElementById('summarySocio').textContent =
-					'C.I. ' + (driverData.driverIdentityDocument || '') + ' — ' + (driverData.driverFullName || '') +
-					(selectedOrganization ? (' — ' + (selectedOrganization.ptgCompleteName || '')) : '');
+					'RIF ' + (ptgData.publicTransportGroupRif || '') + ' — ' + (ptgData.ptgCompleteName || '');
 
 				var proc = (procedureTypes || []).find(function (p) { return String(p.procedureId) === String(selectedProcedureId); });
 				if (proc) {
@@ -1262,18 +1209,10 @@
 				var proc = (procedureTypes || []).find(function (p) { return String(p.procedureId) === String(selectedProcedureId); });
 				var tariff = proc && typeof proc.tariff === 'number' ? proc.tariff : 0;
 
-				var orgHasVehicle = selectedOrganization && selectedOrganization.driverWithVehicle && selectedOrganization.plate;
-
 				var params = new URLSearchParams();
-				params.append('ProcedureByDriverId', '0');
+				params.append('ProcedureByPublicTransportGroupId', '0');
 				params.append('ProcedureId', selectedProcedureId);
-				params.append('DriverId', driverData.driverId);
-				params.append('DriverPTGRif', selectedOrganization.publicTransportGroupRif || '');
-				params.append('DriverPTGName', selectedOrganization.ptgCompleteName || '');
-				params.append('DriverVehiclePlate', orgHasVehicle ? selectedOrganization.plate : '');
-				params.append('DriverVehicleYear', orgHasVehicle && selectedOrganization.year > 0 ? selectedOrganization.year : '0');
-				params.append('DriverVehicleMake', orgHasVehicle ? (selectedOrganization.make || '') : '');
-				params.append('DriverVehicleModel', orgHasVehicle ? (selectedOrganization.model || '') : '');
+				params.append('PublicTransportGroupId', ptgData.publicTransportGroupId);
 				params.append('ProcedureBankAccountId', selectedBankAccount.procedureBankAccountId);
 				params.append('AccounTypeId', selectedPaymentTypeId);
 				params.append('BankId', selectedPayerBankId);
@@ -1315,33 +1254,33 @@
 					});
 			}
 
-			function goToDriverSearch() {
-				var cedula = cedulaInput.value.trim();
+			function goToPTGSearch() {
+				var rif = rifInput.value.trim();
 				step1Error.textContent = '';
 				nextBtn.disabled = true;
 
-				fetch(driverApiUrl + '?driverIdentityDocument=' + encodeURIComponent(cedula), { cache: 'no-store' })
+				fetch(ptgApiUrl + '?publicTransportGroupRif=' + encodeURIComponent(rif), { cache: 'no-store' })
 					.then(function (r) { return r.json(); })
 					.then(function (data) {
 						if (!data) {
-							step1Error.textContent = 'No se encontró ningún transportista con esa cédula.';
+							step1Error.textContent = 'No se encontró ninguna organización con ese RIF.';
 							nextBtn.disabled = false;
 							return;
 						}
 
-						driverData = data;
-						renderDriverStep(driverData);
+						ptgData = data;
+						renderPTGStep(ptgData);
 						showStep(2);
 					})
 					.catch(function () {
-						step1Error.textContent = 'Ocurrió un error al buscar el transportista. Intente nuevamente.';
+						step1Error.textContent = 'Ocurrió un error al buscar la organización. Intente nuevamente.';
 						nextBtn.disabled = false;
 					});
 			}
 
 			nextBtn.addEventListener('click', function () {
 				if (currentStep === 1) {
-					goToDriverSearch();
+					goToPTGSearch();
 				} else if (currentStep === 2) {
 					showStep(3);
 					loadProcedureTypes();

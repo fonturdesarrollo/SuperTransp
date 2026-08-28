@@ -10,17 +10,17 @@ namespace SuperTransp.Controllers
 	{
 		private const int ModuleId = 34;
 
-		private readonly ISupervision _supervision;
 		private readonly IProcedure _procedure;
+		private readonly IPublicTransportGroup _publicTransportGroup;
 		private readonly ICommonData _commonData;
 		private readonly IExchangeRate _exchangeRate;
 		private readonly ISecurity _security;
 		private readonly IOptionsSnapshot<MaintenanceSettings> _settings;
 
-		public ProceduresController(ISupervision supervision, IProcedure procedure, ICommonData commonData, IExchangeRate exchangeRate, ISecurity security, IOptionsSnapshot<MaintenanceSettings> settings)
+		public ProceduresController(IProcedure procedure, IPublicTransportGroup publicTransportGroup, ICommonData commonData, IExchangeRate exchangeRate, ISecurity security, IOptionsSnapshot<MaintenanceSettings> settings)
 		{
-			_supervision = supervision;
 			_procedure = procedure;
+			_publicTransportGroup = publicTransportGroup;
 			_commonData = commonData;
 			_exchangeRate = exchangeRate;
 			_security = security;
@@ -189,15 +189,16 @@ namespace SuperTransp.Controllers
 			var result = CheckSessionAndPermission(ModuleId);
 			if (result != null) return Json(new { data = Array.Empty<object>() });
 
-			var data = _procedure.GetByDriverByProcedureStatusId(procedureStatusId);
+			var data = _procedure.GetByPTGByProcedureStatusId(procedureStatusId);
 
 			var list = data.Select(p => new
 			{
-				procedureByDriverId = p.ProcedureByDriverId,
+				procedureByPublicTransportGroupId = p.ProcedureByPublicTransportGroupId,
 				procedureStatusId = p.ProcedureStatusId,
-				driverIdentityDocument = p.DriverIdentityDocument,
-				driverFullName = p.DriverFullName,
-				driverPhone = p.DriverPhone,
+				publicTransportGroupRif = p.PublicTransportGroupRif,
+				ptgName = p.PublicTransportGroupNameFullName,
+				representativeName = p.RepresentativeName,
+				representativePhone = p.RepresentativePhone,
 				procedureCategoryName = p.ProcedureCategoryName,
 				procedureConcept = p.ProcedureConcept,
 				tariff = p.Tariff,
@@ -221,40 +222,27 @@ namespace SuperTransp.Controllers
 
 		[HttpGet]
 		[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-		public JsonResult GetDriverByIdentityDocument(int driverIdentityDocument)
+		public JsonResult GetDriverByPublicTransportGroupRif(string publicTransportGroupRif)
 		{
 			var result = CheckSessionAndPermission(ModuleId);
 			if (result != null) return Json(null);
 
-			var data = _supervision.GetDriverByDriverIdentityDocument(driverIdentityDocument);
+			var ptg = _publicTransportGroup.GetAll().FirstOrDefault(p => p.PublicTransportGroupRif == publicTransportGroupRif);
 
-			if (data == null || !data.Any())
-			{
-				return Json(null);
-			}
-
-			var first = data.First();
+			if (ptg == null) return Json(null);
 
 			return Json(new
 			{
-				driverId = first.DriverId,
-				driverIdentityDocument = first.DriverIdentityDocument,
-				driverFullName = first.DriverFullName,
-				sexName = first.SexName,
-				birthDate = first.BirthDate,
-				driverPhone = first.DriverPhone,
-				organizations = data.Select(d => new
-				{
-					publicTransportGroupId = d.PublicTransportGroupId,
-					ptgCompleteName = d.PTGCompleteName,
-					publicTransportGroupRif = d.PublicTransportGroupRif,
-					modeName = d.ModeName,
-					driverWithVehicle = d.DriverWithVehicle,
-					plate = d.Plate,
-					make = d.Make,
-					model = d.Model,
-					year = d.Year
-				})
+				publicTransportGroupId = ptg.PublicTransportGroupId,
+				publicTransportGroupRif = ptg.PublicTransportGroupRif,
+				ptgCompleteName = ptg.PTGCompleteName,
+				stateName = ptg.StateName,
+				modeName = ptg.ModeName,
+				representativeName = ptg.RepresentativeName,
+				representativeIdentityDocument = ptg.RepresentativeIdentityDocument,
+				representativePhone = ptg.RepresentativePhone,
+				partners = ptg.Partners,
+				totalDrivers = ptg.TotalDrivers
 			});
 		}
 
@@ -354,7 +342,7 @@ namespace SuperTransp.Controllers
 
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public JsonResult SubmitProcedureRequest(ProcedureByDriverViewModel model)
+		public JsonResult SubmitProcedureRequest(ProcedureByPublicTransportGroupViewModel model)
 		{
 			var result = CheckSessionAndPermission(ModuleId);
 			if (result != null) return Json(new { success = false, message = "Sesión inválida" });
@@ -380,16 +368,16 @@ namespace SuperTransp.Controllers
 				}
 			}
 
-			if (model == null || model.ProcedureId <= 0 || model.DriverId <= 0 || model.ProcedureBankAccountId <= 0 || model.BankId <= 0 || model.BCVPaid <= 0 || model.Tariff <= 0 || model.Rate <= 0)
+			if (model == null || model.ProcedureId <= 0 || model.PublicTransportGroupId <= 0 || model.ProcedureBankAccountId <= 0 || model.BankId <= 0 || model.BCVPaid <= 0 || model.Tariff <= 0 || model.Rate <= 0)
 			{
 				return Json(new { success = false, message = "Datos incompletos para procesar la solicitud" });
 			}
 
 			try
 			{
-				var procedureByDriverId = _procedure.AddOrEditByDriver(model);
+				var procedureByPublicTransportGroupId = _procedure.AddOrEditByPTG(model);
 
-				return Json(new { success = procedureByDriverId > 0, procedureByDriverId });
+				return Json(new { success = procedureByPublicTransportGroupId > 0, procedureByPublicTransportGroupId });
 			}
 			catch (Exception ex)
 			{
@@ -415,13 +403,13 @@ namespace SuperTransp.Controllers
 
 				foreach (var change in changes)
 				{
-					if (change.ProcedureByDriverId <= 0 || change.ProcedureStatusId <= 0) continue;
+					if (change.ProcedureByPublicTransportGroupId <= 0 || change.ProcedureStatusId <= 0) continue;
 
-					// El SP solo actualiza ProcedureStatusId cuando @ProcedureByDriverId != 0;
+					// El SP solo actualiza ProcedureStatusId cuando @ProcedureByPublicTransportGroupId != 0;
 					// ExecuteScalar no devuelve resultado en esa rama (no hay excepción = éxito).
-					_procedure.AddOrEditByDriver(new ProcedureByDriverViewModel
+					_procedure.AddOrEditByPTG(new ProcedureByPublicTransportGroupViewModel
 					{
-						ProcedureByDriverId = change.ProcedureByDriverId,
+						ProcedureByPublicTransportGroupId = change.ProcedureByPublicTransportGroupId,
 						ProcedureStatusId = change.ProcedureStatusId
 					});
 
@@ -438,7 +426,7 @@ namespace SuperTransp.Controllers
 
 		public class ProcedureStatusChangeItem
 		{
-			public int ProcedureByDriverId { get; set; }
+			public int ProcedureByPublicTransportGroupId { get; set; }
 			public int ProcedureStatusId { get; set; }
 		}
 
