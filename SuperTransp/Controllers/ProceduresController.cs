@@ -152,8 +152,8 @@ namespace SuperTransp.Controllers
 
 			try
 			{
-				// El SP solo devuelve el id nuevo al insertar; al actualizar no hay resultado
-				// (no lanzar excepción ya es señal de éxito).
+				// The SP only returns the new id on insert; there's no result on update
+				// (no exception thrown is itself the success signal).
 				_procedure.AddOrEdit(model);
 
 				TempData["SuccessMessage"] = "Trámite actualizado correctamente";
@@ -347,9 +347,9 @@ namespace SuperTransp.Controllers
 			var result = CheckSessionAndPermission(ModuleId);
 			if (result != null) return Json(new { success = false, message = "Sesión inválida" });
 
-			// Los montos se parsean manualmente con cultura invariante: el binder por defecto usa
-			// la cultura del servidor, que en instalaciones en español espera coma decimal y
-			// rechazaría el punto que envía el formulario (formato "123.45").
+			// Amounts are parsed manually with invariant culture: the default binder uses
+			// the server's culture, which on Spanish-locale installs expects a decimal comma
+			// and would reject the dot the form sends (format "123.45").
 			if (model != null)
 			{
 				if (decimal.TryParse(Request.Form["BCVPaid"], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var bcvPaid))
@@ -405,8 +405,8 @@ namespace SuperTransp.Controllers
 				{
 					if (change.ProcedureByPublicTransportGroupId <= 0 || change.ProcedureStatusId <= 0) continue;
 
-					// El SP solo actualiza ProcedureStatusId cuando @ProcedureByPublicTransportGroupId != 0;
-					// ExecuteScalar no devuelve resultado en esa rama (no hay excepción = éxito).
+					// The SP only updates ProcedureStatusId when @ProcedureByPublicTransportGroupId != 0;
+					// ExecuteScalar returns nothing on that branch (no exception = success).
 					_procedure.AddOrEditByPTG(new ProcedureByPublicTransportGroupViewModel
 					{
 						ProcedureByPublicTransportGroupId = change.ProcedureByPublicTransportGroupId,

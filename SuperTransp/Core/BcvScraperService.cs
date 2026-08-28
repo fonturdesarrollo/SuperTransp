@@ -11,7 +11,7 @@ namespace SuperTransp.Core
 
 		private static readonly TimeSpan _interval = TimeSpan.FromHours(6);
 
-		// bcv.org.ve tiene un certificado SSL con problemas; se deshabilita la validación solo para este host
+		// bcv.org.ve has a problematic SSL certificate; validation is disabled only for this host
 		private static readonly HttpClient _httpClient = new(new HttpClientHandler
 		{
 			ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
@@ -47,7 +47,7 @@ namespace SuperTransp.Core
 
 				if (rates.Count == 0)
 				{
-					_logger.LogWarning("BCV: no se encontraron tasas en el HTML");
+					_logger.LogWarning("BCV: no rates found in the HTML");
 					return;
 				}
 
@@ -59,12 +59,12 @@ namespace SuperTransp.Core
 					dal.Save(code, rate);
 				}
 
-				_logger.LogInformation("BCV tasas actualizadas: {Rates}",
+				_logger.LogInformation("BCV rates updated: {Rates}",
 					string.Join(", ", rates.Select(r => $"{r.Key}={r.Value:F4}")));
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, "BCV: error al obtener tasas");
+				_logger.LogError(ex, "BCV: error fetching rates");
 			}
 		}
 
@@ -75,14 +75,14 @@ namespace SuperTransp.Core
 
 			foreach (var (divId, code) in targets)
 			{
-				// Busca <div id="dolar"...> ... <strong>XX,XXXX</strong>
+				// Looks for <div id="dolar"...> ... <strong>XX,XXXX</strong>
 				var match = Regex.Match(html,
 					$@"id=""{divId}""[^>]*>.*?<strong[^>]*>\s*([\d\.,]+)\s*</strong>",
 					RegexOptions.Singleline | RegexOptions.IgnoreCase);
 
 				if (!match.Success) continue;
 
-				// Formato venezolano: punto = miles, coma = decimal → "91,5234" o "1.091,5234"
+				// Venezuelan number format: dot = thousands separator, comma = decimal → "91,5234" or "1.091,5234"
 				var raw = match.Groups[1].Value.Trim()
 					.Replace(".", "")
 					.Replace(",", ".");

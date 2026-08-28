@@ -51,7 +51,7 @@
 			cursor: pointer;
 		}
 
-		/* ── Wizard: Solicitar trámite ─────────────────────────── */
+		/* ── Wizard: Request Procedure ─────────────────────────── */
 		.wizard-overlay {
 			display: none;
 			position: fixed;
@@ -258,9 +258,9 @@
 			width: 60px;
 		}
 
-		/* La plantilla base oculta los radio nativos (opacity:0) porque espera un
-		   <label> a continuación con un ícono dibujado por CSS; como aquí no lo usamos,
-		   se restaura la apariencia nativa solo dentro de esta columna. */
+		/* The base template hides native radio buttons (opacity:0) because it expects
+		   a <label> right after them with a CSS-drawn icon; since we don't use that
+		   pattern here, native appearance is restored only within this column. */
 		.wizard-select-col input[type="radio"] {
 			-webkit-appearance: radio;
 			-moz-appearance: radio;
@@ -341,7 +341,7 @@
 			cursor: not-allowed;
 		}
 
-		/* ── Paso 4: Datos de pago ─────────────────────────────── */
+		/* ── Step 4: Payment Data ─────────────────────────────── */
 		.wizard-frame {
 			border: 1.5px solid #e0e4f7;
 			border-radius: 10px;
@@ -549,7 +549,7 @@
 			</footer>
 		</div>
 
-		<!-- Wizard: Solicitar trámite -->
+		<!-- Wizard: Request Procedure -->
 		<div class="wizard-overlay" id="wizardOverlay">
 			<div class="wizard-modal" id="wizardModal">
 				<div class="wizard-header">
@@ -574,29 +574,29 @@
 				</div>
 
 				<div class="wizard-body">
-					<!-- Paso 1: RIF -->
+					<!-- Step 1: RIF -->
 					<div class="wizard-step" id="wizardStep1">
 						<label for="wizardRif">Indique el número de RIF de la organización</label>
-						<input type="text" id="wizardRif" autocomplete="off" maxlength="12" placeholder="Ej: J123456789" />
+						<input type="text" id="wizardRif" autocomplete="off" maxlength="10" placeholder="Ej: J123456789" />
 						<p class="wizard-error" id="wizardStep1Error"></p>
 					</div>
 
-					<!-- Paso 2: Datos de la organización -->
+					<!-- Step 2: Organization data -->
 					<div class="wizard-step" id="wizardStep2" style="display:none;">
 						<div class="wizard-driver-data">
 							<div><strong>RIF:</strong> <span id="ptgRif"></span></div>
-							<div><strong>Nombre:</strong> <span id="ptgNombre"></span></div>
-							<div><strong>Estado:</strong> <span id="ptgEstado"></span></div>
-							<div><strong>Modalidad:</strong> <span id="ptgModalidad"></span></div>
-							<div><strong>Representante:</strong> <span id="ptgRepresentante"></span></div>
-							<div><strong>Cédula representante:</strong> <span id="ptgRepresentanteCedula"></span></div>
-							<div><strong>Teléfono:</strong> <span id="ptgTelefono"></span></div>
-							<div><strong>Cupo:</strong> <span id="ptgCupo"></span></div>
-							<div><strong>Socios:</strong> <span id="ptgSocios"></span></div>
+							<div><strong>Nombre:</strong> <span id="ptgName"></span></div>
+							<div><strong>Estado:</strong> <span id="ptgState"></span></div>
+							<div><strong>Modalidad:</strong> <span id="ptgMode"></span></div>
+							<div><strong>Representante:</strong> <span id="ptgRepresentativeName"></span></div>
+							<div><strong>Cédula representante:</strong> <span id="ptgRepresentativeId"></span></div>
+							<div><strong>Teléfono:</strong> <span id="ptgPhone"></span></div>
+							<div><strong>Cupo:</strong> <span id="ptgPartners"></span></div>
+							<div><strong>Socios:</strong> <span id="ptgDrivers"></span></div>
 						</div>
 					</div>
 
-					<!-- Paso 3: Tipos de trámite -->
+					<!-- Step 3: Procedure types -->
 					<div class="wizard-step" id="wizardStep3" style="display:none;">
 						<table class="wizard-table wizard-table-full">
 							<thead>
@@ -613,7 +613,7 @@
 						</table>
 					</div>
 
-					<!-- Paso 4: Datos de pago -->
+					<!-- Step 4: Payment data -->
 					<div class="wizard-step" id="wizardStep4" style="display:none;">
 						<div class="wizard-frame">
 							<div class="wizard-frame-title">Banco Receptor</div>
@@ -678,23 +678,23 @@
 						</div>
 					</div>
 
-					<!-- Paso 5: Resumen -->
+					<!-- Step 5: Summary -->
 					<div class="wizard-step" id="wizardStep5" style="display:none;">
 						<div class="wizard-summary-block">
 							<h4>Organización</h4>
-							<p id="summarySocio"></p>
+							<p id="summaryOrganization"></p>
 						</div>
 						<div class="wizard-summary-block">
 							<h4>Trámite</h4>
-							<p id="summaryTramite"></p>
+							<p id="summaryProcedure"></p>
 						</div>
 						<div class="wizard-summary-block">
 							<h4>Banco Receptor</h4>
-							<p id="summaryReceptor"></p>
+							<p id="summaryReceivingBank"></p>
 						</div>
 						<div class="wizard-summary-block">
 							<h4>Banco Pagador</h4>
-							<p id="summaryPagador"></p>
+							<p id="summaryPayingBank"></p>
 						</div>
 					</div>
 				</div>
@@ -850,21 +850,40 @@
 			}
 
 			rifInput.addEventListener('input', function () {
-				this.value = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+				var raw = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+				var firstChar = raw.charAt(0);
+				var letter = '';
+				var rest = raw;
+
+				if (/[JVC]/.test(firstChar)) {
+					letter = firstChar;
+					rest = raw.slice(1);
+				}
+
+				var digits = rest.replace(/\D/g, '').slice(0, 9);
+
+				// If there's no explicit J/V/C letter yet but a digit has already been typed,
+				// default to "J" (the user can delete it and type V or C instead).
+				if (!letter && digits) {
+					letter = 'J';
+				}
+
+				this.value = letter + digits;
 				step1Error.textContent = '';
 				updateNextButtonState();
 			});
 
 			function renderPTGStep(data) {
 				document.getElementById('ptgRif').textContent = data.publicTransportGroupRif || '';
-				document.getElementById('ptgNombre').textContent = data.ptgCompleteName || 'No registrado';
-				document.getElementById('ptgEstado').textContent = data.stateName || 'No registrado';
-				document.getElementById('ptgModalidad').textContent = data.modeName || 'No registrado';
-				document.getElementById('ptgRepresentante').textContent = data.representativeName || 'No registrado';
-				document.getElementById('ptgRepresentanteCedula').textContent = data.representativeIdentityDocument || 'No registrado';
-				document.getElementById('ptgTelefono').textContent = data.representativePhone || 'No registrado';
-				document.getElementById('ptgCupo').textContent = data.partners || 0;
-				document.getElementById('ptgSocios').textContent = data.totalDrivers || 0;
+				document.getElementById('ptgName').textContent = data.ptgCompleteName || 'No registrado';
+				document.getElementById('ptgState').textContent = data.stateName || 'No registrado';
+				document.getElementById('ptgMode').textContent = data.modeName || 'No registrado';
+				document.getElementById('ptgRepresentativeName').textContent = data.representativeName || 'No registrado';
+				document.getElementById('ptgRepresentativeId').textContent = data.representativeIdentityDocument || 'No registrado';
+				document.getElementById('ptgPhone').textContent = data.representativePhone || 'No registrado';
+				document.getElementById('ptgPartners').textContent = data.partners || 0;
+				document.getElementById('ptgDrivers').textContent = data.totalDrivers || 0;
 			}
 
 			function loadProcedureTypes() {
@@ -930,7 +949,7 @@
 				});
 			}
 
-			// ── Paso 4: Tipos de pago (Banco Receptor) ────────────
+			// ── Step 4: Payment Types (Receiving Bank) ────────────
 			function loadAccounTypes() {
 				fetch(accounTypesApiUrl, { cache: 'no-store' })
 					.then(function (r) { return r.json(); })
@@ -951,7 +970,7 @@
 
 			loadAccounTypes();
 
-			// ── Tasa BCV (visible en todos los pasos del wizard) ──
+			// ── BCV rate (visible on every wizard step) ──
 			function loadBcvRate() {
 				var el = document.getElementById('wizardBcvRate');
 				var valueEl = document.getElementById('wizardBcvRateValue');
@@ -992,7 +1011,7 @@
 				document.getElementById('tariffHintMobile').textContent = text;
 			}
 
-			// ── Paso 4: Banco Receptor ────────────────────────────
+			// ── Step 4: Receiving Bank ────────────────────────────
 			function loadReceiverBankAccounts(accounTypeId) {
 				var table = document.getElementById('receiverBankTable');
 				var thead = document.getElementById('receiverBankTableHead');
@@ -1075,7 +1094,7 @@
 				updateNextButtonState();
 			});
 
-			// ── Paso 4: Banco Pagador ──────────────────────────────
+			// ── Step 4: Paying Bank ──────────────────────────────
 			function loadPayerBanks() {
 				if (banksListCache) {
 					populatePayerBankSelect(banksListCache);
@@ -1155,9 +1174,9 @@
 			restrictDecimalInput(document.getElementById('payerAmountPaid1'));
 			restrictDecimalInput(document.getElementById('payerAmountPaid2'));
 
-			// ── Paso 5: Resumen ────────────────────────────────────
+			// ── Step 5: Summary ────────────────────────────────────
 			function buildSummary() {
-				document.getElementById('summarySocio').textContent =
+				document.getElementById('summaryOrganization').textContent =
 					'RIF ' + (ptgData.publicTransportGroupRif || '') + ' — ' + (ptgData.ptgCompleteName || '');
 
 				var proc = (procedureTypes || []).find(function (p) { return String(p.procedureId) === String(selectedProcedureId); });
@@ -1165,33 +1184,33 @@
 					var tariffText = (typeof proc.tariff === 'number')
 						? proc.tariff.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 						: proc.tariff;
-					document.getElementById('summaryTramite').textContent =
+					document.getElementById('summaryProcedure').textContent =
 						proc.procedureCategoryName + ' — ' + proc.procedureConcept + ' (' + proc.procedureFrequencyName + ') — Tarifa: ' + tariffText;
 				}
 
 				var paymentTypeLabel = paymentTypeSelect.options[paymentTypeSelect.selectedIndex].text;
 
-				var receptorText = (selectedBankAccount.bankName || '');
-				receptorText += selectedPaymentTypeId === 3
+				var receivingBankText = (selectedBankAccount.bankName || '');
+				receivingBankText += selectedPaymentTypeId === 3
 					? (' — Teléfono: ' + (selectedBankAccount.cellPhoneNumber || '') + ' — Cédula: ' + (selectedBankAccount.idNumber || ''))
 					: (' — Cuenta: ' + (selectedBankAccount.accountNumber || ''));
-				receptorText += ' — Tipo de cuenta: ' + paymentTypeLabel;
-				document.getElementById('summaryReceptor').textContent = receptorText;
+				receivingBankText += ' — Tipo de cuenta: ' + paymentTypeLabel;
+				document.getElementById('summaryReceivingBank').textContent = receivingBankText;
 
 				var payerBankName = payerBankSelect.options[payerBankSelect.selectedIndex].text;
-				var pagadorText = payerBankName;
+				var payingBankText = payerBankName;
 				if (selectedPaymentTypeId === 3) {
-					pagadorText += ' — Teléfono: ' + document.getElementById('payerCellPhoneNumber').value +
+					payingBankText += ' — Teléfono: ' + document.getElementById('payerCellPhoneNumber').value +
 						' — Cédula: ' + document.getElementById('payerIdNumber').value +
 						' — Monto pagado: ' + document.getElementById('payerAmountPaid2').value +
 						' — N° de referencia: ' + document.getElementById('payerReferenceNumber2').value;
 				} else {
-					pagadorText += ' — Cuenta: ' + document.getElementById('payerAccountNumber').value +
+					payingBankText += ' — Cuenta: ' + document.getElementById('payerAccountNumber').value +
 						' — Monto pagado: ' + document.getElementById('payerAmountPaid1').value +
 						' — N° de referencia: ' + document.getElementById('payerReferenceNumber1').value;
 				}
-				pagadorText += ' — Tipo de cuenta: ' + paymentTypeLabel;
-				document.getElementById('summaryPagador').textContent = pagadorText;
+				payingBankText += ' — Tipo de cuenta: ' + paymentTypeLabel;
+				document.getElementById('summaryPayingBank').textContent = payingBankText;
 			}
 
 			function submitProcedureRequest() {
