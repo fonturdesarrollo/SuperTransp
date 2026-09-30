@@ -131,6 +131,7 @@ namespace SuperTransp.Core
 			public SupervisionSummaryViewModel GetSupervisionSummaryById(int supervisionSummaryId, bool isClosed = false);
 			public SupervisionRoundModel GetActiveSupervisionRoundByStateId(int stateId);
 			public List<SupervisionRoundModel> GetClosedRoundsByStateId(int stateId);
+			public List<SupervisionRoundModel> GetSupervisionRoundsByStateId(int stateId);
 			public SupervisionRoundModel GetClosedRoundsBySupervisionRoundIdAndStateId(int supervisionRoundId, int stateId);
 			public bool IsActiveSupervisionRoundByStateMonthAndYear(int stateId, int month, int year);
 			public bool IsFinishedSupervisionRoundByStateMonthAndYear(int stateId, int month, int year);
@@ -218,9 +219,9 @@ namespace SuperTransp.Core
 		{
 			public int AddOrEdit(ProcedureViewModel model);
 			public List<ProcedureViewModel> GetAll();
-			public List<ProcedureByDriverViewModel> GetByDriverByProcedureStatusId(int procedureStatusId);
+			public List<ProcedureViewModel> GetById(int procedureId);
 			public List<ProcedureByPublicTransportGroupViewModel> GetByPTGByProcedureStatusId(int procedureStatusId);
-			public int AddOrEditByDriver(ProcedureByDriverViewModel model);
+			public int GetMonthlyFeePendingsByPTG(int publicTransportGroupId);
 			public int AddOrEditByPTG(ProcedureByPublicTransportGroupViewModel model);
 			public List<ProcedureBankAccountViewModel> GetByBankAccounTypeId(int accounTypeId);
 			public List<ProcedureStatusViewModel> GetStatusAll();

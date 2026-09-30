@@ -267,6 +267,35 @@ namespace SuperTransp.Controllers
 
 		[HttpGet]
 		[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+		public JsonResult GetProcedureById(int procedureId)
+		{
+			var result = CheckSessionAndPermission(ModuleId);
+			if (result != null) return Json(Array.Empty<object>());
+
+			var data = _procedure.GetById(procedureId);
+
+			return Json(data.Select(p => new
+			{
+				procedureId = p.ProcedureId,
+				procedureCategoryName = p.ProcedureCategoryName,
+				procedureConcept = p.ProcedureConcept,
+				procedureFrequencyName = p.ProcedureFrequencyName,
+				tariff = p.Tariff
+			}));
+		}
+
+		[HttpGet]
+		[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+		public JsonResult GetMonthlyFeePendingsByPTG(int publicTransportGroupId)
+		{
+			var result = CheckSessionAndPermission(ModuleId);
+			if (result != null) return Json(0);
+
+			return Json(_procedure.GetMonthlyFeePendingsByPTG(publicTransportGroupId));
+		}
+
+		[HttpGet]
+		[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 		public JsonResult GetExchangeRate()
 		{
 			var result = CheckSessionAndPermission(ModuleId);

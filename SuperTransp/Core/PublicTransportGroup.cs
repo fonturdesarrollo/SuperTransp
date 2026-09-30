@@ -401,7 +401,7 @@ namespace SuperTransp.Core
 					{
 						sqlConnection.Open();
 					}
-
+					//GetInternalValues();
 					List<PublicTransportGroupViewModel> ptg = new();
 					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupStatisticsInState", sqlConnection);
 

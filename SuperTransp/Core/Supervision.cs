@@ -1678,6 +1678,53 @@ namespace SuperTransp.Core
 			}
 		}
 
+		public List<SupervisionRoundModel> GetSupervisionRoundsByStateId(int stateId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+					var whereCondition = stateId > 0 ? " WHERE StateId = @StateId" : "";
+					List<SupervisionRoundModel> round = new();
+					SqlCommand cmd = new($"SELECT * FROM SuperTransp_SupervisionRoundDetail {whereCondition}", sqlConnection);
+
+					if(stateId > 0)
+					{
+						cmd.Parameters.AddWithValue("@StateId", stateId);
+					}
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							round.Add(new SupervisionRoundModel
+							{
+								StateName = (string)dr["StateName"],
+								SupervisionRoundId = (int)dr["SupervisionRoundId"],
+								StateId = (int)dr["StateId"],
+								SupervisionRoundStartDate = (DateTime)dr["SupervisionRoundStartDate"],
+								SupervisionRoundStartDescription = (string)dr["SupervisionRoundStartDescription"],
+								SupervisionRoundStatus = (bool)dr["SupervisionRoundStatus"],
+								SupervisionRoundStatusDescription = (string)dr["RoundStatusDescription"],
+								CloseRoundDate =  (string)dr["CloseDate"],
+								SupervisionRoundEndDescription = (string)dr["SupervisionRoundEndDescription"],
+							});
+						}
+					}
+
+					return round;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener vuelta de supervision {ex.Message}", ex);
+			}
+		}
+
 		public SupervisionRoundModel GetClosedRoundsBySupervisionRoundIdAndStateId(int supervisionRoundId, int stateId)
 		{
 			try

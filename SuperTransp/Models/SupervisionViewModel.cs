@@ -74,11 +74,13 @@ namespace SuperTransp.Models
 		[Key]
 		public int SupervisionRoundId { get; set; }
 		public int StateId { get; set; }
+		public string? StateName { get; set; }
 		public DateTime SupervisionRoundStartDate { get; set; }
 		public string? SupervisionRoundStartDescription { get; set; }
 		public DateTime? SupervisionRoundEndDate { get; set; }
 		public string? SupervisionRoundEndDescription { get; set; }
 		public bool SupervisionRoundStatus { get; set; }
+		public string? SupervisionRoundStatusDescription { get; set; }
 		public int TotalPTG { get; set; }
 		public int TotalPartners { get; set; }
 		public int TotalSupervisedDrivers { get; set; }

@@ -51,52 +51,6 @@ namespace SuperTransp.Core
 			}
 		}
 
-		public int AddOrEditByDriver(ProcedureByDriverViewModel model)
-		{
-			int result = 0;
-
-			using (SqlConnection sqlConnection = GetConnection())
-			{
-				if (sqlConnection.State == ConnectionState.Closed)
-				{
-					sqlConnection.Open();
-				}
-
-				if (model != null)
-				{
-					SqlCommand cmd = new("SuperTransp_ProcedureByDriverAddOrEdit", sqlConnection)
-					{
-						CommandType = System.Data.CommandType.StoredProcedure
-					};
-
-					cmd.Parameters.AddWithValue("@ProcedureByDriverId", model.ProcedureByDriverId);
-					cmd.Parameters.AddWithValue("@ProcedureId", model.ProcedureId);
-					cmd.Parameters.AddWithValue("@DriverId", model.DriverId);
-					cmd.Parameters.AddWithValue("@DriverPTGRif", (object?)model.DriverPTGRif ?? DBNull.Value);
-					cmd.Parameters.AddWithValue("@DriverPTGName", (object?)model.DriverPTGName ?? DBNull.Value);
-					cmd.Parameters.AddWithValue("@DriverVehiclePlate", (object?)model.DriverVehiclePlate ?? DBNull.Value);
-					cmd.Parameters.AddWithValue("@DriverVehicleYear", (object?)model.DriverVehicleYear ?? DBNull.Value);
-					cmd.Parameters.AddWithValue("@DriverVehicleMake", (object?)model.DriverVehicleMake ?? DBNull.Value);
-					cmd.Parameters.AddWithValue("@DriverVehicleModel", (object?)model.DriverVehicleModel ?? DBNull.Value);
-					cmd.Parameters.AddWithValue("@ProcedureBankAccountId", model.ProcedureBankAccountId);
-					cmd.Parameters.AddWithValue("@AccounTypeId", model.AccounTypeId);
-					cmd.Parameters.AddWithValue("@BankId", model.BankId);
-					cmd.Parameters.AddWithValue("@PayerCellPhoneNumber", (object?)model.PayerCellPhoneNumber ?? DBNull.Value);
-					cmd.Parameters.AddWithValue("@PayerIdNumber", (object?)model.PayerIdNumber ?? DBNull.Value);
-					cmd.Parameters.AddWithValue("@PayerAccountNumber", (object?)model.PayerAccountNumber ?? DBNull.Value);
-					cmd.Parameters.AddWithValue("@PayerReferenceNumber", (object?)model.PayerReferenceNumber ?? DBNull.Value);
-					cmd.Parameters.AddWithValue("@BCVPaid", model.BCVPaid);
-					cmd.Parameters.AddWithValue("@Tariff", model.Tariff);
-					cmd.Parameters.AddWithValue("@Rate", model.Rate);
-					cmd.Parameters.AddWithValue("@ProcedureStatusId", model.ProcedureStatusId);
-
-					result = Convert.ToInt32(cmd.ExecuteScalar());
-				}
-
-				return result;
-			}
-		}
-
 		public int AddOrEditByPTG(ProcedureByPublicTransportGroupViewModel model)
 		{
 			int result = 0;
@@ -148,7 +102,7 @@ namespace SuperTransp.Core
 					}
 
 					List<ProcedureViewModel> procedure = new();
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_ProcedureDetail", sqlConnection);
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_ProcedureDetail ORDER BY ProcedureCategoryName", sqlConnection);
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
 					{
@@ -176,7 +130,7 @@ namespace SuperTransp.Core
 			}
 		}
 
-		public List<ProcedureByDriverViewModel> GetByDriverByProcedureStatusId(int procedureStatusId)
+		public List<ProcedureViewModel> GetById(int procedureId)
 		{
 			try
 			{
@@ -187,40 +141,23 @@ namespace SuperTransp.Core
 						sqlConnection.Open();
 					}
 
-					List<ProcedureByDriverViewModel> procedure = new();
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_ProcedureByDriverDetail WHERE ProcedureStatusId = @ProcedureStatusId", sqlConnection);
-					cmd.Parameters.AddWithValue("@ProcedureStatusId", procedureStatusId);
+					List<ProcedureViewModel> procedure = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_ProcedureDetail WHERE ProcedureId = @ProcedureId", sqlConnection);
+					cmd.Parameters.AddWithValue("@ProcedureId", procedureId);
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
 					{
 						while (dr.Read())
 						{
-							procedure.Add(new ProcedureByDriverViewModel
+							procedure.Add(new ProcedureViewModel
 							{
-								ProcedureByDriverId = (int)dr["ProcedureByDriverId"],
 								ProcedureId = (int)dr["ProcedureId"],
-								ProcedureConcept = dr["ProcedureConcept"] == DBNull.Value ? string.Empty : (string)dr["ProcedureConcept"],
-								ProcedureCategoryName = dr["ProcedureCategoryName"] == DBNull.Value ? string.Empty : (string)dr["ProcedureCategoryName"],
-								DriverId = (int)dr["DriverId"],
-								DriverIdentityDocument = (int)dr["DriverIdentityDocument"],
-								DriverFullName = dr["DriverFullName"] == DBNull.Value ? string.Empty : (string)dr["DriverFullName"],
-								DriverPhone = dr["DriverPhone"] == DBNull.Value ? string.Empty : (string)dr["DriverPhone"],
-								ReceiverBankAccountTypeName = dr["ReceiverBankAccountTypeName"] == DBNull.Value ? string.Empty : (string)dr["ReceiverBankAccountTypeName"],
-								ReceiverBankName = dr["ReceiverBankName"] == DBNull.Value ? string.Empty : (string)dr["ReceiverBankName"],
-								ReceiverBankAccountNumber = dr["ReceiverBankAccountNumber"] == DBNull.Value ? string.Empty : (string)dr["ReceiverBankAccountNumber"],
-								ReceiverBankCellPhone = dr["ReceiverBankCellPhone"] == DBNull.Value ? string.Empty : (string)dr["ReceiverBankCellPhone"],
-								ReceiverBankIdNumber = dr["ReceiverBankIdNumber"] == DBNull.Value ? string.Empty : (string)dr["ReceiverBankIdNumber"],
-								PayerBankName = dr["PayerBankName"] == DBNull.Value ? string.Empty : (string)dr["PayerBankName"],
-								PayerCellPhoneNumber = dr["PayerCellPhoneNumber"] == DBNull.Value ? string.Empty : (string)dr["PayerCellPhoneNumber"],
-								PayerIdNumber = dr["PayerIdNumber"] == DBNull.Value ? string.Empty : (string)dr["PayerIdNumber"],
-								PayerAccountNumber = dr["PayerAccountNumber"] == DBNull.Value ? string.Empty : (string)dr["PayerAccountNumber"],
-								PayerReferenceNumber = dr["PayerReferenceNumber"] == DBNull.Value ? string.Empty : (string)dr["PayerReferenceNumber"],
-								Tariff = (decimal)dr["Tariff"],
-								BCVPaid = (decimal)dr["BCVPaid"],
-								Rate = (decimal)dr["Rate"],
-								ProcedureStatusName = dr["ProcedureStatusName"] == DBNull.Value ? string.Empty : (string)dr["ProcedureStatusName"],
-								ProcedureStatusId = (int)dr["ProcedureStatusId"],
-								AccounTypeId = (int)dr["AccounTypeId"],
+								ProcedureCategoryId = (int)dr["ProcedureCategoryId"],
+								ProcedureCategoryName = (string)dr["ProcedureCategoryName"],
+								ProcedureConcept = (string)dr["ProcedureConcept"],
+								ProcedureFrequencyId = (int)dr["ProcedureFrequencyId"],
+								ProcedureFrequencyName = (string)dr["ProcedureFrequencyName"],
+								Tariff = (decimal)dr["Tariff"]
 							});
 						}
 					}
@@ -442,6 +379,43 @@ namespace SuperTransp.Core
 			catch (Exception ex)
 			{
 				throw new Exception($"Error al obtener las categorias {ex.Message}", ex);
+			}
+		}
+
+		public int GetMonthlyFeePendingsByPTG(int publicTransportGroupId)
+		{
+			try
+			{
+				int totalMonthlyFeesPaid = 0;
+				int monthlyFeePendings = 0;
+				int elapsedMonths = DateTime.Now.Month - 1;
+
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_MonthlyFeesPaid WHERE PublicTransportGroupId = @PublicTransportGroupId AND ProcedureId = 13", sqlConnection);
+					cmd.Parameters.AddWithValue("@PublicTransportGroupId", publicTransportGroupId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						if (dr.Read())
+						{
+							totalMonthlyFeesPaid = (int)dr["TotalMonthlyFeesPaid"];
+						}
+
+						monthlyFeePendings = elapsedMonths - totalMonthlyFeesPaid;
+					}
+
+					return monthlyFeePendings;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener las cuotas mensuales pagadas {ex.Message}", ex);
 			}
 		}
 	}

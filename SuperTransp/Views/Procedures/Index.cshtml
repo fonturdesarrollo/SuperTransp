@@ -205,6 +205,17 @@
 			min-height: 1.1em;
 		}
 
+		.wizard-warning {
+			background: #fff3cd;
+			border: 1px solid #ffe69c;
+			color: #7a5c00;
+			padding: 10px 14px;
+			border-radius: 8px;
+			font-size: 0.85rem;
+			font-weight: 600;
+			margin: 0 0 12px;
+		}
+
 		.wizard-driver-data {
 			display: grid;
 			grid-template-columns: repeat(2, 1fr);
@@ -598,6 +609,7 @@
 
 					<!-- Step 3: Procedure types -->
 					<div class="wizard-step" id="wizardStep3" style="display:none;">
+						<p class="wizard-warning" id="monthlyFeeWarning" style="display:none;"></p>
 						<table class="wizard-table wizard-table-full">
 							<thead>
 								<tr>
@@ -721,6 +733,8 @@
 		(function () {
 			var ptgApiUrl = '@Url.Action("GetDriverByPublicTransportGroupRif", "Procedures")';
 			var procedureApiUrl = '@Url.Action("GetProcedureTypes", "Procedures")';
+			var procedureByIdApiUrl = '@Url.Action("GetProcedureById", "Procedures")';
+			var monthlyFeePendingsApiUrl = '@Url.Action("GetMonthlyFeePendingsByPTG", "Procedures")';
 			var accounTypesApiUrl = '@Url.Action("GetAccounTypes", "Procedures")';
 			var exchangeRateApiUrl = '@Url.Action("GetExchangeRate", "Procedures")';
 			var bankAccountsApiUrl = '@Url.Action("GetProcedureBankAccounts", "Procedures")';
@@ -748,6 +762,8 @@
 			var banksListCache = null;
 			var selectedPayerBankId = null;
 			var currentBcvRate = null;
+			var monthlyFeePendings = 0;
+			var monthlyFeePendingsChecked = false;
 
 			function resetWizard() {
 				currentStep = 1;
@@ -756,9 +772,12 @@
 				procedureTypes = null;
 				bankAccountsCache = {};
 				banksListCache = null;
+				monthlyFeePendings = 0;
+				monthlyFeePendingsChecked = false;
 				rifInput.value = '';
 				step1Error.textContent = '';
 				document.getElementById('procedureTableBody').innerHTML = '';
+				document.getElementById('monthlyFeeWarning').style.display = 'none';
 
 				selectedPaymentTypeId = null;
 				selectedBankAccount = null;
@@ -888,22 +907,52 @@
 
 			function loadProcedureTypes() {
 				var tbody = document.getElementById('procedureTableBody');
+				var warningEl = document.getElementById('monthlyFeeWarning');
 				tbody.innerHTML = '<tr><td colspan="6" class="wizard-empty">Cargando&hellip;</td></tr>';
 
-				if (procedureTypes) {
-					renderProcedureStep(procedureTypes);
+				if (monthlyFeePendingsChecked) {
+					fetchProcedureList();
 					return;
 				}
 
-				fetch(procedureApiUrl, { cache: 'no-store' })
+				fetch(monthlyFeePendingsApiUrl + '?publicTransportGroupId=' + ptgData.publicTransportGroupId, { cache: 'no-store' })
 					.then(function (r) { return r.json(); })
 					.then(function (data) {
-						procedureTypes = data || [];
-						renderProcedureStep(procedureTypes);
+						monthlyFeePendings = typeof data === 'number' ? data : 0;
+						monthlyFeePendingsChecked = true;
+						fetchProcedureList();
 					})
 					.catch(function () {
-						tbody.innerHTML = '<tr><td colspan="6" class="wizard-empty" style="color:#e74c3c;">Error al cargar los trámites</td></tr>';
+						monthlyFeePendings = 0;
+						monthlyFeePendingsChecked = true;
+						fetchProcedureList();
 					});
+
+				function fetchProcedureList() {
+					if (monthlyFeePendings > 1) {
+						warningEl.textContent = 'Organización con cuotas mensuales pendientes (' + monthlyFeePendings + ')';
+						warningEl.style.display = 'block';
+					} else {
+						warningEl.style.display = 'none';
+					}
+
+					if (procedureTypes) {
+						renderProcedureStep(procedureTypes);
+						return;
+					}
+
+					var url = monthlyFeePendings > 1 ? (procedureByIdApiUrl + '?procedureId=13') : procedureApiUrl;
+
+					fetch(url, { cache: 'no-store' })
+						.then(function (r) { return r.json(); })
+						.then(function (data) {
+							procedureTypes = data || [];
+							renderProcedureStep(procedureTypes);
+						})
+						.catch(function () {
+							tbody.innerHTML = '<tr><td colspan="6" class="wizard-empty" style="color:#e74c3c;">Error al cargar los trámites</td></tr>';
+						});
+				}
 			}
 
 			function formatBs(amount) {
@@ -1004,7 +1053,8 @@
 				var text = 'Monto según tarifa: Bs. —';
 
 				if (proc && typeof proc.tariff === 'number' && currentBcvRate) {
-					text = 'Monto según tarifa: ' + formatBs(proc.tariff * currentBcvRate);
+					var pendingsMultiplier = monthlyFeePendings > 1 ? monthlyFeePendings : 1;
+					text = 'Monto según tarifa: ' + formatBs(proc.tariff * currentBcvRate * pendingsMultiplier);
 				}
 
 				document.getElementById('tariffHintAccount').textContent = text;
