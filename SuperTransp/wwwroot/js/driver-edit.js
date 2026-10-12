@@ -60,6 +60,10 @@ document.addEventListener("DOMContentLoaded", function () {
     handleInput("[name='DriverPhone']", function (value) {
         return value.replace(/[^0-9]/g, "");
     });
+
+    handleInput("[name='DriverEmail']", function (value) {
+        return value.toLowerCase().replace(/\s/g, "");
+    });
 });
 
 $("body").on("click", "#saveRequest", function (event) {
@@ -109,6 +113,12 @@ $("form").on("submit", function (e) {
                         type: 'POST',
                         data: formData,
                         success: function (data) {
+                            if (data.success === false && !data.redirectUrl) {
+                                alert(data.message || "No se pudo actualizar el socio.");
+                                $("#saveRequest").prop("disabled", false);
+                                return;
+                            }
+
                             if (data.redirectUrl) {
                                 showMsg(data.message || "Datos actualizados correctamente");
                                 window.location.href = data.redirectUrl
@@ -193,6 +203,8 @@ function isOkToSave() {
             message = "Debe colocar un número de télefono válido";
         }
     }
+
+    // TEMP-EMAIL: email required/format validation removed temporarily (empty is saved as N/D). Restore later.
 
     if (firstInvalidField) {
         showAlert(message, firstInvalidField);

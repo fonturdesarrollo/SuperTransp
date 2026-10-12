@@ -121,7 +121,7 @@
                             </div>
                             <div class="col-6">
                                 <strong>Fecha de nacimiento:</strong>
-                                @Html.TextBox("Birthdate", Model.Birthdate.ToString("dd/MM/yyyy"), new { maxlength = "20" })
+                                @Html.TextBox("Birthdate", Model.Birthdate.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture), new { maxlength = "20" })
                             </div>
                             <div class="col-6">
                                 <strong>Número de Socio:</strong>

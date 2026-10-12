@@ -57,6 +57,10 @@ document.addEventListener("DOMContentLoaded", function () {
         return value.replace(/[^0-9]/g, "");
     });
 
+    handleInput("[name='RepresentativeEmail']", function (value) {
+        return value.toLowerCase().replace(/\s/g, "");
+    });
+
     handleInput("[name='Partners']", function (value) {
         return value.replace(/[^0-9]/g, "");
     });
@@ -81,7 +85,11 @@ $("body").on("click", "#saveRequest", function (event) {
 
     $.ajax({
         url: window.checkExistingUrl,
-        data: { paramValue1: paramValue1 },
+        data: {
+            paramValue1: paramValue1,
+            paramValue4: $('#RepresentativeEmail').val(),
+            paramValue5: $('#RepresentativeIdentityDocument').val()
+        },
         success: function (data) {
             $btn.prop("disabled", false);
             if (data !== "OK") {
@@ -184,6 +192,8 @@ function isOkToSave() {
         firstInvalidField = "#RepresentativePhone";
         message = "Debe colocar un número de teléfono válido";
     }
+
+    // TEMP-EMAIL: email required/format validation removed temporarily (empty is saved as N/D). Restore later.
 
     const partners = $("#Partners").val();
     if (partners === "" && !firstInvalidField) {

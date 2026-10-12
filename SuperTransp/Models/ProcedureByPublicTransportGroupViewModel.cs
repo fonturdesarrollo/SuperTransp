@@ -33,5 +33,6 @@
 		public int ProcedureStatusId { get; set; }
 		public string? ProcedureConcept { get; set; }
 		public string? ProcedureCategoryName { get; set; }
+		public DateTime? ProcedureDate { get; set; }
 	}
 }

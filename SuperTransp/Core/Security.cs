@@ -1142,7 +1142,11 @@ namespace SuperTransp.Core
 			if (securityGroupId != 1) whereClause += "  AND SecurityUserId <> 1";
 			if (hasStateFilter) whereClause += " AND UserState = @StateName";
 			if (!string.IsNullOrEmpty(searchValue))
-				whereClause += " AND (UserFullName LIKE @Search OR UserLogin LIKE @Search OR DeviceIP LIKE @Search OR ActionDescription LIKE @Search OR DeviceBrowser LIKE @Search)";
+				whereClause += @" AND (UserFullName LIKE @Search OR UserLogin LIKE @Search OR DeviceIP LIKE @Search
+					OR ActionDescription LIKE @Search OR DeviceBrowser LIKE @Search
+					OR UserState LIKE @Search OR DeviceType LIKE @Search OR DeviceOperatingSystem LIKE @Search
+					OR CONVERT(varchar(10), SecurityLogbookId) LIKE @Search
+					OR CONVERT(varchar(10), SecurityLogbookDate, 103) LIKE @Search)";
 
 			await using var cn = GetConnection();
 			await cn.OpenAsync();

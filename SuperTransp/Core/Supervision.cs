@@ -598,7 +598,58 @@ namespace SuperTransp.Core
 								UserFullName = (string)dr["UserFullName"],
 								SecurityUserId = (int)dr["SecurityUserId"],	
 								DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"],
+								DriverEmail = (string)dr["DriverEmail"],
+								DriverSexName = (string)dr["SexName"],
 								Pictures = GetPicturesByPTGIdAndDriverPublicTransportGroupId((int)dr["PublicTransportGroupId"], (int)dr["DriverPublicTransportGroupId"])
+							});
+						}
+					}
+
+					return ptg.ToList();
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener transportistas {ex.Message}", ex);
+			}
+		}
+
+		public List<PublicTransportGroupViewModel> GetDriverPTGByIdentityDocument(int driverIdentityDocument)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<PublicTransportGroupViewModel> ptg = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_DriverPTGByIdentityDocument WHERE DriverIdentityDocument = @DriverIdentityDocument", sqlConnection);
+					cmd.Parameters.AddWithValue("@DriverIdentityDocument", driverIdentityDocument);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							ptg.Add(new PublicTransportGroupViewModel
+							{
+								PublicTransportGroupId = (int)dr["PublicTransportGroupId"],
+								PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"],
+								PTGCompleteName = (string)dr["PTGFullName"],
+								StateName = (string)dr["StateName"],
+								MunicipalityName = (string)dr["MunicipalityName"],
+								ModeName = (string)dr["ModeName"],
+								UnionName = (string)dr["UnionName"],
+								DriverId = (int)dr["DriverId"],
+								DriverFullName = (string)dr["DriverFullName"],
+								DriverIdentityDocument = (int)dr["DriverIdentityDocument"],
+								DriverPhone = (string)dr["DriverPhone"],
+								SexName = (string)dr["SexName"],
+								BirthDate = (DateTime)dr["BirthDate"],
+								DriverEmail = (string)dr["DriverEmail"],
+								DriverSexName = (string)dr["SexName"],
 							});
 						}
 					}

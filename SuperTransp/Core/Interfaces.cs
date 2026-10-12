@@ -84,6 +84,7 @@ namespace SuperTransp.Core
 			public int AddOrEdit(PublicTransportGroupViewModel model);
 			public PublicTransportGroupViewModel GetPublicTransportGroupById(int publicTransportGroupId);
 			public string? RegisteredRif(string publicTransportGroupRif);
+			public bool EmailUsedByOtherRepresentative(string representativeEmail, int representativeIdentityDocument); // TEMP-EMAIL-UNIQUE
 			public List<PublicTransportGroupViewModel> GetAll();
 			public List<PublicTransportGroupViewModel> GetAllByStateId(int stateId);
 			public List<PublicTransportGroupViewModel> GetAllStatisticsByStateId(int stateId);
@@ -91,6 +92,7 @@ namespace SuperTransp.Core
 			public List<PublicTransportGroupViewModel> GetAllBySupervisedDriversAndStateIdAndNotSummaryAdded(int stateId);
 			public List<PublicTransportGroupViewModel> GetAllBySupervisedDriversAndNotSummaryAdded();
 			public PublicTransportGroupViewModel GetByGUIDId(string guidId);
+			public List<PublicTransportGroupViewModel> GetAllRepresentativesByIdentityDocument(int representativeIdentityDocument);
 		}
 		public interface IDriver
 		{
@@ -102,6 +104,7 @@ namespace SuperTransp.Core
 			public List<DriverViewModel> GetAllByIdentityDocument(int driverIdentityDocument);
 			public bool RegisteredDocumentId(int driverIdentityDocument, int publicTransportGroupId);
 			public bool RegisteredPhone(string driverPhone, int publicTransportGroupId);
+			public bool EmailUsedByOtherIdentityDocument(string driverEmail, int driverIdentityDocument); // TEMP-EMAIL-UNIQUE
 			public bool RegisteredPartnerNumber(int partnerNumber, int publicTransportGroupId);
 			public DriverViewModel GetById(int driverId, int publicTransportGroupId);
 			public DriverViewModel GetPartnerById(int driverPublicTransportGroupId);
@@ -122,6 +125,7 @@ namespace SuperTransp.Core
 			public List<PublicTransportGroupViewModel> GetDriverPublicTransportGroupByStateIdAndPTGRif(int stateId, string ptgRif);
 			public List<PublicTransportGroupViewModel> GetDriverPublicTransportGroupByPtgId(int publicTransportGroupId);
 			public List<PublicTransportGroupViewModel> GetDriverByDriverIdentityDocument(int driverIdentityDocument);
+			public List<PublicTransportGroupViewModel> GetDriverPTGByIdentityDocument(int driverIdentityDocument);
 			public List<PublicTransportGroupViewModel> GetAllDriverPublicTransportGroup(string ptgRif);
 			public List<PublicTransportGroupViewModel> GetSupervisionPlate(string plate, int stateId);
 			public List<PublicTransportGroupViewModel> RegisteredPlate(string plate);
@@ -213,6 +217,9 @@ namespace SuperTransp.Core
 			public DriversModel? MapToDriversModel(int idCard);
 			public RoutesModel? MapToRoutesModel();
 			public RoutesByRifModel? MapToRoutesByRifModel(string publicTransportGroupRif);
+			public List<RepresentativeModel> MapToRepresentativeByIdentityDocument(int representativeIdentityDocument);
+			public List<DriverModel> MapToDriverByIdentityDocument(int driverIdentityDocument);
+			public List<DriverByPTGModel> MapToDriverPTGByIdentityDocument(int driverIdentityDocument);
 		}
 
 		public interface IProcedure
@@ -220,9 +227,13 @@ namespace SuperTransp.Core
 			public int AddOrEdit(ProcedureViewModel model);
 			public List<ProcedureViewModel> GetAll();
 			public List<ProcedureViewModel> GetById(int procedureId);
-			public List<ProcedureByPublicTransportGroupViewModel> GetByPTGByProcedureStatusId(int procedureStatusId);
+			public List<ProcedureViewModel> GetAllByMode(int modeId, int procedureId = 0);
+			public List<ProcedureByDriverViewModel> GetByDriverByProcedureStatusId(int procedureStatusId);
+			public List<DriverVehicleOptionViewModel> GetDriverVehiclesByIdentityDocument(int driverIdentityDocument);
 			public int GetMonthlyFeePendingsByPTG(int publicTransportGroupId);
-			public int AddOrEditByPTG(ProcedureByPublicTransportGroupViewModel model);
+			public int AddOrEditByDriver(ProcedureByDriverViewModel model);
+			public void LogProcedureRequest(int procedureByDriverId);
+			public RegistrationRequestViewModel? GetRegistrationRequestData(int procedureByDriverId);
 			public List<ProcedureBankAccountViewModel> GetByBankAccounTypeId(int accounTypeId);
 			public List<ProcedureStatusViewModel> GetStatusAll();
 			public List<ProcedureCategoryViewModel> ProcedureCategoryAll();

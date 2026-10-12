@@ -1,4 +1,5 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Presentation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.IdentityModel.Abstractions;
@@ -90,6 +91,7 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@RepresentativeIdentityDocument", model.RepresentativeIdentityDocument);
 						cmd.Parameters.AddWithValue("@RepresentativeName", model.RepresentativeName.ToUpper().Trim());
 						cmd.Parameters.AddWithValue("@RepresentativePhone", model.RepresentativePhone);
+						cmd.Parameters.AddWithValue("@RepresentativeEmail", SuperTransp.Core.EmailDefaults.Normalize(model.RepresentativeEmail)); // TEMP-EMAIL
 						cmd.Parameters.AddWithValue("@PublicTransportGroupIdModifiedDate", DateTime.Now);
 						cmd.Parameters.AddWithValue("@Partners", model.Partners);
 						cmd.Parameters.AddWithValue("@GasStationId", model.GasStationId);
@@ -203,6 +205,7 @@ namespace SuperTransp.Core
 							publicTransportGroup.RepresentativeIdentityDocument = (int)dr["RepresentativeIdentityDocument"];
 							publicTransportGroup.RepresentativeName = (string)dr["RepresentativeName"];
 							publicTransportGroup.RepresentativePhone = (string)dr["RepresentativePhone"];
+							publicTransportGroup.RepresentativeEmail = dr["RepresentativeEmail"] == DBNull.Value ? null : (string)dr["RepresentativeEmail"];
 							publicTransportGroup.StateName = (string)dr["StateName"];
 							publicTransportGroup.Partners = (int)dr["Partners"];
 							publicTransportGroup.PublicTransportGroupGUID = (string)dr["PublicTransportGroupGUID"];
@@ -566,6 +569,24 @@ namespace SuperTransp.Core
 			}
 		}
 
+		// TEMP-EMAIL-UNIQUE: an email can only belong to one representative identity document
+		public bool EmailUsedByOtherRepresentative(string representativeEmail, int representativeIdentityDocument)
+		{
+			using (SqlConnection sqlConnection = GetConnection())
+			{
+				if (sqlConnection.State == ConnectionState.Closed)
+				{
+					sqlConnection.Open();
+				}
+
+				SqlCommand cmd = new("SELECT TOP 1 1 FROM PublicTransportGroup WHERE RepresentativeEmail = @RepresentativeEmail AND RepresentativeIdentityDocument <> @RepresentativeIdentityDocument", sqlConnection);
+				cmd.Parameters.AddWithValue("@RepresentativeEmail", representativeEmail.Trim().ToLower());
+				cmd.Parameters.AddWithValue("@RepresentativeIdentityDocument", representativeIdentityDocument);
+
+				return cmd.ExecuteScalar() != null;
+			}
+		}
+
 		public string? RegisteredRif(string publicTransportGroupRif)
 		{
 			PublicTransportGroupViewModel publicTransportGroup = new();
@@ -625,6 +646,58 @@ namespace SuperTransp.Core
 			catch (Exception ex)
 			{
 				throw new Exception($"Error al obtener los transportistas {ex.Message}", ex);
+			}
+		}
+
+		public List<PublicTransportGroupViewModel> GetAllRepresentativesByIdentityDocument(int representativeIdentityDocument)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<PublicTransportGroupViewModel> ptg = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupAndRepresentatives WHERE RepresentativeIdentityDocument = @RepresentativeIdentityDocument", sqlConnection);
+					cmd.Parameters.AddWithValue("@RepresentativeIdentityDocument", representativeIdentityDocument);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							ptg.Add(new PublicTransportGroupViewModel
+							{
+								StateName = (string)dr["StateName"],
+								MunicipalityName = (string)dr["MunicipalityName"],
+								PublicTransportGroupId = (int)dr["PublicTransportGroupId"],
+								PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"],
+								PTGCompleteName = (string)dr["PTGCompleteName"],
+								UnionName = (string)dr["UnionName"],
+								ModeName = (string)dr["ModeName"],
+								RepresentativeIdentityDocument = (int)dr["RepresentativeIdentityDocument"],
+								RepresentativeName = (string)dr["RepresentativeName"],
+								RepresentativePhone = (string)dr["RepresentativePhone"],
+								RepresentativeEmail = dr["RepresentativeEmail"] == DBNull.Value ? null : (string)dr["RepresentativeEmail"],
+							});
+						}
+					}
+
+					if (ptg != null && ptg.Any())
+					{
+						return ptg.OrderBy(st => st.StateName).ToList();
+					}
+					else
+					{
+						return ptg.ToList();
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener todos los representantes {ex.Message}", ex);
 			}
 		}
 	}

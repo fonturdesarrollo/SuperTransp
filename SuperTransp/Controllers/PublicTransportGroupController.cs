@@ -147,6 +147,14 @@ namespace SuperTransp.Controllers
 						return RedirectToAction("Add");
 					}
 
+					var emailError = ValidateRepresentativeEmailUnique(model.RepresentativeEmail, model.RepresentativeIdentityDocument); // TEMP-EMAIL-UNIQUE
+					if (emailError != null)
+					{
+						TempData["SuccessMessage"] = emailError;
+
+						return RedirectToAction("Add");
+					}
+
 					int publicTransportGroupId = _publicTransportGroup.AddOrEdit(model);
 
 					if (publicTransportGroupId > 0)
@@ -246,6 +254,14 @@ namespace SuperTransp.Controllers
 					return RedirectToAction("Add");
 				}
 
+				var emailError = ValidateRepresentativeEmailUnique(model.RepresentativeEmail, model.RepresentativeIdentityDocument); // TEMP-EMAIL-UNIQUE
+				if (emailError != null)
+				{
+					TempData["SuccessMessage"] = emailError;
+
+					return RedirectToAction("Edit", new { publicTransportGroupId = model.PublicTransportGroupId });
+				}
+
 				if (_security.IsTotalAccess(1) || _security.IsUpdateAccess(1) || securityGroupId == 1)
 				{
 					_publicTransportGroup.AddOrEdit(model);
@@ -335,7 +351,23 @@ namespace SuperTransp.Controllers
 				return Json(union);
 		}
 
-		public JsonResult CheckRifExist(string paramValue1)
+		// TEMP-EMAIL-UNIQUE: returns a message when the email is already used by another representative identity document
+		private string? ValidateRepresentativeEmailUnique(string? email, int? identityDocument)
+		{
+			var value = email?.Trim().ToLower();
+
+			if (string.IsNullOrEmpty(value) || value == "n/d" || identityDocument == null)
+				return null;
+
+			if (!System.Text.RegularExpressions.Regex.IsMatch(value, @"^[^\s@]+@[^\s@]+\.[^\s@]+$"))
+				return null;
+
+			return _publicTransportGroup.EmailUsedByOtherRepresentative(value, identityDocument.Value)
+				? $"El email {value} ya está registrado a otro representante con una cédula diferente."
+				: null;
+		}
+
+		public JsonResult CheckRifExist(string paramValue1, string? paramValue4 = null, int? paramValue5 = null)
 		{
 			var result = CheckSessionAndPermission(1);
 			if (result != null) Json("ERROR");
@@ -348,10 +380,14 @@ namespace SuperTransp.Controllers
 				return Json($"La línea con el RIF {paramValue1} ya está registrada.");					
 			}
 
+			var emailError = ValidateRepresentativeEmailUnique(paramValue4, paramValue5); // TEMP-EMAIL-UNIQUE
+			if (emailError != null)
+				return Json(emailError);
+
 			return Json("OK");
 		}
 
-		public JsonResult CheckRifExistOnEdit(string paramValue1, int paramValue2, int paramValue3)
+		public JsonResult CheckRifExistOnEdit(string paramValue1, int paramValue2, int paramValue3, string? paramValue4 = null, int? paramValue5 = null)
 		{
 			var result = CheckSessionAndPermission(1);
 			if (result != null) return Json("ERROR");
@@ -367,6 +403,10 @@ namespace SuperTransp.Controllers
 					return Json($"La línea con el RIF {paramValue1} ya está registrada.");
 				}
 			}
+
+			var emailError = ValidateRepresentativeEmailUnique(paramValue4, paramValue5); // TEMP-EMAIL-UNIQUE
+			if (emailError != null)
+				return Json(emailError);
 
 			if (paramValue2 > 0)
 			{

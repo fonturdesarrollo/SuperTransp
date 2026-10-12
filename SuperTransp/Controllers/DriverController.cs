@@ -189,7 +189,7 @@ namespace SuperTransp.Controllers
 					sexo = driver.SexName,
 					driverId = driver.DriverId,
 					ptgGUID = $"{driver.PublicTransportGroupGUID}|{driver.PartnerNumber}",
-					nacimiento = driver.Birthdate.ToString("dd/MM/yyyy"),
+					nacimiento = driver.Birthdate.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture),
 					modificar = isTotalAccess ? $@"<a id='btnEdit' href='{editControllerUrl}{driver.DriverPublicTransportGroupId}'>CORREGIR</a>" : "<span>SOLO LECTURA</span>",
 					eliminar = isDeleteAccess ? $@"<a id='btnDelete' href='javascript:void(0);' onclick=""confirmDeletion('/Driver/Delete?driverId={driver.DriverId}&driverPublicTransportGroupId={driver.DriverPublicTransportGroupId}&partnerNumber={driver.PartnerNumber}&publicTransportGroupId={driver.PublicTransportGroupId}&pTGCompleteName={driver.PTGCompleteName}')"">ELIMINAR TODO</a>" : "<span>SOLO LECTURA</span>",
 					cambiarPlaca = ShowValidUrl(publicTransportGroupId, driver.DriverPublicTransportGroupId, driver.PartnerNumber, driver.StateId, isTotalAccess, changePlateControllerUrl),
@@ -243,7 +243,7 @@ namespace SuperTransp.Controllers
 					socio = driver.PartnerNumber,
 					telefono = driver.DriverPhone,
 					sexo = driver.SexName,
-					nacimiento = driver.Birthdate.ToString("dd/MM/yyyy"),
+					nacimiento = driver.Birthdate.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture),
 					año = driver.Year,
 					marca = driver.Make = string.IsNullOrEmpty(driver.Make) ? "SIN VEHICULO" : driver.Make,
 					modelo = string.IsNullOrEmpty(driver.Model) ? "SIN VEHICULO" : driver.Model,
@@ -274,6 +274,10 @@ namespace SuperTransp.Controllers
 
 				if (_security.IsTotalAccess(2) || _security.IsUpdateAccess(2) || groupId == 1)
 				{
+					var emailError = ValidateDriverEmailUnique(model.DriverEmail, model.DriverIdentityDocument); // TEMP-EMAIL-UNIQUE
+					if (emailError != null)
+						return Json(new { success = false, message = emailError });
+
 					int driverId = _driver.AddOrEdit(model);
 
 					//if (driverId > 0)
@@ -331,6 +335,16 @@ namespace SuperTransp.Controllers
 		{
 			try
 			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && !ModelState.IsValid)
+				{
+					var errors = ModelState.Values
+						.SelectMany(v => v.Errors)
+						.Select(e => e.ErrorMessage)
+						.Where(m => !string.IsNullOrEmpty(m));
+
+					return Json(new { success = false, message = string.Join("\n", errors) });
+				}
+
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
 				{
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
@@ -345,6 +359,10 @@ namespace SuperTransp.Controllers
 
 					if (_security.IsTotalAccess(2) || _security.IsUpdateAccess(2) || securityGroupId == 1)
 					{
+						var emailError = ValidateDriverEmailUnique(model.DriverEmail, model.DriverIdentityDocument); // TEMP-EMAIL-UNIQUE
+						if (emailError != null)
+							return Json(new { success = false, message = emailError });
+
 						_driver.AddOrEdit(model);
 
 						return Json(new
@@ -564,11 +582,27 @@ namespace SuperTransp.Controllers
 				var driver = _driver.GetByIdentityDocument(driverIdentityDocument);
 				if (driver != null)
 				{
-					return Json(new { driverId = driver.DriverId, driverFullName = driver.DriverFullName, driverPhone = driver.DriverPhone, driverSexId = driver.SexId, driverBirthDate = driver.Birthdate.ToString("dd/MM/yyyy") });
+					return Json(new { driverId = driver.DriverId, driverFullName = driver.DriverFullName, driverPhone = driver.DriverPhone, driverEmail = driver.DriverEmail, driverSexId = driver.SexId, driverBirthDate = driver.Birthdate.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture) });
 				}
 			}
 
 			return Json(new { driverFullName = "", driverPhone = "" });			
+		}
+
+		// TEMP-EMAIL-UNIQUE: returns a message when the email is already used by another identity document
+		private string? ValidateDriverEmailUnique(string? email, int? identityDocument)
+		{
+			var value = email?.Trim().ToLower();
+
+			if (string.IsNullOrEmpty(value) || value == "n/d" || identityDocument == null)
+				return null;
+
+			if (!System.Text.RegularExpressions.Regex.IsMatch(value, @"^[^\s@]+@[^\s@]+\.[^\s@]+$"))
+				return null;
+
+			return _driver.EmailUsedByOtherIdentityDocument(value, identityDocument.Value)
+				? $"El email {value} ya está registrado a otro socio con una cédula diferente."
+				: null;
 		}
 
 		public JsonResult CheckExistingValues(int paramValue2, int paramValue4)

@@ -131,6 +131,7 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@DriverFullName", model.DriverFullName.ToUpper().Trim());
 						cmd.Parameters.AddWithValue("@PartnerNumber", model.PartnerNumber);
 						cmd.Parameters.AddWithValue("@DriverPhone", model.DriverPhone);
+						cmd.Parameters.AddWithValue("@DriverEmail", SuperTransp.Core.EmailDefaults.Normalize(model.DriverEmail)); // TEMP-EMAIL
 						cmd.Parameters.AddWithValue("@PublicTransportGroupId", model.PublicTransportGroupId);
 						cmd.Parameters.AddWithValue("@DriverModifiedDate", DateTime.Now);
 						cmd.Parameters.AddWithValue("@SexId", model.SexId);
@@ -140,6 +141,18 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@IsUpdatePlateAddDriver", updatePlateAddDriver);			
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
+
+						// The SP only links an existing driver to the organization (no driver data is updated),
+						// so a new email would be lost: fill it in when the driver has none yet.
+						var newEmail = SuperTransp.Core.EmailDefaults.Normalize(model.DriverEmail);
+
+						if (!updatePlate && model.DriverId > 0 && model.DriverPublicTransportGroupId == 0 && newEmail != SuperTransp.Core.EmailDefaults.NotAvailable)
+						{
+							SqlCommand cmdEmail = new("UPDATE Driver SET DriverEmail = @DriverEmail WHERE DriverId = @DriverId AND (DriverEmail IS NULL OR DriverEmail = 'N/D')", sqlConnection);
+							cmdEmail.Parameters.AddWithValue("@DriverEmail", newEmail);
+							cmdEmail.Parameters.AddWithValue("@DriverId", model.DriverId);
+							cmdEmail.ExecuteNonQuery();
+						}
 
 						if(!isEditing)
 						{
@@ -289,6 +302,7 @@ namespace SuperTransp.Core
 							driver.DriverFullName = (string)dr["DriverFullName"];
 							driver.PartnerNumber = (int)dr["PartnerNumber"];
 							driver.DriverPhone = (string)dr["DriverPhone"];
+							driver.DriverEmail = dr["DriverEmail"] == DBNull.Value ? null : (string)dr["DriverEmail"];
 							driver.PTGCompleteName = (string)dr["PTGCompleteName"];
 							driver.DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"];
 							driver.SexId = (int)dr["SexId"];
@@ -330,6 +344,7 @@ namespace SuperTransp.Core
 							driver.DriverIdentityDocument = (int)dr["DriverIdentityDocument"];
 							driver.DriverFullName = (string)dr["DriverFullName"];
 							driver.DriverPhone = (string)dr["DriverPhone"];
+							driver.DriverEmail = dr["DriverEmail"] == DBNull.Value ? null : (string)dr["DriverEmail"];
 							driver.SexId = (int)dr["SexId"];
 							driver.Birthdate = (DateTime)dr["Birthdate"];
 						}
@@ -371,6 +386,8 @@ namespace SuperTransp.Core
 								DriverFullName = (string)dr["DriverFullName"],
 								PartnerNumber = (int)dr["PartnerNumber"],
 								DriverPhone = (string)dr["DriverPhone"],
+								DriverEmail = (string)dr["DriverEmail"],
+								StateName = (string)dr["StateName"],
 								PTGCompleteName = (string)dr["PTGCompleteName"],
 								DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"],
 								PublicTransportGroupGUID = (string)dr["PublicTransportGroupGUID"],
@@ -381,20 +398,6 @@ namespace SuperTransp.Core
 							});
 						}
 					}
-
-
-					//using (SqlDataReader dr = cmd.ExecuteReader())
-					//{
-					//	while (dr.Read())
-					//	{
-					//		driver.DriverId = (int)dr["DriverId"];
-					//		driver.DriverIdentityDocument = (int)dr["DriverIdentityDocument"];
-					//		driver.DriverFullName = (string)dr["DriverFullName"];
-					//		driver.DriverPhone = (string)dr["DriverPhone"];
-					//		driver.SexId = (int)dr["SexId"];
-					//		driver.Birthdate = (DateTime)dr["Birthdate"];
-					//	}
-					//}
 
 					return drivers;
 				}
@@ -430,6 +433,7 @@ namespace SuperTransp.Core
 							driver.DriverFullName = (string)dr["DriverFullName"];
 							driver.PartnerNumber = (int)dr["PartnerNumber"];
 							driver.DriverPhone = (string)dr["DriverPhone"];
+							driver.DriverEmail = dr["DriverEmail"] == DBNull.Value ? null : (string)dr["DriverEmail"];
 							driver.PTGCompleteName = (string)dr["PTGCompleteName"];
 							driver.DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"];
 							driver.SexId = (int)dr["SexId"];
@@ -476,6 +480,7 @@ namespace SuperTransp.Core
 							driver.DriverFullName = (string)dr["DriverFullName"];
 							driver.PartnerNumber = (int)dr["PartnerNumber"];
 							driver.DriverPhone = (string)dr["DriverPhone"];
+							driver.DriverEmail = dr["DriverEmail"] == DBNull.Value ? null : (string)dr["DriverEmail"];
 							driver.PTGCompleteName = (string)dr["PTGCompleteName"];
 							driver.DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"];
 							driver.SexId = (int)dr["SexId"];
@@ -581,6 +586,24 @@ namespace SuperTransp.Core
 				{
 					return dr.HasRows;
 				}
+			}
+		}
+
+		// TEMP-EMAIL-UNIQUE: an email can only belong to one identity document
+		public bool EmailUsedByOtherIdentityDocument(string driverEmail, int driverIdentityDocument)
+		{
+			using (SqlConnection sqlConnection = GetConnection())
+			{
+				if (sqlConnection.State == ConnectionState.Closed)
+				{
+					sqlConnection.Open();
+				}
+
+				SqlCommand cmd = new("SELECT TOP 1 1 FROM Driver WHERE DriverEmail = @DriverEmail AND DriverIdentityDocument <> @DriverIdentityDocument", sqlConnection);
+				cmd.Parameters.AddWithValue("@DriverEmail", driverEmail.Trim().ToLower());
+				cmd.Parameters.AddWithValue("@DriverIdentityDocument", driverIdentityDocument);
+
+				return cmd.ExecuteScalar() != null;
 			}
 		}
 

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Options;
+using QRCoder;
 using SuperTransp.Models;
 using static SuperTransp.Core.Interfaces;
 
@@ -16,8 +17,9 @@ namespace SuperTransp.Controllers
 		private readonly IExchangeRate _exchangeRate;
 		private readonly ISecurity _security;
 		private readonly IOptionsSnapshot<MaintenanceSettings> _settings;
+		private readonly IConfiguration _configuration;
 
-		public ProceduresController(IProcedure procedure, IPublicTransportGroup publicTransportGroup, ICommonData commonData, IExchangeRate exchangeRate, ISecurity security, IOptionsSnapshot<MaintenanceSettings> settings)
+		public ProceduresController(IProcedure procedure, IPublicTransportGroup publicTransportGroup, ICommonData commonData, IExchangeRate exchangeRate, ISecurity security, IOptionsSnapshot<MaintenanceSettings> settings, IConfiguration configuration)
 		{
 			_procedure = procedure;
 			_publicTransportGroup = publicTransportGroup;
@@ -25,6 +27,7 @@ namespace SuperTransp.Controllers
 			_exchangeRate = exchangeRate;
 			_security = security;
 			_settings = settings;
+			_configuration = configuration;
 		}
 
 		public IActionResult Index()
@@ -189,16 +192,22 @@ namespace SuperTransp.Controllers
 			var result = CheckSessionAndPermission(ModuleId);
 			if (result != null) return Json(new { data = Array.Empty<object>() });
 
-			var data = _procedure.GetByPTGByProcedureStatusId(procedureStatusId);
+			var data = _procedure.GetByDriverByProcedureStatusId(procedureStatusId);
 
-			var list = data.Select(p => new
+			// JSON names are kept from the by-organization version so the list views keep working:
+			// the "organization" fields now carry the driver's organization at request time.
+			// Newest requests first
+			var list = data.OrderByDescending(p => p.ProcedureByDriverId).Select(p => new
 			{
-				procedureByPublicTransportGroupId = p.ProcedureByPublicTransportGroupId,
+				procedureByPublicTransportGroupId = p.ProcedureByDriverId,
 				procedureStatusId = p.ProcedureStatusId,
-				publicTransportGroupRif = p.PublicTransportGroupRif,
-				ptgName = p.PublicTransportGroupNameFullName,
-				representativeName = p.RepresentativeName,
-				representativePhone = p.RepresentativePhone,
+				publicTransportGroupRif = p.DriverPTGRif,
+				ptgName = p.DriverPTGName,
+				representativeName = p.DriverFullName,
+				representativePhone = p.DriverPhone,
+				driverIdentityDocument = p.DriverIdentityDocument,
+				vehiclePlate = p.DriverVehiclePlate,
+				vehicleDescription = string.Join(" ", new[] { p.DriverVehicleMake, p.DriverVehicleModel, p.DriverVehicleYear > 0 ? p.DriverVehicleYear.ToString() : null }.Where(x => !string.IsNullOrWhiteSpace(x))),
 				procedureCategoryName = p.ProcedureCategoryName,
 				procedureConcept = p.ProcedureConcept,
 				tariff = p.Tariff,
@@ -214,6 +223,8 @@ namespace SuperTransp.Controllers
 				payerCellPhoneNumber = p.PayerCellPhoneNumber,
 				payerIdNumber = p.PayerIdNumber,
 				payerAccountNumber = p.PayerAccountNumber,
+				payerReferenceNumber = p.PayerReferenceNumber,
+				procedureDate = p.ProcedureDate,
 				procedureStatusName = p.ProcedureStatusName
 			});
 
@@ -222,38 +233,83 @@ namespace SuperTransp.Controllers
 
 		[HttpGet]
 		[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-		public JsonResult GetDriverByPublicTransportGroupRif(string publicTransportGroupRif)
+		public JsonResult GetDriverVehiclesByIdentityDocument(int driverIdentityDocument)
 		{
 			var result = CheckSessionAndPermission(ModuleId);
 			if (result != null) return Json(null);
 
-			var ptg = _publicTransportGroup.GetAll().FirstOrDefault(p => p.PublicTransportGroupRif == publicTransportGroupRif);
+			var options = _procedure.GetDriverVehiclesByIdentityDocument(driverIdentityDocument);
 
-			if (ptg == null) return Json(null);
+			if (options.Count == 0) return Json(null);
 
 			return Json(new
 			{
-				publicTransportGroupId = ptg.PublicTransportGroupId,
-				publicTransportGroupRif = ptg.PublicTransportGroupRif,
-				ptgCompleteName = ptg.PTGCompleteName,
-				stateName = ptg.StateName,
-				modeName = ptg.ModeName,
-				representativeName = ptg.RepresentativeName,
-				representativeIdentityDocument = ptg.RepresentativeIdentityDocument,
-				representativePhone = ptg.RepresentativePhone,
-				partners = ptg.Partners,
-				totalDrivers = ptg.TotalDrivers
+				driverIdentityDocument = options[0].DriverIdentityDocument,
+				driverFullName = options[0].DriverFullName,
+				vehicles = options.Select(o => new
+				{
+					driverId = o.DriverId,
+					publicTransportGroupId = o.PublicTransportGroupId,
+					publicTransportGroupRif = o.PublicTransportGroupRif,
+					modeId = o.ModeId,
+					modeName = o.ModeName,
+					ptgCompleteName = o.PTGCompleteName,
+					plate = o.Plate,
+					year = o.Year,
+					make = o.Make,
+					model = o.Model
+				})
 			});
 		}
 
 		[HttpGet]
 		[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-		public JsonResult GetProcedureTypes()
+		public JsonResult GetRegistrationRequestData(int procedureByDriverId)
+		{
+			var result = CheckSessionAndPermission(ModuleId);
+			if (result != null) return Json(null);
+
+			var data = _procedure.GetRegistrationRequestData(procedureByDriverId);
+
+			// The request letter can only be issued for VALIDADO (2) procedures
+			if (data == null || data.ProcedureStatusId != 2) return Json(null);
+
+			// Same verification URL used by the driver QR (QR/DriverData?driverCode=<ptg guid>|<partner number>)
+			var baseWebSiteUrl = _configuration["FtpSettings:BaseWebSiteUrl"];
+			var verificationUrl = $"{baseWebSiteUrl}QR/DriverData?driverCode={data.PublicTransportGroupGUID}|{data.PartnerNumber}";
+
+			string qrImage;
+			using (var qrGenerator = new QRCodeGenerator())
+			using (var qrCodeData = qrGenerator.CreateQrCode(verificationUrl, QRCodeGenerator.ECCLevel.Q))
+			using (var pngByteQRCode = new PngByteQRCode(qrCodeData))
+			{
+				qrImage = "data:image/png;base64," + Convert.ToBase64String(pngByteQRCode.GetGraphic(10));
+			}
+
+			return Json(new
+			{
+				driverFullName = data.DriverFullName,
+				driverIdentityDocument = data.DriverIdentityDocument,
+				ptgName = data.PTGName,
+				partnerNumber = data.PartnerNumber,
+				modeName = data.ModeName,
+				plate = data.Plate,
+				make = data.Make,
+				model = data.Model,
+				year = data.Year,
+				qrImage
+			});
+		}
+
+		[HttpGet]
+		[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+		public JsonResult GetProcedureTypes(int modeId, int procedureId = 0)
 		{
 			var result = CheckSessionAndPermission(ModuleId);
 			if (result != null) return Json(Array.Empty<object>());
 
-			var data = _procedure.GetAll();
+			// Tariffs depend on the transport mode of the selected vehicle's organization
+			var data = _procedure.GetAllByMode(modeId, procedureId);
 
 			return Json(data.Select(p => new
 			{
@@ -371,7 +427,7 @@ namespace SuperTransp.Controllers
 
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public JsonResult SubmitProcedureRequest(ProcedureByPublicTransportGroupViewModel model)
+		public JsonResult SubmitProcedureRequest(ProcedureByDriverViewModel model)
 		{
 			var result = CheckSessionAndPermission(ModuleId);
 			if (result != null) return Json(new { success = false, message = "Sesión inválida" });
@@ -397,16 +453,49 @@ namespace SuperTransp.Controllers
 				}
 			}
 
-			if (model == null || model.ProcedureId <= 0 || model.PublicTransportGroupId <= 0 || model.ProcedureBankAccountId <= 0 || model.BankId <= 0 || model.BCVPaid <= 0 || model.Tariff <= 0 || model.Rate <= 0)
+			if (model == null || model.ProcedureId <= 0 || model.DriverId <= 0 || string.IsNullOrWhiteSpace(model.DriverVehiclePlate) || model.ProcedureBankAccountId <= 0 || model.BankId <= 0 || model.BCVPaid <= 0 || model.Tariff <= 0 || model.Rate <= 0)
 			{
 				return Json(new { success = false, message = "Datos incompletos para procesar la solicitud" });
 			}
 
+			// Same rules as the wizard: mobile payment (3) needs a valid phone, any other type needs a 20-digit account
+			if (model.AccounTypeId == 3)
+			{
+				if (!System.Text.RegularExpressions.Regex.IsMatch(model.PayerCellPhoneNumber?.Trim() ?? string.Empty, @"^(0412|0414|0416|0424|0426)\d{7}$"))
+				{
+					return Json(new { success = false, message = "El teléfono debe comenzar con 0412, 0414, 0416, 0424 o 0426 y tener 11 dígitos." });
+				}
+			}
+			else if (!System.Text.RegularExpressions.Regex.IsMatch(model.PayerAccountNumber?.Trim() ?? string.Empty, @"^\d{20}$"))
+			{
+				return Json(new { success = false, message = "El número de cuenta debe tener 20 dígitos." });
+			}
+
 			try
 			{
-				var procedureByPublicTransportGroupId = _procedure.AddOrEditByPTG(model);
+				var procedureByDriverId = _procedure.AddOrEditByDriver(model);
 
-				return Json(new { success = procedureByPublicTransportGroupId > 0, procedureByPublicTransportGroupId });
+				// The SP's INSERT ignores @ProcedureStatusId (the table default is 1), so new requests are
+				// saved as VALIDADO (2) through the SP's update branch right after the insert.
+				if (procedureByDriverId > 0)
+				{
+					_procedure.AddOrEditByDriver(new ProcedureByDriverViewModel
+					{
+						ProcedureByDriverId = procedureByDriverId,
+						ProcedureStatusId = 2
+					});
+
+					// The request is already saved: a logbook failure must not turn it into an error for the user
+					try
+					{
+						_procedure.LogProcedureRequest(procedureByDriverId);
+					}
+					catch
+					{
+					}
+				}
+
+				return Json(new { success = procedureByDriverId > 0, procedureByDriverId });
 			}
 			catch (Exception ex)
 			{
@@ -436,9 +525,9 @@ namespace SuperTransp.Controllers
 
 					// The SP only updates ProcedureStatusId when @ProcedureByPublicTransportGroupId != 0;
 					// ExecuteScalar returns nothing on that branch (no exception = success).
-					_procedure.AddOrEditByPTG(new ProcedureByPublicTransportGroupViewModel
+					_procedure.AddOrEditByDriver(new ProcedureByDriverViewModel
 					{
-						ProcedureByPublicTransportGroupId = change.ProcedureByPublicTransportGroupId,
+						ProcedureByDriverId = change.ProcedureByPublicTransportGroupId,
 						ProcedureStatusId = change.ProcedureStatusId
 					});
 

@@ -159,6 +159,11 @@
                                 <span asp-validation-for="RepresentativePhone" class="text-danger"></span>
                             </div>
                             <div class="col-6">
+                                <strong>Email Representante:</strong>
+                                @Html.TextBoxFor(x => x.RepresentativeEmail, new { placeholder = "Email del Representante", maxlength = "80" })
+                                <span asp-validation-for="RepresentativeEmail" class="text-danger"></span>
+                            </div>
+                            <div class="col-6">
                                 <strong>Cupo:</strong>
                                 @Html.TextBoxFor(x => x.Partners, new { placeholder = "Cantidad de Socios", maxlength = "3" })
                                 <span asp-validation-for="Partners" class="text-danger"></span>

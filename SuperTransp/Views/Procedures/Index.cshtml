@@ -63,6 +63,44 @@
 			backdrop-filter: blur(3px);
 		}
 
+		.wizard-validating-overlay {
+			z-index: 3000;
+		}
+
+		.wizard-validating-box {
+			background: white;
+			border-radius: 14px;
+			padding: 36px 44px;
+			text-align: center;
+			max-width: 380px;
+			box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+		}
+
+		.wizard-validating-box h3 {
+			color: #4c3d99;
+			margin: 18px 0 6px;
+		}
+
+		.wizard-validating-box p {
+			color: #6c757d;
+			margin: 0;
+			font-size: 0.9rem;
+		}
+
+		.wizard-spinner {
+			width: 54px;
+			height: 54px;
+			margin: 0 auto;
+			border: 5px solid #e0e4f7;
+			border-top-color: #667eea;
+			border-radius: 50%;
+			animation: wizardSpin 0.9s linear infinite;
+		}
+
+		@@keyframes wizardSpin {
+			to { transform: rotate(360deg); }
+		}
+
 		.wizard-overlay.open {
 			display: flex;
 		}
@@ -203,6 +241,13 @@
 			font-size: 0.85rem;
 			margin: 0;
 			min-height: 1.1em;
+		}
+
+		.wizard-field-error {
+			color: #e74c3c;
+			font-size: 0.78rem;
+			margin: 0;
+			line-height: 1.2;
 		}
 
 		.wizard-warning {
@@ -469,6 +514,73 @@
 		.wizard-summary-block + .wizard-summary-block {
 			margin-top: 14px;
 		}
+
+		/* ── Payment receipt ───────────────────────────────────── */
+		.receipt-body {
+			padding: 24px;
+			overflow-y: auto;
+			background: #f2f4f8;
+		}
+
+		.receipt-paper {
+			background: white;
+			border: 1.5px solid #e0e4f7;
+			border-radius: 10px;
+			padding: 22px 26px;
+			color: #2c3e50;
+			font-size: 0.9rem;
+		}
+
+		.receipt-brand {
+			text-align: center;
+			font-size: 1.45rem;
+			font-weight: 700;
+			color: #4c3d99;
+			margin: 0 0 8px;
+			line-height: 1.2;
+		}
+
+		.receipt-paper h3 {
+			margin: 0 0 4px;
+			text-align: center;
+			color: #667eea;
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+		}
+
+		.receipt-meta {
+			text-align: center;
+			color: #7f8c9b;
+			font-size: 0.82rem;
+			margin-bottom: 16px;
+		}
+
+		.receipt-row {
+			display: flex;
+			justify-content: space-between;
+			gap: 16px;
+			padding: 7px 0;
+			border-bottom: 1px dashed #e0e4f7;
+		}
+
+		.receipt-row span:first-child {
+			font-weight: 600;
+			color: #667eea;
+			flex-shrink: 0;
+		}
+
+		.receipt-row span:last-child {
+			text-align: right;
+			word-break: break-word;
+		}
+
+		.receipt-total {
+			margin-top: 12px;
+			padding: 10px 14px;
+			background: #f8f9ff;
+			border-radius: 8px;
+			font-weight: 700;
+		}
 	</style>
 </head>
 <body class="is-preload">
@@ -543,7 +655,7 @@
 								<ul>
 									<li><a href="javascript:void(0);" id="btnSolicitarTramite">Solicitar trámite</a></li>
 									<li>@Html.ActionLink("Gestiones realizadas", "RealizedProcedures", "Procedures")</li>
-									<li>@Html.ActionLink("Administrar gestiones realizadas", "ManagedProcedures", "Procedures")</li>
+@* 									<li>@Html.ActionLink("Administrar gestiones realizadas", "ManagedProcedures", "Procedures")</li> *@
 								</ul>
 							</div>
 						</div>
@@ -585,26 +697,32 @@
 				</div>
 
 				<div class="wizard-body">
-					<!-- Step 1: RIF -->
+					<!-- Step 1: Driver identity document -->
 					<div class="wizard-step" id="wizardStep1">
-						<label for="wizardRif">Indique el número de RIF de la organización</label>
-						<input type="text" id="wizardRif" autocomplete="off" maxlength="10" placeholder="Ej: J123456789" />
+						<label for="wizardCedula">Indique el número de cédula del socio</label>
+						<input type="text" id="wizardCedula" inputmode="numeric" autocomplete="off" maxlength="10" placeholder="Ej: 12345678" />
 						<p class="wizard-error" id="wizardStep1Error"></p>
 					</div>
 
-					<!-- Step 2: Organization data -->
+					<!-- Step 2: Organizations and vehicles of the driver (select one vehicle) -->
 					<div class="wizard-step" id="wizardStep2" style="display:none;">
 						<div class="wizard-driver-data">
-							<div><strong>RIF:</strong> <span id="ptgRif"></span></div>
-							<div><strong>Nombre:</strong> <span id="ptgName"></span></div>
-							<div><strong>Estado:</strong> <span id="ptgState"></span></div>
-							<div><strong>Modalidad:</strong> <span id="ptgMode"></span></div>
-							<div><strong>Representante:</strong> <span id="ptgRepresentativeName"></span></div>
-							<div><strong>Cédula representante:</strong> <span id="ptgRepresentativeId"></span></div>
-							<div><strong>Teléfono:</strong> <span id="ptgPhone"></span></div>
-							<div><strong>Cupo:</strong> <span id="ptgPartners"></span></div>
-							<div><strong>Socios:</strong> <span id="ptgDrivers"></span></div>
+							<div><strong>Cédula:</strong> <span id="driverCedula"></span></div>
+							<div><strong>Socio:</strong> <span id="driverName"></span></div>
 						</div>
+						<table class="wizard-table wizard-table-full">
+							<thead>
+								<tr>
+									<th>RIF</th>
+									<th>Organización</th>
+									<th>Modalidad</th>
+									<th>Placa</th>
+									<th>Vehículo</th>
+									<th class="wizard-select-col">Seleccionar</th>
+								</tr>
+							</thead>
+							<tbody id="vehicleTableBody"></tbody>
+						</table>
 					</div>
 
 					<!-- Step 3: Procedure types -->
@@ -656,11 +774,12 @@
 									<div class="wizard-form-group">
 										<label for="payerAccountNumber">Número de cuenta</label>
 										<input type="text" id="payerAccountNumber" inputmode="numeric" autocomplete="off" maxlength="20" />
+										<p class="wizard-field-error" id="payerAccountError"></p>
 									</div>
 									<div class="wizard-form-group">
 										<label for="payerAmountPaid1">Monto pagado</label>
-										<p class="wizard-tariff-hint" id="tariffHintAccount">Monto según tarifa: Bs. —</p>
 										<input type="text" id="payerAmountPaid1" inputmode="decimal" autocomplete="off" maxlength="14" />
+										<p class="wizard-tariff-hint" id="tariffHintAccount">Monto según tarifa: Bs. —</p>
 									</div>
 									<div class="wizard-form-group">
 										<label for="payerReferenceNumber1">N° de referencia</label>
@@ -671,6 +790,7 @@
 									<div class="wizard-form-group">
 										<label for="payerCellPhoneNumber">Teléfono</label>
 										<input type="text" id="payerCellPhoneNumber" inputmode="numeric" autocomplete="off" maxlength="11" />
+										<p class="wizard-field-error" id="payerPhoneError"></p>
 									</div>
 									<div class="wizard-form-group">
 										<label for="payerIdNumber">Número de cédula</label>
@@ -678,8 +798,8 @@
 									</div>
 									<div class="wizard-form-group">
 										<label for="payerAmountPaid2">Monto pagado</label>
-										<p class="wizard-tariff-hint" id="tariffHintMobile">Monto según tarifa: Bs. —</p>
 										<input type="text" id="payerAmountPaid2" inputmode="decimal" autocomplete="off" maxlength="14" />
+										<p class="wizard-tariff-hint" id="tariffHintMobile">Monto según tarifa: Bs. —</p>
 									</div>
 									<div class="wizard-form-group">
 										<label for="payerReferenceNumber2">N° de referencia</label>
@@ -693,7 +813,7 @@
 					<!-- Step 5: Summary -->
 					<div class="wizard-step" id="wizardStep5" style="display:none;">
 						<div class="wizard-summary-block">
-							<h4>Organización</h4>
+							<h4>Socio, organización y vehículo</h4>
 							<p id="summaryOrganization"></p>
 						</div>
 						<div class="wizard-summary-block">
@@ -719,6 +839,31 @@
 			</div>
 		</div>
 
+		<!-- Simulated bank validation -->
+		<div class="wizard-overlay wizard-validating-overlay" id="validatingOverlay">
+			<div class="wizard-validating-box">
+				<div class="wizard-spinner"></div>
+				<h3>Validando el pago</h3>
+				<p>Estamos verificando la operación con el banco. Por favor espere, no cierre esta ventana.</p>
+			</div>
+		</div>
+
+		<!-- Payment receipt -->
+		<div class="wizard-overlay" id="receiptOverlay">
+			<div class="wizard-modal">
+				<div class="wizard-header">
+					<h3>Recibo de pago</h3>
+				</div>
+				<div class="receipt-body">
+					<div class="receipt-paper" id="receiptContent"></div>
+				</div>
+				<div class="wizard-footer">
+					<button type="button" class="wizard-btn wizard-btn-cancel" id="receiptClose">Cerrar</button>
+					<button type="button" class="wizard-btn wizard-btn-next" id="receiptPrint">Imprimir</button>
+				</div>
+			</div>
+		</div>
+
 	<!-- Scripts -->
 	<script src="~/assets/js/jquery.min.js"></script>
 	<script src="~/assets/js/browser.min.js"></script>
@@ -731,9 +876,8 @@
 
 	<script>
 		(function () {
-			var ptgApiUrl = '@Url.Action("GetDriverByPublicTransportGroupRif", "Procedures")';
+			var vehiclesApiUrl = '@Url.Action("GetDriverVehiclesByIdentityDocument", "Procedures")';
 			var procedureApiUrl = '@Url.Action("GetProcedureTypes", "Procedures")';
-			var procedureByIdApiUrl = '@Url.Action("GetProcedureById", "Procedures")';
 			var monthlyFeePendingsApiUrl = '@Url.Action("GetMonthlyFeePendingsByPTG", "Procedures")';
 			var accounTypesApiUrl = '@Url.Action("GetAccounTypes", "Procedures")';
 			var exchangeRateApiUrl = '@Url.Action("GetExchangeRate", "Procedures")';
@@ -743,7 +887,7 @@
 
 			var overlay = document.getElementById('wizardOverlay');
 			var modal = document.getElementById('wizardModal');
-			var rifInput = document.getElementById('wizardRif');
+			var cedulaInput = document.getElementById('wizardCedula');
 			var step1Error = document.getElementById('wizardStep1Error');
 			var nextBtn = document.getElementById('wizardNext');
 			var prevBtn = document.getElementById('wizardPrev');
@@ -753,6 +897,10 @@
 			var payerBankSelect = document.getElementById('payerBankSelect');
 
 			var currentStep = 1;
+			var isValidatingPayment = false;
+			var validatingOverlay = document.getElementById('validatingOverlay');
+			var driverData = null;
+			var selectedVehicle = null;
 			var ptgData = null;
 			var procedureTypes = null;
 			var selectedProcedureId = null;
@@ -767,6 +915,8 @@
 
 			function resetWizard() {
 				currentStep = 1;
+				driverData = null;
+				selectedVehicle = null;
 				ptgData = null;
 				selectedProcedureId = null;
 				procedureTypes = null;
@@ -774,7 +924,8 @@
 				banksListCache = null;
 				monthlyFeePendings = 0;
 				monthlyFeePendingsChecked = false;
-				rifInput.value = '';
+				cedulaInput.value = '';
+				document.getElementById('vehicleTableBody').innerHTML = '';
 				step1Error.textContent = '';
 				document.getElementById('procedureTableBody').innerHTML = '';
 				document.getElementById('monthlyFeeWarning').style.display = 'none';
@@ -804,11 +955,16 @@
 				document.getElementById('payerMobileFields').style.display = 'none';
 				document.getElementById('payerAccountNumber').value = '';
 				document.getElementById('payerAmountPaid1').value = '';
+				document.getElementById('payerAmountPaid1').dataset.edited = '';
 				document.getElementById('payerReferenceNumber1').value = '';
 				document.getElementById('payerCellPhoneNumber').value = '';
 				document.getElementById('payerIdNumber').value = '';
 				document.getElementById('payerAmountPaid2').value = '';
+				document.getElementById('payerAmountPaid2').dataset.edited = '';
 				document.getElementById('payerReferenceNumber2').value = '';
+				document.getElementById('payerAccountError').textContent = '';
+				document.getElementById('payerPhoneError').textContent = '';
+				updateTariffHints();
 			}
 
 			function updateStepIndicator() {
@@ -830,7 +986,7 @@
 				document.getElementById('wizardStep3').style.display = step === 3 ? 'flex' : 'none';
 				document.getElementById('wizardStep4').style.display = step === 4 ? 'flex' : 'none';
 				document.getElementById('wizardStep5').style.display = step === 5 ? 'flex' : 'none';
-				modal.classList.toggle('wizard-wide', step === 3 || step === 4);
+				modal.classList.toggle('wizard-wide', step === 2 || step === 3 || step === 4);
 				prevBtn.hidden = step === 1;
 				nextBtn.textContent = step === 5 ? 'Actualizar' : 'Siguiente';
 				updateStepIndicator();
@@ -838,10 +994,11 @@
 			}
 
 			function updateNextButtonState() {
+				updateFieldErrors();
 				if (currentStep === 1) {
-					nextBtn.disabled = rifInput.value.trim().length === 0;
+					nextBtn.disabled = cedulaInput.value.trim().length === 0;
 				} else if (currentStep === 2) {
-					nextBtn.disabled = false;
+					nextBtn.disabled = selectedVehicle === null;
 				} else if (currentStep === 3) {
 					nextBtn.disabled = selectedProcedureId === null;
 				} else if (currentStep === 4) {
@@ -849,6 +1006,25 @@
 				} else if (currentStep === 5) {
 					nextBtn.disabled = false;
 				}
+			}
+
+			// Transfer: the paying account must have exactly 20 digits. Mobile payment: the phone must be
+			// 0412 / 0414 / 0416 / 0424 / 0426 followed by 7 digits.
+			function isValidPayerAccount(value) {
+				return /^\d{20}$/.test(value);
+			}
+
+			function isValidPayerPhone(value) {
+				return /^(0412|0414|0416|0424|0426)\d{7}$/.test(value);
+			}
+
+			function updateFieldErrors() {
+				var account = document.getElementById('payerAccountNumber').value.trim();
+				var phone = document.getElementById('payerCellPhoneNumber').value.trim();
+				document.getElementById('payerAccountError').textContent = (account && !isValidPayerAccount(account))
+					? 'El número de cuenta debe tener 20 dígitos.' : '';
+				document.getElementById('payerPhoneError').textContent = (phone && !isValidPayerPhone(phone))
+					? 'El teléfono debe comenzar con 0412, 0414, 0416, 0424 o 0426 y tener 7 dígitos más (11 en total).' : '';
 			}
 
 			function isPaymentStepValid() {
@@ -859,50 +1035,61 @@
 					var idNum = document.getElementById('payerIdNumber').value.trim();
 					var amount = document.getElementById('payerAmountPaid2').value.trim();
 					var reference2 = document.getElementById('payerReferenceNumber2').value.trim();
-					return !!(phone && idNum && amount && parseFloat(amount) > 0 && reference2);
+					return !!(isValidPayerPhone(phone) && idNum && amount && parseFloat(amount) > 0 && reference2);
 				}
 
 				var accountNumber = document.getElementById('payerAccountNumber').value.trim();
 				var amount1 = document.getElementById('payerAmountPaid1').value.trim();
 				var reference1 = document.getElementById('payerReferenceNumber1').value.trim();
-				return !!(accountNumber && amount1 && parseFloat(amount1) > 0 && reference1);
+				return !!(isValidPayerAccount(accountNumber) && amount1 && parseFloat(amount1) > 0 && reference1);
 			}
 
-			rifInput.addEventListener('input', function () {
-				var raw = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-
-				var firstChar = raw.charAt(0);
-				var letter = '';
-				var rest = raw;
-
-				if (/[JVC]/.test(firstChar)) {
-					letter = firstChar;
-					rest = raw.slice(1);
-				}
-
-				var digits = rest.replace(/\D/g, '').slice(0, 9);
-
-				// If there's no explicit J/V/C letter yet but a digit has already been typed,
-				// default to "J" (the user can delete it and type V or C instead).
-				if (!letter && digits) {
-					letter = 'J';
-				}
-
-				this.value = letter + digits;
+			cedulaInput.addEventListener('input', function () {
+				this.value = this.value.replace(/\D/g, '').slice(0, 10);
 				step1Error.textContent = '';
 				updateNextButtonState();
 			});
 
-			function renderPTGStep(data) {
-				document.getElementById('ptgRif').textContent = data.publicTransportGroupRif || '';
-				document.getElementById('ptgName').textContent = data.ptgCompleteName || 'No registrado';
-				document.getElementById('ptgState').textContent = data.stateName || 'No registrado';
-				document.getElementById('ptgMode').textContent = data.modeName || 'No registrado';
-				document.getElementById('ptgRepresentativeName').textContent = data.representativeName || 'No registrado';
-				document.getElementById('ptgRepresentativeId').textContent = data.representativeIdentityDocument || 'No registrado';
-				document.getElementById('ptgPhone').textContent = data.representativePhone || 'No registrado';
-				document.getElementById('ptgPartners').textContent = data.partners || 0;
-				document.getElementById('ptgDrivers').textContent = data.totalDrivers || 0;
+			function renderVehicleStep(data) {
+				document.getElementById('driverCedula').textContent = data.driverIdentityDocument || '';
+				document.getElementById('driverName').textContent = data.driverFullName || 'No registrado';
+
+				var tbody = document.getElementById('vehicleTableBody');
+				tbody.innerHTML = '';
+
+				(data.vehicles || []).forEach(function (v, index) {
+					var hasPlate = !!(v.plate && v.plate.trim());
+					var description = [v.make, v.model, v.year > 0 ? v.year : ''].filter(function (x) { return x; }).join(' ');
+					var tr = document.createElement('tr');
+
+					[v.publicTransportGroupRif, v.ptgCompleteName, v.modeName, hasPlate ? v.plate : 'Sin vehículo registrado', description].forEach(function (text) {
+						var td = document.createElement('td');
+						td.textContent = text || '';
+						tr.appendChild(td);
+					});
+
+					var tdSelect = document.createElement('td');
+					tdSelect.className = 'wizard-select-col';
+					var radio = document.createElement('input');
+					radio.type = 'radio';
+					radio.name = 'wizardVehicleSelect';
+					radio.value = index;
+					radio.disabled = !hasPlate;
+					radio.addEventListener('change', function () {
+						selectedVehicle = v;
+						// The monthly-fee check and the procedure list depend on the organization of the chosen vehicle
+						ptgData = { publicTransportGroupId: v.publicTransportGroupId, publicTransportGroupRif: v.publicTransportGroupRif, ptgCompleteName: v.ptgCompleteName, modeId: v.modeId };
+						procedureTypes = null;
+						selectedProcedureId = null;
+						monthlyFeePendings = 0;
+						monthlyFeePendingsChecked = false;
+						updateNextButtonState();
+					});
+					tdSelect.appendChild(radio);
+					tr.appendChild(tdSelect);
+
+					tbody.appendChild(tr);
+				});
 			}
 
 			function loadProcedureTypes() {
@@ -941,7 +1128,8 @@
 						return;
 					}
 
-					var url = monthlyFeePendings > 1 ? (procedureByIdApiUrl + '?procedureId=13') : procedureApiUrl;
+					// The tariff depends on the transport mode of the selected vehicle's organization
+					var url = procedureApiUrl + '?modeId=' + ptgData.modeId + (monthlyFeePendings > 1 ? '&procedureId=13' : '');
 
 					fetch(url, { cache: 'no-store' })
 						.then(function (r) { return r.json(); })
@@ -1059,6 +1247,16 @@
 
 				document.getElementById('tariffHintAccount').textContent = text;
 				document.getElementById('tariffHintMobile').textContent = text;
+
+				// Preload the amount to pay; the user can still edit it (once edited it is no longer overwritten)
+				if (proc && typeof proc.tariff === 'number' && currentBcvRate) {
+					var suggested = (proc.tariff * currentBcvRate * (monthlyFeePendings > 1 ? monthlyFeePendings : 1)).toFixed(2);
+					['payerAmountPaid1', 'payerAmountPaid2'].forEach(function (id) {
+						var input = document.getElementById(id);
+						if (input.dataset.edited !== '1') input.value = suggested;
+					});
+					updateNextButtonState();
+				}
 			}
 
 			// ── Step 4: Receiving Bank ────────────────────────────
@@ -1197,6 +1395,12 @@
 				}
 
 				updateNextButtonState();
+
+				// Bring the payment fields into view without the user having to scroll the wizard body
+				var visibleFields = selectedPaymentTypeId === 3 ? mobileFields : accountFields;
+				setTimeout(function () {
+					visibleFields.scrollIntoView({ block: 'end', behavior: 'smooth' });
+				}, 0);
 			});
 
 			function restrictDigitsInput(el) {
@@ -1212,6 +1416,7 @@
 					var parts = v.split('.');
 					if (parts.length > 2) v = parts[0] + '.' + parts.slice(1).join('');
 					this.value = v;
+					this.dataset.edited = '1';
 					updateNextButtonState();
 				});
 			}
@@ -1227,7 +1432,9 @@
 			// ── Step 5: Summary ────────────────────────────────────
 			function buildSummary() {
 				document.getElementById('summaryOrganization').textContent =
-					'RIF ' + (ptgData.publicTransportGroupRif || '') + ' — ' + (ptgData.ptgCompleteName || '');
+					'Cédula ' + (driverData.driverIdentityDocument || '') + ' — ' + (driverData.driverFullName || '') +
+				' — RIF ' + (selectedVehicle.publicTransportGroupRif || '') + ' — ' + (selectedVehicle.ptgCompleteName || '') +
+				' — Placa ' + (selectedVehicle.plate || '');
 
 				var proc = (procedureTypes || []).find(function (p) { return String(p.procedureId) === String(selectedProcedureId); });
 				if (proc) {
@@ -1263,6 +1470,96 @@
 				document.getElementById('summaryPayingBank').textContent = payingBankText;
 			}
 
+			// ── Payment receipt ────────────────────────────────────
+			var receiptOverlay = document.getElementById('receiptOverlay');
+			var receiptContent = document.getElementById('receiptContent');
+
+			function showReceipt(procedureRequestId, amountPaid, tariff) {
+				var now = new Date();
+				var receiptNumber = String(procedureRequestId).padStart(8, '0');
+				var rate = currentBcvRate || 0;
+				var fmt = function (n) {
+					return Number(n).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+				};
+				var text = function (id) { return document.getElementById(id).textContent; };
+
+				// The receipt only shows the procedure description (no category, frequency or tariff)
+				var receiptProc = (procedureTypes || []).find(function (p) { return String(p.procedureId) === String(selectedProcedureId); });
+
+				var rows = [
+					['Socio / Vehículo', text('summaryOrganization')],
+					['Trámite', receiptProc ? receiptProc.procedureConcept : text('summaryProcedure')],
+					['Banco receptor', text('summaryReceivingBank')],
+					['Banco pagador', text('summaryPayingBank')]
+				];
+
+				receiptContent.innerHTML = '';
+
+				var brand = document.createElement('div');
+				brand.className = 'receipt-brand';
+				brand.textContent = 'FONTUR Sistema de Supervisiones SuperTransp';
+				receiptContent.appendChild(brand);
+
+				var title = document.createElement('h3');
+				title.textContent = 'Recibo de pago N° ' + receiptNumber;
+				receiptContent.appendChild(title);
+
+				var meta = document.createElement('div');
+				meta.className = 'receipt-meta';
+				meta.textContent = now.toLocaleDateString('es-VE') + ' ' + now.toLocaleTimeString('es-VE');
+				receiptContent.appendChild(meta);
+
+				rows.forEach(function (r) {
+					var row = document.createElement('div');
+					row.className = 'receipt-row';
+					var label = document.createElement('span');
+					label.textContent = r[0];
+					var value = document.createElement('span');
+					value.textContent = r[1];
+					row.appendChild(label);
+					row.appendChild(value);
+					receiptContent.appendChild(row);
+				});
+
+				var total = document.createElement('div');
+				total.className = 'receipt-row receipt-total';
+				var totalLabel = document.createElement('span');
+				totalLabel.textContent = 'Monto pagado Bs.';
+				var totalValue = document.createElement('span');
+				totalValue.textContent = fmt(amountPaid || 0);
+				total.appendChild(totalLabel);
+				total.appendChild(totalValue);
+				receiptContent.appendChild(total);
+
+				receiptOverlay.classList.add('open');
+			}
+
+			document.getElementById('receiptClose').addEventListener('click', function () {
+				receiptOverlay.classList.remove('open');
+			});
+
+			document.getElementById('receiptPrint').addEventListener('click', function () {
+				var w = window.open('', '_blank', 'width=720,height=800');
+				if (!w) return;
+				// Build the print document with DOM nodes (no HTML literals inside the inline script)
+				w.document.title = 'Recibo de pago';
+				var printStyle = w.document.createElement('style');
+				printStyle.textContent = [
+					'body{font-family:Arial,sans-serif;color:#2c3e50;padding:32px;font-size:14px}',
+					'.receipt-brand{text-align:center;font-size:23px;font-weight:bold;color:#4c3d99;margin:0 0 8px;line-height:1.2}',
+					'h3{text-align:center;color:#667eea;text-transform:uppercase;margin:0 0 4px}',
+					'.receipt-meta{text-align:center;color:#7f8c9b;font-size:12px;margin-bottom:16px}',
+					'.receipt-row{display:flex;justify-content:space-between;gap:16px;padding:7px 0;border-bottom:1px dashed #ccd}',
+					'.receipt-row span:first-child{font-weight:bold;color:#667eea;flex-shrink:0}',
+					'.receipt-row span:last-child{text-align:right}',
+					'.receipt-total{margin-top:12px;font-weight:bold}'
+				].join('');
+				w.document.head.appendChild(printStyle);
+				w.document.body.appendChild(w.document.importNode(receiptContent, true));
+				w.focus();
+				w.print();
+			});
+
 			function submitProcedureRequest() {
 				if (!window.confirm('¿Confirma el registro de este trámite?')) {
 					return;
@@ -1279,9 +1576,15 @@
 				var tariff = proc && typeof proc.tariff === 'number' ? proc.tariff : 0;
 
 				var params = new URLSearchParams();
-				params.append('ProcedureByPublicTransportGroupId', '0');
+				params.append('ProcedureByDriverId', '0');
 				params.append('ProcedureId', selectedProcedureId);
-				params.append('PublicTransportGroupId', ptgData.publicTransportGroupId);
+				params.append('DriverId', selectedVehicle.driverId);
+				params.append('DriverPTGRif', selectedVehicle.publicTransportGroupRif || '');
+				params.append('DriverPTGName', selectedVehicle.ptgCompleteName || '');
+				params.append('DriverVehiclePlate', selectedVehicle.plate || '');
+				params.append('DriverVehicleYear', selectedVehicle.year || 0);
+				params.append('DriverVehicleMake', selectedVehicle.make || '');
+				params.append('DriverVehicleModel', selectedVehicle.model || '');
 				params.append('ProcedureBankAccountId', selectedBankAccount.procedureBankAccountId);
 				params.append('AccounTypeId', selectedPaymentTypeId);
 				params.append('BankId', selectedPayerBankId);
@@ -1308,8 +1611,16 @@
 					.then(function (r) { return r.json(); })
 					.then(function (data) {
 						if (data && data.success) {
-							alert('El trámite se registró correctamente.');
-							closeWizard();
+							// The request is already saved; this screen only simulates the bank validation (5 s)
+							isValidatingPayment = true;
+							validatingOverlay.classList.add('open');
+							setTimeout(function () {
+								// Build the receipt before closeWizard() resets the wizard state
+								showReceipt(data.procedureByDriverId, amount, tariff);
+								validatingOverlay.classList.remove('open');
+								isValidatingPayment = false;
+								closeWizard();
+							}, 5000);
 						} else {
 							alert((data && data.message) || 'No se pudo registrar el trámite.');
 							nextBtn.disabled = false;
@@ -1323,33 +1634,35 @@
 					});
 			}
 
-			function goToPTGSearch() {
-				var rif = rifInput.value.trim();
+			function goToDriverSearch() {
+				var cedula = cedulaInput.value.trim();
 				step1Error.textContent = '';
 				nextBtn.disabled = true;
 
-				fetch(ptgApiUrl + '?publicTransportGroupRif=' + encodeURIComponent(rif), { cache: 'no-store' })
+				fetch(vehiclesApiUrl + '?driverIdentityDocument=' + encodeURIComponent(cedula), { cache: 'no-store' })
 					.then(function (r) { return r.json(); })
 					.then(function (data) {
 						if (!data) {
-							step1Error.textContent = 'No se encontró ninguna organización con ese RIF.';
+							step1Error.textContent = 'No se encontró ningún socio con esa cédula.';
 							nextBtn.disabled = false;
 							return;
 						}
 
-						ptgData = data;
-						renderPTGStep(ptgData);
+						driverData = data;
+						selectedVehicle = null;
+						ptgData = null;
+						renderVehicleStep(driverData);
 						showStep(2);
 					})
 					.catch(function () {
-						step1Error.textContent = 'Ocurrió un error al buscar la organización. Intente nuevamente.';
+						step1Error.textContent = 'Ocurrió un error al buscar el socio. Intente nuevamente.';
 						nextBtn.disabled = false;
 					});
 			}
 
 			nextBtn.addEventListener('click', function () {
 				if (currentStep === 1) {
-					goToPTGSearch();
+					goToDriverSearch();
 				} else if (currentStep === 2) {
 					showStep(3);
 					loadProcedureTypes();
@@ -1381,11 +1694,16 @@
 				overlay.classList.add('open');
 			});
 
+			// Opened from other pages' menus (Procedures/Index?openWizard=1)
+			if (new URLSearchParams(window.location.search).get('openWizard') === '1') {
+				document.getElementById('btnSolicitarTramite').click();
+			}
+
 			cancelBtn.addEventListener('click', closeWizard);
 			closeBtn.addEventListener('click', closeWizard);
 
 			document.addEventListener('keydown', function (e) {
-				if (e.key === 'Escape' && overlay.classList.contains('open')) closeWizard();
+				if (e.key === 'Escape' && overlay.classList.contains('open') && !isValidatingPayment) closeWizard();
 			});
 		})();
 	</script>

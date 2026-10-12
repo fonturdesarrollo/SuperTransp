@@ -115,7 +115,7 @@
                             </div>
                             <div class="col-6">
                                 <strong>Fecha de nacimiento:</strong>
-                                @Html.TextBox("Birthdate", Model.Birthdate.ToString("dd/MM/yyyy"), new { maxlength = "20" })
+                                @Html.TextBox("Birthdate", Model.Birthdate.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture), new { maxlength = "20" })
                             </div>
                             <div class="col-6">
                                 <strong>Número de Socio:</strong>
@@ -126,6 +126,11 @@
                                 <strong>Teléfono:</strong>
                                 @Html.TextBoxFor(x => x.DriverPhone, new { placeholder = "Teléfono del socio", maxlength = "11" })
                                 <span asp-validation-for="DriverPhone" class="text-danger"></span>
+                            </div>
+                            <div class="col-6">
+                                <strong>Email:</strong>
+                                @Html.TextBoxFor(x => x.DriverEmail, new { placeholder = "Email del socio", maxlength = "80" })
+                                <span asp-validation-for="DriverEmail" class="text-danger"></span>
                             </div>
                             <div class="col-12">
                                 <ul class="actions">
