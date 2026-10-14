@@ -162,30 +162,49 @@ namespace SuperTransp.Controllers
 
 		public IActionResult AddSupervisionRound(int monthValue, int yearValue, string supervisionRoundDescription, int stateId)
 		{
-			var result = CheckSessionAndPermission(24);
-			if (result != null) return result;
-
-			DateTime startDate;
-			int year = yearValue;
-			int month = monthValue;
-
-			startDate = new DateTime(year, month, 1);
-
-			SupervisionRoundModel model = new SupervisionRoundModel
+			try
 			{
-				SupervisionRoundStartDate = startDate,
-				StateId = stateId,
-				SupervisionRoundStartDescription = supervisionRoundDescription.ToUpper(),
-				SupervisionRoundEndDate = startDate,
-				SupervisionRoundEndDescription = supervisionRoundDescription,
-				SupervisionRoundStatus = true
-			};
+				var result = CheckSessionAndPermission(24);
+				if (result != null) return result;
 
-			_supervision.AddOrEditRound(model);
+				DateTime startDate;
+				int year = yearValue;
+				int month = monthValue;
 
-			TempData["SuccessMessage"] = "Datos actualizados correctamente";
+				startDate = new DateTime(year, month, 1);
 
-			return RedirectToAction("Index");
+				if (_supervision.IsActiveSupervisionRoundByStateMonthAndYear(stateId, month, year))
+				{
+					TempData["SuccessMessage"] = $"Ya existe una vuelta de supervisión abierta para {month:00}-{year}";
+					return RedirectToAction("Index");
+				}
+
+				if (_supervision.IsFinishedSupervisionRoundByStateMonthAndYear(stateId, month, year))
+				{
+					TempData["SuccessMessage"] = $"La vuelta de supervisión {month:00}-{year} ya fue cerrada y no puede volver a abrirse";
+					return RedirectToAction("Index");
+				}
+
+				SupervisionRoundModel model = new SupervisionRoundModel
+				{
+					SupervisionRoundStartDate = startDate,
+					StateId = stateId,
+					SupervisionRoundStartDescription = supervisionRoundDescription.ToUpper(),
+					SupervisionRoundEndDate = startDate,
+					SupervisionRoundEndDescription = supervisionRoundDescription,
+					SupervisionRoundStatus = true
+				};
+
+				_supervision.AddOrEditRound(model);
+
+				TempData["SuccessMessage"] = "Datos actualizados correctamente";
+
+				return RedirectToAction("Index");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message });
+			}
 		}
 
 		public async Task<IActionResult> AddAsync(int publicTransportGroupId, string pTGCompleteName, string driverFullName, int partnerNumber, string? publicTransportGroupRif, int driverIdentityDocument, string stateName, int? supervisionStatus, int driverId, int supervisionId, int modeId, string modeName, int driverPublicTransportGroupId)

@@ -1892,7 +1892,7 @@ namespace SuperTransp.Core
 					}
 
 					List<SupervisionRoundModel> round = new();
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_SupervisionRoundDetail WHERE StateId = @StateId AND StartMonth = @StartMonth AND StartYear = @StartYear AND SupervisionRoundStatus = 1", sqlConnection);
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_SupervisionRoundDetail WHERE StateId = @StateId AND StartMonth = @StartMonth AND StartYear = @StartYear AND SupervisionRoundStatus = 0", sqlConnection);
 					cmd.Parameters.AddWithValue("@StateId", stateId);
 					cmd.Parameters.AddWithValue("@StartMonth", month);
 					cmd.Parameters.AddWithValue("@StartYear", year);
