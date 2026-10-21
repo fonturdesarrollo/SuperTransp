@@ -419,6 +419,14 @@
 			gap: 14px;
 		}
 
+		.wizard-table th.wizard-code-col,
+		.wizard-table td.wizard-code-col {
+			width: 4.5em;
+			max-width: 4.5em;
+			text-align: center;
+			white-space: nowrap;
+		}
+
 		.wizard-form-group {
 			display: flex;
 			flex-direction: column;
@@ -438,10 +446,62 @@
 
 		.wizard-form-row-compact {
 			flex-wrap: nowrap;
+			align-items: flex-end;
+			padding-bottom: 30px;
 		}
 
 		.wizard-form-row-compact .wizard-form-group {
 			min-width: 0;
+			position: relative;
+		}
+
+		/* validation messages hang below the box so the boxes of the row stay on the same line */
+		.wizard-form-row-compact .wizard-field-error {
+			position: absolute;
+			top: 100%;
+			left: 0;
+			width: max-content;
+			max-width: 360px;
+			margin-top: 3px;
+		}
+
+		.wizard-radio-row {
+			display: flex;
+			gap: 28px;
+		}
+
+		/* same fix as in the selection column: the base template hides native radio buttons */
+		.wizard-radio-row input[type="radio"] {
+			-webkit-appearance: radio;
+			-moz-appearance: radio;
+			appearance: radio;
+			display: inline-block;
+			position: static;
+			float: none;
+			opacity: 1;
+			width: 18px;
+			height: 18px;
+			margin: 0;
+			z-index: auto;
+			cursor: pointer;
+		}
+
+		#posAccountMessage:empty {
+			display: none;
+		}
+
+		#mobileReceiverBlock {
+			margin-top: -6px;
+		}
+
+		.wizard-radio-row label {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			font-size: 0.9rem;
+			font-weight: 600;
+			color: #2c3e50;
+			cursor: pointer;
 		}
 
 		.wizard-form-row-compact select,
@@ -748,22 +808,35 @@
 						<div class="wizard-frame">
 							<div class="wizard-frame-title">Banco Receptor</div>
 							<div class="wizard-frame-body">
-								<div class="wizard-form-group">
-									<label for="paymentTypeSelect">Tipo de pago</label>
-									<select id="paymentTypeSelect" disabled>
-										<option value="">Cargando&hellip;</option>
-									</select>
+								<div class="wizard-radio-row">
+									<label><input type="radio" name="receiverMode" id="receiverModePos" value="pos" checked /> Punto de venta</label>
+									<label><input type="radio" name="receiverMode" id="receiverModeMobile" value="mobile" /> Pago Móvil</label>
 								</div>
-								<table class="wizard-table wizard-table-full" id="receiverBankTable" style="display:none;">
-									<thead id="receiverBankTableHead"></thead>
-									<tbody id="receiverBankTableBody"></tbody>
-								</table>
+								<p class="wizard-error" id="posAccountMessage"></p>
+								<div id="mobileReceiverBlock" style="display:flex; flex-direction:column; gap:14px;">
+									<div class="wizard-form-group" id="paymentTypeGroup">
+										<label for="paymentTypeSelect">Tipo de pago</label>
+										<select id="paymentTypeSelect" disabled>
+											<option value="">Cargando&hellip;</option>
+										</select>
+									</div>
+									<table class="wizard-table wizard-table-full" id="receiverBankTable" style="display:none;">
+										<thead id="receiverBankTableHead"></thead>
+										<tbody id="receiverBankTableBody"></tbody>
+									</table>
+								</div>
 							</div>
 						</div>
 
-						<div class="wizard-frame">
+						<div class="wizard-frame" id="payerFrame" style="display:none;">
 							<div class="wizard-frame-title">Banco Pagador</div>
 							<div class="wizard-frame-body">
+								<div class="wizard-form-group">
+									<label for="payerTypeSelect">Tipo de pago</label>
+									<select id="payerTypeSelect" disabled>
+										<option value="">Cargando&hellip;</option>
+									</select>
+								</div>
 								<div class="wizard-form-group">
 									<label for="payerBankSelect">Banco</label>
 									<select id="payerBankSelect" disabled>
@@ -778,8 +851,9 @@
 									</div>
 									<div class="wizard-form-group">
 										<label for="payerAmountPaid1">Monto pagado</label>
-										<input type="text" id="payerAmountPaid1" inputmode="decimal" autocomplete="off" maxlength="14" />
 										<p class="wizard-tariff-hint" id="tariffHintAccount">Monto según tarifa: Bs. —</p>
+										<input type="text" id="payerAmountPaid1" inputmode="decimal" autocomplete="off" maxlength="14" />
+										<p class="wizard-field-error" id="payerAmountError1"></p>
 									</div>
 									<div class="wizard-form-group">
 										<label for="payerReferenceNumber1">N° de referencia</label>
@@ -798,8 +872,9 @@
 									</div>
 									<div class="wizard-form-group">
 										<label for="payerAmountPaid2">Monto pagado</label>
-										<input type="text" id="payerAmountPaid2" inputmode="decimal" autocomplete="off" maxlength="14" />
 										<p class="wizard-tariff-hint" id="tariffHintMobile">Monto según tarifa: Bs. —</p>
+										<input type="text" id="payerAmountPaid2" inputmode="decimal" autocomplete="off" maxlength="14" />
+										<p class="wizard-field-error" id="payerAmountError2"></p>
 									</div>
 									<div class="wizard-form-group">
 										<label for="payerReferenceNumber2">N° de referencia</label>
@@ -824,7 +899,7 @@
 							<h4>Banco Receptor</h4>
 							<p id="summaryReceivingBank"></p>
 						</div>
-						<div class="wizard-summary-block">
+						<div class="wizard-summary-block" id="summaryPayerBlock">
 							<h4>Banco Pagador</h4>
 							<p id="summaryPayingBank"></p>
 						</div>
@@ -852,7 +927,7 @@
 		<div class="wizard-overlay" id="receiptOverlay">
 			<div class="wizard-modal">
 				<div class="wizard-header">
-					<h3>Recibo de pago</h3>
+					<h3 id="receiptHeaderTitle">Recibo de pago</h3>
 				</div>
 				<div class="receipt-body">
 					<div class="receipt-paper" id="receiptContent"></div>
@@ -882,6 +957,7 @@
 			var accounTypesApiUrl = '@Url.Action("GetAccounTypes", "Procedures")';
 			var exchangeRateApiUrl = '@Url.Action("GetExchangeRate", "Procedures")';
 			var bankAccountsApiUrl = '@Url.Action("GetProcedureBankAccounts", "Procedures")';
+			var bankAccountByIdApiUrl = '@Url.Action("GetProcedureBankAccountById", "Procedures")';
 			var banksApiUrl = '@Url.Action("GetBanks", "Procedures")';
 			var submitApiUrl = '@Url.Action("SubmitProcedureRequest", "Procedures")';
 
@@ -895,6 +971,7 @@
 			var closeBtn = document.getElementById('wizardClose');
 			var paymentTypeSelect = document.getElementById('paymentTypeSelect');
 			var payerBankSelect = document.getElementById('payerBankSelect');
+			var payerTypeSelect = document.getElementById('payerTypeSelect');
 
 			var currentStep = 1;
 			var isValidatingPayment = false;
@@ -905,7 +982,14 @@
 			var procedureTypes = null;
 			var selectedProcedureId = null;
 			var bankAccountsCache = {};
-			var selectedPaymentTypeId = null;
+			var receiverAppliedProcedureId = null;
+			var receiptReceiverText = '';
+			var receiverMode = 'pos'; // 'pos' = Punto de venta (default) | 'mobile' = Pago móvil
+			var posAccount = null; // receiving account registered with AccounTypeId 4 (Punto de Venta)
+			var receiptIsPos = true;
+			var receiptPayerText = '';
+			var selectedPaymentTypeId = null; // type of the receiving account
+			var selectedPayerTypeId = null; // type chosen by the payer: decides which payer fields are used
 			var selectedBankAccount = null;
 			var banksListCache = null;
 			var selectedPayerBankId = null;
@@ -932,7 +1016,14 @@
 
 				selectedPaymentTypeId = null;
 				selectedBankAccount = null;
+				receiverAppliedProcedureId = null;
+				receiverMode = 'pos';
+				posAccount = null;
+				document.getElementById('receiverModePos').checked = true;
+				document.getElementById('payerFrame').style.display = 'none';
+				document.getElementById('posAccountMessage').textContent = '';
 				paymentTypeSelect.value = '';
+				paymentTypeSelect.disabled = paymentTypeSelect.options.length < 2;
 				document.getElementById('receiverBankTable').style.display = 'none';
 				document.getElementById('receiverBankTableHead').innerHTML = '';
 				document.getElementById('receiverBankTableBody').innerHTML = '';
@@ -964,7 +1055,21 @@
 				document.getElementById('payerReferenceNumber2').value = '';
 				document.getElementById('payerAccountError').textContent = '';
 				document.getElementById('payerPhoneError').textContent = '';
+				applyFixedPayerType();
 				updateTariffHints();
+			}
+
+			// The payer always pays with Pago móvil (AccounTypeId 3): the type is preset and locked, the mobile
+			// payment fields are visible from the start and only the bank has to be chosen.
+			function applyFixedPayerType() {
+				var PAYER_TYPE_ID = 3;
+				selectedPayerTypeId = PAYER_TYPE_ID;
+				payerTypeSelect.value = String(PAYER_TYPE_ID);
+				payerTypeSelect.disabled = true;
+				document.getElementById('payerMobileFields').style.display = 'flex';
+				document.getElementById('payerAccountFields').style.display = 'none';
+				loadPayerBanks();
+				updateNextButtonState();
 			}
 
 			function updateStepIndicator() {
@@ -1018,7 +1123,30 @@
 				return /^(0412|0414|0416|0424|0426)\d{7}$/.test(value);
 			}
 
+			// Amount to pay in Bs. (tariff x BCV rate x pending monthly fees), or null while it cannot be computed
+			function getAmountDue() {
+				var proc = (procedureTypes || []).find(function (p) { return String(p.procedureId) === String(selectedProcedureId); });
+				if (!proc || typeof proc.tariff !== 'number' || !currentBcvRate) return null;
+				return Math.round(proc.tariff * currentBcvRate * (monthlyFeePendings > 1 ? monthlyFeePendings : 1) * 100) / 100;
+			}
+
+			function getPayerAmount() {
+				var id = selectedPayerTypeId === 3 ? 'payerAmountPaid2' : 'payerAmountPaid1';
+				var value = parseFloat(document.getElementById(id).value.trim());
+				return isNaN(value) ? null : value;
+			}
+
+			function isAmountBelowDue() {
+				var due = getAmountDue();
+				var amount = getPayerAmount();
+				return due !== null && amount !== null && amount > 0 && Math.round(amount * 100) < Math.round(due * 100);
+			}
+
 			function updateFieldErrors() {
+				var belowDue = receiverMode === 'mobile' && isAmountBelowDue();
+				['payerAmountError1', 'payerAmountError2'].forEach(function (id) {
+					document.getElementById(id).textContent = belowDue ? 'El monto a pagar no puede ser menor al monto del trámite.' : '';
+				});
 				var account = document.getElementById('payerAccountNumber').value.trim();
 				var phone = document.getElementById('payerCellPhoneNumber').value.trim();
 				document.getElementById('payerAccountError').textContent = (account && !isValidPayerAccount(account))
@@ -1028,9 +1156,13 @@
 			}
 
 			function isPaymentStepValid() {
-				if (!selectedPaymentTypeId || !selectedBankAccount || !selectedPayerBankId) return false;
+				// Punto de venta: nothing of the paying bank applies, only the registered POS account is needed
+				if (receiverMode === 'pos') return !!posAccount;
 
-				if (selectedPaymentTypeId === 3) {
+				if (!selectedPaymentTypeId || !selectedBankAccount || !selectedPayerTypeId || !selectedPayerBankId) return false;
+				if (isAmountBelowDue()) return false;
+
+				if (selectedPayerTypeId === 3) {
 					var phone = document.getElementById('payerCellPhoneNumber').value.trim();
 					var idNum = document.getElementById('payerIdNumber').value.trim();
 					var amount = document.getElementById('payerAmountPaid2').value.trim();
@@ -1143,6 +1275,11 @@
 				}
 			}
 
+			// A phone made only of zeros is a placeholder, not a real number
+			function isRealPhone(value) {
+				return !!value && !/^0+$/.test(String(value).trim());
+			}
+
 			function formatBs(amount) {
 				return 'Bs. ' + amount.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 			}
@@ -1191,17 +1328,26 @@
 				fetch(accounTypesApiUrl, { cache: 'no-store' })
 					.then(function (r) { return r.json(); })
 					.then(function (data) {
-						paymentTypeSelect.innerHTML = '<option value="">Seleccione...</option>';
-						(data || []).forEach(function (t) {
-							var opt = document.createElement('option');
-							opt.value = t.accounTypeId;
-							opt.textContent = t.accounTypeName;
-							paymentTypeSelect.appendChild(opt);
+						[paymentTypeSelect, payerTypeSelect].forEach(function (select) {
+							select.innerHTML = '<option value="">Seleccione...</option>';
+							(data || []).forEach(function (t) {
+								var opt = document.createElement('option');
+								opt.value = t.accounTypeId;
+								opt.textContent = t.accounTypeName;
+								select.appendChild(opt);
+							});
+							select.disabled = false;
 						});
-						paymentTypeSelect.disabled = false;
+						applyFixedPayerType();
+						// the receiving combo stays locked while the procedure has an assigned account
+						if (selectedBankAccount && receiverAppliedProcedureId !== null && selectedPaymentTypeId) {
+							paymentTypeSelect.value = selectedPaymentTypeId;
+							paymentTypeSelect.disabled = true;
+						}
 					})
 					.catch(function () {
 						paymentTypeSelect.innerHTML = '<option value="">Error al cargar</option>';
+						payerTypeSelect.innerHTML = '<option value="">Error al cargar</option>';
 					});
 			}
 
@@ -1286,19 +1432,17 @@
 					});
 			}
 
-			function renderReceiverBankTable(data, accounTypeId) {
+			// locked = the account is assigned to the procedure: it is shown already selected and cannot be changed
+			function renderReceiverBankTable(data, accounTypeId, locked) {
 				var thead = document.getElementById('receiverBankTableHead');
 				var tbody = document.getElementById('receiverBankTableBody');
-				var isMobile = accounTypeId === 3;
-
-				thead.innerHTML = isMobile
-					? '<tr><th>Banco</th><th>Código Sudeban</th><th>Teléfono</th><th>Cédula</th><th class="wizard-select-col">Seleccionar</th></tr>'
-					: '<tr><th>Banco</th><th>Código Sudeban</th><th>Tipo de Cuenta</th><th>Número de Cuenta</th><th class="wizard-select-col">Seleccionar</th></tr>';
+				// Same columns for every account type; the ones that do not apply to the account are left empty
+				thead.innerHTML = '<tr><th>Banco</th><th class="wizard-code-col">Código</th><th>Teléfono</th><th>RIF</th><th>Tipo de Cuenta</th><th>Número de Cuenta</th><th class="wizard-select-col">Seleccionar</th></tr>';
 
 				tbody.innerHTML = '';
 
 				if (!data || data.length === 0) {
-					tbody.innerHTML = '<tr><td colspan="5" class="wizard-empty">No hay cuentas registradas para este tipo de pago</td></tr>';
+					tbody.innerHTML = '<tr><td colspan="7" class="wizard-empty">No hay cuentas registradas para este tipo de pago</td></tr>';
 					return;
 				}
 
@@ -1307,14 +1451,20 @@
 
 					tr.innerHTML =
 						'<td>' + (b.bankName || '') + '</td>' +
-						'<td>' + (b.sudebanCode || '') + '</td>' +
-						(isMobile
-							? '<td>' + (b.cellPhoneNumber || '') + '</td><td>' + (b.idNumber || '') + '</td>'
-							: '<td>' + (b.accounTypeName || '') + '</td><td>' + (b.accountNumber || '') + '</td>') +
-						'<td class="wizard-select-col"><input type="radio" name="wizardReceiverBankSelect" value="' + idx + '" /></td>';
+						'<td class="wizard-code-col">' + (b.sudebanCode || '') + '</td>' +
+						'<td>' + (b.cellPhoneNumber || '') + '</td>' +
+						'<td>' + (b.idNumber || '') + '</td>' +
+						'<td>' + (b.accounTypeName || '') + '</td>' +
+						'<td>' + (b.accountNumber || '') + '</td>' +
+						'<td class="wizard-select-col"><input type="radio" name="wizardReceiverBankSelect" value="' + idx + '"' + (locked ? ' checked disabled' : '') + ' /></td>';
 
 					tbody.appendChild(tr);
 				});
+
+				if (locked) {
+					selectedBankAccount = data[0];
+					return;
+				}
 
 				tbody.querySelectorAll('input[name="wizardReceiverBankSelect"]').forEach(function (radio) {
 					radio.addEventListener('change', function () {
@@ -1324,6 +1474,104 @@
 				});
 			}
 
+			// Entering step 4 with a new procedure: the receiving frame works as usual and Punto de venta is the
+			// default option (the option only affects the paying bank frame and the account that is saved)
+			function applyProcedureReceiverAccount() {
+				if (receiverAppliedProcedureId === selectedProcedureId) return; // keep the typed data when going back and forth
+				receiverAppliedProcedureId = selectedProcedureId;
+
+				document.getElementById('receiverModePos').checked = true;
+				setReceiverMode('pos');
+				loadPosAccount();
+				applyReceiverAccount();
+			}
+
+			// Registered Punto de Venta account (AccounTypeId 4): it is the account saved when the option is Punto de venta
+			function loadPosAccount() {
+				var message = document.getElementById('posAccountMessage');
+
+				function apply(list) {
+					posAccount = (list && list[0]) || null;
+					message.textContent = (!posAccount && receiverMode === 'pos') ? 'No hay una cuenta de punto de venta registrada.' : '';
+					updateNextButtonState();
+				}
+
+				if (bankAccountsCache[4]) {
+					apply(bankAccountsCache[4]);
+					return;
+				}
+
+				fetch(bankAccountsApiUrl + '?accounTypeId=4', { cache: 'no-store' })
+					.then(function (r) { return r.json(); })
+					.then(function (data) {
+						bankAccountsCache[4] = data || [];
+						apply(bankAccountsCache[4]);
+					})
+					.catch(function () {
+						message.textContent = 'Error al cargar la cuenta de punto de venta.';
+					});
+			}
+
+			// Punto de venta: the paying bank frame is hidden and none of its validations apply.
+			// Pago móvil: the paying bank frame is shown with all its validations. The receiving frame is not touched.
+			function setReceiverMode(mode) {
+				receiverMode = mode;
+				var isPos = mode === 'pos';
+				document.getElementById('payerFrame').style.display = isPos ? 'none' : '';
+				document.getElementById('posAccountMessage').textContent = (isPos && !posAccount && bankAccountsCache[4]) ? 'No hay una cuenta de punto de venta registrada.' : '';
+				updateNextButtonState();
+			}
+
+			// If the chosen procedure has an assigned receiving account, show only that account, already selected
+			// (and its payment type fixed). Otherwise the user picks type and account as usual.
+			function applyReceiverAccount() {
+				selectedPaymentTypeId = null;
+				selectedBankAccount = null;
+				paymentTypeSelect.value = '';
+				paymentTypeSelect.disabled = paymentTypeSelect.options.length < 2;
+				document.getElementById('paymentTypeGroup').style.display = '';
+				document.getElementById('receiverBankTable').style.display = 'none';
+				document.getElementById('receiverBankTableHead').innerHTML = '';
+				document.getElementById('receiverBankTableBody').innerHTML = '';
+				resetPayerFrame();
+				updateNextButtonState();
+
+				var proc = (procedureTypes || []).find(function (p) { return String(p.procedureId) === String(selectedProcedureId); });
+				var accountId = proc && proc.procedureBankAccountId > 0 ? proc.procedureBankAccountId : 0;
+				if (!accountId) return;
+
+				var table = document.getElementById('receiverBankTable');
+				var tbody = document.getElementById('receiverBankTableBody');
+				table.style.display = 'table';
+				tbody.innerHTML = '<tr><td class="wizard-empty">Cargando&hellip;</td></tr>';
+
+				fetch(bankAccountByIdApiUrl + '?procedureBankAccountId=' + accountId, { cache: 'no-store' })
+					.then(function (r) { return r.json(); })
+					.then(function (data) {
+						var account = data && data[0];
+						if (!account) {
+							tbody.innerHTML = '<tr><td class="wizard-empty" style="color:#e74c3c;">La cuenta receptora de este trámite no está disponible</td></tr>';
+							return;
+						}
+
+						paymentTypeSelect.value = account.accounTypeId;
+						paymentTypeSelect.disabled = true;
+						document.getElementById('paymentTypeGroup').style.display = 'none'; // the type is fixed by the assigned account
+						selectedPaymentTypeId = parseInt(account.accounTypeId, 10);
+						renderReceiverBankTable([account], selectedPaymentTypeId, true);
+						updateNextButtonState();
+					})
+					.catch(function () {
+						tbody.innerHTML = '<tr><td class="wizard-empty" style="color:#e74c3c;">Error al cargar la cuenta receptora</td></tr>';
+					});
+			}
+
+			document.querySelectorAll('input[name="receiverMode"]').forEach(function (radio) {
+				radio.addEventListener('change', function () {
+					if (this.checked) setReceiverMode(this.value);
+				});
+			});
+
 			paymentTypeSelect.addEventListener('change', function () {
 				var typeId = this.value;
 				selectedPaymentTypeId = typeId ? parseInt(typeId, 10) : null;
@@ -1332,11 +1580,9 @@
 				document.getElementById('receiverBankTable').style.display = 'none';
 				document.getElementById('receiverBankTableHead').innerHTML = '';
 				document.getElementById('receiverBankTableBody').innerHTML = '';
-				resetPayerFrame();
 
 				if (selectedPaymentTypeId) {
 					loadReceiverBankAccounts(selectedPaymentTypeId);
-					loadPayerBanks();
 				}
 
 				updateNextButtonState();
@@ -1368,25 +1614,26 @@
 				banks.forEach(function (b) {
 					var opt = document.createElement('option');
 					opt.value = b.bankId;
-					opt.textContent = b.bankName;
+					// Sudeban code on the left, separated from the bank name by a dash
+					opt.textContent = (b.sudebanCode ? b.sudebanCode + ' - ' : '') + b.bankName;
 					payerBankSelect.appendChild(opt);
 				});
 				payerBankSelect.disabled = false;
 			}
 
-			payerBankSelect.addEventListener('change', function () {
-				selectedPayerBankId = this.value || null;
+			// Shows the payer fields that match the payer's type (mobile payment vs account) once type and bank are chosen
+			function showPayerFields(scrollIntoView) {
 				var accountFields = document.getElementById('payerAccountFields');
 				var mobileFields = document.getElementById('payerMobileFields');
 
-				if (!selectedPayerBankId) {
+				if (!selectedPayerBankId || !selectedPayerTypeId) {
 					accountFields.style.display = 'none';
 					mobileFields.style.display = 'none';
 					updateNextButtonState();
 					return;
 				}
 
-				if (selectedPaymentTypeId === 3) {
+				if (selectedPayerTypeId === 3) {
 					mobileFields.style.display = 'flex';
 					accountFields.style.display = 'none';
 				} else {
@@ -1397,10 +1644,38 @@
 				updateNextButtonState();
 
 				// Bring the payment fields into view without the user having to scroll the wizard body
-				var visibleFields = selectedPaymentTypeId === 3 ? mobileFields : accountFields;
-				setTimeout(function () {
-					visibleFields.scrollIntoView({ block: 'end', behavior: 'smooth' });
-				}, 0);
+				if (scrollIntoView) {
+					var visibleFields = selectedPayerTypeId === 3 ? mobileFields : accountFields;
+					setTimeout(function () {
+						visibleFields.scrollIntoView({ block: 'end', behavior: 'smooth' });
+					}, 0);
+				}
+			}
+
+			payerTypeSelect.addEventListener('change', function () {
+				selectedPayerTypeId = this.value ? parseInt(this.value, 10) : null;
+
+				// Each type uses different fields: clear what was typed for the previous type
+				['payerAccountNumber', 'payerReferenceNumber1', 'payerCellPhoneNumber', 'payerIdNumber', 'payerReferenceNumber2'].forEach(function (id) {
+					document.getElementById(id).value = '';
+				});
+
+				if (!selectedPayerTypeId) {
+					selectedPayerBankId = null;
+					payerBankSelect.value = '';
+					payerBankSelect.disabled = true;
+				} else if (payerBankSelect.options.length > 1) {
+					payerBankSelect.disabled = false;
+				} else {
+					loadPayerBanks();
+				}
+
+				showPayerFields(true);
+			});
+
+			payerBankSelect.addEventListener('change', function () {
+				selectedPayerBankId = this.value || null;
+				showPayerFields(true);
 			});
 
 			function restrictDigitsInput(el) {
@@ -1434,29 +1709,54 @@
 				document.getElementById('summaryOrganization').textContent =
 					'Cédula ' + (driverData.driverIdentityDocument || '') + ' — ' + (driverData.driverFullName || '') +
 				' — RIF ' + (selectedVehicle.publicTransportGroupRif || '') + ' — ' + (selectedVehicle.ptgCompleteName || '') +
-				' — Placa ' + (selectedVehicle.plate || '');
+				' — ' + (selectedVehicle.modeName ? selectedVehicle.modeName + ' — ' : '') + 'Placa ' + (selectedVehicle.plate || '');
 
 				var proc = (procedureTypes || []).find(function (p) { return String(p.procedureId) === String(selectedProcedureId); });
 				if (proc) {
-					var tariffText = (typeof proc.tariff === 'number')
-						? proc.tariff.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-						: proc.tariff;
+					// Tariff in bolívares: tariff x BCV rate (falls back to the plain tariff while there is no rate)
+					var summaryDue = getAmountDue();
+					var tariffText = summaryDue !== null
+						? formatBs(summaryDue)
+						: (typeof proc.tariff === 'number'
+							? proc.tariff.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+							: proc.tariff);
 					document.getElementById('summaryProcedure').textContent =
 						proc.procedureCategoryName + ' — ' + proc.procedureConcept + ' (' + proc.procedureFrequencyName + ') — Tarifa: ' + tariffText;
 				}
 
+				var isPos = receiverMode === 'pos';
+				document.getElementById('summaryPayerBlock').style.display = isPos ? 'none' : '';
+
+				if (isPos) {
+					// Punto de venta: receiving bank = the registered POS account; there is no paying bank section
+					var posDue = getAmountDue();
+					receiptReceiverText = (posAccount.bankName || '') +
+						(posAccount.idNumber ? ' — RIF: ' + posAccount.idNumber : '') +
+						(isRealPhone(posAccount.cellPhoneNumber) ? ' — Teléfono: ' + posAccount.cellPhoneNumber : '');
+					receiptPayerText = '';
+					document.getElementById('summaryReceivingBank').textContent = receiptReceiverText +
+						(posDue !== null ? ' — Monto a pagar: ' + formatBs(posDue) : '');
+					document.getElementById('summaryPayingBank').textContent = '';
+					return;
+				}
+
 				var paymentTypeLabel = paymentTypeSelect.options[paymentTypeSelect.selectedIndex].text;
+				var payerTypeLabel = payerTypeSelect.options[payerTypeSelect.selectedIndex].text;
 
 				var receivingBankText = (selectedBankAccount.bankName || '');
-				receivingBankText += selectedPaymentTypeId === 3
-					? (' — Teléfono: ' + (selectedBankAccount.cellPhoneNumber || '') + ' — Cédula: ' + (selectedBankAccount.idNumber || ''))
-					: (' — Cuenta: ' + (selectedBankAccount.accountNumber || ''));
+				if (selectedBankAccount.idNumber) receivingBankText += ' — RIF: ' + selectedBankAccount.idNumber;
+				if (selectedBankAccount.cellPhoneNumber) receivingBankText += ' — Teléfono: ' + selectedBankAccount.cellPhoneNumber;
+				if (selectedBankAccount.accountNumber) receivingBankText += ' — Cuenta: ' + selectedBankAccount.accountNumber;
 				receivingBankText += ' — Tipo de cuenta: ' + paymentTypeLabel;
+				// The receipt shows the receiving bank with its RIF and phone, without the account number
+				receiptReceiverText = (selectedBankAccount.bankName || '') +
+					(selectedBankAccount.idNumber ? ' — RIF: ' + selectedBankAccount.idNumber : '') +
+					(isRealPhone(selectedBankAccount.cellPhoneNumber) ? ' — Teléfono: ' + selectedBankAccount.cellPhoneNumber : '');
 				document.getElementById('summaryReceivingBank').textContent = receivingBankText;
 
 				var payerBankName = payerBankSelect.options[payerBankSelect.selectedIndex].text;
 				var payingBankText = payerBankName;
-				if (selectedPaymentTypeId === 3) {
+				if (selectedPayerTypeId === 3) {
 					payingBankText += ' — Teléfono: ' + document.getElementById('payerCellPhoneNumber').value +
 						' — Cédula: ' + document.getElementById('payerIdNumber').value +
 						' — Monto pagado: ' + document.getElementById('payerAmountPaid2').value +
@@ -1466,7 +1766,9 @@
 						' — Monto pagado: ' + document.getElementById('payerAmountPaid1').value +
 						' — N° de referencia: ' + document.getElementById('payerReferenceNumber1').value;
 				}
-				payingBankText += ' — Tipo de cuenta: ' + paymentTypeLabel;
+				// The receipt shows the paying bank without the account type
+				receiptPayerText = payingBankText;
+				payingBankText += ' — Tipo de cuenta: ' + payerTypeLabel;
 				document.getElementById('summaryPayingBank').textContent = payingBankText;
 			}
 
@@ -1486,12 +1788,19 @@
 				// The receipt only shows the procedure description (no category, frequency or tariff)
 				var receiptProc = (procedureTypes || []).find(function (p) { return String(p.procedureId) === String(selectedProcedureId); });
 
+				receiptIsPos = receiverMode === 'pos';
+
 				var rows = [
 					['Socio / Vehículo', text('summaryOrganization')],
 					['Trámite', receiptProc ? receiptProc.procedureConcept : text('summaryProcedure')],
-					['Banco receptor', text('summaryReceivingBank')],
-					['Banco pagador', text('summaryPayingBank')]
+					['Banco receptor', receiptReceiverText]
 				];
+
+				// Punto de venta receipts have no paying bank section
+				if (!receiptIsPos) rows.push(['Banco pagador', receiptPayerText]);
+
+				var receiptTitleText = receiptIsPos ? 'Recibo de pago' : 'Recibo de pago móvil';
+				document.getElementById('receiptHeaderTitle').textContent = receiptTitleText;
 
 				receiptContent.innerHTML = '';
 
@@ -1501,7 +1810,7 @@
 				receiptContent.appendChild(brand);
 
 				var title = document.createElement('h3');
-				title.textContent = 'Recibo de pago N° ' + receiptNumber;
+				title.textContent = receiptTitleText + ' N° ' + receiptNumber;
 				receiptContent.appendChild(title);
 
 				var meta = document.createElement('div');
@@ -1542,7 +1851,7 @@
 				var w = window.open('', '_blank', 'width=720,height=800');
 				if (!w) return;
 				// Build the print document with DOM nodes (no HTML literals inside the inline script)
-				w.document.title = 'Recibo de pago';
+				w.document.title = receiptIsPos ? 'Recibo de pago' : 'Recibo de pago móvil';
 				var printStyle = w.document.createElement('style');
 				printStyle.textContent = [
 					'body{font-family:Arial,sans-serif;color:#2c3e50;padding:32px;font-size:14px}',
@@ -1568,9 +1877,13 @@
 				nextBtn.disabled = true;
 				prevBtn.disabled = true;
 
-				var amount = selectedPaymentTypeId === 3
-					? document.getElementById('payerAmountPaid2').value.trim()
-					: document.getElementById('payerAmountPaid1').value.trim();
+				var isPos = receiverMode === 'pos';
+				// Punto de venta: the amount paid is the amount due
+				var amount = isPos
+					? (getAmountDue() || 0).toFixed(2)
+					: (selectedPayerTypeId === 3
+						? document.getElementById('payerAmountPaid2').value.trim()
+						: document.getElementById('payerAmountPaid1').value.trim());
 
 				var proc = (procedureTypes || []).find(function (p) { return String(p.procedureId) === String(selectedProcedureId); });
 				var tariff = proc && typeof proc.tariff === 'number' ? proc.tariff : 0;
@@ -1581,19 +1894,31 @@
 				params.append('DriverId', selectedVehicle.driverId);
 				params.append('DriverPTGRif', selectedVehicle.publicTransportGroupRif || '');
 				params.append('DriverPTGName', selectedVehicle.ptgCompleteName || '');
+				params.append('DriverPTGMode', selectedVehicle.modeName || '');
 				params.append('DriverVehiclePlate', selectedVehicle.plate || '');
 				params.append('DriverVehicleYear', selectedVehicle.year || 0);
 				params.append('DriverVehicleMake', selectedVehicle.make || '');
 				params.append('DriverVehicleModel', selectedVehicle.model || '');
-				params.append('ProcedureBankAccountId', selectedBankAccount.procedureBankAccountId);
-				params.append('AccounTypeId', selectedPaymentTypeId);
-				params.append('BankId', selectedPayerBankId);
-				params.append('PayerCellPhoneNumber', selectedPaymentTypeId === 3 ? document.getElementById('payerCellPhoneNumber').value.trim() : '');
-				params.append('PayerIdNumber', selectedPaymentTypeId === 3 ? document.getElementById('payerIdNumber').value.trim() : '');
-				params.append('PayerAccountNumber', selectedPaymentTypeId === 3 ? '' : document.getElementById('payerAccountNumber').value.trim());
-				params.append('PayerReferenceNumber', selectedPaymentTypeId === 3
-					? document.getElementById('payerReferenceNumber2').value.trim()
-					: document.getElementById('payerReferenceNumber1').value.trim());
+				if (isPos) {
+					// Punto de venta (AccounTypeId 4): registered POS account, no paying bank data
+					params.append('ProcedureBankAccountId', posAccount.procedureBankAccountId);
+					params.append('AccounTypeId', 4);
+					params.append('BankId', posAccount.bankId);
+					params.append('PayerCellPhoneNumber', '');
+					params.append('PayerIdNumber', '');
+					params.append('PayerAccountNumber', '');
+					params.append('PayerReferenceNumber', '');
+				} else {
+					params.append('ProcedureBankAccountId', selectedBankAccount.procedureBankAccountId);
+					params.append('AccounTypeId', selectedPayerTypeId); // payer's type: decides which payer data is stored
+					params.append('BankId', selectedPayerBankId);
+					params.append('PayerCellPhoneNumber', selectedPayerTypeId === 3 ? document.getElementById('payerCellPhoneNumber').value.trim() : '');
+					params.append('PayerIdNumber', selectedPayerTypeId === 3 ? document.getElementById('payerIdNumber').value.trim() : '');
+					params.append('PayerAccountNumber', selectedPayerTypeId === 3 ? '' : document.getElementById('payerAccountNumber').value.trim());
+					params.append('PayerReferenceNumber', selectedPayerTypeId === 3
+						? document.getElementById('payerReferenceNumber2').value.trim()
+						: document.getElementById('payerReferenceNumber1').value.trim());
+				}
 				params.append('BCVPaid', amount);
 				params.append('Tariff', tariff);
 				params.append('Rate', currentBcvRate || 0);
@@ -1611,6 +1936,13 @@
 					.then(function (r) { return r.json(); })
 					.then(function (data) {
 						if (data && data.success) {
+							// Punto de venta: there is no bank to validate, the receipt is shown right away
+							if (isPos) {
+								showReceipt(data.procedureByDriverId, amount, tariff);
+								closeWizard();
+								return;
+							}
+
 							// The request is already saved; this screen only simulates the bank validation (5 s)
 							isValidatingPayment = true;
 							validatingOverlay.classList.add('open');
@@ -1668,8 +2000,16 @@
 					loadProcedureTypes();
 				} else if (currentStep === 3) {
 					showStep(4);
+					applyProcedureReceiverAccount();
 					updateTariffHints();
 				} else if (currentStep === 4) {
+					var dueAmount = getAmountDue();
+					var paidAmount = getPayerAmount();
+					if (receiverMode === 'mobile' && dueAmount !== null && paidAmount !== null && Math.round(paidAmount * 100) > Math.round(dueAmount * 100)) {
+						if (!window.confirm('El monto que se está pagando (Bs. ' + paidAmount.toFixed(2) + ') es superior al monto a pagar (Bs. ' + dueAmount.toFixed(2) + '). ¿Desea continuar?')) {
+							return;
+						}
+					}
 					buildSummary();
 					showStep(5);
 				} else if (currentStep === 5) {

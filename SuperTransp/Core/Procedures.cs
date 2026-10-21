@@ -89,6 +89,7 @@ namespace SuperTransp.Core
 					cmd.Parameters.AddWithValue("@DriverVehicleYear", model.DriverVehicleYear);
 					cmd.Parameters.AddWithValue("@DriverVehicleMake", (object?)model.DriverVehicleMake ?? DBNull.Value);
 					cmd.Parameters.AddWithValue("@DriverVehicleModel", (object?)model.DriverVehicleModel ?? DBNull.Value);
+					cmd.Parameters.AddWithValue("@DriverPTGMode", (object?)model.DriverPTGMode ?? DBNull.Value);
 
 					result = Convert.ToInt32(cmd.ExecuteScalar());
 				}
@@ -283,8 +284,9 @@ namespace SuperTransp.Core
 
 					List<ProcedureViewModel> procedure = new();
 					SqlCommand cmd = new(@"SELECT pd.ProcedureId, pd.ProcedureCategoryId, pd.ProcedureCategoryName, pd.ProcedureConcept,
-							pd.ProcedureFrequencyId, pd.ProcedureFrequencyName, t.Tariff
+							pd.ProcedureFrequencyId, pd.ProcedureFrequencyName, t.Tariff, ISNULL(p.ProcedureBankAccountId, 0) AS ProcedureBankAccountId
 						FROM SuperTransp_ProcedureDetail pd
+						INNER JOIN dbo.[Procedure] p ON p.ProcedureId = pd.ProcedureId
 						INNER JOIN ProcedureTariffByMode t ON t.ProcedureId = pd.ProcedureId AND t.ModeId = @ModeId
 						WHERE (@ProcedureId = 0 OR pd.ProcedureId = @ProcedureId)
 						ORDER BY pd.ProcedureCategoryName", sqlConnection);
@@ -303,7 +305,8 @@ namespace SuperTransp.Core
 								ProcedureConcept = (string)dr["ProcedureConcept"],
 								ProcedureFrequencyId = (int)dr["ProcedureFrequencyId"],
 								ProcedureFrequencyName = (string)dr["ProcedureFrequencyName"],
-								Tariff = (decimal)dr["Tariff"]
+								Tariff = (decimal)dr["Tariff"],
+								ProcedureBankAccountId = (int)dr["ProcedureBankAccountId"]
 							});
 						}
 					}
@@ -420,6 +423,105 @@ namespace SuperTransp.Core
 			catch (Exception ex)
 			{
 				throw new Exception($"Error al obtener los procedimientos {ex.Message}", ex);
+			}
+		}
+
+		public List<ProcedureBankAccountViewModel> GetByBankAccountId(int procedureBankAccountId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<ProcedureBankAccountViewModel> bank = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_ProcedureBankAccountDetail WHERE ProcedureBankAccountId = @ProcedureBankAccountId", sqlConnection);
+					cmd.Parameters.AddWithValue("@ProcedureBankAccountId", procedureBankAccountId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							bank.Add(new ProcedureBankAccountViewModel
+							{
+								BankId = (int)dr["BankId"],
+								BankName = dr["BankName"] == DBNull.Value ? string.Empty : (string)dr["BankName"],
+								SudebanCode = dr["SudebanCode"] == DBNull.Value ? string.Empty : (string)dr["SudebanCode"],
+								ProcedureBankAccountId = (int)dr["ProcedureBankAccountId"],
+								AccounTypeName = dr["AccounTypeName"] == DBNull.Value ? string.Empty : (string)dr["AccounTypeName"],
+								AccounTypeId = (int)dr["AccounTypeId"],
+								AccountNumber = dr["AccountNumber"] == DBNull.Value ? string.Empty : (string)dr["AccountNumber"],
+								CellPhoneNumber = dr["CellPhoneNumber"] == DBNull.Value ? string.Empty : (string)dr["CellPhoneNumber"],
+								IdNumber = dr["IdNumber"] == DBNull.Value ? string.Empty : (string)dr["IdNumber"],
+							});
+						}
+					}
+
+					return bank;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener la cuenta del trámite {ex.Message}", ex);
+			}
+		}
+
+		// Tariff (USD) of a procedure for the transport mode of the driver's organization; null when there is none
+		public decimal? GetTariffForDriver(int procedureId, int driverId, string? ptgRif)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SqlCommand cmd = new(@"SELECT TOP 1 t.Tariff
+						FROM ProcedureTariffByMode t
+						INNER JOIN (SELECT DISTINCT ModeId FROM SuperTransp_PublicTransportGroupDriverDetail
+							WHERE DriverId = @DriverId AND PublicTransportGroupRif = @PtgRif) m ON m.ModeId = t.ModeId
+						WHERE t.ProcedureId = @ProcedureId", sqlConnection);
+					cmd.Parameters.AddWithValue("@ProcedureId", procedureId);
+					cmd.Parameters.AddWithValue("@DriverId", driverId);
+					cmd.Parameters.AddWithValue("@PtgRif", (object?)ptgRif ?? DBNull.Value);
+
+					var value = cmd.ExecuteScalar();
+					return value == null || value == DBNull.Value ? null : Convert.ToDecimal(value);
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener la tarifa del trámite {ex.Message}", ex);
+			}
+		}
+
+		// 0 when the procedure has no receiving account assigned
+		public int GetProcedureBankAccountId(int procedureId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SqlCommand cmd = new("SELECT ISNULL(ProcedureBankAccountId, 0) FROM dbo.[Procedure] WHERE ProcedureId = @ProcedureId", sqlConnection);
+					cmd.Parameters.AddWithValue("@ProcedureId", procedureId);
+
+					var value = cmd.ExecuteScalar();
+					return value == null || value == DBNull.Value ? 0 : Convert.ToInt32(value);
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener la cuenta del trámite {ex.Message}", ex);
 			}
 		}
 

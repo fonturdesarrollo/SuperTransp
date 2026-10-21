@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Options;
 using QRCoder;
+using SuperTransp.Core;
 using SuperTransp.Models;
 using static SuperTransp.Core.Interfaces;
 
@@ -18,8 +19,9 @@ namespace SuperTransp.Controllers
 		private readonly ISecurity _security;
 		private readonly IOptionsSnapshot<MaintenanceSettings> _settings;
 		private readonly IConfiguration _configuration;
+		private readonly QrCodeSigner _qrCodeSigner;
 
-		public ProceduresController(IProcedure procedure, IPublicTransportGroup publicTransportGroup, ICommonData commonData, IExchangeRate exchangeRate, ISecurity security, IOptionsSnapshot<MaintenanceSettings> settings, IConfiguration configuration)
+		public ProceduresController(IProcedure procedure, IPublicTransportGroup publicTransportGroup, ICommonData commonData, IExchangeRate exchangeRate, ISecurity security, IOptionsSnapshot<MaintenanceSettings> settings, IConfiguration configuration, QrCodeSigner qrCodeSigner)
 		{
 			_procedure = procedure;
 			_publicTransportGroup = publicTransportGroup;
@@ -28,6 +30,7 @@ namespace SuperTransp.Controllers
 			_security = security;
 			_settings = settings;
 			_configuration = configuration;
+			_qrCodeSigner = qrCodeSigner;
 		}
 
 		public IActionResult Index()
@@ -274,9 +277,9 @@ namespace SuperTransp.Controllers
 			// The request letter can only be issued for VALIDADO (2) procedures
 			if (data == null || data.ProcedureStatusId != 2) return Json(null);
 
-			// Same verification URL used by the driver QR (QR/DriverData?driverCode=<ptg guid>|<partner number>)
+			// Same verification URL used by the driver QR (QR/DriverData?driverCode=<ptg guid>|<partner number>|<signature>)
 			var baseWebSiteUrl = _configuration["FtpSettings:BaseWebSiteUrl"];
-			var verificationUrl = $"{baseWebSiteUrl}QR/DriverData?driverCode={data.PublicTransportGroupGUID}|{data.PartnerNumber}";
+			var verificationUrl = $"{baseWebSiteUrl}QR/DriverData?driverCode={_qrCodeSigner.BuildDriverCode(data.PublicTransportGroupGUID ?? string.Empty, data.PartnerNumber)}";
 
 			string qrImage;
 			using (var qrGenerator = new QRCodeGenerator())
@@ -317,7 +320,8 @@ namespace SuperTransp.Controllers
 				procedureCategoryName = p.ProcedureCategoryName,
 				procedureConcept = p.ProcedureConcept,
 				procedureFrequencyName = p.ProcedureFrequencyName,
-				tariff = p.Tariff
+				tariff = p.Tariff,
+				procedureBankAccountId = p.ProcedureBankAccountId
 			}));
 		}
 
@@ -410,6 +414,29 @@ namespace SuperTransp.Controllers
 
 		[HttpGet]
 		[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+		public JsonResult GetProcedureBankAccountById(int procedureBankAccountId)
+		{
+			var result = CheckSessionAndPermission(ModuleId);
+			if (result != null) return Json(Array.Empty<object>());
+
+			var data = _procedure.GetByBankAccountId(procedureBankAccountId);
+
+			return Json(data.Select(b => new
+			{
+				procedureBankAccountId = b.ProcedureBankAccountId,
+				bankId = b.BankId,
+				accounTypeId = b.AccounTypeId,
+				accounTypeName = b.AccounTypeName,
+				accountNumber = b.AccountNumber,
+				cellPhoneNumber = b.CellPhoneNumber,
+				idNumber = b.IdNumber,
+				bankName = b.BankName,
+				sudebanCode = b.SudebanCode
+			}));
+		}
+
+		[HttpGet]
+		[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 		public JsonResult GetBanks()
 		{
 			var result = CheckSessionAndPermission(ModuleId);
@@ -453,9 +480,49 @@ namespace SuperTransp.Controllers
 				}
 			}
 
+			// Punto de venta (AccounTypeId 4): the receiving account is the one registered with that type and
+			// there is no paying bank data
+			if (model != null && model.AccounTypeId == 4)
+			{
+				var posAccount = _procedure.GetByBankAccounTypeId(4).FirstOrDefault();
+				if (posAccount == null)
+				{
+					return Json(new { success = false, message = "No hay una cuenta de punto de venta registrada" });
+				}
+
+				model.ProcedureBankAccountId = posAccount.ProcedureBankAccountId;
+				model.BankId = posAccount.BankId;
+				model.PayerCellPhoneNumber = string.Empty;
+				model.PayerIdNumber = string.Empty;
+				model.PayerAccountNumber = string.Empty;
+				model.PayerReferenceNumber = string.Empty;
+			}
+
 			if (model == null || model.ProcedureId <= 0 || model.DriverId <= 0 || string.IsNullOrWhiteSpace(model.DriverVehiclePlate) || model.ProcedureBankAccountId <= 0 || model.BankId <= 0 || model.BCVPaid <= 0 || model.Tariff <= 0 || model.Rate <= 0)
 			{
 				return Json(new { success = false, message = "Datos incompletos para procesar la solicitud" });
+			}
+
+			// A procedure with an assigned receiving account can only be paid to that account
+			var assignedAccountId = _procedure.GetProcedureBankAccountId(model.ProcedureId);
+			if (model.AccounTypeId != 4 && assignedAccountId > 0 && model.ProcedureBankAccountId != assignedAccountId)
+			{
+				return Json(new { success = false, message = "La cuenta receptora no corresponde al trámite seleccionado" });
+			}
+
+			// The amount paid cannot be lower than the amount due. The tariff and the BCV rate are read on the
+			// server (the values sent by the browser are not trusted for this check).
+			var serverTariff = _procedure.GetTariffForDriver(model.ProcedureId, model.DriverId, model.DriverPTGRif);
+			var serverRate = _exchangeRate.GetAll().FirstOrDefault(r => r.CurrencyCode == "USD")?.Rate;
+			if (serverTariff == null || serverRate == null || serverRate <= 0)
+			{
+				return Json(new { success = false, message = "No se pudo determinar el monto a pagar del trámite" });
+			}
+
+			var amountDue = Math.Round(serverTariff.Value * serverRate.Value, 2);
+			if (Math.Round(model.BCVPaid, 2) < amountDue)
+			{
+				return Json(new { success = false, message = $"El monto a pagar no puede ser menor al monto del trámite (Bs. {amountDue:0.00})." });
 			}
 
 			// Same rules as the wizard: mobile payment (3) needs a valid phone, any other type needs a 20-digit account
@@ -466,7 +533,7 @@ namespace SuperTransp.Controllers
 					return Json(new { success = false, message = "El teléfono debe comenzar con 0412, 0414, 0416, 0424 o 0426 y tener 11 dígitos." });
 				}
 			}
-			else if (!System.Text.RegularExpressions.Regex.IsMatch(model.PayerAccountNumber?.Trim() ?? string.Empty, @"^\d{20}$"))
+			else if (model.AccounTypeId != 4 && !System.Text.RegularExpressions.Regex.IsMatch(model.PayerAccountNumber?.Trim() ?? string.Empty, @"^\d{20}$"))
 			{
 				return Json(new { success = false, message = "El número de cuenta debe tener 20 dígitos." });
 			}

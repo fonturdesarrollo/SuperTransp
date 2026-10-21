@@ -35,6 +35,7 @@ namespace SuperTransp.Models
 		public string? ProcedureConcept { get; set; }
 		public string? ProcedureCategoryName { get; set; }
 		public DateTime? ProcedureDate { get; set; }
+		public string? DriverPTGMode { get; set; }
 	}
 
 	public class DriverVehicleOptionViewModel

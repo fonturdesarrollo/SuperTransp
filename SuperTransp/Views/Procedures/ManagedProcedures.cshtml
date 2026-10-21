@@ -252,7 +252,7 @@
 						{
 							data: null,
 							render: function (row) {
-								if (row.accounTypeId === 3) {
+								if (!row.receiverBankAccountNumber && row.receiverBankCellPhone) {
 									return (row.receiverBankName || '') + ' — Tel: ' + (row.receiverBankCellPhone || '') + ' / C.I. ' + (row.receiverBankIdNumber || '');
 								}
 								return (row.receiverBankName || '') + ' — Cuenta: ' + (row.receiverBankAccountNumber || '');
@@ -261,6 +261,7 @@
 						{
 							data: null,
 							render: function (row) {
+								if (row.accounTypeId === 4) return ''; // Punto de venta: no paying bank
 								if (row.accounTypeId === 3) {
 									return (row.payerBankName || '') + ' — Tel: ' + (row.payerCellPhoneNumber || '') + ' / C.I. ' + (row.payerIdNumber || '');
 								}

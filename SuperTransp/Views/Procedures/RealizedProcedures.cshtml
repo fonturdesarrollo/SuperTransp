@@ -276,7 +276,7 @@
 	<!-- Payment receipt -->
 	<div class="receipt-overlay" id="receiptOverlay">
 		<div class="receipt-modal">
-			<div class="receipt-header">Recibo de pago</div>
+			<div class="receipt-header">Recibo de pago móvil</div>
 			<div class="receipt-body">
 				<div class="receipt-paper" id="receiptContent"></div>
 			</div>
@@ -412,12 +412,20 @@
 				receiptContent.appendChild(row);
 			}
 
+			var receiptTitleIsPos = false;
+
 			function showReceipt(row) {
+				// accounTypeId 4 = Punto de Venta: plain receipt without paying bank section
+				var isPos = row.accounTypeId === 4;
+				receiptTitleIsPos = isPos;
+				var receiptTitleText = isPos ? 'Recibo de pago' : 'Recibo de pago móvil';
+				$('.receipt-header').text(receiptTitleText);
+				// accounTypeId is the payer's type; the receiving account is a phone account when it has no account number
 				var isMobile = row.accounTypeId === 3;
-				var receiver = (row.receiverBankName || '') + (isMobile
-					? ' — Teléfono: ' + (row.receiverBankCellPhone || '') + ' — Cédula: ' + (row.receiverBankIdNumber || '')
-					: ' — Cuenta: ' + (row.receiverBankAccountNumber || ''));
-				receiver += ' — Tipo de cuenta: ' + (row.receiverBankAccountTypeName || '');
+				// The receipt shows the receiving bank with its RIF and phone, without the account number
+				var receiver = (row.receiverBankName || '') +
+					(row.receiverBankIdNumber ? ' — RIF: ' + row.receiverBankIdNumber : '') +
+					(row.receiverBankCellPhone && !/^0+$/.test(String(row.receiverBankCellPhone).trim()) ? ' — Teléfono: ' + row.receiverBankCellPhone : '');
 
 				var payer = (row.payerBankName || '') + (isMobile
 					? ' — Teléfono: ' + (row.payerCellPhoneNumber || '') + ' — Cédula: ' + (row.payerIdNumber || '')
@@ -434,7 +442,7 @@
 				receiptContent.appendChild(brand);
 
 				var title = document.createElement('h3');
-				title.textContent = 'Recibo de pago N° ' + String(row.procedureByPublicTransportGroupId).padStart(8, '0');
+				title.textContent = receiptTitleText + ' N° ' + String(row.procedureByPublicTransportGroupId).padStart(8, '0');
 				receiptContent.appendChild(title);
 
 				var meta = document.createElement('div');
@@ -447,7 +455,7 @@
 				addReceiptRow('Vehículo', (row.vehiclePlate || '') + ' — ' + (row.vehicleDescription || ''));
 				addReceiptRow('Trámite', row.procedureConcept || '');
 				addReceiptRow('Banco receptor', receiver);
-				addReceiptRow('Banco pagador', payer);
+				if (!isPos) addReceiptRow('Banco pagador', payer);
 				addReceiptRow('Monto pagado Bs.', formatMoney(row.bcvPaid), 'receipt-total');
 
 				receiptOverlay.classList.add('open');
@@ -663,7 +671,7 @@
 				var w = window.open('', '_blank', 'width=720,height=800');
 				if (!w) return;
 				// Build the print document with DOM nodes (no HTML literals inside the inline script)
-				w.document.title = 'Recibo de pago';
+				w.document.title = receiptTitleIsPos ? 'Recibo de pago' : 'Recibo de pago móvil';
 				var printStyle = w.document.createElement('style');
 				printStyle.textContent = [
 					'body{font-family:Arial,sans-serif;color:#2c3e50;padding:32px;font-size:14px}',

@@ -24,10 +24,12 @@ namespace SuperTransp.Controllers
 		private readonly ICommonData _commonData;
 		private readonly IFtpService _ftpService;
 		private readonly IOptionsSnapshot<MaintenanceSettings> _settings;
+		private readonly QrCodeSigner _qrCodeSigner;
 
 		public DriverController(IDriver driver, IPublicTransportGroup publicTransportGroup, ISecurity security, IGeography geography, 
-			IConfiguration configuration, ICommonData commonData, IFtpService ftpService, IOptionsSnapshot<MaintenanceSettings> settings, ISupervision supervision)
+			IConfiguration configuration, ICommonData commonData, IFtpService ftpService, IOptionsSnapshot<MaintenanceSettings> settings, ISupervision supervision, QrCodeSigner qrCodeSigner)
 		{
+			_qrCodeSigner = qrCodeSigner;
 			_driver = driver;
 			_publicTransportGroup = publicTransportGroup;
 			_security = security;
@@ -687,13 +689,26 @@ namespace SuperTransp.Controllers
 		[HttpPost]
 		public IActionResult GenerateQR([FromBody] QRDriverRequest request)
 		{
-			var baseWebSiteUrl = _configuration["FtpSettings:BaseWebSiteUrl"];
-			var ptgDataController = $"{baseWebSiteUrl}QR/DriverData?driverCode={request.ptgGUID}";
+			// This endpoint signs QR codes: it must only work for users with an open session
+			if (HttpContext.Session.GetInt32("SecurityGroupId") == null)
+			{
+				return Unauthorized();
+			}
 
 			if (request == null || string.IsNullOrEmpty(request.ptgGUID))
 			{
 				return BadRequest(new { success = false, message = "Se requiere el GUID para generar el código QR." });
 			}
+
+			// The client sends "<organization GUID>|<partner number>"; the code in the QR also carries the signature
+			var requestParts = request.ptgGUID.Split('|');
+			if (requestParts.Length < 2 || string.IsNullOrWhiteSpace(requestParts[0]) || !int.TryParse(requestParts[1], out var requestPartnerNumber) || requestPartnerNumber <= 0)
+			{
+				return BadRequest(new { success = false, message = "El código del socio no es válido." });
+			}
+
+			var baseWebSiteUrl = _configuration["FtpSettings:BaseWebSiteUrl"];
+			var ptgDataController = $"{baseWebSiteUrl}QR/DriverData?driverCode={_qrCodeSigner.BuildDriverCode(requestParts[0], requestPartnerNumber)}";
 
 			try
 			{

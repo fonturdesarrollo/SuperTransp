@@ -235,6 +235,9 @@ namespace SuperTransp.Core
 			public void LogProcedureRequest(int procedureByDriverId);
 			public RegistrationRequestViewModel? GetRegistrationRequestData(int procedureByDriverId);
 			public List<ProcedureBankAccountViewModel> GetByBankAccounTypeId(int accounTypeId);
+			public List<ProcedureBankAccountViewModel> GetByBankAccountId(int procedureBankAccountId);
+			public int GetProcedureBankAccountId(int procedureId);
+			public decimal? GetTariffForDriver(int procedureId, int driverId, string? ptgRif);
 			public List<ProcedureStatusViewModel> GetStatusAll();
 			public List<ProcedureCategoryViewModel> ProcedureCategoryAll();
 			public List<ProcedureFrequencyViewModel> ProcedureFrequencyAll();

@@ -60,6 +60,7 @@ builder.Services.Configure<FormOptions>(options =>
 builder.Services.Configure<MaintenanceSettings>(
 	builder.Configuration.GetSection("Maintenance"));
 
+builder.Services.AddSingleton<QrCodeSigner>();
 builder.Services.AddTransient<ISecurity, Security>();
 builder.Services.AddTransient<IGeography, SuperTransp.Core.Geography>();
 builder.Services.AddTransient<IPublicTransportGroup, PublicTransportGroup>();

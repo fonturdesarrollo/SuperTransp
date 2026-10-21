@@ -19,5 +19,7 @@ namespace SuperTransp.Models
 		[Required(ErrorMessage = "La tarifa es requerida")]
 		[Range(1, int.MaxValue, ErrorMessage = "La tarifa debe ser mayor a cero")]
 		public decimal Tariff { get; set; }
+		// Receiving bank account assigned to the procedure (0 = none: the user picks one in the wizard)
+		public int ProcedureBankAccountId { get; set; }
 	}
 }
