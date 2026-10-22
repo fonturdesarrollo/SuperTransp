@@ -255,12 +255,13 @@
 					<table id="inventory" class="table table-striped table-bordered dt-responsive dt-nowrap">
 						<thead>
 							<tr>
+								<th>Fecha trámite</th>
 								<th>RIF</th>
 								<th>Organización</th>
-								<th>Socio</th>
+								<th>Asociado</th>
 								<th>Cédula</th>
-								<th>Teléfono</th>
 								<th>Placa</th>
+								<th>Modalidad</th>
 								<th>Trámite</th>
 								<th>Estatus</th>
 									<th>Recibo</th>
@@ -339,12 +340,22 @@
 				pageLength: 10,
 				lengthMenu: [10, 25, 50, 100, 500, 1000],
 				columns: [
+					{
+						data: 'procedureDate',
+						render: function (data, type) {
+							if (!data) return '';
+							// dd/MM/yyyy hh:mm for display, the raw value for sorting and searching
+							if (type !== 'display') return data;
+							var d = new Date(data);
+							return d.toLocaleDateString('es-VE') + ' ' + d.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' });
+						}
+					},
 					{ data: 'publicTransportGroupRif' },
 					{ data: 'ptgName' },
 					{ data: 'representativeName' },
 					{ data: 'driverIdentityDocument' },
-					{ data: 'representativePhone' },
 					{ data: 'vehiclePlate' },
+					{ data: 'modeName' },
 					{
 						data: null,
 						render: function (row) {
@@ -450,7 +461,7 @@
 				meta.textContent = date ? date.toLocaleDateString('es-VE') + ' ' + date.toLocaleTimeString('es-VE') : '';
 				receiptContent.appendChild(meta);
 
-				addReceiptRow('Socio', (row.representativeName || '') + ' — C.I. ' + (row.driverIdentityDocument || ''));
+				addReceiptRow('Asociado', (row.representativeName || '') + ' — C.I. ' + (row.driverIdentityDocument || ''));
 				addReceiptRow('Organización', 'RIF ' + (row.publicTransportGroupRif || '') + ' — ' + (row.ptgName || ''));
 				addReceiptRow('Vehículo', (row.vehiclePlate || '') + ' — ' + (row.vehicleDescription || ''));
 				addReceiptRow('Trámite', row.procedureConcept || '');
@@ -586,7 +597,7 @@
 					{ t: ' que el (la) ciudadano(a): Nombres y Apellidos: ' }, { t: data.driverFullName || '', b: true },
 					{ t: ', Cédula de Identidad: ' }, { t: String(data.driverIdentityDocument || ''), b: true },
 					{ t: ', Nombre de la Línea / Organización de Transporte: ' }, { t: data.ptgName || '', b: true },
-					{ t: ', N°. de socio: ' }, { t: String(data.partnerNumber || ''), b: true },
+					{ t: ', N°. de asociado: ' }, { t: String(data.partnerNumber || ''), b: true },
 					{ t: vehicleText ? ', Placa / Modelo / Año del vehículo: ' : '' }, { t: vehicleText, b: true },
 					{ t: '.' }
 				], left, y, contentWidth, bodyLine) + paragraphGap;
@@ -603,7 +614,7 @@
 
 				var now = new Date();
 				y = drawRichParagraph(doc, [
-					{ t: 'Se emite en Caracas, a los ' + now.getDate() + ' días del mes de ' + MONTHS_ES[now.getMonth()] + ' del año ' + now.getFullYear() + '. Esta solvencia tiene una vigencia de un año a partir de la fecha de emisión de la misma.' }
+					{ t: 'Se emite en Caracas, a los ' + now.getDate() + ' días del mes de ' + MONTHS_ES[now.getMonth()] + ' del año ' + now.getFullYear() + '. Esta solvencia tiene una vigencia de tres meses a partir de la fecha de emisión de la misma.' }
 				], left, y, contentWidth, bodyLine) + paragraphGap;
 
 				y += single;

@@ -98,7 +98,7 @@
             <h2>Menu</h2>
             <ul>
                 <li>@Html.ActionLink("Inicio", "Index", "Home")</li>
-                <li>@Html.ActionLink("Seleccionar socio", "PublicTransportGroupDriverList", "Supervision", new { ptgRifName = Model.PublicTransportGroupRif }, null)</li>
+                <li>@Html.ActionLink("Seleccionar asociado", "PublicTransportGroupDriverList", "Supervision", new { ptgRifName = Model.PublicTransportGroupRif }, null)</li>
                 <li>@Html.ActionLink("Agregar resumen de supervisión", "PublicTransportGroupList", "Supervision")</li>
                 <li>@Html.ActionLink("Modificar resumen de supervisión", "SummaryList", "Supervision")</li>
                 <li>@Html.ActionLink("Supervisión", "Index", "Supervision")</li>
@@ -115,8 +115,8 @@
                     <label>Vuelta: @ViewBag.CurrentRoundStartDate</label><br />
                     <label>Organización: @Model.PublicTransportGroupRif @Model.PTGCompleteName</label><br />
                     <label>Tipo: @Model.ModeName</label><br />
-                    <label>Nombre Socio: @Model.DriverIdentityDocument @Model.DriverFullName</label><br />
-                    <label>Socio: @Model.PartnerNumber</label>
+                    <label>Nombre Asociado: @Model.DriverIdentityDocument @Model.DriverFullName</label><br />
+                    <label>Asociado: @Model.PartnerNumber</label>
                     <br />
                     <br />
                     <br />
@@ -142,7 +142,7 @@
                         </div>
                             <div class="row" id="additionalFieldsX" style="visibility: hidden; opacity: 0; height: 0; overflow: hidden; transition: opacity 0.3s ease-in-out;">
                                 <div class="col-12">
-                                    <strong>¿Socio presente?:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</strong>
+                                    <strong>¿Asociado presente?:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</strong>
                                     @Html.DropDownListFor(t => t.InPerson, (SelectList)ViewBag.InPerson, "-- Seleccione --", new { @class = "form-control" })
                                 </div>
                             </div>
@@ -182,7 +182,7 @@
                             </div>
                             <div class="col-6">
                                 <br />
-                                <strong>Puestos:</strong>
+                                <strong>Asientos:</strong>
                                 @Html.DropDownListFor(t => t.Passengers, (SelectList)ViewBag.Passengers, "-- Seleccione --", new { @class = "form-control" })
                             </div>
                             <div class="col-6">

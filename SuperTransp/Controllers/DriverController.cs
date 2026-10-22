@@ -209,7 +209,7 @@ namespace SuperTransp.Controllers
 		private string ShowValidUrl(int publicTransportGroupId, int driverPublicTransportGroupId, int? partnerNumber, int stateId, bool isTotalAccess, string changePlateControllerUrl)
 		{
 			var supervision = _supervision.GetByPublicTransportGroupIdAndDriverPublicTransportGroupIdAndPartnerNumberStateId(publicTransportGroupId, driverPublicTransportGroupId, (int)partnerNumber, stateId);
-			string columnText = "SUSTITUIR SOCIO MANTENER UNIDAD";
+			string columnText = "SUSTITUIR ASOCIADO MANTENER UNIDAD";
 
 			if (supervision != null)
 			{
@@ -485,7 +485,7 @@ namespace SuperTransp.Controllers
 					return Json(new { success = false, redirect = Url.Action("Login", "Security") });
 
 				if (!ModelState.IsValid)
-					return Json(new { success = false, message = "Datos inválidos para eliminar el socio." });
+					return Json(new { success = false, message = "Datos inválidos para eliminar el asociado." });
 
 				var groupId = HttpContext.Session.GetInt32("SecurityGroupId");
 
@@ -603,7 +603,7 @@ namespace SuperTransp.Controllers
 				return null;
 
 			return _driver.EmailUsedByOtherIdentityDocument(value, identityDocument.Value)
-				? $"El email {value} ya está registrado a otro socio con una cédula diferente."
+				? $"El email {value} ya está registrado a otro asociado con una cédula diferente."
 				: null;
 		}
 
@@ -613,7 +613,7 @@ namespace SuperTransp.Controllers
 			{
 				if (_driver.RegisteredPartnerNumber(paramValue4, paramValue2))
 				{
-					return Json($"El número de socio {paramValue4} ya está registrado a la línea.");
+					return Json($"El número de asociado {paramValue4} ya está registrado a la línea.");
 				}
 
 				var ptgPartners = _publicTransportGroup.GetPublicTransportGroupById(paramValue2);
@@ -621,7 +621,7 @@ namespace SuperTransp.Controllers
 
 				if (totalDrivers >= ptgPartners.Partners)
 				{
-					return Json($"La línea tiene cupo solo para {ptgPartners.Partners} transportista(s) no puede agregar mas.");
+					return Json($"La línea tiene flota habilitada solo para {ptgPartners.Partners} transportista(s) no puede agregar mas.");
 				}
 
 				//ELIMINADA VALIDACIÓN DE NÚMERO DE SOCIO CORRELATIVO
@@ -661,7 +661,7 @@ namespace SuperTransp.Controllers
 						return Json(new
 						{
 							canContinue = false,
-							message = $"El número de socio {paramValue4} ya está registrado a la línea."
+							message = $"El número de asociado {paramValue4} ya está registrado a la línea."
 						});
 					}
 				}
@@ -704,7 +704,7 @@ namespace SuperTransp.Controllers
 			var requestParts = request.ptgGUID.Split('|');
 			if (requestParts.Length < 2 || string.IsNullOrWhiteSpace(requestParts[0]) || !int.TryParse(requestParts[1], out var requestPartnerNumber) || requestPartnerNumber <= 0)
 			{
-				return BadRequest(new { success = false, message = "El código del socio no es válido." });
+				return BadRequest(new { success = false, message = "El código del asociado no es válido." });
 			}
 
 			var baseWebSiteUrl = _configuration["FtpSettings:BaseWebSiteUrl"];

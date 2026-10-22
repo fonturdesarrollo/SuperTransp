@@ -13,7 +13,7 @@ namespace SuperTransp.Models
 		public int? DriverIdentityDocument { get; set; }
 		[Required(ErrorMessage = "El nombre completo es requerido")]
 		public string? DriverFullName { get; set; }
-		[Required(ErrorMessage = "El número de socio es requerido")]
+		[Required(ErrorMessage = "El número de asociado es requerido")]
 		public int? PartnerNumber { get; set; }
 		[Required(ErrorMessage = "El teléfono es requerido")]
 		public string? DriverPhone { get; set; }

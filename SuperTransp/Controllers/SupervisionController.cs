@@ -872,7 +872,7 @@ namespace SuperTransp.Controllers
 				{
 					if (!existingPlate.Where(x => x.DriverId == paramValue1).Any())
 					{
-						return Json($"El número de placa {paramValue2} ya está asignado al socio {existingPlate.FirstOrDefault().DriverFullName} organización {existingPlate.FirstOrDefault().PTGCompleteName} estado {existingPlate.FirstOrDefault().StateName.ToUpper()}.");
+						return Json($"El número de placa {paramValue2} ya está asignado al asociado {existingPlate.FirstOrDefault().DriverFullName} organización {existingPlate.FirstOrDefault().PTGCompleteName} estado {existingPlate.FirstOrDefault().StateName.ToUpper()}.");
 					}
 				}
 

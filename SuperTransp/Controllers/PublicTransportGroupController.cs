@@ -414,7 +414,7 @@ namespace SuperTransp.Controllers
 
 				if (totalDrivers > paramValue3)
 				{
-					return Json($"Existen {totalDrivers} transportista(s) cargado(s) a esta línea, si desea reducir el cupo debe eliminar los necesarios.");
+					return Json($"Existen {totalDrivers} transportista(s) cargado(s) a esta línea, si desea reducir la flota habilitada debe eliminar los necesarios.");
 				}
 			}
 

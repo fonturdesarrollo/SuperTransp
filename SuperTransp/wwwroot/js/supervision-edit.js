@@ -237,18 +237,18 @@
 			}
 		};
 
-		validateField(isEmpty("DriverWithVehicle") && val("DriverWithVehicle") !== "False", "DriverWithVehicle", "Debe indicar si el socio posee o no vehículo");
+		validateField(isEmpty("DriverWithVehicle") && val("DriverWithVehicle") !== "False", "DriverWithVehicle", "Debe indicar si el asociado posee o no vehículo");
 
 		if ($("#DriverWithVehicle option:selected").text() === "Sí") {
 			const requiredFields = [
-				["InPerson", "Debe indicar si el socio se presentó o no a la supervisión"],
+				["InPerson", "Debe indicar si el asociado se presentó o no a la supervisión"],
 				["WorkingVehicle", "Debe indicar si el vehículo está operativo o no"],
 				["FailureTypeId", "Debe indicar el tipo de falla", () => val("WorkingVehicle") === "False"],
 				["Plate", "Debe colocar la placa"],
 				["Year", "Debe seleccionar el año del vehículo"],
 				["Make", "Debe seleccionar la marca del vehículo"],
 				["VehicleDataId", "Debe seleccionar el modelo del vehículo"],
-				["Passengers", "Debe seleccionar la cantidad de puestos"],
+				["Passengers", "Debe seleccionar la cantidad de asientos"],
 				["RimId", "Debe seleccionar el tipo de neumáticos"],
 				["Wheels", "Debe seleccionar la cantidad de neumáticos"],
 				["FuelTypeId", "Debe seleccionar el tipo de combustible"],

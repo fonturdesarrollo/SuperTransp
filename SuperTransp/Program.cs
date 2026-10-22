@@ -61,6 +61,24 @@ builder.Services.Configure<MaintenanceSettings>(
 	builder.Configuration.GetSection("Maintenance"));
 
 builder.Services.AddSingleton<QrCodeSigner>();
+
+// BDV C2P integration (section "Bdv"): disabled until Bdv:Enabled is true and the API key is configured
+builder.Services.Configure<BdvC2POptions>(builder.Configuration.GetSection("Bdv"));
+builder.Services.AddHttpClient<BdvC2PService>((sp, client) =>
+{
+	var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<BdvC2POptions>>().Value;
+	client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds > 0 ? options.TimeoutSeconds : 30);
+})
+.ConfigurePrimaryHttpMessageHandler(sp =>
+{
+	var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<BdvC2POptions>>().Value;
+	var handler = new HttpClientHandler();
+	if (options.SkipCertificateValidation)
+	{
+		handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+	}
+	return handler;
+});
 builder.Services.AddTransient<ISecurity, Security>();
 builder.Services.AddTransient<IGeography, SuperTransp.Core.Geography>();
 builder.Services.AddTransient<IPublicTransportGroup, PublicTransportGroup>();

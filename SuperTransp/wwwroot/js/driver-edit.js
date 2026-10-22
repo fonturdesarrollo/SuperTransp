@@ -114,7 +114,7 @@ $("form").on("submit", function (e) {
                         data: formData,
                         success: function (data) {
                             if (data.success === false && !data.redirectUrl) {
-                                alert(data.message || "No se pudo actualizar el socio.");
+                                alert(data.message || "No se pudo actualizar el asociado.");
                                 $("#saveRequest").prop("disabled", false);
                                 return;
                             }
@@ -143,7 +143,7 @@ function isOkToSave() {
 
     if ($("#DriverIdentityDocument").val() == "" && !firstInvalidField) {
         firstInvalidField = "#DriverIdentityDocument";
-        message = "Debe colocar la cédula del socio";
+        message = "Debe colocar la cédula del asociado";
     }
 
     if (!firstInvalidField) {
@@ -157,7 +157,7 @@ function isOkToSave() {
 
     if ($("#DriverFullName").val() == "" && !firstInvalidField) {
         firstInvalidField = "#DriverFullName";
-        message = "Debe colocar el nombre del socio";
+        message = "Debe colocar el nombre del asociado";
     } else {
         const driverFullName = $("#DriverFullName").val().trim();
         const regex = /^[a-zA-ZñÑ\s]{5,}$/;
@@ -182,12 +182,12 @@ function isOkToSave() {
 
     if ($("#PartnerNumber").val() != "" &&  $("#PartnerNumber").val() == "0" && !firstInvalidField) {
         firstInvalidField = "#PartnerNumber";
-        message = "El número de socio no puede ser cero";
+        message = "El número de asociado no puede ser cero";
     }
 
     if ($("#PartnerNumber").val() == "" && !firstInvalidField) {
         firstInvalidField = "#PartnerNumber";
-        message = "Debe colocar el número de socio";
+        message = "Debe colocar el número de asociado";
     }
 
     //if ($("#RepresentativePhone").val() == "" && !firstInvalidField) {

@@ -202,10 +202,10 @@ function isOkToSave() {
     const partners = $("#Partners").val();
     if (partners === "" && !firstInvalidField) {
         firstInvalidField = "#Partners";
-        message = "Debe colocar el cupo";
+        message = "Debe colocar la flota habilitada";
     } else if (partners === "0" && !firstInvalidField) {
         firstInvalidField = "#Partners";
-        message = "El cupo no puede ser cero";
+        message = "La flota habilitada no puede ser cero";
     }
 
     const gasStationCount = $('#gasStationTableBody tr').length;

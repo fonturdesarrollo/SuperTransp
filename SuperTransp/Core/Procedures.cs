@@ -226,7 +226,7 @@ namespace SuperTransp.Core
 			}
 			catch (Exception ex)
 			{
-				throw new Exception($"Error al obtener los vehículos del socio {ex.Message}", ex);
+				throw new Exception($"Error al obtener los vehículos del asociado {ex.Message}", ex);
 			}
 		}
 		public List<ProcedureViewModel> GetAll()
@@ -393,6 +393,7 @@ namespace SuperTransp.Core
 								DriverPhone = dr["DriverPhone"] == DBNull.Value ? string.Empty : (string)dr["DriverPhone"],
 								DriverPTGRif = dr["DriverPTGRif"] == DBNull.Value ? string.Empty : (string)dr["DriverPTGRif"],
 								DriverPTGName = dr["DriverPTGName"] == DBNull.Value ? string.Empty : (string)dr["DriverPTGName"],
+								DriverPTGMode = dr["DriverPTGMode"] == DBNull.Value ? string.Empty : (string)dr["DriverPTGMode"],
 								DriverVehiclePlate = dr["DriverVehiclePlate"] == DBNull.Value ? string.Empty : (string)dr["DriverVehiclePlate"],
 								DriverVehicleMake = dr["DriverVehicleMake"] == DBNull.Value ? string.Empty : (string)dr["DriverVehicleMake"],
 								DriverVehicleModel = dr["DriverVehicleModel"] == DBNull.Value ? string.Empty : (string)dr["DriverVehicleModel"],

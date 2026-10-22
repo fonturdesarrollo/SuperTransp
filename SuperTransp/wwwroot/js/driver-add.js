@@ -155,13 +155,13 @@ $("#saveRequest").on("click", function (event) {
                     $("#saveRequest").prop("disabled", false);
                 },
                 error: function () {
-                    alert("Error en el servidor al guardar el socio.");
+                    alert("Error en el servidor al guardar el asociado.");
                     $("#saveRequest").prop("disabled", false);
                 }
             });
         },
         error: function () {
-            alert("Error al validar los datos del socio.");
+            alert("Error al validar los datos del asociado.");
             $("#saveRequest").prop("disabled", false);
         }
     });
@@ -193,7 +193,7 @@ function isOkToSave() {
 
     if ($("#DriverIdentityDocument").val() == "" && !firstInvalidField) {
         firstInvalidField = "#DriverIdentityDocument";
-        message = "Debe colocar la cédula del socio";
+        message = "Debe colocar la cédula del asociado";
     }
 
     if (!firstInvalidField) {
@@ -207,7 +207,7 @@ function isOkToSave() {
 
     if ($("#DriverFullName").val() == "" && !firstInvalidField) {
         firstInvalidField = "#DriverFullName";
-        message = "Debe colocar el nombre del socio";
+        message = "Debe colocar el nombre del asociado";
     } else {
         const driverFullName = $("#DriverFullName").val().trim();
         const regex = /^[a-zA-ZñÑ\s]{5,}$/;
@@ -232,12 +232,12 @@ function isOkToSave() {
 
     if ($("#PartnerNumber").val() != "" &&  $("#PartnerNumber").val() == "0" && !firstInvalidField) {
         firstInvalidField = "#PartnerNumber";
-        message = "El número de socio no puede ser cero";
+        message = "El número de asociado no puede ser cero";
     }
 
     if ($("#PartnerNumber").val() == "" && !firstInvalidField) {
         firstInvalidField = "#PartnerNumber";
-        message = "Debe colocar el número de socio";
+        message = "Debe colocar el número de asociado";
     }
 
     if ($("#RepresentativePhone").val() == "" && !firstInvalidField) {

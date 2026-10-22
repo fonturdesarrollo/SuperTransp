@@ -435,10 +435,12 @@
             }
         }
 
+        @* TEMP-HIDDEN: card hidden temporarily, remove the Razor comment to show it again
         <div class="stat-card universe-orgs">
             <h3>Universo Organizaciones</h3>
             <div class="value">@totalUniversePTG.ToString("N0", new System.Globalization.CultureInfo("de-DE"))</div>
         </div>
+        *@
 
         <div class="stat-card orgs-loaded">
             <h3>Organizaciones Cargadas</h3>
@@ -448,13 +450,15 @@
             </div>
         </div>
 
+        @* TEMP-HIDDEN: card hidden temporarily, remove the Razor comment to show it again
         <div class="stat-card universe-partners">
-            <h3>Universo Socios</h3>
+            <h3>Universo Asociados</h3>
             <div class="value">@totalUniversePartners.ToString("N0", new System.Globalization.CultureInfo("de-DE"))</div>
         </div>
+        *@
 
         <div class="stat-card partners-loaded">
-            <h3>Socios Cargados</h3>
+            <h3>Vehículos Cargados por Asociado</h3>
             <div class="value">
                 @totalPartnersLoaded.ToString("N0", new System.Globalization.CultureInfo("de-DE"))
                 <span style="font-size: 1rem; color: #2196F3; font-weight: 600;">(avance @porcentajeSocios.ToString("F2", new System.Globalization.CultureInfo("de-DE"))%)</span>
@@ -462,7 +466,7 @@
         </div>
 
         <div class="stat-card supervised">
-            <h3>Socios Supervisados</h3>
+            <h3>Asociados Supervisados</h3>
             <div class="value">@totalSupervised.ToString("N0", new System.Globalization.CultureInfo("de-DE"))</div>
         </div>
 
@@ -482,27 +486,31 @@
             </div>
             <div class="filter-option">
                 <input type="checkbox" id="filter-socios-cargados" checked>
-                <label for="filter-socios-cargados">Socios Cargados</label>
+                <label for="filter-socios-cargados">Vehículos Cargados por Asociado</label>
             </div>
             <div class="filter-option">
                 <input type="checkbox" id="filter-socios-supervisados" checked>
-                <label for="filter-socios-supervisados">Socios Supervisados</label>
+                <label for="filter-socios-supervisados">Asociados Supervisados</label>
             </div>
+            @* TEMP-HIDDEN: filter hidden temporarily, remove the Razor comment to show it again
             <div class="filter-option">
                 <input type="checkbox" id="filter-universo-orgs">
                 <label for="filter-universo-orgs">Universo Orgs.</label>
             </div>
+            *@
+            @* TEMP-HIDDEN: filter hidden temporarily, remove the Razor comment to show it again
             <div class="filter-option">
                 <input type="checkbox" id="filter-universo-socios">
-                <label for="filter-universo-socios">Universo Socios</label>
+                <label for="filter-universo-socios">Universo Asociados</label>
             </div>
+            *@
             <div class="filter-option">
                 <input type="checkbox" id="filter-avance-orgs">
                 <label for="filter-avance-orgs">Avance Orgs.</label>
             </div>
             <div class="filter-option">
                 <input type="checkbox" id="filter-avance-socios">
-                <label for="filter-avance-socios">Avance Socios</label>
+                <label for="filter-avance-socios">Avance Asociados</label>
             </div>
         </div>
     </div>
@@ -525,12 +533,12 @@
 
         const filterMapping = {
             'filter-orgs-cargadas': { label: 'Orgs. Cargadas', field: 'TotalPTGInState', isPercentage: false },
-            'filter-socios-cargados': { label: 'Socios Cargados', field: 'TotalAddedPartners', isPercentage: false },
-            'filter-socios-supervisados': { label: 'Socios Supervisados', field: 'TotalSupervisedDrivers', isPercentage: false },
+            'filter-socios-cargados': { label: 'Vehículos Cargados por Asociado', field: 'TotalAddedPartners', isPercentage: false },
+            'filter-socios-supervisados': { label: 'Asociados Supervisados', field: 'TotalSupervisedDrivers', isPercentage: false },
             'filter-universo-orgs': { label: 'Universo Orgs.', field: 'TotalUniversePTGInState', isPercentage: false },
-            'filter-universo-socios': { label: 'Universo Socios', field: 'TotalUniverseDriversInState', isPercentage: false },
+            'filter-universo-socios': { label: 'Universo Asociados', field: 'TotalUniverseDriversInState', isPercentage: false },
             'filter-avance-orgs': { label: 'Avance Orgs.', field: 'AvanceOrgs', isPercentage: true },
-            'filter-avance-socios': { label: 'Avance Socios', field: 'AvanceSocios', isPercentage: true }
+            'filter-avance-socios': { label: 'Avance Asociados', field: 'AvanceSocios', isPercentage: true }
         };
 
         // Save checkbox state to localStorage

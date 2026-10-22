@@ -759,7 +759,7 @@
 				<div class="wizard-body">
 					<!-- Step 1: Driver identity document -->
 					<div class="wizard-step" id="wizardStep1">
-						<label for="wizardCedula">Indique el número de cédula del socio</label>
+						<label for="wizardCedula">Indique el número de cédula del asociado</label>
 						<input type="text" id="wizardCedula" inputmode="numeric" autocomplete="off" maxlength="10" placeholder="Ej: 12345678" />
 						<p class="wizard-error" id="wizardStep1Error"></p>
 					</div>
@@ -768,7 +768,7 @@
 					<div class="wizard-step" id="wizardStep2" style="display:none;">
 						<div class="wizard-driver-data">
 							<div><strong>Cédula:</strong> <span id="driverCedula"></span></div>
-							<div><strong>Socio:</strong> <span id="driverName"></span></div>
+							<div><strong>Asociado:</strong> <span id="driverName"></span></div>
 						</div>
 						<table class="wizard-table wizard-table-full">
 							<thead>
@@ -888,7 +888,7 @@
 					<!-- Step 5: Summary -->
 					<div class="wizard-step" id="wizardStep5" style="display:none;">
 						<div class="wizard-summary-block">
-							<h4>Socio, organización y vehículo</h4>
+							<h4>Asociado, organización y vehículo</h4>
 							<p id="summaryOrganization"></p>
 						</div>
 						<div class="wizard-summary-block">
@@ -1791,7 +1791,7 @@
 				receiptIsPos = receiverMode === 'pos';
 
 				var rows = [
-					['Socio / Vehículo', text('summaryOrganization')],
+					['Asociado / Vehículo', text('summaryOrganization')],
 					['Trámite', receiptProc ? receiptProc.procedureConcept : text('summaryProcedure')],
 					['Banco receptor', receiptReceiverText]
 				];
@@ -1975,7 +1975,7 @@
 					.then(function (r) { return r.json(); })
 					.then(function (data) {
 						if (!data) {
-							step1Error.textContent = 'No se encontró ningún socio con esa cédula.';
+							step1Error.textContent = 'No se encontró ningún asociado con esa cédula.';
 							nextBtn.disabled = false;
 							return;
 						}
@@ -1987,7 +1987,7 @@
 						showStep(2);
 					})
 					.catch(function () {
-						step1Error.textContent = 'Ocurrió un error al buscar el socio. Intente nuevamente.';
+						step1Error.textContent = 'Ocurrió un error al buscar el asociado. Intente nuevamente.';
 						nextBtn.disabled = false;
 					});
 			}

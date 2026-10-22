@@ -103,7 +103,7 @@
                     <li>@Html.ActionLink("Modificar organización", "PublicTransportGroupList", "PublicTransportGroup")</li>
                     <li>
                         @Html.ActionLink(
-                            "Agregar socios a organización",
+                            "Agregar asociados a organización",
                             "Add",
                             "Driver",
                             new { publicTransportGroupId = @Model.PublicTransportGroupId, pTGCompleteName = @Model.PTGCompleteName },
@@ -179,8 +179,8 @@
                                 <span asp-validation-for="RepresentativeEmail" class="text-danger"></span>
                             </div>
                             <div class="col-6">
-                                <strong>Cupo:</strong>
-                                @Html.TextBoxFor(x => x.Partners, new { placeholder = "Cantidad de Socios", maxlength = "3" })
+                                <strong>Flota habilitada:</strong>
+                                @Html.TextBoxFor(x => x.Partners, new { placeholder = "Cantidad de Asociados", maxlength = "3" })
                                 <span asp-validation-for="Partners" class="text-danger"></span>
                             </div>
                             <div class="col-12">

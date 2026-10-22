@@ -48,12 +48,12 @@ namespace SuperTransp.Core
 
 						if(drv.FirstOrDefault().DriverId != model.DriverId)
 						{
-							throw new Exception($"No puede modificar la cedula a este socio ya que existe en otras organizaciones", null);
+							throw new Exception($"No puede modificar la cedula a este asociado ya que existe en otras organizaciones", null);
 						}
 
 						if(drv.FirstOrDefault().DriverIdentityDocument != model.DriverIdentityDocument)
 						{
-							throw new Exception($"No puede modificar la cedula a este socio ya que existe en otras organizaciones", null);
+							throw new Exception($"No puede modificar la cedula a este asociado ya que existe en otras organizaciones", null);
 						}
 					}
 
@@ -89,12 +89,12 @@ namespace SuperTransp.Core
 						{
 							if(model.DriverId != existingDriverId)
 							{
-								throw new Exception($"No puede modificar la cedula a este socio ya que existe en otras organizaciones", null);
+								throw new Exception($"No puede modificar la cedula a este asociado ya que existe en otras organizaciones", null);
 							}
 
 							if (drv.FirstOrDefault().DriverIdentityDocument != model.DriverIdentityDocument)
 							{
-								throw new Exception($"No puede modificar la cedula a este socio ya que existe en otras organizaciones", null);
+								throw new Exception($"No puede modificar la cedula a este asociado ya que existe en otras organizaciones", null);
 							}
 						}
 					}

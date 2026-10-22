@@ -1,9 +1,9 @@
 -- Wizard "Solicitar tramite" por socio + vehiculo: la vista de detalle debe exponer
--- organizacion, vehiculo y fecha del tramite guardados en ProcedureByDriver. Idempotente.
+-- organizacion, modalidad, vehiculo y fecha del tramite guardados en ProcedureByDriver. Idempotente.
 CREATE OR ALTER VIEW dbo.SuperTransp_ProcedureByDriverDetail
 AS
 SELECT        dbo.ProcedureByDriver.ProcedureByDriverId, dbo.ProcedureByDriver.ProcedureId, dbo.[Procedure].ProcedureConcept, dbo.ProcedureCategory.ProcedureCategoryName, dbo.Driver.DriverId, dbo.Driver.DriverIdentityDocument,
-                         dbo.Driver.DriverFullName, dbo.Driver.DriverPhone, dbo.ProcedureByDriver.DriverPTGRif, dbo.ProcedureByDriver.DriverPTGName, dbo.ProcedureByDriver.DriverVehiclePlate,
+                         dbo.Driver.DriverFullName, dbo.Driver.DriverPhone, dbo.ProcedureByDriver.DriverPTGRif, dbo.ProcedureByDriver.DriverPTGName, dbo.ProcedureByDriver.DriverPTGMode, dbo.ProcedureByDriver.DriverVehiclePlate,
                          dbo.ProcedureByDriver.DriverVehicleYear, dbo.ProcedureByDriver.DriverVehicleMake, dbo.ProcedureByDriver.DriverVehicleModel,
                          dbo.SuperTransp_ProcedureBankAccountDetail.AccounTypeName AS ReceiverBankAccountTypeName,
                          dbo.SuperTransp_ProcedureBankAccountDetail.BankName AS ReceiverBankName, dbo.SuperTransp_ProcedureBankAccountDetail.AccountNumber AS ReceiverBankAccountNumber,

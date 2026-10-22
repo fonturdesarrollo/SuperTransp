@@ -5,7 +5,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <title>Agregar Socio</title>
+    <title>Agregar Asociado</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
     <link rel="stylesheet" href="~/assets/css/main.css" />
@@ -113,10 +113,10 @@
                     <h2>Menu</h2>
                     <ul>
                         <li>@Html.ActionLink("Inicio", "Index", "Home")</li>
-                        <li>@Html.ActionLink("Agregar socios a organización", "PublicTransportGroupList", "Driver")</li>
+                        <li>@Html.ActionLink("Agregar asociados a organización", "PublicTransportGroupList", "Driver")</li>
                         <li>@Html.ActionLink("Agregar organización", "Add", "PublicTransportGroup")</li>
                         <li>@Html.ActionLink("Modificar organización", "PublicTransportGroupList", "PublicTransportGroup")</li>
-                        <li>@Html.ActionLink("Socios/Transportistas", "Index", "Driver")</li>
+                        <li>@Html.ActionLink("Asociados/Transportistas", "Index", "Driver")</li>
                         <li>@Html.ActionLink("Salir", "Login", "Security")</li>
                     </ul>
                 </nav>
@@ -126,10 +126,10 @@
                     <div class="inner">
                         <!-- Form -->
                         <section>
-                            <h1 style="color:#4cbece">Agregar socio</h1>
+                            <h1 style="color:#4cbece">Agregar asociado</h1>
                             <label>Organización: @Model.PTGCompleteName</label>
                             <br />
-                            <label>Cupo: @ViewBag.Partners</label>
+                            <label>Flota habilitada: @ViewBag.Partners</label>
                             <br />
                             <br />
                             <br />
@@ -145,7 +145,7 @@
                                 </div>
                                 <div class="col-6 col-12-xsmall">
                                     <strong>Nombre:</strong>
-                                    @Html.TextBoxFor(x => x.DriverFullName, new { placeholder = "Nombre del socio", tabindex = "0", maxlength = "50" })
+                                    @Html.TextBoxFor(x => x.DriverFullName, new { placeholder = "Nombre del asociado", tabindex = "0", maxlength = "50" })
                                 </div>
                                 <div class="col-6">
                                     <strong>Sexo:</strong>
@@ -156,18 +156,18 @@
                                     @Html.TextBox("Birthdate", Model.Birthdate.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture), new { maxlength = "20" })
                                 </div>
                                 <div class="col-6">
-                                    <strong>Número de Socio:</strong>
-                                    @Html.TextBoxFor(x => x.PartnerNumber, new { placeholder = "Número de socio", maxlength = "3" })
+                                    <strong>Número de Asociado:</strong>
+                                    @Html.TextBoxFor(x => x.PartnerNumber, new { placeholder = "Número de asociado", maxlength = "3" })
                                     <span asp-validation-for="PartnerNumber" class="text-danger"></span>
                                 </div>
                                 <div class="col-6">
                                     <strong>Teléfono:</strong>
-                                    @Html.TextBoxFor(x => x.DriverPhone, new { placeholder = "Teléfono del socio", maxlength = "11" })
+                                    @Html.TextBoxFor(x => x.DriverPhone, new { placeholder = "Teléfono del asociado", maxlength = "11" })
                                     <span asp-validation-for="DriverPhone" class="text-danger"></span>
                                 </div>
                                 <div class="col-6">
                                     <strong>Email:</strong>
-                                    @Html.TextBoxFor(x => x.DriverEmail, new { placeholder = "Email del socio", maxlength = "80" })
+                                    @Html.TextBoxFor(x => x.DriverEmail, new { placeholder = "Email del asociado", maxlength = "80" })
                                     <span asp-validation-for="DriverEmail" class="text-danger"></span>
                                 </div>
                                 <div class="col-12">
@@ -186,7 +186,7 @@
                 </div>
             </div>
         <div style="width:100%; max-width: 100em; margin: 0 auto; padding: 0 1em;">
-                <h4 style="color:#4cbece">Socios asignados a la organización</h4>
+                <h4 style="color:#4cbece">Asociados asignados a la organización</h4>
                 <div id="loadingSpinner" style="text-align:center; padding:1em;">
                     <div class="spinner-border text-info" role="status">
                         <span class="sr-only">Cargando...</span>
@@ -198,13 +198,13 @@
                         <tr>
                             <th>Nombre</th>
                             <th>Cédula</th>
-                            <th>Socio</th>
+                            <th>Asociado</th>
                             <th>Teléfono</th>
                             <th>Sexo</th>
                             <th>Nacimiento</th>
                             <th>Corregir</th>
                             <th>Eliminar todo</th>
-                            <th>Sustituir socio mantener unidad</th>
+                            <th>Sustituir asociado mantener unidad</th>
 @*                             <th>QR</th> *@
                         </tr>
                     </thead>

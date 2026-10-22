@@ -828,10 +828,10 @@ namespace SuperTransp.Controllers
 				worksheet.Cell(1, 1).Value = "Estado";
 				worksheet.Cell(1, 2).Value = "Organizaciones Cargadas";
 				worksheet.Cell(1, 3).Value = "Universo Organizaciones";
-				worksheet.Cell(1, 4).Value = "Socios Totales";
-				worksheet.Cell(1, 5).Value = "Socios Cargados";
-				worksheet.Cell(1, 6).Value = "Socios Supervisados";
-				worksheet.Cell(1, 7).Value = "Universo Socios";
+				worksheet.Cell(1, 4).Value = "Asociados Totales";
+				worksheet.Cell(1, 5).Value = "Vehículos Cargados por Asociado";
+				worksheet.Cell(1, 6).Value = "Asociados Supervisados";
+				worksheet.Cell(1, 7).Value = "Universo Asociados";
 
 
 				var headerRange = worksheet.Range("A1:G1");

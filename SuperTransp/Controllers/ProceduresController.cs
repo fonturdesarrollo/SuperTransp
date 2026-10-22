@@ -20,8 +20,9 @@ namespace SuperTransp.Controllers
 		private readonly IOptionsSnapshot<MaintenanceSettings> _settings;
 		private readonly IConfiguration _configuration;
 		private readonly QrCodeSigner _qrCodeSigner;
+		private readonly BdvC2PService _bdvC2P;
 
-		public ProceduresController(IProcedure procedure, IPublicTransportGroup publicTransportGroup, ICommonData commonData, IExchangeRate exchangeRate, ISecurity security, IOptionsSnapshot<MaintenanceSettings> settings, IConfiguration configuration, QrCodeSigner qrCodeSigner)
+		public ProceduresController(IProcedure procedure, IPublicTransportGroup publicTransportGroup, ICommonData commonData, IExchangeRate exchangeRate, ISecurity security, IOptionsSnapshot<MaintenanceSettings> settings, IConfiguration configuration, QrCodeSigner qrCodeSigner, BdvC2PService bdvC2P)
 		{
 			_procedure = procedure;
 			_publicTransportGroup = publicTransportGroup;
@@ -31,6 +32,7 @@ namespace SuperTransp.Controllers
 			_settings = settings;
 			_configuration = configuration;
 			_qrCodeSigner = qrCodeSigner;
+			_bdvC2P = bdvC2P;
 		}
 
 		public IActionResult Index()
@@ -210,6 +212,7 @@ namespace SuperTransp.Controllers
 				representativePhone = p.DriverPhone,
 				driverIdentityDocument = p.DriverIdentityDocument,
 				vehiclePlate = p.DriverVehiclePlate,
+				modeName = p.DriverPTGMode,
 				vehicleDescription = string.Join(" ", new[] { p.DriverVehicleMake, p.DriverVehicleModel, p.DriverVehicleYear > 0 ? p.DriverVehicleYear.ToString() : null }.Where(x => !string.IsNullOrWhiteSpace(x))),
 				procedureCategoryName = p.ProcedureCategoryName,
 				procedureConcept = p.ProcedureConcept,
@@ -450,6 +453,32 @@ namespace SuperTransp.Controllers
 				bankName = b.BankName,
 				sudebanCode = b.SudebanCode
 			}));
+		}
+
+		// Step 1 of the BDV C2P flow: the bank sends the payment key (OTP) to the payer.
+		// Not used by the wizard yet; it answers "not enabled" until the Bdv section is enabled.
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public async Task<JsonResult> RequestPaymentKey(string customerDocumentId)
+		{
+			var result = CheckSessionAndPermission(ModuleId);
+			if (result != null) return Json(new { success = false, message = "Sesión inválida" });
+
+			var response = await _bdvC2P.RequestPaymentKeyAsync(customerDocumentId);
+
+			if (response.Code != "DISABLED" && response.Code != "INVALID")
+			{
+				// The logbook never stores the payment key
+				try
+				{
+					_security.AddLogbook(0, false, $" Solicitud de clave de pago C2P -> documento: {customerDocumentId} - resultado: {response.Code}");
+				}
+				catch
+				{
+				}
+			}
+
+			return Json(new { success = response.Success, code = response.Code, message = response.Message });
 		}
 
 		[HttpPost]
