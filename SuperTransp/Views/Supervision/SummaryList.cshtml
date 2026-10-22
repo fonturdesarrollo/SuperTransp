@@ -64,6 +64,7 @@
 						<thead>
 							<tr>
 								<th>Línea</th>
+								<th>Rif</th>
 								<th>Estado</th>
 								<th>Supervisor</th>
 								<th>Fecha Supervisión</th>
@@ -78,6 +79,7 @@
 										new { supervisionSummaryId = ptg.SupervisionSummaryId, publicTransportGroupId = ptg.PublicTransportGroupId },
 										new { @class = "action-link", data_group_id = ptg.PublicTransportGroupId })
 									</td>
+									<td>@ptg.PublicTransportGroupRif</td>
 									<td>@ptg.StateName</td>
 									<td>@ptg.UserFullName</td>
 									<td>@ptg.SupervisionDate.ToShortDateString()</td>

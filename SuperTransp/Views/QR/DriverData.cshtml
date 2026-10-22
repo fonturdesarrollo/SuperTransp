@@ -6,7 +6,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-	<title>Socio</title>
+	<title>Asociado</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 	<link rel="stylesheet" href="~/assets/css/main.css" />
@@ -31,7 +31,7 @@
 
 				<!-- Logo -->
 				<a href="#" class="logo">
-					<span ><img src="~/images/Logo.png" width="100px" height="100px" alt=""/></span><span class="title"></span>
+					<span><img src="~/images/cintillo_fontur.png" width="701" height="77px" alt="" /></span><span class="title"></span>
 				</a>
 			</div>
 		</header>
@@ -41,7 +41,7 @@
 			<div class="inner">
 				<!-- Form -->
 				<section>
-					<h1 style="color:#4cbece">Socio</h1>
+					<h1 style="color:#4cbece">Asociado</h1>
 					<br />
 					@Html.HiddenFor(x => x.Pictures)
 					<div class="row gtr-uniform">
@@ -55,17 +55,8 @@
 							@Model.PTGCompleteName
 						</div>
 						<div class="col-12">
-							<strong>Cedula:</strong>
-							@Model.DriverIdentityDocument
-						</div>
-
-						<div class="col-12">
-							<strong>Nombre Socio:</strong>
+							<strong>Nombre Asociado:</strong>
 							@Model.DriverFullName
-						</div>
-						<div class="col-12">
-							<strong>N° Socio:</strong>
-							@Model.PartnerNumber
 						</div>
 						@{
 							if (Model.SupervisionStatus != null && (bool)Model.SupervisionStatus)
@@ -101,16 +92,9 @@
 										@Model.Make
 									</div>
 									<div class="col-12">
-										<strong>Marca:</strong>
+										<strong>Modelo:</strong>
 										@Model.Model
 									</div>
-									if(!string.IsNullOrEmpty(Model.Remarks))
-									{
-										<div class="col-12">
-											<strong>Observaciones:</strong>
-											@Model.Remarks
-										</div>
-									}
 									<div class="col-12">
 										<strong>Imágenes:</strong>
 										<br />

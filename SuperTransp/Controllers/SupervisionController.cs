@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DocumentFormat.OpenXml.Wordprocessing;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
@@ -23,10 +24,12 @@ namespace SuperTransp.Controllers
 		private readonly IGeography _geography;
 		private readonly IFtpService _ftpService;
 		private readonly IDriver _driver;
+		private readonly IReport _report;
+		private readonly IExcelExporter _excelExporter;
 		private readonly IOptionsSnapshot<MaintenanceSettings> _settings;
 
 		public SupervisionController(ISupervision supervision, ISecurity security, IPublicTransportGroup publicTransportGroup, 
-			ICommonData commonData, IConfiguration configuration, IGeography geography, IFtpService ftpService, IDriver driver, IOptionsSnapshot<MaintenanceSettings> settings)
+			ICommonData commonData, IConfiguration configuration, IGeography geography, IFtpService ftpService, IDriver driver, IReport report, IExcelExporter excelExporter, IOptionsSnapshot<MaintenanceSettings> settings)
 		{
 			_supervision = supervision;
 			_security = security;
@@ -37,6 +40,8 @@ namespace SuperTransp.Controllers
 			_ftpService = ftpService;
 			_driver = driver;
 			_settings = settings;
+			_report = report;
+			_excelExporter = excelExporter;
 		}
 
 		public IActionResult Index()
@@ -157,30 +162,49 @@ namespace SuperTransp.Controllers
 
 		public IActionResult AddSupervisionRound(int monthValue, int yearValue, string supervisionRoundDescription, int stateId)
 		{
-			var result = CheckSessionAndPermission(24);
-			if (result != null) return result;
-
-			DateTime startDate;
-			int year = yearValue;
-			int month = monthValue;
-
-			startDate = new DateTime(year, month, 1);
-
-			SupervisionRoundModel model = new SupervisionRoundModel
+			try
 			{
-				SupervisionRoundStartDate = startDate,
-				StateId = stateId,
-				SupervisionRoundStartDescription = supervisionRoundDescription.ToUpper(),
-				SupervisionRoundEndDate = startDate,
-				SupervisionRoundEndDescription = supervisionRoundDescription,
-				SupervisionRoundStatus = true
-			};
+				var result = CheckSessionAndPermission(24);
+				if (result != null) return result;
 
-			_supervision.AddOrEditRound(model);
+				DateTime startDate;
+				int year = yearValue;
+				int month = monthValue;
 
-			TempData["SuccessMessage"] = "Datos actualizados correctamente";
+				startDate = new DateTime(year, month, 1);
 
-			return RedirectToAction("Index");
+				if (_supervision.IsActiveSupervisionRoundByStateMonthAndYear(stateId, month, year))
+				{
+					TempData["SuccessMessage"] = $"Ya existe una vuelta de supervisión abierta para {month:00}-{year}";
+					return RedirectToAction("Index");
+				}
+
+				if (_supervision.IsFinishedSupervisionRoundByStateMonthAndYear(stateId, month, year))
+				{
+					TempData["SuccessMessage"] = $"La vuelta de supervisión {month:00}-{year} ya fue cerrada y no puede volver a abrirse";
+					return RedirectToAction("Index");
+				}
+
+				SupervisionRoundModel model = new SupervisionRoundModel
+				{
+					SupervisionRoundStartDate = startDate,
+					StateId = stateId,
+					SupervisionRoundStartDescription = supervisionRoundDescription.ToUpper(),
+					SupervisionRoundEndDate = startDate,
+					SupervisionRoundEndDescription = supervisionRoundDescription,
+					SupervisionRoundStatus = true
+				};
+
+				_supervision.AddOrEditRound(model);
+
+				TempData["SuccessMessage"] = "Datos actualizados correctamente";
+
+				return RedirectToAction("Index");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message });
+			}
 		}
 
 		public async Task<IActionResult> AddAsync(int publicTransportGroupId, string pTGCompleteName, string driverFullName, int partnerNumber, string? publicTransportGroupRif, int driverIdentityDocument, string stateName, int? supervisionStatus, int driverId, int supervisionId, int modeId, string modeName, int driverPublicTransportGroupId)
@@ -300,7 +324,7 @@ namespace SuperTransp.Controllers
 						var driver = _driver.GetByDriverPublicTransportGroupId(model.DriverPublicTransportGroupId);
 						model.StateId = driver.StateId;
 
-						if (!model.DriverWithVehicle || !model.InPerson)
+						if (!model.DriverWithVehicle || (!model.InPerson && !IsPartnerWithSupervisedVehicle(model.SupervisionId, model.VehicleDataId)))
 						{
 							model.InPerson = !model.DriverWithVehicle ? false : model.InPerson;
 
@@ -390,7 +414,7 @@ namespace SuperTransp.Controllers
 						}
 					}
 
-					var model = _supervision.GetByPublicTransportGroupIdAndDriverIdAndPartnerNumberStateId(publicTransportGroupId, driverPublicTransportGroupId, partnerNumber, (int)stateId);
+					var model = _supervision.GetByPublicTransportGroupIdAndDriverPublicTransportGroupIdAndPartnerNumberStateId(publicTransportGroupId, driverPublicTransportGroupId, partnerNumber, (int)stateId);
 
 					if(model != null)
 					{
@@ -624,6 +648,12 @@ namespace SuperTransp.Controllers
 
 			var images = new List<SupervisionPictures>();
 
+			// Paso 1.0: Verificar si la carpeta del estado existe antes de crearla
+			if (!await _ftpService.FolderExistsAsync(ftpFolderPath))
+			{
+				await _ftpService.CreateFolderAsync(ftpFolderPath);
+			}
+
 			// Paso 1: Verificar si la carpeta destino existe antes de crearla
 			if (!await _ftpService.FolderExistsAsync(ftpfinalFolderPath))
 			{
@@ -682,6 +712,7 @@ namespace SuperTransp.Controllers
 
 		private async Task<List<SupervisionSummaryPictures>> SupervisionSummaryPictureUrlAsync(string stateName, string publicTransportGroupRif)
 		{
+			int? stateId = HttpContext.Session.GetInt32("StateId");
 			var ftpBaseUrl = _configuration["FtpSettings:BaseUrl"];
 			var ftpUsername = _configuration["FtpSettings:Username"];
 			var ftpPassword = _configuration["FtpSettings:Password"];
@@ -691,37 +722,59 @@ namespace SuperTransp.Controllers
 			var ftpFolderPath = $"{ftpBaseUrl}/{newFolderName}";
 			var subFolderName = $"{publicTransportGroupRif}-resumen_supervision_temp";
 			var subFinalFolderName = $"{publicTransportGroupRif}-resumen_supervision";
+			var supervisionFolderName = "RESUMEN_DE_SUPERVISION";
+			var roundFolderName = string.Empty;
 			var ftpSubFolderPath = $"{ftpFolderPath}/{subFolderName}";
-			var ftpfinalFolderPath = $"{ftpFolderPath}/{subFinalFolderName}";
-
+			var ftpFinalFolderPath = $"{ftpFolderPath}/{subFinalFolderName}";
 			var images = new List<SupervisionSummaryPictures>();
-
-			// Paso 1: Verificar si la carpeta destino existe antes de crearla
-			if (!await _ftpService.FolderExistsAsync(ftpfinalFolderPath))
-			{
-				await _ftpService.CreateFolderAsync(ftpfinalFolderPath);
-			}
 
 			try
 			{
+				roundFolderName = $"VUELTA_{_supervision.GetActiveSupervisionRoundByStateId((int)stateId).SupervisionRoundStartDate.ToString("MM-yyyy")}";
+
+				// Verificar si la carpeta RESUMEN_DE_SUPERVISION existe antes de crearla
+				if (!await _ftpService.FolderExistsAsync($"{ftpFolderPath}/{supervisionFolderName}"))
+				{
+					await _ftpService.CreateFolderAsync($"{ftpFolderPath}/{supervisionFolderName}");
+				}
+
+				// Verificar si la carpeta VUELTA existe antes de crearla
+				if (!await _ftpService.FolderExistsAsync($"{ftpFolderPath}/{supervisionFolderName}/{roundFolderName}"))
+				{
+					await _ftpService.CreateFolderAsync($"{ftpFolderPath}/{supervisionFolderName}/{roundFolderName}");
+				}
+
+				ftpFinalFolderPath = $"{ftpFolderPath}/{supervisionFolderName}/{roundFolderName}/{subFinalFolderName}";
+				// Paso 1: Verificar si la carpeta destino existe antes de crearla
+				if (!await _ftpService.FolderExistsAsync(ftpFinalFolderPath))
+				{
+					await _ftpService.CreateFolderAsync(ftpFinalFolderPath);
+				}
+
 				// Paso 2: Obtener lista de archivos
 				var fileList = await _ftpService.ListFilesAsync(ftpSubFolderPath);
 				if (fileList.Count == 0) return images;
 
 				// Paso 3: Transferir archivos a la carpeta final
 				var transferTasks = fileList.Select(fileName =>
-					_ftpService.TransferFileAsync($"{ftpSubFolderPath}/{fileName}", $"{ftpfinalFolderPath}/{fileName}"));
+					_ftpService.TransferFileAsync($"{ftpSubFolderPath}/{fileName}", $"{ftpFinalFolderPath}/{fileName}"));
 				await Task.WhenAll(transferTasks);
 
-				// Paso 4: Eliminar archivos de la carpeta temporal
+				// Paso 4: Registrar imágenes
+				foreach (var fileName in await _ftpService.ListFilesAsync(ftpSubFolderPath))
+				{
+					var filePath = $"{ftpFinalFolderPath}/{fileName}".Replace(ftpBaseUrl, baseImagesUrl);
+					images.Add(new SupervisionSummaryPictures { SupervisionSummaryPictureUrl = filePath });
+				}
+
+				// Paso 5: Eliminar archivos de la carpeta temporal
 				var deleteTasks = fileList.Select(fileName => _ftpService.DeleteFileAsync($"{ftpSubFolderPath}/{fileName}"));
 				await Task.WhenAll(deleteTasks);
 
-				// Paso 5: Registrar imágenes
-				foreach (var fileName in await _ftpService.ListFilesAsync(ftpfinalFolderPath))
+				// Paso 6: Eliminar la carpeta temporal
+				if (await _ftpService.FolderExistsAsync(ftpSubFolderPath))
 				{
-					var filePath = $"{ftpfinalFolderPath}/{fileName}".Replace(ftpBaseUrl, baseImagesUrl);
-					images.Add(new SupervisionSummaryPictures { SupervisionSummaryPictureUrl = filePath });
+					await _ftpService.DeleteFolderAsync(ftpSubFolderPath);
 				}
 			}
 			catch (WebException ex)
@@ -732,8 +785,83 @@ namespace SuperTransp.Controllers
 			return images;
 		}
 
+		public IActionResult CloseRound()
+		{
+			int? stateId = HttpContext.Session.GetInt32("StateId");
+			ViewBag.RoundActive = _supervision.IsActiveSupervisionRoundByStateId((int)stateId);
+
+			var currentRound = _supervision.GetActiveSupervisionRoundByStateId((int)stateId);
+
+			if (currentRound != null)
+			{
+				ViewBag.CurrentRoundStartDate = $"{currentRound.SupervisionRoundStartDate.ToString("MMMM").ToUpper()} {currentRound.SupervisionRoundStartDate.ToString("yyyy")}";
+			}
+			else
+			{
+				ViewBag.CurrentRoundStartDate = "No existe vuelta de supervisión abierta";
+			}
+
+			ViewBag.RoundMessage = ViewBag.RoundActive ? $"Vuelta {ViewBag.CurrentRoundStartDate}" : "No existe vuelta de supervisión abierta";
+			ViewBag.SecurityGroupId = (int)HttpContext.Session.GetInt32("SecurityGroupId");
+			ViewBag.ModulesInGroup = _security.GetModulesByGroupId(ViewBag.SecurityGroupId);
+
+			return View();
+		}
+
+		public IActionResult CloseSupervisionRound(string supervisionRoundEndDescription)
+		{
+			int? stateId = HttpContext.Session.GetInt32("StateId");
+			var result = CheckSessionAndPermission(24);
+			if (result != null) return result;
+
+			try
+			{
+				List<PublicTransportGroupViewModel> ptgStatistics = new();
+				List<PublicTransportGroupViewModel> partnerstatistics = new();
+				var currentRound = _supervision.GetActiveSupervisionRoundByStateId((int)stateId);
+
+				if (currentRound != null)
+				{
+					ptgStatistics = _publicTransportGroup.GetAllStatisticsByStateId((int)stateId);
+					partnerstatistics = _report.GetAllSupervisedDriversStatisticsInEstateByStateId((int)stateId);
+
+					SupervisionRoundModel model = new SupervisionRoundModel
+					{
+						StateId = (int)stateId,
+						SupervisionRoundId = currentRound.SupervisionRoundId,
+						SupervisionRoundEndDate = DateTime.Now,
+						SupervisionRoundEndDescription = supervisionRoundEndDescription.ToUpper(),
+						SupervisionRoundStatus = false,
+						TotalPTG = ptgStatistics.FirstOrDefault().TotalPTGInState,
+						TotalPartners = ptgStatistics.FirstOrDefault().TotalAddedPartners,
+						TotalSupervisedDrivers = partnerstatistics.FirstOrDefault().TotalSupervisedDrivers,
+						TotalWorkingVehicles = partnerstatistics.FirstOrDefault().TotalWorkingVehicles,
+						TotalNotInOperationVehicles = partnerstatistics.FirstOrDefault().TotalNotWorkingVehicles,
+						TotalAbsentDrivers = partnerstatistics.FirstOrDefault().TotalDriverNotInPerson,
+						TotalPartersWithoutVehicle = partnerstatistics.FirstOrDefault().TotalWithoutVehicle,
+						TotalShowedUpDrivers = partnerstatistics.FirstOrDefault().TotalShowedUpDrivers,
+					};
+
+					_supervision.CloseRound(model);
+
+					TempData["SuccessMessage"] = "Datos actualizados correctamente";
+
+					return RedirectToAction("Index");
+				}
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+
+			TempData["SuccessMessage"] = "No existe vuelta de supervisión abierta";
+
+			return RedirectToAction("Index");
+		}
+
 		public JsonResult CheckExistingPlate(int paramValue1, string paramValue2)
 		{
+			var returnResult =  string.IsNullOrEmpty(paramValue2) ? "OK" : "ERROR";
 			var result = CheckSessionAndPermission(3);
 			if (result != null) return Json("ERROR");
 
@@ -744,7 +872,7 @@ namespace SuperTransp.Controllers
 				{
 					if (!existingPlate.Where(x => x.DriverId == paramValue1).Any())
 					{
-						return Json($"El número de placa {paramValue2} ya está asignado al socio {existingPlate.FirstOrDefault().DriverFullName} organización {existingPlate.FirstOrDefault().PTGCompleteName} estado {existingPlate.FirstOrDefault().StateName.ToUpper()}.");
+						return Json($"El número de placa {paramValue2} ya está asignado al asociado {existingPlate.FirstOrDefault().DriverFullName} organización {existingPlate.FirstOrDefault().PTGCompleteName} estado {existingPlate.FirstOrDefault().StateName.ToUpper()}.");
 					}
 				}
 
@@ -766,7 +894,7 @@ namespace SuperTransp.Controllers
 				return Json("OK");
 			}
 
-			return Json("ERROR");
+			return Json(returnResult);
 		}
 
 		public IActionResult PublicTransportGroupList()
@@ -833,7 +961,8 @@ namespace SuperTransp.Controllers
 						PublicTransportGroupRif = ptg.PublicTransportGroupRif,
 						StateName = ptg.StateName,
 						SupervisionDate = DateTime.Now,
-						SecurityUserId = (int)HttpContext.Session.GetInt32("SecurityUserId")
+						SecurityUserId = (int)HttpContext.Session.GetInt32("SecurityUserId"),
+						StateId = ptg.StateId
 					};
 
 					ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
@@ -908,32 +1037,41 @@ namespace SuperTransp.Controllers
 			int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
 			int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
 			ViewBag.IsTotalAccess = false;
+			ViewBag.DeleteSummary = false;
 
-			if (!_supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId))
+			if (securityGroupId > 2)
 			{
-				return RedirectToAction("SummaryList");
+				if (!_supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId))
+				{
+					return RedirectToAction("SummaryList");
+				}
 			}
 
 			var model = _supervision.GetSupervisionSummaryById(supervisionSummaryId);
 
 			if (securityGroupId != 1)
 			{
-				if(_security.IsTotalAccess(3) || _security.IsUpdateAccess(3))
+				if (_security.IsTotalAccess(3) || _security.IsUpdateAccess(3))
 				{
 					ViewBag.IsTotalAccess = true;
+
+					if (_security.GroupHasAccessToModule((int)securityGroupId, 29))
+					{
+						ViewBag.DeleteSummary = true;
+					}
 				}
 			}
 			else
 			{
-
 				ViewBag.IsTotalAccess = true;
+				ViewBag.DeleteSummary = true;
 			}
 
 			return View(model);
 		}
 
 		[HttpPost]
-		public IActionResult EditSummary(IFormCollection form, SupervisionSummaryViewModel model)
+		public IActionResult EditSummary(IFormCollection form, SupervisionSummaryViewModel model, string actionType)
 		{
 			var result = CheckSessionAndPermission(3);
 			if (result != null) return result;
@@ -943,6 +1081,11 @@ namespace SuperTransp.Controllers
 
 			if (_security.IsTotalAccess(3) || securityGroupId == 1)
 			{
+				if (actionType == "delete")
+				{
+					return RedirectToAction("DeleteSummary", new { supervisionSummaryId = model.SupervisionSummaryId });
+				}
+
 				List<SupervisionSummaryPictures> pictures = new List<SupervisionSummaryPictures>();
 				// TODO FIX THIS
 				foreach (var key in form.Keys)
@@ -965,11 +1108,61 @@ namespace SuperTransp.Controllers
 
 				TempData["SuccessMessage"] = "Datos actualizados correctamente";
 
-				//return RedirectToAction("EditSummary", new { supervisionSummaryId = model.SupervisionSummaryId });
 				return RedirectToAction("PublicTransportGroupList");
 			}
 
 			return RedirectToAction("Login", "Security");
+		}
+
+		[HttpGet]
+		public async Task<IActionResult> DeleteSummary(int supervisionSummaryId)
+		{
+			var summaryData = _supervision.GetSupervisionSummaryById(supervisionSummaryId);
+			var summaryFolderName = string.Empty;
+			string ftpFilesFolderPath = string.Empty;
+
+			if (summaryData != null)
+			{
+				var ftpBaseUrl = _configuration["FtpSettings:BaseUrl"];
+				var stateName = summaryData.StateName.ToUpper();
+				var summaryParentFolderName = "RESUMEN_DE_SUPERVISION";
+				summaryFolderName = $"{summaryData.PublicTransportGroupRif}-resumen_supervision";
+
+				if (summaryData.Pictures.Any())
+				{
+					if (summaryData.Pictures.Any(p =>
+						!string.IsNullOrEmpty(p.SupervisionSummaryPictureUrl) &&
+						p.SupervisionSummaryPictureUrl.Contains(summaryParentFolderName)))
+					{
+						string url = summaryData.Pictures
+							.FirstOrDefault(p => !string.IsNullOrEmpty(p.SupervisionSummaryPictureUrl))?
+							.SupervisionSummaryPictureUrl;
+
+						if (!string.IsNullOrEmpty(url))
+						{
+							var match = Regex.Match(url, @"RESUMEN_DE_SUPERVISION/VUELTA_\d{2}-\d{4}");
+							if (match.Success)
+							{
+								ftpFilesFolderPath = Path.Combine(
+									ftpBaseUrl,
+									stateName.ToUpper().Trim(),
+									match.Value,
+									summaryFolderName
+								).Replace("\\", "/");
+							}
+						}
+					}
+				}
+
+				if (!string.IsNullOrEmpty(ftpFilesFolderPath))
+				{
+					await _ftpService.DeleteFilesInFolderAsync(ftpFilesFolderPath);
+				}
+
+				_supervision.DeleteSupervisionSummaryById(supervisionSummaryId);
+			}
+
+			return RedirectToAction("SummaryList");
 		}
 
 		public IActionResult SummaryList()
@@ -1037,13 +1230,17 @@ namespace SuperTransp.Controllers
 		public JsonResult CheckPermissionSummary(int publicTransportGroupId)
 		{
 			int? securityUserId = HttpContext.Session?.GetInt32("SecurityUserId");
+			int? securityGroupId = HttpContext.Session?.GetInt32("SecurityGroupId");
 			bool hasPermission = true;
 
-			hasPermission = _supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId);
-
-			if (!hasPermission)
+			if(securityGroupId > 2)
 			{
-				return Json(new { hasPermission, message = "Esta organización está siendo supervisada por otro supervisor." });
+				hasPermission = _supervision.IsUserSupervisingPublicTransportGroup((int)securityUserId, publicTransportGroupId);
+
+				if (!hasPermission)
+				{
+					return Json(new { hasPermission, message = "Esta organización está siendo supervisada por otro supervisor." });
+				}
 			}
 
 			return Json(new { hasPermission, message = "" });
@@ -1101,6 +1298,53 @@ namespace SuperTransp.Controllers
 				return RedirectToAction("Login", "Security");
 
 			return null;
+		}
+
+		public async Task<IActionResult> ExportSupervisionDetail()
+		{
+			try
+			{
+				if (string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+				{
+					return RedirectToAction("Login", "Security");
+				}
+
+				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+				int? stateId = HttpContext.Session.GetInt32("StateId");
+
+				var currentRound = _supervision.GetActiveSupervisionRoundByStateId((int)stateId);
+
+				if(currentRound == null)
+				{
+					return RedirectToAction("Error", "Home", new { errorMessage = "No existe vuelta de supervisión abierta" });
+				}
+
+				if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 4))
+				{
+					return RedirectToAction("Login", "Security");
+				}
+
+				int idParam = 0;
+				if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
+				{
+					idParam = (int)stateId;
+				}
+
+				var content = await _excelExporter.GenerateExcelSupervisionDetailAsync(idParam);
+
+				return File(content,
+							"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+							$"Supervisiones_Vuelta_{currentRound.SupervisionRoundStartDate.ToString("MM-yyyy")}_{DateTime.Now:yyyyMMdd}.xlsx");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message });
+			}
+		}
+
+		private bool IsPartnerWithSupervisedVehicle(int supervisionId, int? vehicleDataId)
+		{
+			return supervisionId > 0 && vehicleDataId > 0 || vehicleDataId != null;
 		}
 	}
 }

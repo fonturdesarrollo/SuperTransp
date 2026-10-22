@@ -1,0 +1,187 @@
+@model List<SuperTransp.Models.ProcedureViewModel>
+@{
+    Layout = "";
+}
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Tarifas por Trámites Administrativos</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="stylesheet" href="~/assets/css/main.css" />
+    <noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
+    <link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
+
+    @*DataTable************************************************************************@
+    <link rel="stylesheet" href="~/datatable/css/bootstrap.css" />
+    <link rel="stylesheet" href="~/datatable/css/dataTables.bootstrap4.min.css" />
+    <link rel="stylesheet" href="~/datatable/css/responsive.bootstrap4.min.css" />
+    @*************************************************************************************@
+
+    <style>
+        .logo-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+            .logo-container img {
+                display: block;
+            }
+
+        .btn-modificar {
+            padding: 4px 12px;
+            border-radius: 6px;
+            border: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-modificar:hover {
+            opacity: 0.9;
+        }
+    </style>
+
+</head>
+<body class="is-preload">
+    <div style="width:100%; max-width: 100em; margin: 0 auto; padding: 0 1em;">
+        <!-- Header -->
+        <header id="header">
+            <div class="inner">
+                <!-- Logo -->
+                <div class="logo-container">
+                    <!-- Logo izquierdo -->
+                    <img src="~/images/Logo.png" width="100px" height="100px" alt="Logo principal" />
+
+                    <!-- Logo derecho -->
+                    <img src="~/images/super-transp-logo.png" width="150px" height="150px" alt="Logo SuperTransp" />
+                </div>
+                <div class="logo">
+                    <span>@ViewBag.EmployeeName</span>
+                    <br />
+                    <span>Tarifas por trámites administrativos</span>
+                </div>
+            </div>
+
+            <!-- Nav -->
+            <nav>
+                <ul>
+                    <li><a href="#menu">Menu</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <!-- Menu -->
+        <nav id="menu">
+            <h2>Menu</h2>
+            <ul>
+                <li>@Html.ActionLink("Inicio", "Index", "Home")</li>
+                <li>@Html.ActionLink("Agregar tarifas por gastos administrativos", "Add", "Procedures")</li>
+                <li>@Html.ActionLink("Gestiones administrativas", "Index", "Procedures")</li>
+                <li>@Html.ActionLink("Salir", "Login", "Security")</li>
+            </ul>
+        </nav>
+
+        <div id="main">
+            <div class="inner">
+                <!-- Form -->
+                <section>
+                    <h4 style="color:#4cbece">Tarifas por Trámites Administrativos</h4>
+                    <br />
+
+                    <table id="inventory" class="table table-striped table-bordered dt-responsive dt-nowrap">
+                        <thead>
+                            <tr>
+                                <th>Categoría</th>
+                                <th>Concepto</th>
+                                <th>Frecuencia</th>
+                                <th>Tarifa</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="~/assets/js/jquery.min.js"></script>
+    <script src="~/assets/js/browser.min.js"></script>
+    <script src="~/assets/js/breakpoints.min.js"></script>
+    <script src="~/assets/js/util.js"></script>
+    <script src="~/assets/js/main.js"></script>
+
+    @*DataTable*******************************************@
+    <script src="~/datatable/js/jquery-3.5.1.js"></script>
+    <script src="~/datatable/js/jquery.dataTables.min.js"></script>
+    <script src="~/datatable/js/dataTables.bootstrap4.js"></script>
+    <script src="~/datatable/js/dataTables.responsive.min.js"></script>
+    <script src="~/datatable/js/responsive.bootstrap4.min.js"></script>
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    @***********************************************************@
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var procedures = @Html.Raw(Json.Serialize(Model.Select(p => new
+            {
+                procedureId = p.ProcedureId,
+                procedureCategoryName = p.ProcedureCategoryName,
+                procedureConcept = p.ProcedureConcept,
+                procedureFrequencyName = p.ProcedureFrequencyName,
+                tariff = p.Tariff
+            })));
+
+            var editUrl = '@Url.Action("Edit", "Procedures")';
+
+            $('#inventory').DataTable({
+                data: procedures,
+                pageLength: 10,
+                lengthMenu: [10, 25, 50, 100, 500],
+                columns: [
+                    { data: 'procedureCategoryName' },
+                    { data: 'procedureConcept' },
+                    { data: 'procedureFrequencyName' },
+                    {
+                        data: 'tariff',
+                        render: function (data) {
+                            return typeof data === 'number' ? data.toLocaleString('es-VE') : data;
+                        }
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        render: function (row) {
+                            return '<a class="btn-modificar" href="' + editUrl + '?procedureId=' + row.procedureId + '">Modificar</a>';
+                        }
+                    }
+                ],
+                language: {
+                    sProcessing: "Procesando...",
+                    sLengthMenu: "Mostrar _MENU_ registros",
+                    sZeroRecords: "No se encontraron resultados",
+                    sEmptyTable: "Ningún dato disponible en esta tabla",
+                    sInfo: "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+                    sInfoEmpty: "Mostrando registros del 0 al 0 de un total de 0 registros",
+                    sInfoFiltered: "(filtrado de un total de _MAX_ registros)",
+                    sSearch: "Buscar:",
+                    oPaginate: {
+                        sFirst: "Primero",
+                        sLast: "Último",
+                        sNext: "Siguiente",
+                        sPrevious: "Anterior"
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

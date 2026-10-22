@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Office.PowerPoint.Y2023.M02.Main;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Options;
 using QRCoder;
@@ -17,14 +19,17 @@ namespace SuperTransp.Controllers
 		private readonly IGeography _geography;
 		private readonly IPublicTransportGroup _publicTransportGroup;
 		private readonly IDriver _driver;
+		private readonly ISupervision _supervision;
 		private readonly IConfiguration _configuration;
 		private readonly ICommonData _commonData;
 		private readonly IFtpService _ftpService;
 		private readonly IOptionsSnapshot<MaintenanceSettings> _settings;
+		private readonly QrCodeSigner _qrCodeSigner;
 
 		public DriverController(IDriver driver, IPublicTransportGroup publicTransportGroup, ISecurity security, IGeography geography, 
-			IConfiguration configuration, ICommonData commonData, IFtpService ftpService, IOptionsSnapshot<MaintenanceSettings> settings)
+			IConfiguration configuration, ICommonData commonData, IFtpService ftpService, IOptionsSnapshot<MaintenanceSettings> settings, ISupervision supervision, QrCodeSigner qrCodeSigner)
 		{
+			_qrCodeSigner = qrCodeSigner;
 			_driver = driver;
 			_publicTransportGroup = publicTransportGroup;
 			_security = security;
@@ -33,6 +38,7 @@ namespace SuperTransp.Controllers
 			_commonData = commonData;
 			_ftpService = ftpService;
 			_settings = settings;
+			_supervision = supervision;
 		}
 
 		public IActionResult Index()
@@ -174,6 +180,7 @@ namespace SuperTransp.Controllers
 				var isTotalAccess = securityGroupId == 1 || _security.IsTotalAccess(2) || _security.IsUpdateAccess(2);
 				var isDeleteAccess = securityGroupId == 1 || _security.IsTotalAccess(2);
 				var editControllerUrl = $"{Url.Action("Edit", "Driver")}?driverPublicTransportGroupId=";
+				var changePlateControllerUrl = $"{Url.Action("ChangePlate", "Driver")}?driverPublicTransportGroupId=";
 
 				var data = drivers.Select(driver => new
 				{
@@ -184,13 +191,68 @@ namespace SuperTransp.Controllers
 					sexo = driver.SexName,
 					driverId = driver.DriverId,
 					ptgGUID = $"{driver.PublicTransportGroupGUID}|{driver.PartnerNumber}",
-					nacimiento = driver.Birthdate.ToString("dd/MM/yyyy"),
-					modificar = isTotalAccess ? $@"<a id='btnEdit' href='{editControllerUrl}{driver.DriverPublicTransportGroupId}'>MODIFICAR</a>" : "<span>SOLO LECTURA</span>",
-					eliminar = isDeleteAccess ? $@"<a id='btnDelete' href='javascript:void(0);' onclick=""confirmDeletion('/Driver/Delete?driverId={driver.DriverId}&driverPublicTransportGroupId={driver.DriverPublicTransportGroupId}&partnerNumber={driver.PartnerNumber}&publicTransportGroupId={driver.PublicTransportGroupId}&pTGCompleteName={driver.PTGCompleteName}')"">ELIMINAR</a>" : "<span>SOLO LECTURA</span>",
+					nacimiento = driver.Birthdate.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture),
+					modificar = isTotalAccess ? $@"<a id='btnEdit' href='{editControllerUrl}{driver.DriverPublicTransportGroupId}'>CORREGIR</a>" : "<span>SOLO LECTURA</span>",
+					eliminar = isDeleteAccess ? $@"<a id='btnDelete' href='javascript:void(0);' onclick=""confirmDeletion('/Driver/Delete?driverId={driver.DriverId}&driverPublicTransportGroupId={driver.DriverPublicTransportGroupId}&partnerNumber={driver.PartnerNumber}&publicTransportGroupId={driver.PublicTransportGroupId}&pTGCompleteName={driver.PTGCompleteName}')"">ELIMINAR TODO</a>" : "<span>SOLO LECTURA</span>",
+					cambiarPlaca = ShowValidUrl(publicTransportGroupId, driver.DriverPublicTransportGroupId, driver.PartnerNumber, driver.StateId, isTotalAccess, changePlateControllerUrl),
 					qr = "<button class='generateQR view-info p-1' type='button'><i class='bi bi-qr-code'></i></button>"
 				});
 
 				return Json(new { data });
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(new { error = ex.Message });
+			}
+		}
+
+		private string ShowValidUrl(int publicTransportGroupId, int driverPublicTransportGroupId, int? partnerNumber, int stateId, bool isTotalAccess, string changePlateControllerUrl)
+		{
+			var supervision = _supervision.GetByPublicTransportGroupIdAndDriverPublicTransportGroupIdAndPartnerNumberStateId(publicTransportGroupId, driverPublicTransportGroupId, (int)partnerNumber, stateId);
+			string columnText = "SUSTITUIR ASOCIADO MANTENER UNIDAD";
+
+			if (supervision != null)
+			{
+				if(string.IsNullOrEmpty(supervision.Plate))
+				{
+					columnText = "SIN VEHICULO";
+					return columnText;
+				}
+				else
+				{
+					return isTotalAccess ? $@"<a id='btnChangePlate' href='{changePlateControllerUrl}{driverPublicTransportGroupId}'>{columnText}</a>" : "<span>SOLO LECTURA</span>";
+				}
+			}
+
+			columnText = "SIN SUPERVISION";
+			return columnText;
+		}
+
+		public IActionResult GetDriverByPTGDriverIdAndPartnerNumber(int publicTransportGroupId, int driverId, int partnerNumber, int stateId)
+		{
+			try
+			{
+				var result = CheckSessionAndPermission(2);
+				if (result != null) return result;
+
+				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+				var driver = _supervision.GetByPublicTransportGroupIdAndDriverIdAndPartnerNumberStateId(publicTransportGroupId, driverId, partnerNumber, stateId);
+
+				var data = new
+				{
+					nombre = driver.DriverFullName,
+					cedula = driver.DriverIdentityDocument,
+					socio = driver.PartnerNumber,
+					telefono = driver.DriverPhone,
+					sexo = driver.SexName,
+					nacimiento = driver.Birthdate.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture),
+					año = driver.Year,
+					marca = driver.Make = string.IsNullOrEmpty(driver.Make) ? "SIN VEHICULO" : driver.Make,
+					modelo = string.IsNullOrEmpty(driver.Model) ? "SIN VEHICULO" : driver.Model,
+					placa = string.IsNullOrEmpty(driver.Plate) ? "SIN VEHICULO" : driver.Plate,
+				};
+
+				return Json(new { data = new[] { data } });
 			}
 			catch (Exception ex)
 			{
@@ -214,6 +276,10 @@ namespace SuperTransp.Controllers
 
 				if (_security.IsTotalAccess(2) || _security.IsUpdateAccess(2) || groupId == 1)
 				{
+					var emailError = ValidateDriverEmailUnique(model.DriverEmail, model.DriverIdentityDocument); // TEMP-EMAIL-UNIQUE
+					if (emailError != null)
+						return Json(new { success = false, message = emailError });
+
 					int driverId = _driver.AddOrEdit(model);
 
 					//if (driverId > 0)
@@ -271,6 +337,16 @@ namespace SuperTransp.Controllers
 		{
 			try
 			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && !ModelState.IsValid)
+				{
+					var errors = ModelState.Values
+						.SelectMany(v => v.Errors)
+						.Select(e => e.ErrorMessage)
+						.Where(m => !string.IsNullOrEmpty(m));
+
+					return Json(new { success = false, message = string.Join("\n", errors) });
+				}
+
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
 				{
 					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
@@ -285,7 +361,98 @@ namespace SuperTransp.Controllers
 
 					if (_security.IsTotalAccess(2) || _security.IsUpdateAccess(2) || securityGroupId == 1)
 					{
+						var emailError = ValidateDriverEmailUnique(model.DriverEmail, model.DriverIdentityDocument); // TEMP-EMAIL-UNIQUE
+						if (emailError != null)
+							return Json(new { success = false, message = emailError });
+
 						_driver.AddOrEdit(model);
+
+						return Json(new
+						{
+							success = true,
+							message = "Datos actualizados correctamente",
+							redirectUrl = Url.Action("Add", new { publicTransportGroupId = model.PublicTransportGroupId, pTGCompleteName = model.PTGCompleteName })
+						});
+					}
+				}
+
+				return Json(new
+				{
+					success = false,
+					redirectUrl = Url.Action("Login", "Security")
+				});
+			}
+			catch (Exception ex)
+			{
+				return Json(new { success = false, message = ex.Message });
+			}
+		}
+
+		[HttpGet]
+		public IActionResult ChangePlate(int driverPublicTransportGroupId)
+		{
+			var result = CheckSessionAndPermission(2);
+			if (result != null) return result;
+
+			ViewBag.IsTotalAccess = false;
+			ViewBag.IsDeleteAccess = false;
+			var driver = _driver.GetByDriverPublicTransportGroupId(driverPublicTransportGroupId);
+			var ptg = _publicTransportGroup.GetPublicTransportGroupById(driver.PublicTransportGroupId);
+			int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+			var model = new DriverViewModel
+			{
+				PublicTransportGroupId = driver.PublicTransportGroupId,
+				PTGCompleteName = driver.PTGCompleteName,
+				DriverModifiedDate = DateTime.Now,
+				Birthdate = DateTime.Now.AddYears(-20),
+				DriverId = driver.DriverId,
+				PartnerNumber = driver.PartnerNumber,
+				StateId = driver.StateId,
+				DriverPhone = string.Empty,
+			};
+
+			ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+			ViewBag.Partners = ptg.Partners;
+
+			if (securityGroupId != 1)
+			{
+				if (_security.IsTotalAccess(2) || _security.IsUpdateAccess(2))
+				{
+					ViewBag.IsTotalAccess = true;
+				}
+			}
+			else
+			{
+				ViewBag.IsTotalAccess = true;
+			}
+
+			ViewBag.Sex = new SelectList(_commonData.GetSex(), "SexId", "SexName");
+
+			return View(model);
+		}
+
+
+		[HttpPost]
+		public JsonResult ChangePlateWithAjax(DriverViewModel model)
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
+				{
+					int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+					if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 2))
+					{
+						return Json(new
+						{
+							success = false,
+							redirectUrl = Url.Action("Login", "Security")
+						});
+					}
+
+					if (_security.IsTotalAccess(2) || _security.IsUpdateAccess(2) || securityGroupId == 1)
+					{
+						_driver.UpdateDriverPlate(model);				
 
 						return Json(new
 						{
@@ -318,7 +485,7 @@ namespace SuperTransp.Controllers
 					return Json(new { success = false, redirect = Url.Action("Login", "Security") });
 
 				if (!ModelState.IsValid)
-					return Json(new { success = false, message = "Datos inválidos para eliminar el socio." });
+					return Json(new { success = false, message = "Datos inválidos para eliminar el asociado." });
 
 				var groupId = HttpContext.Session.GetInt32("SecurityGroupId");
 
@@ -367,10 +534,11 @@ namespace SuperTransp.Controllers
 				try
 				{
 					var fileList = await _ftpService.ListFilesAsync(ftpSubFolderPath);
-					if (fileList.Count == 0) return false;
-
-					var deleteTasks = fileList.Select(fileName => _ftpService.DeleteFileAsync($"{ftpSubFolderPath}/{fileName}"));
-					await Task.WhenAll(deleteTasks);
+					if (fileList.Count > 0)
+					{
+						var deleteTasks = fileList.Select(fileName => _ftpService.DeleteFileAsync($"{ftpSubFolderPath}/{fileName}"));
+						await Task.WhenAll(deleteTasks);
+					}
 
 					try
 					{
@@ -416,11 +584,27 @@ namespace SuperTransp.Controllers
 				var driver = _driver.GetByIdentityDocument(driverIdentityDocument);
 				if (driver != null)
 				{
-					return Json(new { driverId = driver.DriverId, driverFullName = driver.DriverFullName, driverPhone = driver.DriverPhone, driverSexId = driver.SexId, driverBirthDate = driver.Birthdate.ToString("dd/MM/yyyy") });
+					return Json(new { driverId = driver.DriverId, driverFullName = driver.DriverFullName, driverPhone = driver.DriverPhone, driverEmail = driver.DriverEmail, driverSexId = driver.SexId, driverBirthDate = driver.Birthdate.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture) });
 				}
 			}
 
 			return Json(new { driverFullName = "", driverPhone = "" });			
+		}
+
+		// TEMP-EMAIL-UNIQUE: returns a message when the email is already used by another identity document
+		private string? ValidateDriverEmailUnique(string? email, int? identityDocument)
+		{
+			var value = email?.Trim().ToLower();
+
+			if (string.IsNullOrEmpty(value) || value == "n/d" || identityDocument == null)
+				return null;
+
+			if (!System.Text.RegularExpressions.Regex.IsMatch(value, @"^[^\s@]+@[^\s@]+\.[^\s@]+$"))
+				return null;
+
+			return _driver.EmailUsedByOtherIdentityDocument(value, identityDocument.Value)
+				? $"El email {value} ya está registrado a otro asociado con una cédula diferente."
+				: null;
 		}
 
 		public JsonResult CheckExistingValues(int paramValue2, int paramValue4)
@@ -429,7 +613,7 @@ namespace SuperTransp.Controllers
 			{
 				if (_driver.RegisteredPartnerNumber(paramValue4, paramValue2))
 				{
-					return Json($"El número de socio {paramValue4} ya está registrado a la línea.");
+					return Json($"El número de asociado {paramValue4} ya está registrado a la línea.");
 				}
 
 				var ptgPartners = _publicTransportGroup.GetPublicTransportGroupById(paramValue2);
@@ -437,7 +621,7 @@ namespace SuperTransp.Controllers
 
 				if (totalDrivers >= ptgPartners.Partners)
 				{
-					return Json($"La línea tiene cupo solo para {ptgPartners.Partners} transportista(s) no puede agregar mas.");
+					return Json($"La línea tiene flota habilitada solo para {ptgPartners.Partners} transportista(s) no puede agregar mas.");
 				}
 
 				//ELIMINADA VALIDACIÓN DE NÚMERO DE SOCIO CORRELATIVO
@@ -477,7 +661,7 @@ namespace SuperTransp.Controllers
 						return Json(new
 						{
 							canContinue = false,
-							message = $"El número de socio {paramValue4} ya está registrado a la línea."
+							message = $"El número de asociado {paramValue4} ya está registrado a la línea."
 						});
 					}
 				}
@@ -505,13 +689,26 @@ namespace SuperTransp.Controllers
 		[HttpPost]
 		public IActionResult GenerateQR([FromBody] QRDriverRequest request)
 		{
-			var baseWebSiteUrl = _configuration["FtpSettings:BaseWebSiteUrl"];
-			var ptgDataController = $"{baseWebSiteUrl}QR/DriverData?driverCode={request.ptgGUID}";
+			// This endpoint signs QR codes: it must only work for users with an open session
+			if (HttpContext.Session.GetInt32("SecurityGroupId") == null)
+			{
+				return Unauthorized();
+			}
 
 			if (request == null || string.IsNullOrEmpty(request.ptgGUID))
 			{
 				return BadRequest(new { success = false, message = "Se requiere el GUID para generar el código QR." });
 			}
+
+			// The client sends "<organization GUID>|<partner number>"; the code in the QR also carries the signature
+			var requestParts = request.ptgGUID.Split('|');
+			if (requestParts.Length < 2 || string.IsNullOrWhiteSpace(requestParts[0]) || !int.TryParse(requestParts[1], out var requestPartnerNumber) || requestPartnerNumber <= 0)
+			{
+				return BadRequest(new { success = false, message = "El código del asociado no es válido." });
+			}
+
+			var baseWebSiteUrl = _configuration["FtpSettings:BaseWebSiteUrl"];
+			var ptgDataController = $"{baseWebSiteUrl}QR/DriverData?driverCode={_qrCodeSigner.BuildDriverCode(requestParts[0], requestPartnerNumber)}";
 
 			try
 			{

@@ -11,7 +11,7 @@ using System.Drawing;
 using System.Net;
 using System.Reflection.Metadata;
 using System.Security;
-using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;	
 using static SuperTransp.Core.Interfaces;
 
 namespace SuperTransp.Controllers
@@ -26,10 +26,11 @@ namespace SuperTransp.Controllers
 		private IPublicTransportGroup _publicTransportGroup;
 		private IDriver _driver;
 		private IConfiguration _configuration;
+		private readonly ICommonData _commonData;
 		private readonly IOptionsSnapshot<MaintenanceSettings> _settings;
 
 		public PublicTransportGroupController(IPublicTransportGroup publicTransportGroup, ISecurity security, IGeography geography, IDesignation designation, 
-			IUnion union, IMode mode, IDriver driver, IConfiguration configuration, IOptionsSnapshot<MaintenanceSettings> settings)
+			IUnion union, IMode mode, IDriver driver, IConfiguration configuration, IOptionsSnapshot<MaintenanceSettings> settings, ICommonData commonData)
 		{
 			_publicTransportGroup = publicTransportGroup;
 			_security = security;
@@ -40,6 +41,7 @@ namespace SuperTransp.Controllers
 			_driver = driver;
 			_configuration = configuration;
 			_settings = settings;
+			_commonData = commonData;
 		}
 
 		public IActionResult Index()
@@ -80,6 +82,7 @@ namespace SuperTransp.Controllers
 						{
 							ViewBag.States = new SelectList(_geography.GetAllStates(), "StateId", "StateName");
 							ViewBag.Union = new SelectList(_union.GetAll(), "UnionId", "UnionName");
+							ViewBag.GasStations = new SelectList(_commonData.GetGasStationsAll(), "GasStationId", "GasStationDisplayName");
 
 							if (_security.IsTotalAccess(1) || _security.IsUpdateAccess(1))
 							{
@@ -92,8 +95,9 @@ namespace SuperTransp.Controllers
 							{
 								ViewBag.States = new SelectList(_geography.GetStateById((int)stateId), "StateId", "StateName");
 								ViewBag.Union = new SelectList(_union.GetByStateId((int)stateId), "UnionId", "UnionName");
+								ViewBag.GasStations = new SelectList(_commonData.GetGasStationsByStateId((int)stateId), "GasStationId", "GasStationDisplayName");
 
-								if(_security.IsTotalAccess(1) || _security.IsUpdateAccess(1))
+								if (_security.IsTotalAccess(1) || _security.IsUpdateAccess(1))
 								{
 									ViewBag.IsTotalAccess = true;
 								}
@@ -104,13 +108,14 @@ namespace SuperTransp.Controllers
 					{
 						ViewBag.States = new SelectList(_geography.GetAllStates(), "StateId", "StateName");
 						ViewBag.Union = new SelectList(_union.GetAll(), "UnionId", "UnionName");
+						ViewBag.GasStations = new SelectList(_commonData.GetGasStationsAll(), "GasStationId", "GasStationDisplayName");
 						ViewBag.IsTotalAccess = true;
 					}
 				}
 
 				List <DesignationViewModel> designations = _designation.GetAll();
 
-				ViewBag.Designation = new SelectList(designations, "DesignationId", "DesignationName");
+				ViewBag.Designation = new SelectList(designations, "DesignationId", "DesignationName");				
 				ViewBag.Mode = new SelectList(_mode.GetAll(), "ModeId", "ModeName");
 				ViewBag.DesignationList = Designations(designations);
 
@@ -138,6 +143,14 @@ namespace SuperTransp.Controllers
 					if(model.DesignationId == 0)
 					{
 						TempData["SuccessMessage"] = "Debe seleccionar la entidad legal de la lista";
+
+						return RedirectToAction("Add");
+					}
+
+					var emailError = ValidateRepresentativeEmailUnique(model.RepresentativeEmail, model.RepresentativeIdentityDocument); // TEMP-EMAIL-UNIQUE
+					if (emailError != null)
+					{
+						TempData["SuccessMessage"] = emailError;
 
 						return RedirectToAction("Add");
 					}
@@ -182,6 +195,7 @@ namespace SuperTransp.Controllers
 					{
 						ViewBag.States = new SelectList(_geography.GetAllStates(), "StateId", "StateName");
 						ViewBag.Union = new SelectList(_union.GetByStateId((int)model.StateId), "UnionId", "UnionName");
+						ViewBag.GasStations = new SelectList(_commonData.GetGasStationsByStateId((int)model.StateId), "GasStationId", "GasStationDisplayName");
 
 						if (_security.IsTotalAccess(1) || _security.IsUpdateAccess(1))
 						{
@@ -194,6 +208,7 @@ namespace SuperTransp.Controllers
 						{
 							ViewBag.States = new SelectList(_geography.GetStateById((int)stateId), "StateId", "StateName");
 							ViewBag.Union = new SelectList(_union.GetByStateId((int)model.StateId), "UnionId", "UnionName");
+							ViewBag.GasStations = new SelectList(_commonData.GetGasStationsByStateId((int)model.StateId), "GasStationId", "GasStationDisplayName");
 
 							if (_security.IsTotalAccess(1) || _security.IsUpdateAccess(1))
 							{
@@ -206,6 +221,7 @@ namespace SuperTransp.Controllers
 				{
 					ViewBag.States = new SelectList(_geography.GetAllStates(), "StateId", "StateName");
 					ViewBag.Union = new SelectList(_union.GetByStateId((int)model.StateId), "UnionId", "UnionName");
+					ViewBag.GasStations = new SelectList(_commonData.GetGasStationsByStateId(model.StateId), "GasStationId", "GasStationDisplayName");
 					ViewBag.IsTotalAccess = true;
 				}
 
@@ -215,6 +231,8 @@ namespace SuperTransp.Controllers
 				ViewBag.DesignationList = Designations(designations);
 				ViewBag.Mode = new SelectList(_mode.GetAll(), "ModeId", "ModeName");
 				ViewBag.Municipality = new SelectList(_geography.GetMunicipalityByStateId(model.StateId), "MunicipalityId", "MunicipalityName");
+				ViewBag.ExistingGasStations = _commonData.GetGasStationsByPTGId(publicTransportGroupId);
+				ViewBag.GasStationsFull = _commonData.GetGasStationsByStateId(model.StateId);
 			}
 
 			return View(model);
@@ -234,6 +252,14 @@ namespace SuperTransp.Controllers
 					TempData["SuccessMessage"] = "Debe seleccionar la entidad legal de la lista";
 
 					return RedirectToAction("Add");
+				}
+
+				var emailError = ValidateRepresentativeEmailUnique(model.RepresentativeEmail, model.RepresentativeIdentityDocument); // TEMP-EMAIL-UNIQUE
+				if (emailError != null)
+				{
+					TempData["SuccessMessage"] = emailError;
+
+					return RedirectToAction("Edit", new { publicTransportGroupId = model.PublicTransportGroupId });
 				}
 
 				if (_security.IsTotalAccess(1) || _security.IsUpdateAccess(1) || securityGroupId == 1)
@@ -325,7 +351,23 @@ namespace SuperTransp.Controllers
 				return Json(union);
 		}
 
-		public JsonResult CheckRifExist(string paramValue1)
+		// TEMP-EMAIL-UNIQUE: returns a message when the email is already used by another representative identity document
+		private string? ValidateRepresentativeEmailUnique(string? email, int? identityDocument)
+		{
+			var value = email?.Trim().ToLower();
+
+			if (string.IsNullOrEmpty(value) || value == "n/d" || identityDocument == null)
+				return null;
+
+			if (!System.Text.RegularExpressions.Regex.IsMatch(value, @"^[^\s@]+@[^\s@]+\.[^\s@]+$"))
+				return null;
+
+			return _publicTransportGroup.EmailUsedByOtherRepresentative(value, identityDocument.Value)
+				? $"El email {value} ya está registrado a otro representante con una cédula diferente."
+				: null;
+		}
+
+		public JsonResult CheckRifExist(string paramValue1, string? paramValue4 = null, int? paramValue5 = null)
 		{
 			var result = CheckSessionAndPermission(1);
 			if (result != null) Json("ERROR");
@@ -338,10 +380,14 @@ namespace SuperTransp.Controllers
 				return Json($"La línea con el RIF {paramValue1} ya está registrada.");					
 			}
 
+			var emailError = ValidateRepresentativeEmailUnique(paramValue4, paramValue5); // TEMP-EMAIL-UNIQUE
+			if (emailError != null)
+				return Json(emailError);
+
 			return Json("OK");
 		}
 
-		public JsonResult CheckRifExistOnEdit(string paramValue1, int paramValue2, int paramValue3)
+		public JsonResult CheckRifExistOnEdit(string paramValue1, int paramValue2, int paramValue3, string? paramValue4 = null, int? paramValue5 = null)
 		{
 			var result = CheckSessionAndPermission(1);
 			if (result != null) return Json("ERROR");
@@ -358,13 +404,17 @@ namespace SuperTransp.Controllers
 				}
 			}
 
+			var emailError = ValidateRepresentativeEmailUnique(paramValue4, paramValue5); // TEMP-EMAIL-UNIQUE
+			if (emailError != null)
+				return Json(emailError);
+
 			if (paramValue2 > 0)
 			{
 				var totalDrivers = _driver.TotalDriversByPublicTransportGroupId(paramValue2);
 
 				if (totalDrivers > paramValue3)
 				{
-					return Json($"Existen {totalDrivers} transportista(s) cargado(s) a esta línea, si desea reducir el cupo debe eliminar los necesarios.");
+					return Json($"Existen {totalDrivers} transportista(s) cargado(s) a esta línea, si desea reducir la flota habilitada debe eliminar los necesarios.");
 				}
 			}
 

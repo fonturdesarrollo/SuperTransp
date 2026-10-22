@@ -11,6 +11,9 @@ namespace SuperTransp.Models
 		public bool DriverWithVehicle { get; set; }
 		public bool WorkingVehicle { get; set; }
 		public int DriverId { get; set; }
+		public string? DriverPhone { get; set; }
+		public string? SexName { get; set; }
+		public DateTime Birthdate { get; set; }
 		public string? Plate { get; set; }
 		public int? VehicleDataId { get; set; }
 		public int? Passengers { get; set; }
@@ -29,6 +32,7 @@ namespace SuperTransp.Models
 		public int SecurityUserId { get; set; }
 		public string? PTGCompleteName { get; set; }
 		public int PublicTransportGroupId { get; set; }
+		public string? PublicTransportGroupGUID { get; set; }
 		public int DriverIdentityDocument { get; set; }
 		public string? DriverFullName { get; set; }
 		public int PartnerNumber { get; set; }
@@ -70,11 +74,23 @@ namespace SuperTransp.Models
 		[Key]
 		public int SupervisionRoundId { get; set; }
 		public int StateId { get; set; }
+		public string? StateName { get; set; }
 		public DateTime SupervisionRoundStartDate { get; set; }
 		public string? SupervisionRoundStartDescription { get; set; }
 		public DateTime? SupervisionRoundEndDate { get; set; }
 		public string? SupervisionRoundEndDescription { get; set; }
 		public bool SupervisionRoundStatus { get; set; }
+		public string? SupervisionRoundStatusDescription { get; set; }
+		public int TotalPTG { get; set; }
+		public int TotalPartners { get; set; }
+		public int TotalSupervisedDrivers { get; set; }
+		public int TotalWorkingVehicles { get; set; }
+		public int TotalNotInOperationVehicles { get; set; }
+		public int TotalPartersWithoutVehicle { get; set; }
+		public int TotalAbsentDrivers { get; set; }
+		public int TotalShowedUpDrivers { get; set; }
+		public string? OpenRoundDate { get; set; }
+		public string? CloseRoundDate { get; set; }
 	}
 
 	public class PublicTransportGroupDriverListPageVM

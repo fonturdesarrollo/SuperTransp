@@ -1,4 +1,6 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Drawing;
+using Microsoft.Data.SqlClient;
 using SuperTransp.Extensions;
 using SuperTransp.Models;
 using System.Data;
@@ -274,6 +276,65 @@ namespace SuperTransp.Core
 			}
 		}
 
+		public int CloseRound(SupervisionRoundModel model)
+		{
+			int result = 0;
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					if (model != null)
+					{
+						SqlCommand cmd = new("SuperTransp_SupervisionCloseRound", sqlConnection)
+						{
+							CommandType = System.Data.CommandType.StoredProcedure
+						};
+
+						cmd.Parameters.AddWithValue("@SupervisionRoundId", model.SupervisionRoundId);
+						cmd.Parameters.AddWithValue("@StateId", model.StateId);
+						cmd.Parameters.AddWithValue("@SupervisionRoundEndDate", DateTime.Now);
+						cmd.Parameters.AddWithValue("@SupervisionRoundEndDescription", model.SupervisionRoundEndDescription);
+						cmd.Parameters.AddWithValue("@TotalPTG", model.TotalPTG);
+						cmd.Parameters.AddWithValue("@TotalPartners", model.TotalPartners);
+						cmd.Parameters.AddWithValue("@TotalSupervisedDrivers", model.TotalSupervisedDrivers);
+						cmd.Parameters.AddWithValue("@TotalWorkingVehicles", model.TotalWorkingVehicles);
+						cmd.Parameters.AddWithValue("@TotalNotInOperationVehicles", model.TotalNotInOperationVehicles);
+						cmd.Parameters.AddWithValue("@TotalPartersWithoutVehicle", model.TotalPartersWithoutVehicle);
+						cmd.Parameters.AddWithValue("@TotalAbsentDrivers", model.TotalAbsentDrivers);
+						cmd.Parameters.AddWithValue("@TotalShowedUpDrivers", model.TotalShowedUpDrivers);
+
+						result = Convert.ToInt32(cmd.ExecuteScalar());
+
+						_security.AddLogbook(0, false,
+							$" cierrre vuelta de supervisión," +
+							$" mes: {DateTime.Now.ToString("MMMM").ToUpper()} -" +
+							$" año: {DateTime.Now.ToString("yyyy")} -" +
+							$" descripcion: {model.SupervisionRoundEndDescription} " +
+							$" total organizaciones: {model.TotalPTG}" +
+							$" total socios: {model.TotalPTG}" +
+							$" total supervisados: {model.TotalSupervisedDrivers}" +
+							$" total vehiculos en funcionamiento {model.TotalWorkingVehicles}" +
+							$" total vehicuslos inoperativos {model.TotalNotInOperationVehicles}" +
+							$" total socios sin vehiculos {model.TotalPartersWithoutVehicle}" +
+							$" total socios presentes {model.TotalShowedUpDrivers}" +
+							$" total socios ausentes {model.TotalAbsentDrivers}");
+						
+					}
+				}
+
+				return result;
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al añadir la supervisión {ex.Message}", ex);
+			}
+		}
+
 		public bool DeletePicturesByPTGIdAndPartnerNumber(int publicTransportGroupId, int partnerNumber)
 		{
 			using (SqlConnection sqlConnection = GetConnection())
@@ -306,7 +367,7 @@ namespace SuperTransp.Core
 
 					List<PublicTransportGroupViewModel> ptg = new();
 					//ESTO PERMITE QUE SOLO LAS ORGANIZACIONES CON SOCIOS IGUALES A CUPOS SEAN MOSTRADOS EN LA LISTA, SE OMITE ESTA VALIDACION PORQUE 
-					//EXISTEN ORGANIZACIONES CON CUPOS VACIOS QUE DEDEN SUPERVISARSE
+					//EXISTEN ORGANIZACIONES CON CUPOS VACIOS QUE DEBEN SUPERVISARSE
 					//SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE StateId = @StateId AND PublicTransportGroupRif = @PublicTransportGroupRif AND Partners = TotalDrivers", sqlConnection);
 					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE StateId = @StateId AND PublicTransportGroupRif = @PublicTransportGroupRif", sqlConnection);
 					cmd.Parameters.AddWithValue("@StateId", stateId);
@@ -340,6 +401,7 @@ namespace SuperTransp.Core
 								DriverIdentityDocument = (int)dr["DriverIdentityDocument"],
 								PartnerNumber = (int)dr["PartnerNumber"],
 								SupervisionStatusName = (string)dr["SupervisionStatusText"],
+								SupervisionPostCloseStatusName = (string)dr["PostCloseStatusText"],
 								TotalDrivers = (int)dr["TotalDrivers"],
 								TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"],
 								SupervisionId = (int)dr["SupervisionId"],
@@ -365,6 +427,7 @@ namespace SuperTransp.Core
 								Remarks = (string)dr["Remarks"],
 								UserFullName = (string)dr["UserFullName"],
 								DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"],
+								SupervisionLastRoundDate = dr.IsDBNull(dr.GetOrdinal("SupervisionLastRoundDate")) ? (DateTime?)null : dr.GetDateTime(dr.GetOrdinal("SupervisionLastRoundDate")),
 								Pictures = GetPicturesByPTGIdAndDriverPublicTransportGroupId((int)dr["PublicTransportGroupId"], (int)dr["DriverPublicTransportGroupId"]),
 							});
 						}
@@ -422,6 +485,7 @@ namespace SuperTransp.Core
 								DriverIdentityDocument = (int)dr["DriverIdentityDocument"],
 								PartnerNumber = (int)dr["PartnerNumber"],
 								SupervisionStatusName = (string)dr["SupervisionStatusText"],
+								SupervisionPostCloseStatusName = (string)dr["PostCloseStatusText"],
 								TotalDrivers = (int)dr["TotalDrivers"],
 								TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"],
 								SupervisionId = (int)dr["SupervisionId"],
@@ -447,6 +511,7 @@ namespace SuperTransp.Core
 								Remarks = (string)dr["Remarks"],
 								UserFullName = (string)dr["UserFullName"],
 								SecurityUserId = (int)dr["SecurityUserId"],
+								SupervisionLastRoundDate = dr.IsDBNull(dr.GetOrdinal("SupervisionLastRoundDate"))? (DateTime?)null: dr.GetDateTime(dr.GetOrdinal("SupervisionLastRoundDate")),
 								Pictures = GetPicturesByPTGIdAndDriverPublicTransportGroupId((int)dr["PublicTransportGroupId"], (int)dr["DriverPublicTransportGroupId"])
 							});
 						}
@@ -533,7 +598,58 @@ namespace SuperTransp.Core
 								UserFullName = (string)dr["UserFullName"],
 								SecurityUserId = (int)dr["SecurityUserId"],	
 								DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"],
+								DriverEmail = (string)dr["DriverEmail"],
+								DriverSexName = (string)dr["SexName"],
 								Pictures = GetPicturesByPTGIdAndDriverPublicTransportGroupId((int)dr["PublicTransportGroupId"], (int)dr["DriverPublicTransportGroupId"])
+							});
+						}
+					}
+
+					return ptg.ToList();
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener transportistas {ex.Message}", ex);
+			}
+		}
+
+		public List<PublicTransportGroupViewModel> GetDriverPTGByIdentityDocument(int driverIdentityDocument)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<PublicTransportGroupViewModel> ptg = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_DriverPTGByIdentityDocument WHERE DriverIdentityDocument = @DriverIdentityDocument", sqlConnection);
+					cmd.Parameters.AddWithValue("@DriverIdentityDocument", driverIdentityDocument);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							ptg.Add(new PublicTransportGroupViewModel
+							{
+								PublicTransportGroupId = (int)dr["PublicTransportGroupId"],
+								PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"],
+								PTGCompleteName = (string)dr["PTGFullName"],
+								StateName = (string)dr["StateName"],
+								MunicipalityName = (string)dr["MunicipalityName"],
+								ModeName = (string)dr["ModeName"],
+								UnionName = (string)dr["UnionName"],
+								DriverId = (int)dr["DriverId"],
+								DriverFullName = (string)dr["DriverFullName"],
+								DriverIdentityDocument = (int)dr["DriverIdentityDocument"],
+								DriverPhone = (string)dr["DriverPhone"],
+								SexName = (string)dr["SexName"],
+								BirthDate = (DateTime)dr["BirthDate"],
+								DriverEmail = (string)dr["DriverEmail"],
+								DriverSexName = (string)dr["SexName"],
 							});
 						}
 					}
@@ -613,7 +729,7 @@ namespace SuperTransp.Core
 			}
 		}
 
-		public SupervisionViewModel GetByPublicTransportGroupIdAndDriverIdAndPartnerNumberStateId(int publicTransportGroupId, int driverId, int partnerNumber, int stateId)
+		public SupervisionViewModel GetByPublicTransportGroupIdAndDriverPublicTransportGroupIdAndPartnerNumberStateId(int publicTransportGroupId, int driverId, int partnerNumber, int stateId)
 		{
 			try
 			{
@@ -638,12 +754,16 @@ namespace SuperTransp.Core
 							supervision.PublicTransportGroupId = (int)dr["PublicTransportGroupId"];
 							supervision.PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"];
 							supervision.PTGCompleteName = (string)dr["PTGCompleteName"];
+							supervision.PublicTransportGroupGUID = (string)dr["PublicTransportGroupGUID"];
 							supervision.ModeId = (int)dr["ModeId"];
 							supervision.StateName = (string)dr["StateName"];
 							supervision.ModeName = (string)dr["ModeName"];
 							supervision.DriverId = (int)dr["DriverId"];
 							supervision.DriverFullName = (string)dr["DriverFullName"];
 							supervision.DriverIdentityDocument = (int)dr["DriverIdentityDocument"];
+							supervision.DriverPhone = (string)dr["DriverPhone"];
+							supervision.SexName = (string)dr["SexName"];
+							supervision.Birthdate = (DateTime)dr["Birthdate"];
 							supervision.PartnerNumber = (int)dr["PartnerNumber"];
 							supervision.SupervisionStatusName = (string)dr["SupervisionStatusText"];
 							supervision.TotalDrivers = (int)dr["TotalDrivers"];
@@ -674,6 +794,89 @@ namespace SuperTransp.Core
 							supervision.VehicleImageUrl = (string)dr["VehicleImageUrl"];
 							supervision.FingerprintTrouble = (bool)dr["FingerprintTrouble"];
 							supervision.Remarks = (string)dr["Remarks"];							
+							supervision.VehicleDataId = (int)dr["VehicleDataId"];
+							supervision.SupervisionStatus = (bool)dr["SupervisionStatus"];
+							supervision.SupervisionDateAdded = (DateTime)dr["SupervisionDateAdded"];
+							supervision.DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"];
+							supervision.Pictures = GetPicturesByPTGIdAndDriverPublicTransportGroupId(publicTransportGroupId, (int)dr["DriverPublicTransportGroupId"]);
+						}
+					}
+
+					return supervision;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener los datos del transportista y el vehiculo {ex.Message}", ex);
+			}
+		}
+
+
+		public SupervisionViewModel GetByPublicTransportGroupIdAndDriverIdAndPartnerNumberStateId(int publicTransportGroupId, int driverId, int partnerNumber, int stateId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SupervisionViewModel supervision = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail WHERE PublicTransportGroupId = @PublicTransportGroupId AND DriverId = @DriverId AND PartnerNumber = @PartnerNumber AND StateId = @StateId", sqlConnection);
+					cmd.Parameters.AddWithValue("@PublicTransportGroupId", publicTransportGroupId);
+					cmd.Parameters.AddWithValue("@DriverId", driverId);
+					cmd.Parameters.AddWithValue("@PartnerNumber", partnerNumber);
+					cmd.Parameters.AddWithValue("@StateId", stateId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							supervision.PublicTransportGroupId = (int)dr["PublicTransportGroupId"];
+							supervision.PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"];
+							supervision.PTGCompleteName = (string)dr["PTGCompleteName"];
+							supervision.PublicTransportGroupGUID = (string)dr["PublicTransportGroupGUID"];
+							supervision.ModeId = (int)dr["ModeId"];
+							supervision.StateName = (string)dr["StateName"];
+							supervision.ModeName = (string)dr["ModeName"];
+							supervision.DriverId = (int)dr["DriverId"];
+							supervision.DriverFullName = (string)dr["DriverFullName"];
+							supervision.DriverIdentityDocument = (int)dr["DriverIdentityDocument"];
+							supervision.DriverPhone = (string)dr["DriverPhone"];
+							supervision.SexName = (string)dr["SexName"];
+							supervision.Birthdate = (DateTime)dr["Birthdate"];
+							supervision.PartnerNumber = (int)dr["PartnerNumber"];
+							supervision.SupervisionStatusName = (string)dr["SupervisionStatusText"];
+							supervision.TotalDrivers = (int)dr["TotalDrivers"];
+							supervision.TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"];
+							supervision.SupervisionId = (int)dr["SupervisionId"];
+							supervision.DriverWithVehicle = (bool)dr["DriverWithVehicle"];
+							supervision.WorkingVehicle = (bool)dr["WorkingVehicle"];
+							supervision.InPerson = (bool)dr["InPerson"];
+							supervision.Plate = (string)dr["Plate"];
+							supervision.Year = (int)dr["Year"];
+							supervision.Make = (string)dr["Make"];
+							supervision.Model = (string)dr["Model"];
+							supervision.Passengers = (int)dr["Passengers"];
+							supervision.RimName = (string)dr["RimName"];
+							supervision.RimId = (int)dr["RimId"];
+							supervision.Wheels = (int)dr["Wheels"];
+							supervision.MotorOilName = (string)dr["MotorOilName"];
+							supervision.MotorOilId = (int)dr["MotorOilId"];
+							supervision.Liters = (int)dr["Liters"];
+							supervision.FuelTypeName = (string)dr["FuelTypeName"];
+							supervision.FuelTypeId = (int)dr["FuelTypeId"];
+							supervision.TankCapacity = (int)dr["TankCapacity"];
+							supervision.BatteryName = (string)dr["BatteryName"];
+							supervision.BatteryId = (int)dr["BatteryId"];
+							supervision.NumberOfBatteries = (int)dr["NumberOfBatteries"];
+							supervision.FailureTypeName = (string)dr["FailureTypeName"];
+							supervision.FailureTypeId = (int)dr["FailureTypeId"];
+							supervision.VehicleImageUrl = (string)dr["VehicleImageUrl"];
+							supervision.FingerprintTrouble = (bool)dr["FingerprintTrouble"];
+							supervision.Remarks = (string)dr["Remarks"];
 							supervision.VehicleDataId = (int)dr["VehicleDataId"];
 							supervision.SupervisionStatus = (bool)dr["SupervisionStatus"];
 							supervision.SupervisionDateAdded = (DateTime)dr["SupervisionDateAdded"];
@@ -767,7 +970,7 @@ namespace SuperTransp.Core
 		}
 
 		public List<PublicTransportGroupViewModel> GetAllDriverPublicTransportGroup(string ptgRif)
-			{
+		{
 			try
 			{
 				using (SqlConnection sqlConnection = GetConnection())
@@ -838,6 +1041,7 @@ namespace SuperTransp.Core
 								UserFullName = (string)dr["UserFullName"],
 								SecurityUserId = (int)dr["SecurityUserId"],
 								DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"],
+								SupervisionLastRoundDate = dr.IsDBNull(dr.GetOrdinal("SupervisionLastRoundDate")) ? (DateTime?)null : dr.GetDateTime(dr.GetOrdinal("SupervisionLastRoundDate")),
 								Pictures = GetPicturesByPTGIdAndDriverPublicTransportGroupId((int)dr["PublicTransportGroupId"], (int)dr["DriverPublicTransportGroupId"]),
 							});
 						}
@@ -891,6 +1095,97 @@ namespace SuperTransp.Core
 			catch (Exception ex)
 			{
 				throw new Exception($"Error al obtener las imagenes de los vehiculos {ex.Message}", ex);
+			}
+		}
+
+
+		public List<PublicTransportGroupViewModel> GetSupervisionPlate(string plate, int stateId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<PublicTransportGroupViewModel> ptg = new();
+					string whereCondition = stateId == 0 ? " WHERE Plate = @Plate" : " WHERE Plate = @Plate AND StateId = @StateId";
+					SqlCommand cmd = new($"SELECT * FROM SuperTransp_PublicTransportGroupDriverDetail {whereCondition} ORDER BY StateName, PTGCompleteName, PartnerNumber", sqlConnection);
+					cmd.Parameters.AddWithValue("@Plate", plate);
+
+					if(stateId != 0)
+					{
+						cmd.Parameters.AddWithValue("@StateId", stateId);
+					}
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							ptg.Add(new PublicTransportGroupViewModel
+							{
+								PublicTransportGroupId = (int)dr["PublicTransportGroupId"],
+								PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"],
+								DesignationId = (int)dr["DesignationId"],
+								PublicTransportGroupName = (string)dr["PublicTransportGroupName"],
+								PTGCompleteName = (string)dr["PTGCompleteName"],
+								ModeId = (int)dr["ModeId"],
+								UnionId = (int)dr["UnionId"],
+								MunicipalityId = (int)dr["MunicipalityId"],
+								StateId = (int)dr["StateId"],
+								RepresentativeIdentityDocument = (int)dr["RepresentativeIdentityDocument"],
+								RepresentativeName = (string)dr["RepresentativeName"],
+								RepresentativePhone = (string)dr["RepresentativePhone"],
+								DesignationName = (string)dr["DesignationName"],
+								StateName = (string)dr["StateName"],
+								MunicipalityName = (string)dr["MunicipalityName"],
+								ModeName = (string)dr["ModeName"],
+								UnionName = (string)dr["UnionName"],
+								DriverId = (int)dr["DriverId"],
+								DriverFullName = (string)dr["DriverFullName"],
+								DriverIdentityDocument = (int)dr["DriverIdentityDocument"],
+								PartnerNumber = (int)dr["PartnerNumber"],
+								SupervisionStatusName = (string)dr["SupervisionStatusText"],
+								TotalDrivers = (int)dr["TotalDrivers"],
+								TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"],
+								SupervisionId = (int)dr["SupervisionId"],
+								DriverWithVehicle = (bool)dr["DriverWithVehicle"],
+								WorkingVehicle = (bool)dr["WorkingVehicle"],
+								InPerson = (bool)dr["InPerson"],
+								Plate = (string)dr["Plate"],
+								Year = (int)dr["Year"],
+								Make = (string)dr["Make"],
+								Model = (string)dr["Model"],
+								Passengers = (int)dr["Passengers"],
+								RimName = (string)dr["RimName"],
+								Wheels = (int)dr["Wheels"],
+								MotorOilName = (string)dr["MotorOilName"],
+								Liters = (int)dr["Liters"],
+								FuelTypeName = (string)dr["FuelTypeName"],
+								TankCapacity = (int)dr["TankCapacity"],
+								BatteryName = (string)dr["BatteryName"],
+								NumberOfBatteries = (int)dr["NumberOfBatteries"],
+								FailureTypeName = (string)dr["FailureTypeName"],
+								VehicleImageUrl = (string)dr["VehicleImageUrl"],
+								FingerprintTrouble = (bool)dr["FingerprintTrouble"],
+								Remarks = (string)dr["Remarks"],
+								UserFullName = (string)dr["UserFullName"],
+								SecurityUserId = (int)dr["SecurityUserId"],
+								DriverPublicTransportGroupId = (int)dr["DriverPublicTransportGroupId"],
+								SupervisionLastRoundDate = dr.IsDBNull(dr.GetOrdinal("SupervisionLastRoundDate")) ? (DateTime?)null : dr.GetDateTime(dr.GetOrdinal("SupervisionLastRoundDate")),
+								Pictures = GetPicturesByPTGIdAndDriverPublicTransportGroupId((int)dr["PublicTransportGroupId"], (int)dr["DriverPublicTransportGroupId"]),
+							});
+						}
+					}
+
+					return ptg.ToList();
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener todas las líneas {ex.Message}", ex);
 			}
 		}
 
@@ -949,6 +1244,8 @@ namespace SuperTransp.Core
 
 					if (model != null)
 					{
+						var round = GetActiveSupervisionRoundByStateId(model.StateId);
+
 						SqlCommand cmd = new("SuperTransp_SupervisionSummaryAddOrEdit", sqlConnection)
 						{
 							CommandType = System.Data.CommandType.StoredProcedure
@@ -961,7 +1258,18 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@SupervisionSummaryRemarks", model.SupervisionSummaryRemarks);
 						cmd.Parameters.AddWithValue("@SupervisionStatusId", model.SupervisionStatusId);
 						cmd.Parameters.AddWithValue("@SecurityUserId", model.SecurityUserId);
-						
+						cmd.Parameters.AddWithValue("@SupervisionRoundId", round.SupervisionRoundId);
+						cmd.Parameters.AddWithValue("@SupervisionRoundStartDate", round.SupervisionRoundStartDate);
+						cmd.Parameters.AddWithValue("@SupervisionRoundStartDescription", round.SupervisionRoundStartDescription);
+
+						//Nullable parameters
+						var param = cmd.Parameters.Add("@SupervisionRoundEndDate", SqlDbType.SmallDateTime);
+						param.Value = round.SupervisionRoundEndDate ?? (object)DBNull.Value;
+						param = cmd.Parameters.Add("@SupervisionRoundEndDescription", SqlDbType.VarChar);
+						param.Value = round.SupervisionRoundEndDescription ?? (object)DBNull.Value;
+
+						cmd.Parameters.AddWithValue("@SupervisionRoundStatus", round.SupervisionRoundStatus);
+
 						result = Convert.ToInt32(cmd.ExecuteScalar());
 
 						summaryId = model.SupervisionSummaryId == 0 ? result : model.SupervisionSummaryId;
@@ -1025,7 +1333,7 @@ namespace SuperTransp.Core
 			}
 		}
 
-		public List<SupervisionSummaryViewModel> GetSupervisionSummaryByStateId(int stateId)
+		public List<SupervisionSummaryViewModel> GetSupervisionSummaryByStateId(int stateId, int supervisionRoundId = 0)
 		{
 			try
 			{
@@ -1037,8 +1345,28 @@ namespace SuperTransp.Core
 					}
 
 					List<SupervisionSummaryViewModel> summary = new();
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_SupervisionSummaryDetail WHERE StateId = @StateId ORDER BY SupervisionSummaryId", sqlConnection);
-					cmd.Parameters.AddWithValue("@StateId", stateId);
+					string sql = string.Empty;
+
+					if(supervisionRoundId == 0)
+					{
+						sql = "SELECT * FROM SuperTransp_SupervisionSummaryDetail WHERE StateId = @StateId ORDER BY SupervisionSummaryId";
+					}
+					else
+					{
+						sql = "SELECT * FROM SuperTransp_SupervisionSummaryDetailClosed WHERE StateId = @StateId AND SupervisionRoundId = @SupervisionRoundId ORDER BY SupervisionSummaryId";
+					}
+
+					SqlCommand cmd = new($"{sql}", sqlConnection);
+
+					if (supervisionRoundId == 0)
+					{
+						cmd.Parameters.AddWithValue("@StateId", stateId);
+					}
+					else
+					{
+						cmd.Parameters.AddWithValue("@StateId", stateId);
+						cmd.Parameters.AddWithValue("@SupervisionRoundId", supervisionRoundId);
+					}
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
 					{
@@ -1071,7 +1399,7 @@ namespace SuperTransp.Core
 			}
 		}
 
-		public SupervisionSummaryViewModel GetSupervisionSummaryById(int supervisionSummaryId)
+		public SupervisionSummaryViewModel GetSupervisionSummaryById(int supervisionSummaryId, bool isClosed = false)
 		{
 			try
 			{
@@ -1085,7 +1413,8 @@ namespace SuperTransp.Core
 					SupervisionSummaryViewModel summary = new();
 					List<SupervisionSummaryPictures> images = new List<SupervisionSummaryPictures>();
 
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_SupervisionSummaryDetail WHERE SupervisionSummaryId = @SupervisionSummaryId", sqlConnection);
+					var viewName = isClosed ? "SuperTransp_SupervisionSummaryDetailClosed" : "SuperTransp_SupervisionSummaryDetail";
+					SqlCommand cmd = new($"SELECT * FROM {viewName} WHERE SupervisionSummaryId = @SupervisionSummaryId", sqlConnection);
 					cmd.Parameters.AddWithValue("@SupervisionSummaryId", supervisionSummaryId);
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
@@ -1211,7 +1540,7 @@ namespace SuperTransp.Core
 			}
 		}
 
-		public List<SupervisionSummaryViewModel> GetAllSupervisionSummary()
+		public List<SupervisionSummaryViewModel> GetAllSupervisionSummary(int stateId = 0, int supervisionRoundId = 0)
 		{
 			try
 			{
@@ -1223,7 +1552,25 @@ namespace SuperTransp.Core
 					}
 
 					List<SupervisionSummaryViewModel> summary = new();
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_SupervisionSummaryDetail ORDER BY StateName, PTGCompleteName", sqlConnection);
+
+					string sql = string.Empty;
+
+					if (supervisionRoundId == 0)
+					{
+						sql = "SELECT * FROM SuperTransp_SupervisionSummaryDetail ORDER BY SupervisionSummaryId";
+					}
+					else
+					{
+						sql = "SELECT * FROM SuperTransp_SupervisionSummaryDetailClosed WHERE StateId = @StateId AND SupervisionRoundId = @SupervisionRoundId ORDER BY SupervisionSummaryId";
+					}
+
+					SqlCommand cmd = new($"{sql}", sqlConnection);
+
+					if (supervisionRoundId > 0)
+					{
+						cmd.Parameters.AddWithValue("@StateId", stateId);
+						cmd.Parameters.AddWithValue("@SupervisionRoundId", supervisionRoundId);
+					}
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
 					{
@@ -1255,6 +1602,47 @@ namespace SuperTransp.Core
 			}
 		}
 
+		public bool DeleteSupervisionSummaryById(int supervisionSummaryId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					var supervision = GetSupervisionSummaryById(supervisionSummaryId);
+
+					SqlCommand cmd = new("DELETE FROM SupervisionSummary WHERE SupervisionSummaryId = @SupervisionSummaryId", sqlConnection);
+					cmd.Parameters.AddWithValue("@SupervisionSummaryId", supervisionSummaryId);
+
+					int rowsAffected = cmd.ExecuteNonQuery();
+
+					if (rowsAffected > 0)
+					{
+						if (supervision != null)
+						{
+							_security.AddLogbook(supervision.SupervisionSummaryId, true,
+								$" Resumen de Supervision " +
+								$" Fecha {supervision.SupervisionDate.ToString("dd/MM/yyyy")}" +
+								$" organizacion {supervision.PTGCompleteName}" +
+								$" RIF {supervision.PublicTransportGroupRif}" +
+								$" direccion {supervision.SupervisionAddress.ToUpper().Trim()}" +
+								$" observaciones {supervision.SupervisionSummaryRemarks}");
+						}
+					}
+
+					return true;
+				}
+			}
+			catch (Exception ex)			
+			{
+				throw new Exception($"Error al eliminar resumen de supervision {ex.Message}", ex);
+			}
+		}
+
 		public SupervisionRoundModel GetActiveSupervisionRoundByStateId(int stateId)
 		{
 			try
@@ -1278,6 +1666,153 @@ namespace SuperTransp.Core
 							round.StateId = (int)dr["StateId"];
 							round.SupervisionRoundStartDate = (DateTime)dr["SupervisionRoundStartDate"];
 							round.SupervisionRoundStartDescription = (string)dr["SupervisionRoundStartDescription"];
+							round.SupervisionRoundStatus = (bool)dr["SupervisionRoundStatus"];
+						}
+					}
+
+					return round;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener vuelta de supervision {ex.Message}", ex);
+			}
+		}
+
+		public List<SupervisionRoundModel> GetClosedRoundsByStateId(int stateId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<SupervisionRoundModel> round = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_SupervisionRoundDetailClosed WHERE StateId = @StateId", sqlConnection);
+					cmd.Parameters.AddWithValue("@StateId", stateId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							round.Add(new SupervisionRoundModel
+							{
+								SupervisionRoundId = (int)dr["SupervisionRoundId"],
+								StateId = (int)dr["StateId"],
+								SupervisionRoundStartDate = (DateTime)dr["SupervisionRoundStartDate"],
+								SupervisionRoundStartDescription = (string)dr["SupervisionRoundStartDescription"],
+								SupervisionRoundStatus = (bool)dr["SupervisionRoundStatus"],
+								SupervisionRoundEndDate = (DateTime)dr["SupervisionRoundEndDate"],
+								SupervisionRoundEndDescription = (string)dr["SupervisionRoundEndDescription"],
+								TotalPTG = (int)dr["TotalPTG"],
+								TotalPartners = (int)dr["TotalPartners"],
+								TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"],
+								TotalWorkingVehicles = (int)dr["TotalWorkingVehicles"],
+								TotalNotInOperationVehicles = (int)dr["TotalNotInOperationVehicles"],
+								TotalPartersWithoutVehicle = (int)dr["TotalPartersWithoutVehicle"],
+								TotalAbsentDrivers = (int)dr["TotalAbsentDrivers"],
+								OpenRoundDate = (string)dr["OpenRoundDate"],
+								CloseRoundDate = (string)dr["CloseRoundDate"],
+							});
+						}
+					}
+
+					return round;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener vuelta de supervision {ex.Message}", ex);
+			}
+		}
+
+		public List<SupervisionRoundModel> GetSupervisionRoundsByStateId(int stateId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+					var whereCondition = stateId > 0 ? " WHERE StateId = @StateId" : "";
+					List<SupervisionRoundModel> round = new();
+					SqlCommand cmd = new($"SELECT * FROM SuperTransp_SupervisionRoundDetail {whereCondition}", sqlConnection);
+
+					if(stateId > 0)
+					{
+						cmd.Parameters.AddWithValue("@StateId", stateId);
+					}
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							round.Add(new SupervisionRoundModel
+							{
+								StateName = (string)dr["StateName"],
+								SupervisionRoundId = (int)dr["SupervisionRoundId"],
+								StateId = (int)dr["StateId"],
+								SupervisionRoundStartDate = (DateTime)dr["SupervisionRoundStartDate"],
+								SupervisionRoundStartDescription = (string)dr["SupervisionRoundStartDescription"],
+								SupervisionRoundStatus = (bool)dr["SupervisionRoundStatus"],
+								SupervisionRoundStatusDescription = (string)dr["RoundStatusDescription"],
+								CloseRoundDate =  (string)dr["CloseDate"],
+								SupervisionRoundEndDescription = (string)dr["SupervisionRoundEndDescription"],
+							});
+						}
+					}
+
+					return round;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener vuelta de supervision {ex.Message}", ex);
+			}
+		}
+
+		public SupervisionRoundModel GetClosedRoundsBySupervisionRoundIdAndStateId(int supervisionRoundId, int stateId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SupervisionRoundModel round = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_SupervisionRoundDetailClosed WHERE SupervisionRoundId = @SupervisionRoundId AND StateId = @StateId", sqlConnection);
+					cmd.Parameters.AddWithValue("@SupervisionRoundId", supervisionRoundId);
+					cmd.Parameters.AddWithValue("@StateId", stateId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							round.SupervisionRoundId = (int)dr["SupervisionRoundId"];
+							round.StateId = (int)dr["StateId"];
+							round.SupervisionRoundStartDate = (DateTime)dr["SupervisionRoundStartDate"];
+							round.SupervisionRoundStartDescription = (string)dr["SupervisionRoundStartDescription"];
+							round.SupervisionRoundStatus = (bool)dr["SupervisionRoundStatus"];
+							round.SupervisionRoundEndDate = (DateTime)dr["SupervisionRoundEndDate"];
+							round.SupervisionRoundEndDescription = (string)dr["SupervisionRoundEndDescription"];
+							round.TotalPTG = (int)dr["TotalPTG"];
+							round.TotalPartners = (int)dr["TotalPartners"];
+							round.TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"];
+							round.TotalWorkingVehicles = (int)dr["TotalWorkingVehicles"];
+							round.TotalNotInOperationVehicles = (int)dr["TotalNotInOperationVehicles"];
+							round.TotalPartersWithoutVehicle = (int)dr["TotalPartersWithoutVehicle"];
+							round.TotalAbsentDrivers = (int)dr["TotalAbsentDrivers"];
+							round.TotalShowedUpDrivers = (int)dr["TotalShowedUpDrivers"];
+							round.OpenRoundDate = (string)dr["OpenRoundDate"];
+							round.CloseRoundDate = (string)dr["CloseRoundDate"];
 						}
 					}
 
@@ -1357,10 +1892,10 @@ namespace SuperTransp.Core
 					}
 
 					List<SupervisionRoundModel> round = new();
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_SupervisionRoundDetail WHERE StateId = @StateId AND EndMonth = @EndMonth AND EndYear = @EndYear AND SupervisionRoundStatus = 0", sqlConnection);
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_SupervisionRoundDetail WHERE StateId = @StateId AND StartMonth = @StartMonth AND StartYear = @StartYear AND SupervisionRoundStatus = 0", sqlConnection);
 					cmd.Parameters.AddWithValue("@StateId", stateId);
-					cmd.Parameters.AddWithValue("@EndMonth", month);
-					cmd.Parameters.AddWithValue("@EndYear", year);
+					cmd.Parameters.AddWithValue("@StartMonth", month);
+					cmd.Parameters.AddWithValue("@StartYear", year);
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
 					{
@@ -1377,7 +1912,7 @@ namespace SuperTransp.Core
 		public bool IsUserSupervisingPublicTransportGroup(int securityUserId, int publicTransportGroupId)
 		{
 			var pTGs = GetDriverPublicTransportGroupByPtgId(publicTransportGroupId);
-			var isSupervised = pTGs.Where(x => x.SupervisionStatusName == "SUPERVISADO");
+			var isSupervised = pTGs.Where(x => x.SupervisionPostCloseStatusName == "SUPERVISADO");
 
 			if(isSupervised.Any())
 			{

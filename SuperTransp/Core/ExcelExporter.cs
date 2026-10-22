@@ -24,6 +24,36 @@ namespace SuperTransp.Core
 			return sqlConnection;
 		}
 
+		public async Task<byte[]> GenerateExcelPublicTransportGroupAsync(int stateId)
+		{
+			var dt = new DataTable();
+
+			var whereClause = stateId > 0 ? "WHERE [Codigo Estado] = @StateId" : string.Empty;
+
+			using (var con = (GetConnection()))
+			using (var cmd = new SqlCommand($"SELECT * FROM SuperTransp_PublicTransportGroupForExcel {whereClause} ORDER BY Estado, Municipio, Organizacion", con))
+			{
+				if (stateId > 0)
+				{
+					cmd.Parameters.AddWithValue("@StateId", stateId);
+				}
+
+				await con.OpenAsync();
+				using (var reader = await cmd.ExecuteReaderAsync())
+				{
+					dt.Load(reader);
+				}
+			}
+
+			using (var workbook = new XLWorkbook())
+			using (var stream = new MemoryStream())
+			{
+				workbook.Worksheets.Add(dt, "Organizaciones");
+				workbook.SaveAs(stream);
+				return stream.ToArray();
+			}
+		}
+
 		public async Task<byte[]> GenerateExcelPublicTransportGroupAndDriversAsync(int stateId)
 		{
 			var dt = new DataTable();

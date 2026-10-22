@@ -1,4 +1,5 @@
 ﻿using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Presentation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.IdentityModel.Abstractions;
@@ -90,10 +91,35 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@RepresentativeIdentityDocument", model.RepresentativeIdentityDocument);
 						cmd.Parameters.AddWithValue("@RepresentativeName", model.RepresentativeName.ToUpper().Trim());
 						cmd.Parameters.AddWithValue("@RepresentativePhone", model.RepresentativePhone);
+						cmd.Parameters.AddWithValue("@RepresentativeEmail", SuperTransp.Core.EmailDefaults.Normalize(model.RepresentativeEmail)); // TEMP-EMAIL
 						cmd.Parameters.AddWithValue("@PublicTransportGroupIdModifiedDate", DateTime.Now);
 						cmd.Parameters.AddWithValue("@Partners", model.Partners);
+						cmd.Parameters.AddWithValue("@GasStationId", model.GasStationId);
 
 						result = Convert.ToInt32(cmd.ExecuteScalar());
+
+						var ptgId = model.PublicTransportGroupId == 0 ? result : model.PublicTransportGroupId;
+
+						SqlCommand cmdDeleteGS = new("SuperTransp_GasStationPTGDelete", sqlConnection)
+						{
+							CommandType = System.Data.CommandType.StoredProcedure
+						};
+						cmdDeleteGS.Parameters.AddWithValue("@PublicTransportGroupId", ptgId);
+						cmdDeleteGS.ExecuteNonQuery();
+
+						if (model.GasStationIds != null && model.GasStationIds.Any())
+						{
+							foreach (int gsId in model.GasStationIds)
+							{
+								SqlCommand cmdAddGS = new("SuperTransp_GasStationPTGAddOrEdit", sqlConnection)
+								{
+									CommandType = System.Data.CommandType.StoredProcedure
+								};
+								cmdAddGS.Parameters.AddWithValue("@GasStationId", gsId);
+								cmdAddGS.Parameters.AddWithValue("@PublicTransportGroupId", ptgId);
+								cmdAddGS.ExecuteScalar();
+							}
+						}						
 
 						if (!isEditing)
 						{
@@ -179,11 +205,13 @@ namespace SuperTransp.Core
 							publicTransportGroup.RepresentativeIdentityDocument = (int)dr["RepresentativeIdentityDocument"];
 							publicTransportGroup.RepresentativeName = (string)dr["RepresentativeName"];
 							publicTransportGroup.RepresentativePhone = (string)dr["RepresentativePhone"];
+							publicTransportGroup.RepresentativeEmail = dr["RepresentativeEmail"] == DBNull.Value ? null : (string)dr["RepresentativeEmail"];
 							publicTransportGroup.StateName = (string)dr["StateName"];
 							publicTransportGroup.Partners = (int)dr["Partners"];
 							publicTransportGroup.PublicTransportGroupGUID = (string)dr["PublicTransportGroupGUID"];
 							publicTransportGroup.SupervisionSummaryId = (int)dr["SupervisionSummaryId"];
 							publicTransportGroup.DesignationName = (string)dr["DesignationName"];
+							publicTransportGroup.GasStationId = (int)dr["GasStationId"];
 
 							if (dr["PublicTransportGroupIdModifiedDate"] != DBNull.Value)
 							{
@@ -300,7 +328,7 @@ namespace SuperTransp.Core
 								TotalDrivers = (int)dr["TotalDrivers"],
 								TotalSupervisedDrivers = (int)dr["TotalSupervisedDrivers"],
 								PublicTransportGroupGUID = (string)dr["PublicTransportGroupGUID"],
-								SupervisionSummaryId = (int)dr["SupervisionSummaryId"],
+								SupervisionSummaryId = 0,
 							});
 						}
 					}
@@ -376,7 +404,7 @@ namespace SuperTransp.Core
 					{
 						sqlConnection.Open();
 					}
-
+					//GetInternalValues();
 					List<PublicTransportGroupViewModel> ptg = new();
 					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupStatisticsInState", sqlConnection);
 
@@ -434,7 +462,7 @@ namespace SuperTransp.Core
 					//EXISTEN ORGANIZACIONES CON CUPOS VACIOS QUE DEDEN SUPERVISARSE
 					//SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail WHERE StateId = @StateId AND TotalSupervisedDrivers = Partners AND SupervisionSummaryId = 0", sqlConnection);
 					//SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail WHERE StateId = @StateId AND SupervisionSummaryId = 0", sqlConnection);
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetailNoUser WHERE StateId = @StateId AND SupervisionSummaryId = 0", sqlConnection);
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetailForSummary WHERE StateId = @StateId AND SupervisionSummaryId = 0", sqlConnection);
 					cmd.Parameters.AddWithValue("@StateId", stateId);
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
@@ -495,7 +523,7 @@ namespace SuperTransp.Core
 					//ESTO PERMITE QUE SOLO LAS ORGANIZACIONES CON SOCIOS IGUALES A CUPOS SEAN MOSTRADOS EN LA LISTA, SE OMITE ESTA VALIDACION PORQUE 
 					//EXISTEN ORGANIZACIONES CON CUPOS VACIOS QUE DEDEN SUPERVISARSE
 					//SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetail WHERE TotalSupervisedDrivers = Partners AND SupervisionSummaryId = 0", sqlConnection);
-					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetailNoUser WHERE SupervisionSummaryId = 0", sqlConnection);
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupDetailForSummary WHERE SupervisionSummaryId = 0", sqlConnection);
 
 
 					using (SqlDataReader dr = cmd.ExecuteReader())
@@ -538,6 +566,24 @@ namespace SuperTransp.Core
 			catch (Exception ex)
 			{
 				throw new Exception($"Error al obtener todas las líneas {ex.Message}", ex);
+			}
+		}
+
+		// TEMP-EMAIL-UNIQUE: an email can only belong to one representative identity document
+		public bool EmailUsedByOtherRepresentative(string representativeEmail, int representativeIdentityDocument)
+		{
+			using (SqlConnection sqlConnection = GetConnection())
+			{
+				if (sqlConnection.State == ConnectionState.Closed)
+				{
+					sqlConnection.Open();
+				}
+
+				SqlCommand cmd = new("SELECT TOP 1 1 FROM PublicTransportGroup WHERE RepresentativeEmail = @RepresentativeEmail AND RepresentativeIdentityDocument <> @RepresentativeIdentityDocument", sqlConnection);
+				cmd.Parameters.AddWithValue("@RepresentativeEmail", representativeEmail.Trim().ToLower());
+				cmd.Parameters.AddWithValue("@RepresentativeIdentityDocument", representativeIdentityDocument);
+
+				return cmd.ExecuteScalar() != null;
 			}
 		}
 
@@ -600,6 +646,58 @@ namespace SuperTransp.Core
 			catch (Exception ex)
 			{
 				throw new Exception($"Error al obtener los transportistas {ex.Message}", ex);
+			}
+		}
+
+		public List<PublicTransportGroupViewModel> GetAllRepresentativesByIdentityDocument(int representativeIdentityDocument)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<PublicTransportGroupViewModel> ptg = new();
+					SqlCommand cmd = new("SELECT * FROM SuperTransp_PublicTransportGroupAndRepresentatives WHERE RepresentativeIdentityDocument = @RepresentativeIdentityDocument", sqlConnection);
+					cmd.Parameters.AddWithValue("@RepresentativeIdentityDocument", representativeIdentityDocument);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							ptg.Add(new PublicTransportGroupViewModel
+							{
+								StateName = (string)dr["StateName"],
+								MunicipalityName = (string)dr["MunicipalityName"],
+								PublicTransportGroupId = (int)dr["PublicTransportGroupId"],
+								PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"],
+								PTGCompleteName = (string)dr["PTGCompleteName"],
+								UnionName = (string)dr["UnionName"],
+								ModeName = (string)dr["ModeName"],
+								RepresentativeIdentityDocument = (int)dr["RepresentativeIdentityDocument"],
+								RepresentativeName = (string)dr["RepresentativeName"],
+								RepresentativePhone = (string)dr["RepresentativePhone"],
+								RepresentativeEmail = dr["RepresentativeEmail"] == DBNull.Value ? null : (string)dr["RepresentativeEmail"],
+							});
+						}
+					}
+
+					if (ptg != null && ptg.Any())
+					{
+						return ptg.OrderBy(st => st.StateName).ToList();
+					}
+					else
+					{
+						return ptg.ToList();
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener todos los representantes {ex.Message}", ex);
 			}
 		}
 	}

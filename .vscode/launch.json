@@ -8,7 +8,7 @@
         "preLaunchTask": "build",
         "program": "${workspaceFolder}/SuperTransp/bin/Debug/net8.0/SuperTransp.dll",
         "args": [],
-        "cwd": "${workspaceFolder}",
+        "cwd": "${workspaceFolder}/SuperTransp",
         "stopAtEntry": false,
         "serverReadyAction": {
           "action": "openExternally",

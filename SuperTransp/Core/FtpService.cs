@@ -64,7 +64,7 @@ public class FtpService : IFtpService
 
     public async Task CreateFolderAsync(string folderPath)
     {
-        var request = (FtpWebRequest)WebRequest.Create(folderPath);
+		var request = (FtpWebRequest)WebRequest.Create(folderPath);
         request.Method = WebRequestMethods.Ftp.MakeDirectory;
         request.Credentials = GetCredentials();
         using (await request.GetResponseAsync()) { }

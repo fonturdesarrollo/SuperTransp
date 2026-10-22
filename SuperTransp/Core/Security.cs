@@ -967,7 +967,42 @@ namespace SuperTransp.Core
 			}
 			catch (Exception ex)
 			{
-				throw new Exception("Error al añadir o editar el usuario", ex);
+				throw new Exception("Error al cambiar el password", ex);
+			}
+		}
+
+		public int ResetPassword(int securityUserId)
+		{
+			int result = 0;
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					if (securityUserId != 0)
+					{
+						SqlCommand cmd = new("Security_ResetPassword", sqlConnection)
+						{
+							CommandType = System.Data.CommandType.StoredProcedure
+						};
+
+						cmd.Parameters.AddWithValue("@SecurityUserId", securityUserId);
+
+						result = Convert.ToInt32(cmd.ExecuteScalar());
+
+						AddLogbook(0, false, "Restablecio la clave a su version inicial");
+					}
+				}
+
+				return result;
+			}
+			catch (Exception ex)
+			{
+				throw new Exception("Error al restablecer el password", ex);
 			}
 		}
 
@@ -1089,163 +1124,6 @@ namespace SuperTransp.Core
 			}
 		}
 
-		// Cambiados por: GetLogbookServerSideAsync() para que lea directamente del servidor
-		//public List<SecurityLogbookModel> GetLogbookByStateName(string userState, string filterType)
-		//{
-		//	int currentMonth = DateTime.Now.Month;
-		//	int currentYear = DateTime.Now.Year;
-		//	string whereCondition = string.Empty;
-
-		//	using (SqlConnection sqlConnection = GetConnection())
-		//	{
-		//		if (sqlConnection.State == ConnectionState.Closed)
-		//		{
-		//			sqlConnection.Open();
-		//		}
-
-		//		if (filterType == "currentMonth")
-		//		{
-		//			whereCondition = $"WHERE (MONTH(SecurityLogbookDate) = {currentMonth}) AND (YEAR(SecurityLogbookDate) = {currentYear}) AND UserState = '{userState}' ORDER BY SecurityLogbookId DESC";
-		//		}
-		//		else
-		//		{
-		//			whereCondition = $"WHERE (MONTH(SecurityLogbookDate) = {currentMonth} OR MONTH(SecurityLogbookDate) = {currentMonth - 1}) AND (YEAR(SecurityLogbookDate) = {currentYear}) AND UserState = '{userState}' ORDER BY SecurityLogbookId DESC";
-		//		}
-
-		//		List<SecurityLogbookModel> logbook = new();
-		//		var sql = $"SELECT  SecurityLogbookId, MONTH(SecurityLogbookDate) AS Month, YEAR(SecurityLogbookDate) AS Year, SecurityLogbookDate, DeviceIP, DeviceType, DeviceBrowser, DeviceOperatingSystem, SecurityUserId, UserFullName, UserLogin, UserState, ActionDescription " +
-		//		$"FROM dbo.SecurityLogbook {whereCondition}";
-		//		SqlCommand cmd = new(sql, sqlConnection);
-
-		//		using (SqlDataReader dr = cmd.ExecuteReader())
-		//		{
-		//			while (dr.Read())
-		//			{
-		//				logbook.Add(new SecurityLogbookModel
-		//				{
-		//					SecurityLogbookId = (int)dr["SecurityLogbookId"],
-		//					SecurityLogbookDate = (DateTime)dr["SecurityLogbookDate"],
-		//					DeviceIP = (string)dr["DeviceIP"],
-		//					DeviceType = dr["DeviceType"] != null ? (string)dr["DeviceType"] : "NO DISPONIBLE",
-		//					DeviceOperatingSystem = dr["DeviceOperatingSystem"] != null ? (string)dr["DeviceOperatingSystem"] : "NO DISPONIBLE",
-		//					DeviceBrowser = dr["DeviceBrowser"] != null ? (string)dr["DeviceBrowser"] : "NO DISPONIBLE",
-		//					UserFullName = (string)dr["UserFullName"],
-		//					UserLogin = (string)dr["UserLogin"],
-		//					UserState = (string)dr["UserState"],
-		//					ActionDescription = (string)dr["ActionDescription"],
-		//				});
-		//			}
-		//		}
-
-		//		return logbook.OrderByDescending(id=> id.SecurityLogbookId).ToList();
-		//	}
-		//}
-
-		//public List<SecurityLogbookModel> GetLogbookAllExceptAdminByStateName(string selectStateName, string filterType)
-		//{
-		//	int currentMonth = DateTime.Now.Month;
-		//	int currentYear = DateTime.Now.Year;
-		//	string whereCondition = string.Empty;
-
-		//	using (SqlConnection sqlConnection = GetConnection())
-		//	{
-		//		if (sqlConnection.State == ConnectionState.Closed)
-		//		{
-		//			sqlConnection.Open();
-		//		}
-
-		//		if (filterType == "currentMonth")
-		//		{
-		//			whereCondition = $"WHERE (MONTH(SecurityLogbookDate) = {currentMonth}) AND (YEAR(SecurityLogbookDate) = {currentYear}) AND UserState = '{selectStateName}' AND (SecurityUserId <> 1) ORDER BY SecurityLogbookId DESC";
-		//		}
-		//		else
-		//		{
-		//			whereCondition = $"WHERE (MONTH(SecurityLogbookDate) = {currentMonth} OR MONTH(SecurityLogbookDate) = {currentMonth - 1}) AND (YEAR(SecurityLogbookDate) = {currentYear}) AND UserState = '{selectStateName}' AND (SecurityUserId <> 1) ORDER BY SecurityLogbookId DESC";
-		//		}
-
-		//		List<SecurityLogbookModel> logbook = new();
-		//		var sql = $"SELECT  SecurityLogbookId, MONTH(SecurityLogbookDate) AS Month, YEAR(SecurityLogbookDate) AS Year, SecurityLogbookDate, DeviceIP, DeviceType, DeviceBrowser, DeviceOperatingSystem, SecurityUserId, UserFullName, UserLogin, UserState, ActionDescription " +
-		//		$"FROM dbo.SecurityLogbook {whereCondition}";
-		//		SqlCommand cmd = new(sql, sqlConnection);
-
-		//		using (SqlDataReader dr = cmd.ExecuteReader())
-		//		{
-		//			while (dr.Read())
-		//			{
-		//				logbook.Add(new SecurityLogbookModel
-		//				{
-		//					SecurityLogbookId = (int)dr["SecurityLogbookId"],
-		//					SecurityLogbookDate = (DateTime)dr["SecurityLogbookDate"],
-		//					DeviceIP = (string)dr["DeviceIP"],
-		//					DeviceType = dr["DeviceType"] != null ? (string)dr["DeviceType"] : "NO DISPONIBLE",
-		//					DeviceOperatingSystem = dr["DeviceOperatingSystem"] != null ? (string)dr["DeviceOperatingSystem"] : "NO DISPONIBLE",
-		//					DeviceBrowser = dr["DeviceBrowser"] != null ? (string)dr["DeviceBrowser"] : "NO DISPONIBLE",
-		//					UserFullName = (string)dr["UserFullName"],
-		//					UserLogin = (string)dr["UserLogin"],
-		//					UserState = (string)dr["UserState"],
-		//					ActionDescription = (string)dr["ActionDescription"],
-		//				});
-		//			}
-		//		}
-
-		//		return logbook.OrderByDescending(id => id.SecurityLogbookId).ToList();
-		//	}
-		//}
-
-		//public List<SecurityLogbookModel> GetLogbookAllBySelectedStateName(string selectedStateName, string filterType)
-		//{
-		//	int currentMonth = DateTime.Now.Month;
-		//	int currentYear = DateTime.Now.Year;
-		//	string currentState = selectedStateName.ToLower() == "todos los estados" ? string.Empty : $"AND UserState = '{selectedStateName}'";
-		//	string whereCondition = string.Empty;
-
-		//	using (SqlConnection sqlConnection = GetConnection())
-		//	{
-		//		if (sqlConnection.State == ConnectionState.Closed)
-		//		{
-		//			sqlConnection.Open();
-		//		}
-
-		//		if(filterType =="currentMonth")
-		//		{
-		//			whereCondition = $"WHERE (MONTH(SecurityLogbookDate) = {currentMonth}) AND (YEAR(SecurityLogbookDate) = {currentYear}) {currentState} ORDER BY SecurityLogbookId DESC";
-		//		}
-		//		else
-		//		{
-		//			whereCondition = $"WHERE (MONTH(SecurityLogbookDate) = {currentMonth} OR MONTH(SecurityLogbookDate) = {currentMonth - 1}) AND (YEAR(SecurityLogbookDate) = {currentYear}) {currentState} ORDER BY SecurityLogbookId DESC";
-		//		}
-
-		//		List<SecurityLogbookModel> logbook = new();
-		//		var sql = $"SELECT  SecurityLogbookId, MONTH(SecurityLogbookDate) AS Month, YEAR(SecurityLogbookDate) AS Year, SecurityLogbookDate, DeviceIP, DeviceType, DeviceBrowser, DeviceOperatingSystem, SecurityUserId, UserFullName, UserLogin, UserState, ActionDescription " +
-		//		$"FROM dbo.SecurityLogbook {whereCondition}";
-		//		SqlCommand cmd = new(sql, sqlConnection);
-
-		//		using (SqlDataReader dr = cmd.ExecuteReader())
-		//		{
-		//			while (dr.Read())
-		//			{
-		//				logbook.Add(new SecurityLogbookModel
-		//				{
-		//					SecurityLogbookId = (int)dr["SecurityLogbookId"],
-		//					SecurityLogbookDate = (DateTime)dr["SecurityLogbookDate"],
-		//					DeviceIP = (string)dr["DeviceIP"],
-		//					DeviceType = dr["DeviceType"] != null ? (string)dr["DeviceType"] : "NO DISPONIBLE",
-		//					DeviceOperatingSystem = dr["DeviceOperatingSystem"] != null ? (string)dr["DeviceOperatingSystem"] : "NO DISPONIBLE",
-		//					DeviceBrowser = dr["DeviceBrowser"] != null ? (string)dr["DeviceBrowser"] : "NO DISPONIBLE",
-		//					UserFullName = (string)dr["UserFullName"],
-		//					UserLogin = (string)dr["UserLogin"],
-		//					UserState = (string)dr["UserState"],
-		//					ActionDescription = (string)dr["ActionDescription"],
-		//				});
-		//			}
-		//		}
-
-		//		return logbook.OrderByDescending(id => id.SecurityLogbookId).ToList();
-		//	}
-		//}
-
-		//**************************************************************************************
-
 		public async Task<object> GetLogbookServerSideAsync(
 			int draw, int start, int length, string searchValue,
 			string selectedStateName, string filterType, int securityGroupId)
@@ -1264,7 +1142,11 @@ namespace SuperTransp.Core
 			if (securityGroupId != 1) whereClause += "  AND SecurityUserId <> 1";
 			if (hasStateFilter) whereClause += " AND UserState = @StateName";
 			if (!string.IsNullOrEmpty(searchValue))
-				whereClause += " AND (UserFullName LIKE @Search OR UserLogin LIKE @Search OR DeviceIP LIKE @Search OR ActionDescription LIKE @Search OR DeviceBrowser LIKE @Search)";
+				whereClause += @" AND (UserFullName LIKE @Search OR UserLogin LIKE @Search OR DeviceIP LIKE @Search
+					OR ActionDescription LIKE @Search OR DeviceBrowser LIKE @Search
+					OR UserState LIKE @Search OR DeviceType LIKE @Search OR DeviceOperatingSystem LIKE @Search
+					OR CONVERT(varchar(10), SecurityLogbookId) LIKE @Search
+					OR CONVERT(varchar(10), SecurityLogbookDate, 103) LIKE @Search)";
 
 			await using var cn = GetConnection();
 			await cn.OpenAsync();

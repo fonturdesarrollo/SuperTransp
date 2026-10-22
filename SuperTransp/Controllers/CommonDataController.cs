@@ -184,6 +184,61 @@ namespace SuperTransp.Controllers
 			}
 		}
 
+		public IActionResult AddGasStation()
+		{
+			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+			{
+				if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 26))
+				{
+					return RedirectToAction("Login", "Security");
+				}
+
+				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+				ViewBag.States = _geography.GetAllStates();
+				ViewBag.GasStations = _commonData.GetGasStationsAll();
+			}
+
+			return View(new GastStationViewModel { GasStationId = 0 });
+		}
+
+		public JsonResult GetMunicipalitiesByStateId(int stateId)
+		{
+			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+			{
+				return Json(_geography.GetMunicipalityByStateId(stateId));
+			}
+			return Json(null);
+		}
+
+		[HttpPost]
+		public IActionResult AddGasStation(GastStationViewModel model)
+		{
+			try
+			{
+				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
+				{
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 26))
+					{
+						return RedirectToAction("Login", "Security");
+					}
+
+					int result = _commonData.GasStationAddOrEdit(model);
+
+					if (result > 0)
+					{
+						TempData["SuccessMessage"] = "Datos actualizados correctamente";
+						return RedirectToAction("AddGasStation");
+					}
+				}
+
+				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message.ToString() });
+			}
+		}
+
 		public JsonResult CheckExistingValues(string paramValue1)
 		{
 			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))

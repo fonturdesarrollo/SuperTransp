@@ -84,4 +84,64 @@ public class ApiController : ControllerBase
 			return BadRequest(e.Message);
 		}
 	}
+
+	[HttpGet("representative/{representativeIdentityDocument}")]
+	public IActionResult GetRepresentativeByIdentityDocument(int representativeIdentityDocument)
+	{
+		try
+		{
+			var model = _apiCore.MapToRepresentativeByIdentityDocument(representativeIdentityDocument);
+
+			if (model != null)
+			{
+				return Ok(model);
+			}
+
+			return BadRequest("No existen representantes registrados.");
+		}
+		catch (Exception e)
+		{
+			return BadRequest(e.Message);
+		}
+	}
+
+	[HttpGet("driver/{driverIdentityDocument}")]
+	public IActionResult GetDriverByIdentityDocument(int driverIdentityDocument)
+	{
+		try
+		{
+			var model = _apiCore.MapToDriverByIdentityDocument(driverIdentityDocument);
+
+			if (model != null)
+			{
+				return Ok(model);
+			}
+
+			return BadRequest("No existen socios registrados.");
+		}
+		catch (Exception e)
+		{
+			return BadRequest(e.Message);
+		}
+	}
+
+	[HttpGet("driver-ptg/{driverIdentityDocument}")]
+	public IActionResult GetDriverPTGByIdentityDocument(int driverIdentityDocument)
+	{
+		try
+		{
+			var model = _apiCore.MapToDriverPTGByIdentityDocument(driverIdentityDocument);
+
+			if (model != null)
+			{
+				return Ok(model);
+			}
+
+			return BadRequest("No existen socios registrados.");
+		}
+		catch (Exception e)
+		{
+			return BadRequest(e.Message);
+		}
+	}
 }

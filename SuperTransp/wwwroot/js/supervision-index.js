@@ -53,16 +53,19 @@ document.addEventListener("DOMContentLoaded", function () {
 	inputElement.addEventListener("input", function () {
 		var value = inputElement.value;
 
-		if (value.length > 0 && !/^[JjVv]/.test(value[0])) {
+		if (value.length > 0 && !/^[JjVvCc]/.test(value[0])) {
 			value = "J" + value;
 		}
 
-		value = value.replace(/[^JjVv0-9]/g, "");
+		value = value.replace(/[^JjVvCc0-9]/g, "");
 
 		if (/^[Jj]/.test(value)) {
 			value = "J" + value.slice(1);
 		} else if (/^[Vv]/.test(value)) {
 			value = "V" + value.slice(1);
+		}
+		else if (/^[Cc]/.test(value)) {
+			value = "C" + value.slice(1);
 		}
 
 		if (value.length > 1 && /^[JV]/.test(value[0])) {

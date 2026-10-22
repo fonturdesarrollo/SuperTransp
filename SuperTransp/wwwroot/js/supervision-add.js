@@ -198,13 +198,13 @@ function isOkToSave() {
 
     if ($("#DriverWithVehicle").val() == "" && $("#DriverWithVehicle").val() != "False" && !firstInvalidField) {
         firstInvalidField = "#DriverWithVehicle";
-        message = "Debe indicar si el socio posee o no vehículo";
+        message = "Debe indicar si el asociado posee o no vehículo";
     }
 
     if ($("#DriverWithVehicle option:selected").text() == "Sí") {
         if ($("#InPerson").val() == "" && !firstInvalidField) {
             firstInvalidField = "#InPerson";
-            message = "Debe indicar si el socio se presentó o no a la supervisión";
+            message = "Debe indicar si el asociado se presentó o no a la supervisión";
         }
 
         if ($("#WorkingVehicle").val() == "" && !firstInvalidField) {
@@ -239,7 +239,7 @@ function isOkToSave() {
 
         if ($("#Passengers").val() == "" && !firstInvalidField) {
             firstInvalidField = "#Passengers";
-            message = "Debe seleccionar la cantidad de puestos";
+            message = "Debe seleccionar la cantidad de asientos";
         }
 
         if ($("#RimId").val() == "" && !firstInvalidField) {

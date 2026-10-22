@@ -64,9 +64,9 @@
 			<h2>Menu</h2>
 			<ul>
 				<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
-				<li>@Html.ActionLink("Organizaciones con socios supervisados", "PublicTransportGroupSupervisedDriversStatistics", "Reports")</li>
-				<li>@Html.ActionLink("Gráficos Organizaciones por estado", "PublicTransportGroupStatisticsInState", "Reports")</li>
-				<li>@Html.ActionLink("Gráficos vehículos supervisados por estado", "SupervisedDriversStatisticsInEstate", "Reports")</li>
+				<li>@Html.ActionLink("Organizaciones con asociados supervisados", "PublicTransportGroupSupervisedDriversStatistics", "Reports")</li>
+                 <li>@Html.ActionLink("Estadísticas Organizaciones por estado", "DashboardPTG", "Reports")</li>
+				<li>@Html.ActionLink("Estadísticas de Supervisión", "Dashboard", "Reports")</li>
 				<li>@Html.ActionLink("Reportes/Consultas", "Index", "Reports")</li>
 				<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 			</ul>
@@ -82,6 +82,7 @@
 						<thead>
 							<tr>
 								<th>Línea</th>
+								<th>Rif</th>
 								<th>Estado</th>
 								<th>Supervisor</th>
 								<th>Fecha Supervisión</th>
@@ -92,8 +93,28 @@
 							{
 								<tr>
 									<td>
-										@Html.ActionLink(@ptg.PTGCompleteName, "EditSummary", "Reports",
-										new { supervisionSummaryId = ptg.SupervisionSummaryId, publicTransportGroupId = ptg.PublicTransportGroupId })
+										@Html.ActionLink(
+											ptg.PTGCompleteName, 
+											"EditSummary", 
+											"Reports", 
+											new { 
+												supervisionSummaryId = ptg.SupervisionSummaryId, 
+												publicTransportGroupId = ptg.PublicTransportGroupId 
+											}, 
+											new { target = "_blank" }
+										)
+									</td>
+									<td>
+										@Html.ActionLink(
+											ptg.PublicTransportGroupRif, 
+											"EditSummary", 
+											"Reports", 
+											new { 
+												supervisionSummaryId = ptg.SupervisionSummaryId, 
+												publicTransportGroupId = ptg.PublicTransportGroupId 
+											}, 
+											new { target = "_blank" }
+										)
 									</td>
 									<td>@ptg.StateName</td>
 									<td>@ptg.UserFullName</td>

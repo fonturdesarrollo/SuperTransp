@@ -185,6 +185,20 @@
 		handleSaveRequest(event);
 	});
 
+	$("body").on("click", "#saveRequestX", function (event) {
+		event.preventDefault();
+		if (confirm("¿Está seguro de que desea actualizar los registros?")) {
+			$(this).closest("form")[0].submit();
+		}
+	});
+
+	$("body").on("click", "#saveRequestXX", function (event) {
+		event.preventDefault();
+		if (confirm("¿Está seguro de que desea actualizar los registros?")) {
+			$(this).closest("form")[0].submit();
+		}
+	});
+
 	$("form").on("submit", function (e) {
 		e.preventDefault();
 		if ($(this).valid()) {
@@ -223,18 +237,18 @@
 			}
 		};
 
-		validateField(isEmpty("DriverWithVehicle") && val("DriverWithVehicle") !== "False", "DriverWithVehicle", "Debe indicar si el socio posee o no vehículo");
+		validateField(isEmpty("DriverWithVehicle") && val("DriverWithVehicle") !== "False", "DriverWithVehicle", "Debe indicar si el asociado posee o no vehículo");
 
 		if ($("#DriverWithVehicle option:selected").text() === "Sí") {
 			const requiredFields = [
-				["InPerson", "Debe indicar si el socio se presentó o no a la supervisión"],
+				["InPerson", "Debe indicar si el asociado se presentó o no a la supervisión"],
 				["WorkingVehicle", "Debe indicar si el vehículo está operativo o no"],
 				["FailureTypeId", "Debe indicar el tipo de falla", () => val("WorkingVehicle") === "False"],
 				["Plate", "Debe colocar la placa"],
 				["Year", "Debe seleccionar el año del vehículo"],
 				["Make", "Debe seleccionar la marca del vehículo"],
 				["VehicleDataId", "Debe seleccionar el modelo del vehículo"],
-				["Passengers", "Debe seleccionar la cantidad de puestos"],
+				["Passengers", "Debe seleccionar la cantidad de asientos"],
 				["RimId", "Debe seleccionar el tipo de neumáticos"],
 				["Wheels", "Debe seleccionar la cantidad de neumáticos"],
 				["FuelTypeId", "Debe seleccionar el tipo de combustible"],
@@ -374,20 +388,37 @@
 		});
 
 		if ($('#DriverWithVehicle').val() == "True") {
+			const btn = document.getElementById('saveRequestXX');
+			btn.style.display = 'none';
 			$('#additionalFieldsX').css({ visibility: 'visible', opacity: '1', height: 'auto', overflow: 'visible' });
 			$('#additionalFields').css({ visibility: 'visible', opacity: '1', height: 'auto', overflow: 'visible' });
 		} else {
 			if ($('#InPerson').val() === "False") {
 				$('#InPerson').val("");
 			}
+			const btn = document.getElementById('saveRequestXX');
+			btn.style.display = '';
 		}
 
 		if ($('#InPerson').val() == "False") {
-			$('#additionalFields').css({ opacity: '0', visibility: 'hidden', height: '0', overflow: 'hidden' });
+			const btn = document.getElementById('saveRequestX');
+			if ($('#VehicleDataId').val() == "" || $('#VehicleDataId').val() == null) {
+				$('#additionalFields').css({ opacity: '0', visibility: 'hidden', height: '0', overflow: 'hidden' });
+				btn.style.display = '';
+			} else {
+				btn.style.display = 'none';
+				$('#additionalFieldsX').css({ visibility: 'visible', opacity: '1', height: 'auto', overflow: 'visible' });
+				$('#additionalFields').css({ visibility: 'visible', opacity: '1', height: 'auto', overflow: 'visible' });
+			}
+		} else {
+			const btn = document.getElementById('saveRequestX');
+			btn.style.display = 'none';
 		}
 
 		$('#DriverWithVehicle').change(function (event) {
 			if ($(this).val() === "True") {
+				const btn = document.getElementById('saveRequestXX');
+				btn.style.display = 'none';
 				$('#additionalFieldsX').css({ visibility: 'visible', opacity: '1', height: 'auto', overflow: 'visible' });
 			} else if ($(this).val() === "False") {
 				$('#additionalFieldsX').css({ opacity: '0', visibility: 'hidden', height: '0', overflow: 'hidden' });

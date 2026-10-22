@@ -26,6 +26,9 @@ namespace SuperTransp.Models
 		public string? RepresentativeName { get; set; }
 		[Required(ErrorMessage = "Teléfono del representante es requerido")]
 		public string? RepresentativePhone { get; set; }
+		// TEMP-EMAIL: Required + EmailAddress removed temporarily (empty email is saved as N/D). Restore later.
+		[StringLength(80, ErrorMessage = "Email del representante no puede exceder 80 caracteres")]
+		public string? RepresentativeEmail { get; set; }
 		public DateTime PublicTransportGroupIdModifiedDate { get; set; }
 		public string? PTGCompleteName { get; set; }
 		public string? StateName { get; set; }
@@ -38,10 +41,13 @@ namespace SuperTransp.Models
 		public string? DriverFullName { get; set; }
 		public int PartnerNumber { get; set; }
 		public string? DriverPhone { get; set; }
+		public string? DriverEmail { get; set; }
+		public string? DriverSexName { get; set; }
 		public string? SexName { get; set; }
 		public DateTime? BirthDate { get; set; }
 		public bool? SupervisionStatus { get; set; }
 		public string? SupervisionStatusName { get; set; }
+		public string? SupervisionPostCloseStatusName { get; set; }
 		public int TotalDrivers { get; set; }
 		public int TotalSupervisedDrivers { get; set; }
 		public int? SupervisionId { get; set; }
@@ -83,5 +89,9 @@ namespace SuperTransp.Models
 		public int TotalUniversePTGInState { get; set; }
 		public int TotalUniverseDriversInState { get; set; }
 		public int DriverPublicTransportGroupId { get; set; }
+		public int TotalShowedUpDrivers { get; set; }
+		public DateTime? SupervisionLastRoundDate { get; set; }
+		public int GasStationId { get; set; }
+		public List<int> GasStationIds { get; set; } = new List<int>();
 	}
 }

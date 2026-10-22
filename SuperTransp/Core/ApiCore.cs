@@ -8,11 +8,13 @@ namespace SuperTransp.Core
 	{
 		private readonly ISupervision _supervision;
 		private IPublicTransportGroup _publicTransportGroup;
+		private IDriver _driver;
 		private readonly ISecurity _security;
-		public ApiCore(ISupervision supervision, IPublicTransportGroup publicTransportGroup, ISecurity security)
+		public ApiCore(ISupervision supervision, IPublicTransportGroup publicTransportGroup, ISecurity security, IDriver driver)
 		{
 			_supervision = supervision;
 			_publicTransportGroup = publicTransportGroup;
+			_driver = driver;
 			_security = security;
 		}
 
@@ -141,6 +143,104 @@ namespace SuperTransp.Core
 			};
 
 			_security.AddLogbook(0, false, $"API GET Consulta de datos de la organizacion por RIF: {publicTransportGroupRif}");
+
+			return model;
+		}
+
+		public List<RepresentativeModel> MapToRepresentativeByIdentityDocument(int representativeIdentityDocument)
+		{
+			var ptgData = _publicTransportGroup.GetAllRepresentativesByIdentityDocument(representativeIdentityDocument);
+
+			if (ptgData == null || ptgData.Count == 0)
+				return null;
+
+			var model = ptgData
+				.GroupBy(x => x.PublicTransportGroupId)
+				.Select(g => g.First())
+				.Select(x => new RepresentativeModel
+				{
+					RepresentativeIdentityDocument = x.RepresentativeIdentityDocument ?? 0,
+					RepresentativeName = x.RepresentativeName,
+					RepresentativePhone = x.RepresentativePhone,
+					RepresentativeEmail = x.RepresentativeEmail,
+					PublicTransportGroupId = x.PublicTransportGroupId,
+					PublicTransportGroupRif = x.PublicTransportGroupRif,
+					PTGCompleteName = x.PTGCompleteName,
+					StateName = x.StateName,
+					MunicipalityName = x.MunicipalityName,
+					UnionName = x.UnionName,
+					ModeName = x.ModeName
+				}).ToList();
+
+			_security.AddLogbook(0, false, $"API GET Consulta de datos del representante por cedula: {representativeIdentityDocument}");
+
+			return model;
+		}
+
+		public List<DriverModel> MapToDriverByIdentityDocument(int driverIdentityDocument)
+		{
+			var driverData = _supervision.GetDriverByDriverIdentityDocument(driverIdentityDocument);
+
+			if (driverData == null || driverData.Count == 0)
+				return null;
+
+			var model = driverData.Select(x => new DriverModel
+			{
+				DriverId = x.DriverId,
+				PublicTransportGroupId = x.PublicTransportGroupId,
+				DriverPublicTransportGroupId = x.DriverPublicTransportGroupId,
+				DriverIdentityDocument = x.DriverIdentityDocument,
+				DriverFullName = x.DriverFullName,
+				PartnerNumber = x.PartnerNumber,
+				DriverPhone = x.DriverPhone,
+				DriverEmail = x.DriverEmail,
+				PTGCompleteName = x.PTGCompleteName,
+				ModeName = x.ModeName,
+				UnionName = x.UnionName,
+				SexName = x.SexName,
+				Birthdate = (DateTime)x.BirthDate,
+				StateName = x.StateName,
+				MunicipalityName = x.MunicipalityName,
+				PublicTransportGroupRif = x.PublicTransportGroupRif,
+				StateId = x.StateId,
+				VehiclePlate = x.Plate,
+				VehicleYear = x.Year,
+				VehicleMake = x.Make,
+				VehicleModel = x.Model,
+				VehiclePassengers = x.Passengers,
+			}).ToList();
+
+			_security.AddLogbook(0, false, $"API GET Consulta de datos del socio por cedula: {driverIdentityDocument}");
+
+			return model;
+		}
+
+		public List<DriverByPTGModel> MapToDriverPTGByIdentityDocument(int driverIdentityDocument)
+		{
+			var driverData = _supervision.GetDriverPTGByIdentityDocument(driverIdentityDocument);
+
+			if (driverData == null || driverData.Count == 0)
+				return null;
+
+			var model = driverData.Select(x => new DriverByPTGModel
+			{
+				DriverId = x.DriverId,
+				PublicTransportGroupId = x.PublicTransportGroupId,
+				DriverIdentityDocument = x.DriverIdentityDocument,
+				DriverFullName = x.DriverFullName,
+				DriverPhone = x.DriverPhone,
+				DriverEmail = x.DriverEmail,
+				PTGCompleteName = x.PTGCompleteName,
+				SexName = x.SexName,
+				Birthdate = (DateTime)x.BirthDate,
+				StateName = x.StateName,
+				PublicTransportGroupRif = x.PublicTransportGroupRif,
+				ModeName = x.ModeName,
+				UnionName = x.UnionName,
+				MunicipalityName = x.MunicipalityName,
+			}).ToList();
+
+			_security.AddLogbook(0, false, $"API GET Consulta de datos del socio por cedula: {driverIdentityDocument}");
 
 			return model;
 		}

@@ -54,7 +54,7 @@
 				<ul>
 					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
 					<li>@Html.ActionLink("Resumenes de supervision", "SummaryList", "Reports")</li>
-					<li>@Html.ActionLink("Organizaciones con socios supervisados", "PublicTransportGroupSupervisedDriversStatistics", "Reports")</li>
+					<li>@Html.ActionLink("Organizaciones con asociados supervisados", "PublicTransportGroupSupervisedDriversStatistics", "Reports")</li>
 					<li>@Html.ActionLink("Gráficos Organizaciones por estado", "PublicTransportGroupStatisticsInState", "Reports")</li>
 					<li>@Html.ActionLink("Gráficos vehículos supervisados por estado", "SupervisedDriversStatisticsInEstate", "Reports")</li>
 					<li>@Html.ActionLink("Reportes/Consultas", "Index", "Reports")</li>
@@ -69,6 +69,8 @@
 					<section>
 						<h1 style="color:#4cbece">Resumen de Supervisión</h1>
 						<label>Organización: @Model.PTGCompleteName</label>
+						<br />
+						<label>RIF: @Model.PublicTransportGroupRif</label>
 						<br />
 						<label>Estado: @Model.StateName.ToUpper()</label>
 						<br />

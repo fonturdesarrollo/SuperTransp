@@ -91,6 +91,10 @@ document.addEventListener("DOMContentLoaded", function () {
     handleInput("[name='DriverPhone']", function (value) {
         return value.replace(/[^0-9]/g, "");
     });
+
+    handleInput("[name='DriverEmail']", function (value) {
+        return value.toLowerCase().replace(/\s/g, "");
+    });
 });
 
 $("#saveRequest").on("click", function (event) {
@@ -134,7 +138,7 @@ $("#saveRequest").on("click", function (event) {
                         alert("Registro actualizado correctamente.");
 
                         $("form")[0].reset();
-                        $("#DriverFullName, #DriverPhone").prop("readonly", false);
+                        $("#DriverFullName, #DriverPhone, #DriverEmail").prop("readonly", false);
                         $("#SexId").removeClass("readonly-style").off("click");
                         $("#publicTransportGroupId").val(window.publicTransportGroupId);
                         $("#PTGCompleteName").val(window.ptgCompleteName);
@@ -151,13 +155,13 @@ $("#saveRequest").on("click", function (event) {
                     $("#saveRequest").prop("disabled", false);
                 },
                 error: function () {
-                    alert("Error en el servidor al guardar el socio.");
+                    alert("Error en el servidor al guardar el asociado.");
                     $("#saveRequest").prop("disabled", false);
                 }
             });
         },
         error: function () {
-            alert("Error al validar los datos del socio.");
+            alert("Error al validar los datos del asociado.");
             $("#saveRequest").prop("disabled", false);
         }
     });
@@ -189,7 +193,7 @@ function isOkToSave() {
 
     if ($("#DriverIdentityDocument").val() == "" && !firstInvalidField) {
         firstInvalidField = "#DriverIdentityDocument";
-        message = "Debe colocar la cédula del socio";
+        message = "Debe colocar la cédula del asociado";
     }
 
     if (!firstInvalidField) {
@@ -203,7 +207,7 @@ function isOkToSave() {
 
     if ($("#DriverFullName").val() == "" && !firstInvalidField) {
         firstInvalidField = "#DriverFullName";
-        message = "Debe colocar el nombre del socio";
+        message = "Debe colocar el nombre del asociado";
     } else {
         const driverFullName = $("#DriverFullName").val().trim();
         const regex = /^[a-zA-ZñÑ\s]{5,}$/;
@@ -228,12 +232,12 @@ function isOkToSave() {
 
     if ($("#PartnerNumber").val() != "" &&  $("#PartnerNumber").val() == "0" && !firstInvalidField) {
         firstInvalidField = "#PartnerNumber";
-        message = "El número de socio no puede ser cero";
+        message = "El número de asociado no puede ser cero";
     }
 
     if ($("#PartnerNumber").val() == "" && !firstInvalidField) {
         firstInvalidField = "#PartnerNumber";
-        message = "Debe colocar el número de socio";
+        message = "Debe colocar el número de asociado";
     }
 
     if ($("#RepresentativePhone").val() == "" && !firstInvalidField) {
@@ -249,6 +253,8 @@ function isOkToSave() {
             message = "Debe colocar un número de télefono válido";
         }
     }
+
+    // TEMP-EMAIL: email required/format validation removed temporarily (empty is saved as N/D). Restore later.
 
     if (firstInvalidField) {
         showAlert(message, firstInvalidField);
@@ -332,6 +338,7 @@ $(document).ready(function () {
                     window.driverId = response.driverId;
                     $("#DriverFullName").val(response.driverFullName);
                     $("#DriverPhone").val(response.driverPhone);
+                    $("#DriverEmail").val(response.driverEmail || "");
                     $("#SexId").val(response.driverSexId);
                     $("#Birthdate").val(response.driverBirthDate);
 
@@ -340,6 +347,7 @@ $(document).ready(function () {
 
                     $("#DriverFullName").prop("readonly", true);
                     $("#DriverPhone").prop("readonly", true);
+                    $("#DriverEmail").prop("readonly", !!response.driverEmail);
                     $("#Birthdate").prop("readonly", true);
 
                     $("#PartnerNumber").focus();
@@ -349,9 +357,11 @@ $(document).ready(function () {
                     $('#SexId').removeClass('readonly-style');
                     $("#DriverFullName").prop("readonly", false);
                     $("#DriverPhone").prop("readonly", false);
+                    $("#DriverEmail").prop("readonly", false);
 
                     $("#DriverFullName").val("");
                     $("#DriverPhone").val("");
+                    $("#DriverEmail").val("");
 
                     $("#DriverFullName").focus();
                 }
@@ -369,6 +379,10 @@ $(document).ready(function () {
     }
 
     var controllerUrl = window.getDriversByPTGUrl + `?publicTransportGroupId=${window.publicTransportGroupId}`;
+    $('#loadingSpinner').show();
+    var controllerUrl = window.getDriversByPTGUrl + `?publicTransportGroupId=${window.publicTransportGroupId}`;
+
+    $('#loadingSpinner').show();
 
     $('#inventory').DataTable({
         ajax: {
@@ -384,11 +398,15 @@ $(document).ready(function () {
             { data: 'nacimiento' },
             { data: 'modificar' },
             { data: 'eliminar' },
-            { data: 'qr' }
+            { data: 'cambiarPlaca' }
+/*            { data: 'qr' },*/
         ],
         createdRow: function (row, data, dataIndex) {
             let ptgGUID = `${data.ptgGUID}`;
             $(row).attr('data-ptgguid', ptgGUID);
+        },
+        initComplete: function (settings, json) {
+            $('#loadingSpinner').hide();
         },
         stateSave: true,
         language: {

@@ -28,6 +28,7 @@ namespace SuperTransp.Core
 			public int AddOrEditGroupModules(SecurityGroupModuleModel model);
 			public int DeleteGroupModules(int securityGroupModuleId);
 			public int ChangePassword(SecurityUserViewModel model);
+			public int ResetPassword(int securityUserId);
 			public bool OldPasswordValid(int securityUserId, string oldPassword);
 			public string? Encrypt(string plainText);
 			public string? Decrypt(string encryptedText);
@@ -83,6 +84,7 @@ namespace SuperTransp.Core
 			public int AddOrEdit(PublicTransportGroupViewModel model);
 			public PublicTransportGroupViewModel GetPublicTransportGroupById(int publicTransportGroupId);
 			public string? RegisteredRif(string publicTransportGroupRif);
+			public bool EmailUsedByOtherRepresentative(string representativeEmail, int representativeIdentityDocument); // TEMP-EMAIL-UNIQUE
 			public List<PublicTransportGroupViewModel> GetAll();
 			public List<PublicTransportGroupViewModel> GetAllByStateId(int stateId);
 			public List<PublicTransportGroupViewModel> GetAllStatisticsByStateId(int stateId);
@@ -90,16 +92,19 @@ namespace SuperTransp.Core
 			public List<PublicTransportGroupViewModel> GetAllBySupervisedDriversAndStateIdAndNotSummaryAdded(int stateId);
 			public List<PublicTransportGroupViewModel> GetAllBySupervisedDriversAndNotSummaryAdded();
 			public PublicTransportGroupViewModel GetByGUIDId(string guidId);
+			public List<PublicTransportGroupViewModel> GetAllRepresentativesByIdentityDocument(int representativeIdentityDocument);
 		}
 		public interface IDriver
 		{
-			public int AddOrEdit(DriverViewModel model);
+			public int AddOrEdit(DriverViewModel model, bool updatePlate = false, bool updatePlateAddDriver = false);
+			public int UpdateDriverPlate(DriverViewModel model);
 			public List<DriverViewModel> GetByPublicTransportGroupId(int publicTransportGroupId);
 			public DriverViewModel GetByDriverPublicTransportGroupId(int driverPublicTransportGroupId);
 			public DriverViewModel GetByIdentityDocument(int driverIdentityDocument);
 			public List<DriverViewModel> GetAllByIdentityDocument(int driverIdentityDocument);
 			public bool RegisteredDocumentId(int driverIdentityDocument, int publicTransportGroupId);
 			public bool RegisteredPhone(string driverPhone, int publicTransportGroupId);
+			public bool EmailUsedByOtherIdentityDocument(string driverEmail, int driverIdentityDocument); // TEMP-EMAIL-UNIQUE
 			public bool RegisteredPartnerNumber(int partnerNumber, int publicTransportGroupId);
 			public DriverViewModel GetById(int driverId, int publicTransportGroupId);
 			public DriverViewModel GetPartnerById(int driverPublicTransportGroupId);
@@ -112,19 +117,26 @@ namespace SuperTransp.Core
 			public int AddOrEdit(SupervisionViewModel model);
 			public int AddSimple(SupervisionViewModel model);
 			public int AddOrEditRound(SupervisionRoundModel model);
+			public int CloseRound(SupervisionRoundModel model);
 			public SupervisionViewModel GetById(int supervisionId);
+			public SupervisionViewModel GetByPublicTransportGroupIdAndDriverPublicTransportGroupIdAndPartnerNumberStateId(int publicTransportGroupId, int driverId, int partnerNumber, int stateId);
 			public SupervisionViewModel GetByPublicTransportGroupIdAndDriverIdAndPartnerNumberStateId(int publicTransportGroupId, int driverId, int partnerNumber, int stateId);
 			public SupervisionViewModel GetByPublicTransportGroupGUIDAndPartnerNumber(string publicTransportGroupGUID, int partnerNumber);
 			public List<PublicTransportGroupViewModel> GetDriverPublicTransportGroupByStateIdAndPTGRif(int stateId, string ptgRif);
 			public List<PublicTransportGroupViewModel> GetDriverPublicTransportGroupByPtgId(int publicTransportGroupId);
 			public List<PublicTransportGroupViewModel> GetDriverByDriverIdentityDocument(int driverIdentityDocument);
+			public List<PublicTransportGroupViewModel> GetDriverPTGByIdentityDocument(int driverIdentityDocument);
 			public List<PublicTransportGroupViewModel> GetAllDriverPublicTransportGroup(string ptgRif);
+			public List<PublicTransportGroupViewModel> GetSupervisionPlate(string plate, int stateId);
 			public List<PublicTransportGroupViewModel> RegisteredPlate(string plate);
 			public int AddOrEditSummary(SupervisionSummaryViewModel model);
-			public List<SupervisionSummaryViewModel> GetAllSupervisionSummary();
-			public List<SupervisionSummaryViewModel> GetSupervisionSummaryByStateId(int stateId);
-			public SupervisionSummaryViewModel GetSupervisionSummaryById(int supervisionSummaryId);
+			public List<SupervisionSummaryViewModel> GetAllSupervisionSummary(int stateId = 0, int supervisionRoundId = 0);
+			public List<SupervisionSummaryViewModel> GetSupervisionSummaryByStateId(int stateId, int supervisionRoundId = 0);
+			public SupervisionSummaryViewModel GetSupervisionSummaryById(int supervisionSummaryId, bool isClosed = false);
 			public SupervisionRoundModel GetActiveSupervisionRoundByStateId(int stateId);
+			public List<SupervisionRoundModel> GetClosedRoundsByStateId(int stateId);
+			public List<SupervisionRoundModel> GetSupervisionRoundsByStateId(int stateId);
+			public SupervisionRoundModel GetClosedRoundsBySupervisionRoundIdAndStateId(int supervisionRoundId, int stateId);
 			public bool IsActiveSupervisionRoundByStateMonthAndYear(int stateId, int month, int year);
 			public bool IsFinishedSupervisionRoundByStateMonthAndYear(int stateId, int month, int year);
 			public bool IsActiveSupervisionRoundByStateId(int stateId);
@@ -133,6 +145,7 @@ namespace SuperTransp.Core
 			public bool IsUserSupervisingPublicTransportGroup(int securityUserId, int publicTransportGroupId);
 			public bool DeletePicturesByPTGIdAndPartnerNumber(int publicTransportGroupId, int partnerNumber);
 			public List<SupervisionPictures> GetPicturesByPTGIdAndDriverPublicTransportGroupId(int publicTransportGroupId, int driverPublicTransportGroupId);
+			public bool DeleteSupervisionSummaryById(int supervisionSummaryId);
 		}
 
 		public interface ICommonData
@@ -157,6 +170,14 @@ namespace SuperTransp.Core
 			public int AddOrEditMakeModel(CommonDataViewModel model);
 			public CommonDataViewModel GetCommonDataValueByName(string commonDataName);
 			public List<CommonDataViewModel> GetSex();
+			public List<GastStationViewModel> GetGasStationsAll();
+			public List<GastStationViewModel> GetGasStationsByStateId(int stateId);
+			public List<GastStationViewModel> GetGasStationsByPTGId(int publicTransportGroupId);
+			public List<PublicTransportGroupViewModel> GetPTGsByGasStationId(int gasStationId);
+			public (int TotalStates, int TotalMunicipalities, int TotalStations, int TotalPTG) GetGasStationsGlobalStats();
+			public int GasStationAddOrEdit(GastStationViewModel model);
+			public List<BankViewModel> GetBanksAll();
+			public List<AccounTypeViewModel> GetAccounTypesAll();
 		}
 
 		public interface IReport
@@ -179,7 +200,8 @@ namespace SuperTransp.Core
 		}
 
 		public interface IExcelExporter
-		{			
+		{
+			public Task<byte[]> GenerateExcelPublicTransportGroupAsync(int stateId);
 			public Task<byte[]> GenerateExcelPublicTransportGroupAndDriversAsync(int stateId);
 			public Task<byte[]> GenerateExcelSupervisionDetailAsync(int stateId);
 		}
@@ -195,6 +217,37 @@ namespace SuperTransp.Core
 			public DriversModel? MapToDriversModel(int idCard);
 			public RoutesModel? MapToRoutesModel();
 			public RoutesByRifModel? MapToRoutesByRifModel(string publicTransportGroupRif);
+			public List<RepresentativeModel> MapToRepresentativeByIdentityDocument(int representativeIdentityDocument);
+			public List<DriverModel> MapToDriverByIdentityDocument(int driverIdentityDocument);
+			public List<DriverByPTGModel> MapToDriverPTGByIdentityDocument(int driverIdentityDocument);
+		}
+
+		public interface IProcedure
+		{
+			public int AddOrEdit(ProcedureViewModel model);
+			public List<ProcedureViewModel> GetAll();
+			public List<ProcedureViewModel> GetById(int procedureId);
+			public List<ProcedureViewModel> GetAllByMode(int modeId, int procedureId = 0);
+			public List<ProcedureByDriverViewModel> GetByDriverByProcedureStatusId(int procedureStatusId);
+			public List<DriverVehicleOptionViewModel> GetDriverVehiclesByIdentityDocument(int driverIdentityDocument);
+			public int GetMonthlyFeePendingsByPTG(int publicTransportGroupId);
+			public int AddOrEditByDriver(ProcedureByDriverViewModel model);
+			public void LogProcedureRequest(int procedureByDriverId);
+			public RegistrationRequestViewModel? GetRegistrationRequestData(int procedureByDriverId);
+			public List<ProcedureBankAccountViewModel> GetByBankAccounTypeId(int accounTypeId);
+			public List<ProcedureBankAccountViewModel> GetByBankAccountId(int procedureBankAccountId);
+			public int GetProcedureBankAccountId(int procedureId);
+			public decimal? GetTariffForDriver(int procedureId, int driverId, string? ptgRif);
+			public List<ProcedureStatusViewModel> GetStatusAll();
+			public List<ProcedureCategoryViewModel> ProcedureCategoryAll();
+			public List<ProcedureFrequencyViewModel> ProcedureFrequencyAll();
+
+		}
+
+		public interface IExchangeRate
+		{
+			public List<ExchangeRateViewModel> GetAll();
+			public void Save(string currencyCode, decimal rate);
 		}
 	}
 }

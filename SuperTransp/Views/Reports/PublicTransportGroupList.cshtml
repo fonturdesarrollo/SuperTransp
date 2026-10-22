@@ -6,7 +6,7 @@
 <html>
 
 <head>
-	<title>Reportes - Consultar Organizaciones y Socios<</title>
+	<title>Reportes - Consultar Organizaciones y Asociados<</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 	<link rel="stylesheet" href="~/assets/css/main.css" />
@@ -47,7 +47,7 @@
 				<div class="logo">
 					<span>@ViewBag.EmployeeName</span>
 					<br />
-					<span>Reportes - Consultar organizaciones y socios</span>
+					<span>Reportes - Consultar organizaciones y asociados</span>
 				</div>
 			</div>
 			<!-- Nav -->
@@ -63,9 +63,9 @@
 			<h2>Menu</h2>
 			<ul>
 				<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
-				<li>@Html.ActionLink("Organizaciones con socios supervisados", "PublicTransportGroupSupervisedDriversStatistics", "Reports")</li>
-				<li>@Html.ActionLink("Gráficos Organizaciones por estado", "PublicTransportGroupStatisticsInState", "Reports")</li>
-				<li>@Html.ActionLink("Gráficos vehículos supervisados por estado", "SupervisedDriversStatisticsInEstate", "Reports")</li>
+				<li>@Html.ActionLink("Organizaciones con asociados supervisados", "PublicTransportGroupSupervisedDriversStatistics", "Reports")</li>
+				<li>@Html.ActionLink("Estadísticas Organizaciones por estado", "DashboardPTG", "Reports")</li>
+				<li>@Html.ActionLink("Estadísticas de Supervisión", "Dashboard", "Reports")</li>
 				<li>@Html.ActionLink("Reportes/Consultas", "Index", "Reports")</li>
 				<li>@Html.ActionLink("Salir", "Login", "Security")</li>
 			</ul>
@@ -89,7 +89,7 @@
 								<th>Estado</th>
 								<th>Modalidad</th>
 								<th>Rif</th>
-								<th>Cupos</th>
+								<th>Flota</th>
 								<th>Cargados</th>
 								<th>Supervisados</th>
 								<th>Estatus</th>
@@ -141,7 +141,9 @@
 					{
 						data: 'nombre',
 						render: function (data, type, row) {
-							return `<a href="${urlPtg}?publicTransportGroupId=${row.id}" style="color:${row.color};">${data}</a>`;
+						return `<a href="${urlPtg}?publicTransportGroupId=${row.id}"
+								   style="color:${row.color};"
+								   target="_blank">${data}</a>`;
 						}
 					},
 					{ data: 'estado' },

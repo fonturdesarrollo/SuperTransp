@@ -202,6 +202,15 @@ namespace SuperTransp.Controllers
                     ViewBag.Groups = new SelectList(_security.GetAllGroups(), "SecurityGroupId", "SecurityGroupName");
                 }
                 ViewBag.Status = new SelectList(_security.GetAllUsersStatus(), "SecurityStatusId", "SecurityStatusName");
+
+                if (_security.GroupHasAccessToModule(groupId.Value, 31) || groupId.Value == 1)
+                {
+                    ViewBag.ResetPassword = true;
+                }
+                else
+                {
+                    ViewBag.ResetPassword = false;
+                }
             }
 
             return View(model);
@@ -633,7 +642,26 @@ namespace SuperTransp.Controllers
             }
         }
 
-        public JsonResult CheckOldPasswordExist(string paramValue1)
+		public JsonResult ResetPassword(int securityUserId)
+		{
+			try
+			{
+				if (!IsUserLoggedIn() || !ModelState.IsValid)
+					RedirectToAction("Login", "Security");
+
+				int securityGroupModuleId = _security.ResetPassword(securityUserId);
+
+				TempData["SuccessMessage"] = "Clave restablecida correctamente a: 1";
+
+				return Json("OK");
+			}
+			catch (Exception ex)
+			{
+				return Json(ex.Message);
+			}
+		}
+
+		public JsonResult CheckOldPasswordExist(string paramValue1)
         {
             if (!IsUserLoggedIn())
                 return Json("ERROR");
@@ -672,58 +700,6 @@ namespace SuperTransp.Controllers
 
             return View();
         }
-
-        //[HttpGet]
-        //public IActionResult GetLogbookData(string selectedStateName, string filterType)
-        //{
-        //    try
-        //    {
-        //        if (string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) || string.IsNullOrEmpty(selectedStateName))
-        //            return RedirectToAction("Login", "Security");
-
-        //        int? groupId = HttpContext.Session.GetInt32("SecurityGroupId");
-        //        int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
-
-        //        if (groupId is null ||
-        //            (groupId != 1 && !_security.GroupHasAccessToModule(groupId.Value, 4)) ||
-        //            (groupId == 1 ? false : !_security.GroupHasAccessToModule(groupId.Value, 18)))
-        //            return RedirectToAction("Login", "Security");
-
-        //        List<SecurityLogbookModel> model;
-
-        //        if (securityGroupId != 1)
-        //        {
-        //            if (!_security.GroupHasAccessToModule(securityGroupId.Value, 6))
-        //                model = _security.GetLogbookByStateName(selectedStateName, filterType);
-        //            else
-        //                model = _security.GetLogbookAllExceptAdminByStateName(selectedStateName, filterType);
-        //        }
-        //        else
-        //        {
-        //            model = _security.GetLogbookAllBySelectedStateName(selectedStateName, filterType);
-        //        }
-
-        //        var resultado = model.Select(m => new
-        //        {
-        //            id = m.SecurityLogbookId,
-        //            fecha = m.SecurityLogbookDate.ToString("dd/MM/yyyy hh:mm tt"),
-        //            dispositivo = m.DeviceType,
-        //            os = m.DeviceOperatingSystem,
-        //            navegador = m.DeviceBrowser,
-        //            ip = m.DeviceIP,
-        //            nombre = m.UserFullName,
-        //            login = m.UserLogin,
-        //            estado = m.UserState,
-        //            accion = m.ActionDescription
-        //        });
-
-        //        return Json(new { data = resultado });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest(new { error = ex.Message });
-        //    }
-        //}
 
 		[HttpPost]
 		[IgnoreAntiforgeryToken]

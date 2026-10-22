@@ -112,13 +112,13 @@
         @@keyframes spin {
             0%
 
-        {
-            transform: rotate(0deg);
-        }
+            {
+                transform: rotate(0deg);
+            }
 
-        100% {
-            transform: rotate(360deg);
-        }
+            100% {
+                transform: rotate(360deg);
+            }
 
         }
 
@@ -200,25 +200,38 @@
                                 <h3>Organizaciones de Transporte</h3>
                                 <ul>
                                     @{
-                                        var modulesInGroup = (IEnumerable<SecurityModuleModel>)ViewBag.ModulesInGroup;
+                                        var modulesInGroup = (IEnumerable<SecurityModuleModel>)ViewBag.ModulesInGroup; 
+
+                                        if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 32))
+                                        {
+                                            <li><a href="#" id="openPlateModal">Consultar placa</a></li>
+                                        }
 
                                         if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 20))
                                         {
-                                            <li>@Html.ActionLink("Organizaciones y socios", "PublicTransportGroupList", "Reports")</li>
+                                            <li>@Html.ActionLink("Organizaciones y asociados", "PublicTransportGroupList", "Reports")</li>
                                         }
                                         if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 21))
                                         {
-                                            <li>@Html.ActionLink("Organizaciones con socios supervisados", "PublicTransportGroupSupervisedDriversStatistics", "Reports")</li>
+                                            <li>@Html.ActionLink("Organizaciones con asociados supervisados", "PublicTransportGroupSupervisedDriversStatistics", "Reports")</li>
                                         }
                                         if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 21))
                                         {
-                                            <li>@Html.ActionLink("Resúmenes de supervisión", "SummaryList", "Reports")</li>
+                                            <li>@Html.ActionLink("Resúmenes de supervisión (vuelta activa)", "SummaryList", "Reports")</li>
+                                        }
+                                        if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 21))
+                                        {
+                                             <li>@Html.ActionLink("Resúmenes de supervisión (históricos)", "HistoricalData", "Reports")</li>
+                                        }
+                                        if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 21))
+                                        {
+                                            <li>@Html.ActionLink("Vueltas de supervisión", "SupervisionRounds", "Reports")</li>
                                         }
                                         if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 22))
                                         {
                                             if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 6))
                                             {
-                                                <li><a href="#" id="openStatisticsModal">Gráficos Organizaciones por estado</a></li>
+                                                <li><a href="#" id="openStatisticsModal">Gráficos organizaciones por estado</a></li>
                                             }
                                             else
                                             {
@@ -231,15 +244,41 @@
                                                 </li>
                                             }
                                         }
+                                        if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 22))
+                                        {
+                                            if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 6))
+                                            {
+                                                <li><a href="#" id="openDashboardPTGModal">Estadísticas organizaciones por estado</a></li>
+                                            }
+                                            else
+                                            {
+                                                <li>
+                                                    @Html.ActionLink(
+                                                    "Estadísticas organizaciones por estado",
+                                                    "DashboardPTG",
+                                                    "Reports",
+                                                    new { selectedStatisticsStateId = ViewBag.UserStateId }, null)
+                                                </li>
+                                            }
+                                        }
                                         if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 23))
                                         {
                                             <li>@Html.ActionLink("Gráficos vehículos supervisados por estado", "SupervisedDriversStatisticsInEstate", "Reports")</li>
                                         }
+                                        if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 23))
+                                        {  
+                                            <li>@Html.ActionLink("Estadísticas vehículos supervisados por estado", "Dashboard", "Reports")</li>
+                                        }
                                         if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 27))
                                         {
                                             <li>
+                                            <a href="#" id="exportExcelPTGLink" data-url="@Url.Action("ExportPublicTransportGroup", "Reports")">
+                                                    Exportar a excel organizaciones
+                                                </a>
+                                            </li>
+                                            <li>
                                                 <a href="#" id="exportExcelLink" data-url="@Url.Action("ExportPublicTransportGroupAndDrivers", "Reports")">
-                                                    Exportar a excel organizaciones y socios
+                                                    Exportar a excel organizaciones y asociados
                                                 </a>
                                             </li>
                                             <li>
@@ -247,6 +286,7 @@
                                                     Exportar a excel supervisiones
                                                 </a>
                                             </li>
+                                        <li>@Html.ActionLink("Estaciones de servicio a nivel nacional", "GasStationsMap", "Reports")</li>
                                         }
                                     }
                                 </ul>
@@ -320,6 +360,37 @@
         </div>
     </div>
 
+    <div id="modalDashboardPTGForm" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Indique el estado</h3>
+            @using (Html.BeginForm("DashboardPTG", "Reports", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <label>Estado</label>
+                @Html.DropDownList("selectedStatisticsStateId", (SelectList)ViewBag.StatisticsStates, "Seleccione el estado", new { @class = "form-control", id = "DashboardPTGStateId" })
+
+                <input type="submit" value="Buscar" id="sendDashboardPTGRequest" class="btn-align-right" />
+            }
+        </div>
+    </div>
+
+    <div id="modalPlateForm" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Indique la placa</h3>
+            @using (Html.BeginForm("SupervisionPlate", "Reports", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <label>Placa</label>
+
+                @Html.TextBox("supervisionPlate", "", new { maxlength = "12", placeholder = "Indique la placa", required = "required" })
+
+                <input type="submit" value="Buscar" id="sendPlateRequest" class="btn-align-right" />
+            }
+        </div>
+    </div>
+
     <div id="loading-spinner" class="spinner-container hidden">
         <div class="spinner"></div>
     </div>
@@ -358,6 +429,55 @@
             }
 
             $(this).closest("form")[0].submit();
+        });
+
+        $("body").on("click", "#sendDashboardPTGRequest", function (event) {
+            event.preventDefault();
+
+            const state = $("#DashboardPTGStateId").val();
+
+            if (state === "") {
+                alert("Debe indicar el estado");
+                return false;
+            }
+
+            $(this).closest("form")[0].submit();
+        });
+
+        $("body").on("click", "#sendPlateRequest", function (event) {
+            event.preventDefault();
+
+            const state = $("#supervisionPlate").val();
+
+            if (state === "") {
+                alert("Debe indicar la placa");
+                return false;
+            }
+
+            $(this).closest("form")[0].submit();
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const link = document.getElementById("exportExcelPTGLink");
+            const spinner = document.getElementById("loading-spinner");
+            const downloadFrame = document.getElementById("downloadFrame");
+
+            link.addEventListener("click", function (event) {
+                event.preventDefault();
+
+                const url = this.getAttribute("data-url");
+                const mensaje = "¿Desea exportar los registros? esto tomará algún tiempo.";
+
+                if (confirm(mensaje)) {
+                    spinner.classList.remove("hidden");
+
+                    downloadFrame.src = url;
+
+                    setTimeout(() => {
+                        spinner.classList.add("hidden");
+                    }, 5000);
+                }
+            });
         });
 
         document.addEventListener("DOMContentLoaded", function () {
@@ -424,12 +544,32 @@
                 });
             });
 
+            $("#openDashboardPTGModal").click(function (e) {
+                e.preventDefault();
+                $("#modalDashboardPTGForm").fadeIn(function () {
+                });
+            });
+
+            $("#openPlateModal").click(function (e) {
+                e.preventDefault();
+                $("#modalPlateForm").fadeIn(function () {
+                });
+            });
+
             $(".close").click(function () {
                 $("#modalForm").fadeOut();
             });
 
             $(".close").click(function () {
                 $("#modalStatisticsForm").fadeOut();
+            });
+
+            $(".close").click(function () {
+                $("#modalDashboardPTGForm").fadeOut();
+            });
+
+            $(".close").click(function () {
+                $("#modalPlateForm").fadeOut();
             });
 
             $(window).click(function (e) {
@@ -441,6 +581,12 @@
             $(window).click(function (e) {
                 if ($(e.target).is("#modalStatisticsForm")) {
                     $("#modalStatisticsForm").fadeOut();
+                }
+            });
+
+            $(window).click(function (e) {
+                if ($(e.target).is("#modalDashboardPTGForm")) {
+                    $("#modalDashboardPTGForm").fadeOut();
                 }
             });
         });

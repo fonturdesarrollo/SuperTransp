@@ -12,9 +12,11 @@ namespace SuperTransp.Controllers
 		private IDriver _driver;
 		ISupervision _supervision;
 		ISecurity _security;
+		private readonly QrCodeSigner _qrCodeSigner;
 
-		public QRController(IPublicTransportGroup publicTransportGroup, IDriver driver, ISupervision supervision, ISecurity security)
+		public QRController(IPublicTransportGroup publicTransportGroup, IDriver driver, ISupervision supervision, ISecurity security, QrCodeSigner qrCodeSigner)
 		{
+			_qrCodeSigner = qrCodeSigner;
 			_publicTransportGroup = publicTransportGroup;
 			_driver = driver;
 			_supervision = supervision;
@@ -32,23 +34,20 @@ namespace SuperTransp.Controllers
 
 		public IActionResult DriverData(string driverCode)
 		{
-			string publicTransportGroupGUID = string.Empty;
-			int partnerNumber = 0;
-
-			if(!string.IsNullOrEmpty(driverCode))
+			// Malformed or forged codes (bad signature) are answered like a code that does not exist
+			if (!_qrCodeSigner.TryParseDriverCode(driverCode, out var publicTransportGroupGUID, out var partnerNumber))
 			{
-				var codes = driverCode.Split('|');
+				return NotFound();
+			}
 
-				if (codes?.Length > 0)
-				{
-					publicTransportGroupGUID = codes[0];
-					partnerNumber = int.Parse(codes[1]);
-				}
+			var model = _supervision.GetByPublicTransportGroupGUIDAndPartnerNumber(publicTransportGroupGUID, partnerNumber);
+
+			if (model == null || model.PublicTransportGroupId == 0)
+			{
+				return NotFound();
 			}
 
 			ViewBag.AllowedHash = _security.GeneratePublicKey();
-
-			var model = _supervision.GetByPublicTransportGroupGUIDAndPartnerNumber(publicTransportGroupGUID, partnerNumber);
 
 			return View(model);
 		}

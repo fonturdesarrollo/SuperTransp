@@ -1,0 +1,727 @@
+@{
+	Layout = "";
+}
+<!DOCTYPE HTML>
+<html>
+
+<head>
+	<title>Gestiones Realizadas</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+	<link rel="stylesheet" href="~/assets/css/main.css" />
+	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
+	<link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
+
+	@*DataTable************************************************************************@
+	<link rel="stylesheet" href="~/datatable/css/bootstrap.css" />
+	<link rel="stylesheet" href="~/datatable/css/dataTables.bootstrap4.min.css" />
+	<link rel="stylesheet" href="~/datatable/css/responsive.bootstrap4.min.css" />
+	@*************************************************************************************@
+
+	<style>
+		.logo-container {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+
+			.logo-container img {
+				display: block;
+			}
+
+		.status-filter-row {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			margin-bottom: 1em;
+		}
+
+		.status-filter-row label {
+			font-weight: 600;
+			margin: 0;
+		}
+
+		.status-filter-row select {
+			max-width: 280px;
+		}
+
+		.badge-status {
+			padding: 4px 10px;
+			border-radius: 10px;
+			font-size: 0.78rem;
+			font-weight: 700;
+			color: white;
+			white-space: nowrap;
+		}
+
+		.badge-status-1 { background: #f0ad4e; }
+		.badge-status-2 { background: #5cb85c; }
+		.badge-status-3 { background: #d9534f; }
+		.badge-status-default { background: #6c757d; }
+
+		.btn-receipt {
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			color: white;
+			border: none;
+			border-radius: 8px;
+			padding: 4px 12px;
+			font-size: 0.8rem;
+			font-weight: 600;
+			cursor: pointer;
+			white-space: nowrap;
+		}
+
+		.btn-request:disabled {
+			background: #c9ced6;
+			cursor: not-allowed;
+			opacity: 0.7;
+		}
+
+		.btn-request {
+			background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+			color: white;
+			border: none;
+			border-radius: 8px;
+			padding: 4px 12px;
+			font-size: 0.8rem;
+			font-weight: 600;
+			cursor: pointer;
+			white-space: nowrap;
+		}
+
+		.receipt-overlay {
+			display: none;
+			position: fixed;
+			inset: 0;
+			background: rgba(0,0,0,0.55);
+			z-index: 2000;
+			justify-content: center;
+			align-items: center;
+		}
+
+		.receipt-overlay.open { display: flex; }
+
+		.receipt-modal {
+			background: white;
+			border-radius: 16px;
+			box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+			width: min(720px, 94vw);
+			max-height: 88vh;
+			display: flex;
+			flex-direction: column;
+			overflow: hidden;
+		}
+
+		.receipt-header {
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			color: white;
+			padding: 18px 24px;
+			font-weight: 700;
+		}
+
+		.receipt-body {
+			padding: 24px;
+			overflow-y: auto;
+			background: #f2f4f8;
+		}
+
+		.receipt-paper {
+			background: white;
+			border: 1.5px solid #e0e4f7;
+			border-radius: 10px;
+			padding: 22px 26px;
+			color: #2c3e50;
+			font-size: 0.9rem;
+		}
+
+		.receipt-brand {
+			text-align: center;
+			font-size: 1.45rem;
+			font-weight: 700;
+			color: #4c3d99;
+			margin: 0 0 8px;
+			line-height: 1.2;
+		}
+
+		.receipt-paper h3 {
+			margin: 0 0 4px;
+			text-align: center;
+			color: #667eea;
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+		}
+
+		.receipt-meta {
+			text-align: center;
+			color: #7f8c9b;
+			font-size: 0.82rem;
+			margin-bottom: 16px;
+		}
+
+		.receipt-row {
+			display: flex;
+			justify-content: space-between;
+			gap: 16px;
+			padding: 7px 0;
+			border-bottom: 1px dashed #e0e4f7;
+		}
+
+		.receipt-row span:first-child {
+			font-weight: 600;
+			color: #667eea;
+			flex-shrink: 0;
+		}
+
+		.receipt-row span:last-child {
+			text-align: right;
+			word-break: break-word;
+		}
+
+		.receipt-total {
+			margin-top: 12px;
+			padding: 10px 14px;
+			background: #f8f9ff;
+			border-radius: 8px;
+			font-weight: 700;
+		}
+
+		.receipt-footer {
+			padding: 14px 24px;
+			display: flex;
+			justify-content: flex-end;
+			gap: 10px;
+		}
+	</style>
+
+</head>
+<body class="is-preload">
+	<div style="width:100%; max-width: 100em; margin: 0 auto; padding: 0 1em;">
+		<!-- Header -->
+		<header id="header">
+			<div class="inner">
+				<!-- Logo -->
+				<div class="logo-container">
+					<!-- Logo izquierdo -->
+					<img src="~/images/Logo.png" width="100px" height="100px" alt="Logo principal" />
+
+					<!-- Logo derecho -->
+					<img src="~/images/super-transp-logo.png" width="150px" height="150px" alt="Logo SuperTransp" />
+				</div>
+				<div class="logo">
+					<span>@ViewBag.EmployeeName</span>
+					<br />
+					<span>Gestiones realizadas</span>
+				</div>
+			</div>
+
+			<!-- Nav -->
+			<nav>
+				<ul>
+					<li><a href="#menu">Menu</a></li>
+				</ul>
+			</nav>
+		</header>
+
+		<!-- Menu -->
+		<nav id="menu">
+			<h2>Menu</h2>
+			<ul>
+				<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
+				<li>@Html.ActionLink("Gestiones administrativas", "Index", "Procedures")</li>
+				<li>@Html.ActionLink("Solicitar trámite", "Index", "Procedures", new { openWizard = 1 }, null)</li>
+				<li>@Html.ActionLink("Salir", "Login", "Security")</li>
+			</ul>
+		</nav>
+
+		<div id="main">
+			<div class="inner">
+				<!-- Form -->
+				<section>
+					<h4 style="color:#4cbece">Gestiones Realizadas</h4>
+					<br />
+
+					<div class="status-filter-row">
+						<label for="statusFilter">Estatus:</label>
+						<select id="statusFilter">
+							<option value="">Cargando&hellip;</option>
+						</select>
+					</div>
+
+					<div id="loadingSpinner" style="text-align:center; padding:1em;">
+						<div class="spinner-border text-info" role="status">
+							<span class="sr-only">Cargando...</span>
+						</div>
+					</div>
+					<table id="inventory" class="table table-striped table-bordered dt-responsive dt-nowrap">
+						<thead>
+							<tr>
+								<th>Fecha trámite</th>
+								<th>RIF</th>
+								<th>Organización</th>
+								<th>Asociado</th>
+								<th>Cédula</th>
+								<th>Placa</th>
+								<th>Modalidad</th>
+								<th>Trámite</th>
+								<th>Estatus</th>
+									<th>Recibo</th>
+								<th>Solicitud</th>
+							</tr>
+						</thead>
+					</table>
+				</section>
+			</div>
+		</div>
+	</div>
+
+	<!-- Payment receipt -->
+	<div class="receipt-overlay" id="receiptOverlay">
+		<div class="receipt-modal">
+			<div class="receipt-header">Recibo de pago móvil</div>
+			<div class="receipt-body">
+				<div class="receipt-paper" id="receiptContent"></div>
+			</div>
+			<div class="receipt-footer">
+				<button type="button" class="button" id="receiptClose">Cerrar</button>
+				<button type="button" class="button primary" id="receiptPrint">Imprimir</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- Scripts -->
+	<script src="~/assets/js/jquery.min.js"></script>
+	<script src="~/assets/js/browser.min.js"></script>
+	<script src="~/assets/js/breakpoints.min.js"></script>
+	<script src="~/assets/js/util.js"></script>
+	<script src="~/assets/js/main.js"></script>
+
+	@*DataTable*******************************************@
+	<script src="~/datatable/js/jquery-3.5.1.js"></script>
+	<script src="~/datatable/js/jquery.dataTables.min.js"></script>
+	<script src="~/datatable/js/dataTables.bootstrap4.js"></script>
+	<script src="~/datatable/js/dataTables.responsive.min.js"></script>
+	<script src="~/datatable/js/responsive.bootstrap4.min.js"></script>
+	<script src="~/lib/jspdf/jspdf.umd.min.js"></script>
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+	@***********************************************************@
+
+	<script type="text/javascript">
+		$(document).ready(function () {
+			var statusApiUrl = '@Url.Action("GetProcedureStatuses", "Procedures")';
+			var dataApiUrl = '@Url.Action("GetProceduresByStatus", "Procedures")';
+			var defaultStatusId = 2; // Validados
+
+			function formatMoney(value) {
+				if (typeof value !== 'number') return value;
+				return value.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+			}
+
+			function badgeClassFor(procedureStatusId) {
+				if (procedureStatusId === 1 || procedureStatusId === 2 || procedureStatusId === 3) {
+					return 'badge-status-' + procedureStatusId;
+				}
+				return 'badge-status-default';
+			}
+
+			var table = $('#inventory').DataTable({
+				ajax: {
+					url: dataApiUrl,
+					data: function (d) {
+						d.procedureStatusId = $('#statusFilter').val() || defaultStatusId;
+					},
+					dataSrc: function (json) {
+						$('#loadingSpinner').fadeOut();
+						return json.data;
+					}
+				},
+				order: [], // keep the server order (newest first)
+				pageLength: 10,
+				lengthMenu: [10, 25, 50, 100, 500, 1000],
+				columns: [
+					{
+						data: 'procedureDate',
+						render: function (data, type) {
+							if (!data) return '';
+							// dd/MM/yyyy hh:mm for display, the raw value for sorting and searching
+							if (type !== 'display') return data;
+							var d = new Date(data);
+							return d.toLocaleDateString('es-VE') + ' ' + d.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' });
+						}
+					},
+					{ data: 'publicTransportGroupRif' },
+					{ data: 'ptgName' },
+					{ data: 'representativeName' },
+					{ data: 'driverIdentityDocument' },
+					{ data: 'vehiclePlate' },
+					{ data: 'modeName' },
+					{
+						data: null,
+						render: function (row) {
+							return (row.procedureCategoryName || '') + ' - ' + (row.procedureConcept || '');
+						}
+					},
+					{
+						data: null,
+						render: function (row) {
+							var cls = badgeClassFor(row.procedureStatusId);
+							return '<span class="badge-status ' + cls + '">' + (row.procedureStatusName || '') + '</span>';
+						}
+					},
+					{
+						data: null,
+						orderable: false,
+						searchable: false,
+						render: function () {
+							return '<button type="button" class="btn-receipt">Ver recibo</button>';
+						}
+					},
+					{
+						data: null,
+						orderable: false,
+						searchable: false,
+						render: function (data, type, row) {
+							// The request letter is only available for VALIDADO (2) procedures
+							var validated = Number(row.procedureStatusId) === 2;
+							return '<button type="button" class="btn-request"' + (validated ? '' : ' disabled title="Disponible solo para trámites validados"') + '>Imprimir solicitud</button>';
+						}
+					}
+				],
+				stateSave: true,
+				language: {
+					sProcessing: "Procesando...",
+					sLengthMenu: "Mostrar _MENU_ registros",
+					sZeroRecords: "No se encontraron resultados",
+					sEmptyTable: "Ningún dato disponible en esta tabla",
+					sInfo: "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+					sInfoEmpty: "Mostrando registros del 0 al 0 de un total de 0 registros",
+					sInfoFiltered: "(filtrado de un total de _MAX_ registros)",
+					sSearch: "Buscar:",
+					oPaginate: {
+						sFirst: "Primero",
+						sLast: "Último",
+						sNext: "Siguiente",
+						sPrevious: "Anterior"
+					}
+				}
+			});
+
+			// ── Payment receipt ────────────────────────────────────
+			var receiptOverlay = document.getElementById('receiptOverlay');
+			var receiptContent = document.getElementById('receiptContent');
+
+			function addReceiptRow(label, value, extraClass) {
+				var row = document.createElement('div');
+				row.className = 'receipt-row' + (extraClass ? ' ' + extraClass : '');
+				var l = document.createElement('span');
+				l.textContent = label;
+				var v = document.createElement('span');
+				v.textContent = value;
+				row.appendChild(l);
+				row.appendChild(v);
+				receiptContent.appendChild(row);
+			}
+
+			var receiptTitleIsPos = false;
+
+			function showReceipt(row) {
+				// accounTypeId 4 = Punto de Venta: plain receipt without paying bank section
+				var isPos = row.accounTypeId === 4;
+				receiptTitleIsPos = isPos;
+				var receiptTitleText = isPos ? 'Recibo de pago' : 'Recibo de pago móvil';
+				$('.receipt-header').text(receiptTitleText);
+				// accounTypeId is the payer's type; the receiving account is a phone account when it has no account number
+				var isMobile = row.accounTypeId === 3;
+				// The receipt shows the receiving bank with its RIF and phone, without the account number
+				var receiver = (row.receiverBankName || '') +
+					(row.receiverBankIdNumber ? ' — RIF: ' + row.receiverBankIdNumber : '') +
+					(row.receiverBankCellPhone && !/^0+$/.test(String(row.receiverBankCellPhone).trim()) ? ' — Teléfono: ' + row.receiverBankCellPhone : '');
+
+				var payer = (row.payerBankName || '') + (isMobile
+					? ' — Teléfono: ' + (row.payerCellPhoneNumber || '') + ' — Cédula: ' + (row.payerIdNumber || '')
+					: ' — Cuenta: ' + (row.payerAccountNumber || ''));
+				payer += ' — N° de referencia: ' + (row.payerReferenceNumber || '');
+
+				var date = row.procedureDate ? new Date(row.procedureDate) : null;
+
+				receiptContent.innerHTML = '';
+
+				var brand = document.createElement('div');
+				brand.className = 'receipt-brand';
+				brand.textContent = 'FONTUR Sistema de Supervisiones SuperTransp';
+				receiptContent.appendChild(brand);
+
+				var title = document.createElement('h3');
+				title.textContent = receiptTitleText + ' N° ' + String(row.procedureByPublicTransportGroupId).padStart(8, '0');
+				receiptContent.appendChild(title);
+
+				var meta = document.createElement('div');
+				meta.className = 'receipt-meta';
+				meta.textContent = date ? date.toLocaleDateString('es-VE') + ' ' + date.toLocaleTimeString('es-VE') : '';
+				receiptContent.appendChild(meta);
+
+				addReceiptRow('Asociado', (row.representativeName || '') + ' — C.I. ' + (row.driverIdentityDocument || ''));
+				addReceiptRow('Organización', 'RIF ' + (row.publicTransportGroupRif || '') + ' — ' + (row.ptgName || ''));
+				addReceiptRow('Vehículo', (row.vehiclePlate || '') + ' — ' + (row.vehicleDescription || ''));
+				addReceiptRow('Trámite', row.procedureConcept || '');
+				addReceiptRow('Banco receptor', receiver);
+				if (!isPos) addReceiptRow('Banco pagador', payer);
+				addReceiptRow('Monto pagado Bs.', formatMoney(row.bcvPaid), 'receipt-total');
+
+				receiptOverlay.classList.add('open');
+			}
+
+			$('#inventory tbody').on('click', '.btn-receipt', function () {
+				var tr = $(this).closest('tr');
+				if (tr.hasClass('child')) tr = tr.prev();
+				showReceipt(table.row(tr).data());
+			});
+
+			// ── Registration request letter (PDF) ──────────────────
+			var requestDataUrl = '@Url.Action("GetRegistrationRequestData", "Procedures")';
+			var headerImageUrl = '@Url.Content("~/images/solvencia/header-fontur.png")';
+			var footerImageUrl = '@Url.Content("~/images/solvencia/footer-fontur.png")';
+			var MONTHS_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+			function loadImageAsDataUrl(url) {
+				return fetch(url, { cache: 'force-cache' })
+					.then(function (r) { return r.blob(); })
+					.then(function (blob) {
+						return new Promise(function (resolve, reject) {
+							var reader = new FileReader();
+							reader.onload = function () {
+								var img = new Image();
+								img.onload = function () { resolve({ dataUrl: reader.result, width: img.width, height: img.height }); };
+								img.onerror = reject;
+								img.src = reader.result;
+							};
+							reader.onerror = reject;
+							reader.readAsDataURL(blob);
+						});
+					});
+			}
+
+			// Draws a paragraph made of [{ t: text, b: bold }] pieces, wrapping by words, and returns the new y.
+			function drawRichParagraph(doc, pieces, x, y, maxWidth, lineHeight) {
+				var words = [];
+				pieces.forEach(function (piece) {
+					String(piece.t).split(/\s+/).filter(Boolean).forEach(function (w) { words.push({ w: w, b: !!piece.b }); });
+				});
+
+				var lines = [[]];
+				var lineWidth = 0;
+				words.forEach(function (word) {
+					doc.setFont('helvetica', word.b ? 'bold' : 'normal');
+					var wordWidth = doc.getTextWidth(word.w);
+					doc.setFont('helvetica', 'normal');
+					var spaceWidth = doc.getTextWidth(' ');
+					var needed = lines[lines.length - 1].length ? wordWidth + spaceWidth : wordWidth;
+					if (lineWidth + needed > maxWidth && lines[lines.length - 1].length) {
+						lines.push([]);
+						lineWidth = 0;
+						needed = wordWidth;
+					}
+					lines[lines.length - 1].push({ w: word.w, b: word.b, width: wordWidth });
+					lineWidth += needed;
+				});
+
+				lines.forEach(function (line, index) {
+					var isLast = index === lines.length - 1;
+					var wordsWidth = line.reduce(function (sum, item) { return sum + item.width; }, 0);
+					// Justified text: spread the free space between words on every line except the last one
+					var gap = (!isLast && line.length > 1) ? (maxWidth - wordsWidth) / (line.length - 1) : null;
+					doc.setFont('helvetica', 'normal');
+					var normalGap = doc.getTextWidth(' ');
+					var cursor = x;
+					line.forEach(function (item) {
+						doc.setFont('helvetica', item.b ? 'bold' : 'normal');
+						doc.text(item.w, cursor, y);
+						cursor += item.width + (gap !== null ? gap : normalGap);
+					});
+					y += lineHeight;
+				});
+
+				doc.setFont('helvetica', 'normal');
+				return y;
+			}
+
+			// Layout follows the Word template "solvencia .docx": Letter page, 30 mm side margins, header image on top,
+			// full-width footer image at the bottom, justified paragraphs with 1.5 line spacing.
+			function buildRegistrationRequestPdf(data, header, footer) {
+				var jsPDF = window.jspdf.jsPDF;
+				var doc = new jsPDF({ unit: 'mm', format: 'letter' });
+				var pageWidth = doc.internal.pageSize.getWidth();
+				var pageHeight = doc.internal.pageSize.getHeight();
+				var left = 30;
+				var contentWidth = pageWidth - left * 2;
+				var center = pageWidth / 2;
+				var rightEdge = pageWidth - left;
+				var single = 4.9;
+				var bodyLine = 6.3;
+				var paragraphGap = 2.8;
+				var y = 10;
+
+				doc.setTextColor(0, 0, 0);
+				doc.setFont('helvetica', 'normal');
+				doc.setFontSize(11);
+
+				// Footer image: full page width, glued to the bottom (214.5 x 38.6 mm as in the Word template)
+				if (footer) {
+					var footerHeight = 38.6;
+					doc.addImage(footer.dataUrl, 'PNG', 0, pageHeight - footerHeight, pageWidth, footerHeight);
+				}
+
+				if (header) {
+					var headerWidth = 114.6;
+					var headerHeight = 23.3; // fixed size from the Word template (the image has built-in padding)
+					doc.addImage(header.dataUrl, 'PNG', left, y, headerWidth, headerHeight);
+					y += headerHeight;
+				}
+
+				y += single * 1.5;
+				doc.setFont('helvetica', 'bold');
+				doc.setFontSize(14);
+				doc.text('SOLVENCIA', center, y, { align: 'center' });
+
+				y += single * 1.5;
+				doc.setFontSize(11);
+				doc.text('Registro Nacional de Supervisiones del Transporte Público.', center, y, { align: 'center' });
+				doc.setFont('helvetica', 'normal');
+
+				y += single * 1.5;
+				var vehicleText = [data.plate, [data.make, data.model].filter(Boolean).join(' '), data.year > 0 ? data.year : ''].filter(Boolean).join(' / ');
+
+				y = drawRichParagraph(doc, [
+					{ t: 'Por medio de la presente se ' }, { t: 'CERTIFICA', b: true },
+					{ t: ' que el (la) ciudadano(a): Nombres y Apellidos: ' }, { t: data.driverFullName || '', b: true },
+					{ t: ', Cédula de Identidad: ' }, { t: String(data.driverIdentityDocument || ''), b: true },
+					{ t: ', Nombre de la Línea / Organización de Transporte: ' }, { t: data.ptgName || '', b: true },
+					{ t: ', N°. de asociado: ' }, { t: String(data.partnerNumber || ''), b: true },
+					{ t: vehicleText ? ', Placa / Modelo / Año del vehículo: ' : '' }, { t: vehicleText, b: true },
+					{ t: '.' }
+				], left, y, contentWidth, bodyLine) + paragraphGap;
+
+				y = drawRichParagraph(doc, [
+					{ t: 'Ha sido debidamente verificado(a) a través de los procesos administrativos realizados por esta Gerencia, constatando que ' },
+					{ t: 'SÍ PERTENECE', b: true },
+					{ t: ' al sector de Transporte Público Nacional en la Modalidad ' }, { t: data.modeName || '', b: true }, { t: '.' }
+				], left, y, contentWidth, bodyLine) + paragraphGap;
+
+				y = drawRichParagraph(doc, [
+					{ t: 'La presente certificación se expide a solicitud de la parte interesada como requisito indispensable para ser consignada ante el operativo "Ponte al día con tu Vehículo de Transporte Público" con la finalidad de gestionar la titularidad del vehículo.' }
+				], left, y, contentWidth, bodyLine) + paragraphGap;
+
+				var now = new Date();
+				y = drawRichParagraph(doc, [
+					{ t: 'Se emite en Caracas, a los ' + now.getDate() + ' días del mes de ' + MONTHS_ES[now.getMonth()] + ' del año ' + now.getFullYear() + '. Esta solvencia tiene una vigencia de tres meses a partir de la fecha de emisión de la misma.' }
+				], left, y, contentWidth, bodyLine) + paragraphGap;
+
+				y += single;
+				doc.setFont('helvetica', 'bold');
+				doc.setFontSize(12);
+				doc.text('Atentamente,', center, y, { align: 'center' });
+				y += single * 3.5;
+				doc.text('Dra. Mirla Yris Castellano Villarreal', center, y, { align: 'center' });
+				y += single;
+				doc.text('Presidenta', center, y, { align: 'center' });
+				doc.setFontSize(8);
+				['Fundación Fondo Nacional de Transporte Urbano (FONTUR)', 'Decreto N° 5383 de fecha 10 de Julio 2026', 'Gaceta oficial de la República Bolivariana de Venezuela N° 43.413. de la Misma Fecha.'].forEach(function (line) {
+					y += single * 0.8;
+					doc.text(line, center, y, { align: 'center' });
+				});
+
+				// Verification QR, right-aligned (same URL the driver QR uses)
+				var qrSize = 26;
+				y += single * 0.9;
+				doc.text('Código de Verificación', rightEdge, y, { align: 'right' });
+				if (data.qrImage) {
+					doc.addImage(data.qrImage, 'PNG', rightEdge - qrSize, y + 1.5, qrSize, qrSize);
+				}
+
+				return doc;
+			}
+
+			$('#inventory tbody').on('click', '.btn-request', function () {
+				var $btn = $(this);
+				var tr = $btn.closest('tr');
+				if (tr.hasClass('child')) tr = tr.prev();
+				var row = table.row(tr).data();
+				if (Number(row.procedureStatusId) !== 2) return;
+
+				$btn.prop('disabled', true);
+
+				var logoPromise = loadImageAsDataUrl(headerImageUrl).catch(function () { return null; });
+				var footerPromise = loadImageAsDataUrl(footerImageUrl).catch(function () { return null; });
+				var dataPromise = fetch(requestDataUrl + '?procedureByDriverId=' + row.procedureByPublicTransportGroupId, { cache: 'no-store' })
+					.then(function (r) { return r.json(); });
+
+				Promise.all([dataPromise, logoPromise, footerPromise])
+					.then(function (results) {
+						var data = results[0];
+						if (!data) {
+							alert('No se encontraron los datos para generar la solicitud.');
+							return;
+						}
+						var doc = buildRegistrationRequestPdf(data, results[1], results[2]);
+						doc.save('Solicitud_Registro_' + data.driverIdentityDocument + '.pdf');
+					})
+					.catch(function () {
+						alert('Ocurrió un error al generar la solicitud.');
+					})
+					.then(function () {
+						$btn.prop('disabled', false);
+					});
+			});
+
+			$('#receiptClose').on('click', function () {
+				receiptOverlay.classList.remove('open');
+			});
+
+			$('#receiptPrint').on('click', function () {
+				var w = window.open('', '_blank', 'width=720,height=800');
+				if (!w) return;
+				// Build the print document with DOM nodes (no HTML literals inside the inline script)
+				w.document.title = receiptTitleIsPos ? 'Recibo de pago' : 'Recibo de pago móvil';
+				var printStyle = w.document.createElement('style');
+				printStyle.textContent = [
+					'body{font-family:Arial,sans-serif;color:#2c3e50;padding:32px;font-size:14px}',
+					'.receipt-brand{text-align:center;font-size:23px;font-weight:bold;color:#4c3d99;margin:0 0 8px;line-height:1.2}',
+					'h3{text-align:center;color:#667eea;text-transform:uppercase;margin:0 0 4px}',
+					'.receipt-meta{text-align:center;color:#7f8c9b;font-size:12px;margin-bottom:16px}',
+					'.receipt-row{display:flex;justify-content:space-between;gap:16px;padding:7px 0;border-bottom:1px dashed #ccd}',
+					'.receipt-row span:first-child{font-weight:bold;color:#667eea;flex-shrink:0}',
+					'.receipt-row span:last-child{text-align:right}',
+					'.receipt-total{margin-top:12px;font-weight:bold}'
+				].join('');
+				w.document.head.appendChild(printStyle);
+				w.document.body.appendChild(w.document.importNode(receiptContent, true));
+				w.focus();
+				w.print();
+			});
+
+			fetch(statusApiUrl, { cache: 'no-store' })
+				.then(function (r) { return r.json(); })
+				.then(function (data) {
+					var select = $('#statusFilter');
+					select.empty();
+
+					(data || []).forEach(function (s) {
+						select.append($('<option>', {
+							value: s.procedureStatusId,
+							text: s.procedureStatusName,
+							selected: s.procedureStatusId === defaultStatusId
+						}));
+					});
+				})
+				.catch(function () {
+					$('#statusFilter').html('<option value="' + defaultStatusId + '">Validado</option>');
+				});
+
+			$('#statusFilter').on('change', function () {
+				table.ajax.reload();
+			});
+		});
+	</script>
+</body>
+</html>

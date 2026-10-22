@@ -13,8 +13,8 @@
             firstDay: 1
         },
         autoClose: true,
-        minDate: new Date(2000, 0, 1),
-        maxDate: new Date(2050, 11, 31)
+        minDate: new Date(1920, 0, 1),
+        maxDate: new Date(2030, 11, 31)
     });
 });
 
@@ -60,6 +60,10 @@ document.addEventListener("DOMContentLoaded", function () {
     handleInput("[name='DriverPhone']", function (value) {
         return value.replace(/[^0-9]/g, "");
     });
+
+    handleInput("[name='DriverEmail']", function (value) {
+        return value.toLowerCase().replace(/\s/g, "");
+    });
 });
 
 $("body").on("click", "#saveRequest", function (event) {
@@ -102,13 +106,19 @@ $("form").on("submit", function (e) {
 
                 if (response.canContinue) {
                     let formData = $("form").serialize();
-                    formData += "&DriverId=" + (Number.isInteger(window.driverId) ? window.driverId : 0);
+                    //formData += "&DriverId=" + (Number.isInteger(window.driverId) ? window.driverId : 0);
 
                     $.ajax({
                         url: window.editWithAjaxUrl,
                         type: 'POST',
                         data: formData,
                         success: function (data) {
+                            if (data.success === false && !data.redirectUrl) {
+                                alert(data.message || "No se pudo actualizar el asociado.");
+                                $("#saveRequest").prop("disabled", false);
+                                return;
+                            }
+
                             if (data.redirectUrl) {
                                 showMsg(data.message || "Datos actualizados correctamente");
                                 window.location.href = data.redirectUrl
@@ -133,7 +143,7 @@ function isOkToSave() {
 
     if ($("#DriverIdentityDocument").val() == "" && !firstInvalidField) {
         firstInvalidField = "#DriverIdentityDocument";
-        message = "Debe colocar la cédula del socio";
+        message = "Debe colocar la cédula del asociado";
     }
 
     if (!firstInvalidField) {
@@ -147,7 +157,7 @@ function isOkToSave() {
 
     if ($("#DriverFullName").val() == "" && !firstInvalidField) {
         firstInvalidField = "#DriverFullName";
-        message = "Debe colocar el nombre del socio";
+        message = "Debe colocar el nombre del asociado";
     } else {
         const driverFullName = $("#DriverFullName").val().trim();
         const regex = /^[a-zA-ZñÑ\s]{5,}$/;
@@ -172,18 +182,18 @@ function isOkToSave() {
 
     if ($("#PartnerNumber").val() != "" &&  $("#PartnerNumber").val() == "0" && !firstInvalidField) {
         firstInvalidField = "#PartnerNumber";
-        message = "El número de socio no puede ser cero";
+        message = "El número de asociado no puede ser cero";
     }
 
     if ($("#PartnerNumber").val() == "" && !firstInvalidField) {
         firstInvalidField = "#PartnerNumber";
-        message = "Debe colocar el número de socio";
+        message = "Debe colocar el número de asociado";
     }
 
-    if ($("#RepresentativePhone").val() == "" && !firstInvalidField) {
-        firstInvalidField = "#RepresentativePhone";
-        message = "Debe colocar el número de teléfono del representante";
-    }
+    //if ($("#RepresentativePhone").val() == "" && !firstInvalidField) {
+    //    firstInvalidField = "#RepresentativePhone";
+    //    message = "Debe colocar el número de teléfono del representante";
+    //}
 
     if (!firstInvalidField) {
         const identityValue = $("#DriverPhone").val();
@@ -193,6 +203,8 @@ function isOkToSave() {
             message = "Debe colocar un número de télefono válido";
         }
     }
+
+    // TEMP-EMAIL: email required/format validation removed temporarily (empty is saved as N/D). Restore later.
 
     if (firstInvalidField) {
         showAlert(message, firstInvalidField);

@@ -13,6 +13,10 @@ using static SuperTransp.Core.Interfaces;
 var builder = WebApplication.CreateBuilder(args);
 
 var jwtKey = builder.Configuration["Jwt:SecretKey"];
+if (string.IsNullOrEmpty(jwtKey))
+{
+	throw new InvalidOperationException("JWT SecretKey no está configurada en appsettings.json. Por favor verifica la sección 'Jwt:SecretKey'.");
+}
 var key = Encoding.ASCII.GetBytes(jwtKey);
 
 builder.Services.AddAuthentication(options =>
@@ -56,10 +60,25 @@ builder.Services.Configure<FormOptions>(options =>
 builder.Services.Configure<MaintenanceSettings>(
 	builder.Configuration.GetSection("Maintenance"));
 
-builder.Configuration
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true);
+builder.Services.AddSingleton<QrCodeSigner>();
 
+// BDV C2P integration (section "Bdv"): disabled until Bdv:Enabled is true and the API key is configured
+builder.Services.Configure<BdvC2POptions>(builder.Configuration.GetSection("Bdv"));
+builder.Services.AddHttpClient<BdvC2PService>((sp, client) =>
+{
+	var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<BdvC2POptions>>().Value;
+	client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds > 0 ? options.TimeoutSeconds : 30);
+})
+.ConfigurePrimaryHttpMessageHandler(sp =>
+{
+	var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<BdvC2POptions>>().Value;
+	var handler = new HttpClientHandler();
+	if (options.SkipCertificateValidation)
+	{
+		handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+	}
+	return handler;
+});
 builder.Services.AddTransient<ISecurity, Security>();
 builder.Services.AddTransient<IGeography, SuperTransp.Core.Geography>();
 builder.Services.AddTransient<IPublicTransportGroup, PublicTransportGroup>();
@@ -70,6 +89,10 @@ builder.Services.AddTransient<IDriver, Driver>();
 builder.Services.AddTransient<ISupervision, Supervision>();
 builder.Services.AddTransient<ICommonData, CommonData>();
 builder.Services.AddTransient<IReport, Reports>();
+builder.Services.AddTransient<IProcedure, Procedures>();
+builder.Services.AddTransient<IExchangeRate, ExchangeRate>();
+builder.Services.AddSingleton<BcvScraperService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<BcvScraperService>());
 builder.Services.AddScoped<ClientInfoService>();
 builder.Services.AddScoped<IFtpService, FtpService>();
 builder.Services.AddScoped<IUniverse, Universe>();

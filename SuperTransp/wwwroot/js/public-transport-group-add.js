@@ -4,20 +4,22 @@
         inputElement.addEventListener("input", function () {
             var value = inputElement.value;
 
-            if (value.length > 0 && !/^[JjVv]/.test(value[0])) {
+            if (value.length > 0 && !/^[JjVvCc]/.test(value[0])) {
                 value = "J" + value;
             }
 
-            value = value.replace(/[^JjVv0-9]/g, "");
+            value = value.replace(/[^JjVvCc0-9]/g, "");
 
             if (/^[Jj]/.test(value)) {
                 value = "J" + value.slice(1);
             } else if (/^[Vv]/.test(value)) {
                 value = "V" + value.slice(1);
+            } else if (/^[Cc]/.test(value)) {
+                value = "C" + value.slice(1);
             }
 
-            if (value.length > 1 && /^[JV]/.test(value[0])) {
-                value = value[0] + value.slice(1).replace(/[JV]/gi, "");
+            if (value.length > 1 && /^[JVC]/.test(value[0])) {
+                value = value[0] + value.slice(1).replace(/[JVC]/gi, "");
             }
 
             inputElement.value = value;
@@ -55,6 +57,10 @@ document.addEventListener("DOMContentLoaded", function () {
         return value.replace(/[^0-9]/g, "");
     });
 
+    handleInput("[name='RepresentativeEmail']", function (value) {
+        return value.toLowerCase().replace(/\s/g, "");
+    });
+
     handleInput("[name='Partners']", function (value) {
         return value.replace(/[^0-9]/g, "");
     });
@@ -71,27 +77,39 @@ $("body").on("click", "#saveRequest", function (event) {
         return false;
     }
 
-    $(this).closest("form").trigger("submit");
-});
+    var $btn = $(this);
+    var nativeForm = $btn.closest("form")[0];
+    var paramValue1 = $('#PublicTransportGroupRif').val();
 
-$("form").on("submit", function (e) {
-    e.preventDefault();
+    $btn.prop("disabled", true);
 
-    if ($(this).valid()) {
-        var paramValue1 = $('#PublicTransportGroupRif').val();
-        $("#saveRequest").prop("disabled", true);
-        $.ajax({
-            url: window.checkExistingUrl,
-            data: {
-                paramValue1: paramValue1,
-            },
-            success: function (data) {
-                showMsg(data);
-                $("#saveRequest").prop("disabled", false);
-            },
-            cache: false
-        });
-    }
+    $.ajax({
+        url: window.checkExistingUrl,
+        data: {
+            paramValue1: paramValue1,
+            paramValue4: $('#RepresentativeEmail').val(),
+            paramValue5: $('#RepresentativeIdentityDocument').val()
+        },
+        success: function (data) {
+            $btn.prop("disabled", false);
+            if (data !== "OK") {
+                alert(data);
+                return;
+            }
+            // Inyectar GasStationIds antes del submit nativo
+            $('input[name="GasStationIds"]').remove();
+            $('#gasStationTableBody tr').each(function () {
+                var id = $(this).data('gasStationId');
+                $('<input>').attr({
+                    type: 'hidden',
+                    name: 'GasStationIds',
+                    value: id
+                }).appendTo(nativeForm);
+            });
+            nativeForm.submit();
+        },
+        cache: false
+    });
 });
 
 function isOkToSave() {
@@ -175,13 +193,21 @@ function isOkToSave() {
         message = "Debe colocar un número de teléfono válido";
     }
 
+    // TEMP-EMAIL: email required/format validation removed temporarily (empty is saved as N/D). Restore later.
+
     const partners = $("#Partners").val();
     if (partners === "" && !firstInvalidField) {
         firstInvalidField = "#Partners";
-        message = "Debe colocar el cupo";
+        message = "Debe colocar la flota habilitada";
     } else if (partners === "0" && !firstInvalidField) {
         firstInvalidField = "#Partners";
-        message = "El cupo no puede ser cero";
+        message = "La flota habilitada no puede ser cero";
+    }
+
+    const gasStationCount = $('#gasStationTableBody tr').length;
+    if (gasStationCount === 0 && !firstInvalidField) {
+        firstInvalidField = "#GasStationId";
+        message = "Debe agregar al menos una estación de combustible a la tabla";
     }
 
     if (firstInvalidField) {
@@ -217,15 +243,6 @@ function highlightErrorField(selector) {
     });
 
     $(selector)[0].scrollIntoView({ behavior: "smooth", block: "center" });
-}
-
-function showMsg(hasCurrentJob) {
-    if (hasCurrentJob != "OK") {
-        alert(hasCurrentJob);
-        return false;
-    } else {
-        $("form").unbind('submit').submit();
-    }
 }
 
 $(document).ready(function () {
@@ -280,6 +297,57 @@ $(document).ready(function () {
         const match = window.designations.find(item => item.label === typed);
         if (!match) {
             $("#DesignationId").val("");
+        }
+    });
+
+    $('#btnAddGasStation').on('click', function () {
+        var stationId = $('#GasStationId').val();
+        var fullText = $('#GasStationId option:selected').text();
+        var parts = fullText.includes(' - ') ? fullText.split(' - ') : ['', fullText];
+        var municipalityName = parts[0];
+        var stationName = parts.slice(1).join(' - ');
+
+        if (!stationId) {
+            alert('Debe seleccionar una estación de la lista.');
+            return;
+        }
+
+        // Verificar duplicado
+        var duplicate = false;
+        $('#gasStationTableBody tr').each(function () {
+            if ($(this).data('gasStationId') == stationId) {
+                duplicate = true;
+                return false;
+            }
+        });
+
+        if (duplicate) {
+            alert('Esta estación ya fue agregada.');
+            return;
+        }
+
+        var trashIcon = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">' +
+            '<path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>' +
+            '<path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>' +
+            '</svg>';
+
+        var row = '<tr data-gas-station-id="' + stationId + '">' +
+            '<td style="padding:8px 12px; border-bottom:1px solid #eee;">' + municipalityName + '</td>' +
+            '<td style="padding:8px 12px; border-bottom:1px solid #eee;">' + stationName + '</td>' +
+            '<td style="padding:8px; text-align:center; border-bottom:1px solid #eee;">' +
+            '<button type="button" class="btnRemoveStation" style="background:none; border:none; cursor:pointer; color:#c0392b; padding:2px 6px;" title="Eliminar">' +
+            trashIcon + '</button>' +
+            '</td></tr>';
+
+        $('#gasStationTableBody').append(row);
+        $('#gasStationTableContainer').show();
+        $('#GasStationId').val('');
+    });
+
+    $(document).on('click', '.btnRemoveStation', function () {
+        $(this).closest('tr').remove();
+        if ($('#gasStationTableBody tr').length === 0) {
+            $('#gasStationTableContainer').hide();
         }
     });
 });

@@ -9,7 +9,7 @@
         StateName = item.StateName,
         TotalPTGInState = item.TotalPTGInState,
         TotalUniversePTGInState = item.TotalUniversePTGInState,
-        TotaPartnersByPTG = item.TotaPartnersByPTG,
+        TotalSupervisedDrivers = item.TotalSupervisedDrivers,
         TotalAddedPartners = item.TotalAddedPartners,
         TotalUniverseDriversInState = item.TotalUniverseDriversInState
     });
@@ -133,13 +133,15 @@
                     }
                 }
 
+                @* TEMP-HIDDEN: universe totals hidden temporarily, remove the Razor comment to show them again
                 Total universo de organizaciones: @totalPTGUniverseInState.ToString("N0", new System.Globalization.CultureInfo("de-DE"))
                 <br />
-                Total universo de socios: @totalDriversUniverseInState.ToString("N0", new System.Globalization.CultureInfo("de-DE"))
+                Total universo de asociados: @totalDriversUniverseInState.ToString("N0", new System.Globalization.CultureInfo("de-DE"))
                 <br />
+                *@
                 Total organizaciones cargadas: @totalPTG.ToString("N0", new System.Globalization.CultureInfo("de-DE")) avance: @porcentajeOrganizaciones.ToString("F2", new System.Globalization.CultureInfo("de-DE"))%
                 <br />
-                Total socios cargados: @totalPartners.ToString("N0", new System.Globalization.CultureInfo("de-DE")) avance: @porcentajeSocios.ToString("F2", new System.Globalization.CultureInfo("de-DE"))%
+                Total asociados cargados: @totalPartners.ToString("N0", new System.Globalization.CultureInfo("de-DE")) avance: @porcentajeSocios.ToString("F2", new System.Globalization.CultureInfo("de-DE"))%
             </h3>
         </div>
     </div>
@@ -161,11 +163,11 @@
         const currentTypes = {};
 
         // Paleta consistente entre dona/torta y barras (mismo orden que los checkboxes)
-        // 0: Orgs. Cargadas, 1: Socios Cargados, 2: Socios Totales, 3: Universo Orgs., 4: Universo Socios
+        // 0: Orgs. Cargadas, 1: Socios Cargados, 2: Socios Supervisados, 3: Universo Orgs., 4: Universo Socios
         const COLORS = [
             '#4CAF50', // Orgs. Cargadas
             '#2196F3', // Socios Cargados
-            '#FF9800', // Socios Totales
+            '#FF9800', // Socios Supervisados
             '#9C27B0', // Universo Orgs.
             '#E91E63'  // Universo Socios
         ];
@@ -175,7 +177,8 @@
             return {
                 ptg: `ptg-checkbox-${chartId}`,
                 partners: `partners-checkbox-${chartId}`,
-                totalPartnersByPTG: `total-partners-by-ptg-checkbox-${chartId}`,
+                // Muestra Socios Supervisados
+                totalSupervisedDrivers: `total-partners-by-ptg-checkbox-${chartId}`,
                 universePtg: `universe-ptg-checkbox-${chartId}`,
                 universePartners: `universe-partners-checkbox-${chartId}`
             };
@@ -190,11 +193,11 @@
             const ids = getCheckboxIds(item.ChartId);
 
             const picks = [
-                { show: document.getElementById(ids.ptg).checked, value: item.TotalPTGInState, label: 'Organizaciones Cargadas', color: COLORS[0] },
-                { show: document.getElementById(ids.partners).checked, value: item.TotalAddedPartners, label: 'Socios Cargados', color: COLORS[1] },
-                { show: document.getElementById(ids.totalPartnersByPTG).checked, value: item.TotaPartnersByPTG, label: 'Socios Totales', color: COLORS[2] },
                 { show: document.getElementById(ids.universePtg).checked, value: item.TotalUniversePTGInState, label: 'Universo Organizaciones', color: COLORS[3] },
-                { show: document.getElementById(ids.universePartners).checked, value: item.TotalUniverseDriversInState, label: 'Universo Socios', color: COLORS[4] }
+                { show: document.getElementById(ids.ptg).checked, value: item.TotalPTGInState, label: 'Organizaciones Cargadas', color: COLORS[0] },
+                { show: document.getElementById(ids.universePartners).checked, value: item.TotalUniverseDriversInState, label: 'Universo Asociados', color: COLORS[4] },
+                { show: document.getElementById(ids.partners).checked, value: item.TotalAddedPartners, label: 'Vehículos Cargados por Asociado', color: COLORS[1] },
+                { show: document.getElementById(ids.totalSupervisedDrivers).checked, value: item.TotalSupervisedDrivers, label: 'Asociados Supervisados', color: COLORS[2] }
             ];
 
             picks.forEach(p => {
@@ -351,11 +354,9 @@
             progressDiv.style.color = '#2c3e50';
             progressDiv.innerHTML = `
                 <strong>% Avance Orgs:</strong> ${porcentajeOrg.toFixed(2)}%<br/>
-                <strong>% Avance Socios:</strong> ${porcentajeSocios.toFixed(2)}%
+                <strong>% Avance Asociados:</strong> ${porcentajeSocios.toFixed(2)}%
             `;
             card.appendChild(progressDiv);
-
-
 
             const controlsDiv = document.createElement('div');
             controlsDiv.className = 'controls';
@@ -369,19 +370,28 @@
             `;
             controlsDiv.innerHTML += `
                 <input type="checkbox" id="${ids.partners}" checked>
-                <label for="${ids.partners}">Socios Cargados</label>
+                <label for="${ids.partners}">Vehículos Cargados por Asociado</label>
             `;
+            // Muestra Socios Supervisados
             controlsDiv.innerHTML += `
-                <input type="checkbox" id="${ids.totalPartnersByPTG}">
-                <label for="${ids.totalPartnersByPTG}">Socios Totales</label>
+                <input type="checkbox" id="${ids.totalSupervisedDrivers}" checked>
+                <label for="${ids.totalSupervisedDrivers}">Asociados Supervisados</label>
             `;
+            // TEMP-HIDDEN: "Universo Orgs." filter hidden temporarily (display:none keeps the checkbox in the DOM,
+            // the chart code reads it); remove the style to show it again
             controlsDiv.innerHTML += `
-                <input type="checkbox" id="${ids.universePtg}">
-                <label for="${ids.universePtg}">Universo Orgs.</label>
+                <span style="display:none">
+                    <input type="checkbox" id="${ids.universePtg}">
+                    <label for="${ids.universePtg}">Universo Orgs.</label>
+                </span>
             `;
+            // TEMP-HIDDEN: "Universo Asociados" filter hidden temporarily (display:none keeps the checkbox in the
+            // DOM, the chart code reads it); remove the style to show it again
             controlsDiv.innerHTML += `
-                <input type="checkbox" id="${ids.universePartners}">
-                <label for="${ids.universePartners}">Universo Socios</label>
+                <span style="display:none">
+                    <input type="checkbox" id="${ids.universePartners}">
+                    <label for="${ids.universePartners}">Universo Asociados</label>
+                </span>
             `;
 
             const chartDiv = document.createElement('div');
@@ -400,7 +410,7 @@
             renderChart(item, 'bar');
 
             // Eventos de checkboxes => actualizar
-            Object.values(ids).forEach(cid => {
+            Object.values(ids).forEach(cid => { 
                 document.getElementById(cid).addEventListener('change', () => updateChart(item.ChartId));
             });
         });
