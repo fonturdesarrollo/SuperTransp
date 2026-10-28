@@ -29,6 +29,7 @@ namespace SuperTransp.Models
 		// TEMP-EMAIL: Required + EmailAddress removed temporarily (empty email is saved as N/D). Restore later.
 		[StringLength(80, ErrorMessage = "Email del representante no puede exceder 80 caracteres")]
 		public string? RepresentativeEmail { get; set; }
+		public DateTime? AssemblyDate { get; set; }
 		public DateTime PublicTransportGroupIdModifiedDate { get; set; }
 		public string? PTGCompleteName { get; set; }
 		public string? StateName { get; set; }
@@ -68,6 +69,9 @@ namespace SuperTransp.Models
 		public string? BatteryName { get; set; }
 		public int NumberOfBatteries { get; set; }
 		public string? FailureTypeName { get; set; }
+		public string? Niv { get; set; }
+		public string? BodySerialNumber { get; set; }
+		public string? EngineSerialNumber { get; set; }
 		public bool FingerprintTrouble { get; set; }
 		public string? Remarks { get; set; }
 		public string? VehicleImageUrl { get; set; }

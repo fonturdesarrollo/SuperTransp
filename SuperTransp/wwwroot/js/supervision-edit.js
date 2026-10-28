@@ -9,6 +9,9 @@
 		}
 	}
 
+	// Pictures required per vehicle: 3 for moto taxi (mode 4), 5 for the other modes (taxi included)
+	const requiredPictures = document.querySelector('[name="ModeId"]').value === "4" ? 3 : 5;
+
 	Dropzone.autoDiscover = false;
 	const dropzone = new Dropzone("#myDropzone", {
 		url: data.saveFilesUrl,
@@ -18,7 +21,7 @@
 		acceptedFiles: ".jpg,.jpeg,.png,.gif,.webp",
 		dictDefaultMessage: "Arrastra las imágenes aquí o haga clic para agregarlas.",
 		addRemoveLinks: false,
-		maxFiles: 4,
+		maxFiles: requiredPictures,
 		headers: {
 			"RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val()
 		},
@@ -32,9 +35,9 @@
 		},
 		init: function () {
 			this.on("addedfile", function (file) {
-				if (this.files.length > 4) {
+				if (this.files.length > requiredPictures) {
 					this.removeFile(file);
-					alert("Solo se pueden subir hasta 4 imágenes.");
+					alert("Solo se pueden subir hasta " + requiredPictures + " imágenes.");
 					return;
 				}
 				console.log("Archivo agregado:", file);
@@ -44,7 +47,7 @@
 			});
 			this.on("queuecomplete", function () {
 				let uploadedFiles = this.getAcceptedFiles().filter(f => f.status === Dropzone.SUCCESS);
-				if (uploadedFiles.length > 0 && uploadedFiles.length <= 4) {
+				if (uploadedFiles.length > 0 && uploadedFiles.length <= requiredPictures) {
 					alert("Todas las imágenes han sido cargadas correctamente.");
 				}
 			});
@@ -210,8 +213,28 @@
 					paramValue1: paramValue1,
 					paramValue2: paramValue2
 				},
-				success: function (data) {
-					showMsg(data);
+				success: function (plateResult) {
+					if (plateResult != "OK") {
+						showMsg(plateResult);
+						return;
+					}
+
+					// Plate is free: now check the NIV / serials against other vehicles
+					$.ajax({
+						url: data.checkVehicleIdentifiersUrl,
+						data: {
+							paramValue1: paramValue1,
+							paramValue2: $('#ModeId').val(),
+							niv: $('#Niv').val(),
+							bodySerial: $('#BodySerialNumber').val(),
+							engineSerial: $('#EngineSerialNumber').val(),
+							withVehicle: $("#DriverWithVehicle option:selected").text() === "Sí"
+						},
+						success: function (identifiersResult) {
+							showMsg(identifiersResult);
+						},
+						cache: false
+					});
 				},
 				cache: false
 			});
@@ -228,7 +251,9 @@
 		const dz = Dropzone.forElement("#myDropzone");
 		const uploaded = dz.getAcceptedFiles().filter(f => f.status === Dropzone.SUCCESS);
 		const val = id => $(`#${id}`).val();
-		const isEmpty = id => val(id) === "";
+		// N/D and N/A (any case) are placeholders, not real values: for these three boxes they count as empty
+		const isSerialPlaceholder = id => ["Niv", "BodySerialNumber", "EngineSerialNumber"].includes(id) && /^\s*N\s*\/\s*[DA]\s*$/i.test(val(id) || "");
+		const isEmpty = id => { const v = val(id); return v === "" || (typeof v === "string" && v.trim() === "") || isSerialPlaceholder(id); };
 
 		const validateField = (condition, fieldId, msg) => {
 			if (condition && !firstInvalidField) {
@@ -257,6 +282,9 @@
 				["NumberOfBatteries", "Debe seleccionar la cantidad de baterías"],
 				["MotorOilId", "Debe seleccionar el tipo de aceite"],
 				["Liters", "Debe seleccionar los litros de aceite"],
+				["Niv", "Debe colocar el NIV del vehículo", () => ["1", "2", "5", "6"].includes(val("ModeId"))],
+				["BodySerialNumber", "Debe colocar el serial de carrocería del vehículo"],
+				["EngineSerialNumber", "Debe colocar el serial de motor del vehículo"],
 				["FingerprintTrouble", "Debe seleccionar si tiene o no problemas con la huella"],
 				["FailureTypeId", "Debe seleccionar si tiene o no alguna falla"]
 			];
@@ -275,9 +303,9 @@
 					firstInvalidField = "#myDropzone";
 					message = modeMessage;
 				}
-			} else if (totalPics === 0) {
+			} else if (totalPics === 0 && !firstInvalidField) {
 				firstInvalidField = "#myDropzone";
-				message = "Debe agregar imágenes del vehículo para poder actualizar";
+				message = "Debe agregar imágenes del vehículo para poder actualizar. Recuerde agregar la foto del carnet o certificado de circulación.";
 			} else {
 				const modeMessage = validateMode(modeId, uploaded, totalPics);
 				if (modeMessage && !firstInvalidField) {
@@ -303,34 +331,31 @@
 		return true;
 	}
 
+	// Pictures rule: the vehicle must end up with the required number of pictures.
+	//  - nothing uploaded: the pictures it already has must reach the required number
+	//  - uploading the full set replaces the current pictures
+	//  - uploading fewer adds them to the current ones (the current pictures are kept) as long as the total is the required number
 	function validateMode(modeId, uploaded, currentTotalPictures) {
-		var message = "";
-		if (modeId === "4") {
-			if (currentTotalPictures != 2 || uploaded.length > 0) {
-				if (uploaded.length < 2 || uploaded.length > 2) {
-					var staticMessage = "El vehículo que está actualizando es una moto y requiere de 2 imágenes para poder ser actualizado, actualmente tiene ";
-					var quantityMessage = "";
-					if (uploaded.length > 2) {
-						quantityMessage = uploaded.length + ", haga clic en el recuadro: Cargar imágenes, y agregue 2 imágenes (las actuales serán sustituidas)";
-					} else if (uploaded.length < 2) {
-						quantityMessage = uploaded.length + ", haga clic en el recuadro: Cargar imágenes, y agregue 2 imágenes (las actuales serán sustituidas).";
-					}
-					message = staticMessage + quantityMessage;
-				}
-			}
-		} else {
-			if (currentTotalPictures != 4 || uploaded.length > 0) {
-				if (uploaded.length < 4 || uploaded.length > 4) {
-					var staticMessage = "El vehículo que está actualizando requiere de 4 imágenes para poder ser actualizado, actualmente tiene ";
-					var quantityMessage = "";
-					if (uploaded.length < 4) {
-						quantityMessage = uploaded.length + ", haga clic en el recuadro: Cargar imágenes, y agregue 4 imágenes (las actuales serán sustituidas).";
-					}
-					message = staticMessage + quantityMessage;
-				}
-			}
+		const required = requiredPictures;
+		const uploadedCount = uploaded.length;
+		const missing = required - currentTotalPictures;
+
+		if (uploadedCount === 0) {
+			if (currentTotalPictures >= required) return "";
+			return "El vehículo requiere de " + required + " imágenes y actualmente tiene " + currentTotalPictures +
+				". Haga clic en el recuadro: Cargar imágenes, y agregue " + missing + " imagen(es) adicional(es) (las actuales se conservan). Recuerde agregar la foto del carnet o certificado de circulación.";
 		}
-		return message;
+
+		if (uploadedCount === required) return "";
+		if (missing > 0 && uploadedCount === missing) return "";
+
+		let message = "El vehículo requiere de " + required + " imágenes, actualmente tiene " + currentTotalPictures + " y está agregando " + uploadedCount + ". ";
+		if (missing > 0) {
+			message += "Agregue " + missing + " imagen(es) adicional(es) (las actuales se conservan) o agregue " + required + " imágenes (las actuales serán sustituidas).";
+		} else {
+			message += "Agregue " + required + " imágenes (las actuales serán sustituidas).";
+		}
+		return message + " Recuerde agregar la foto del carnet o certificado de circulación.";
 	}
 
 	function showMsg(hasCurrentJob) {
@@ -341,6 +366,29 @@
 			$("form").unbind('submit').submit();
 		}
 	}
+
+	// Tank capacity 0 only applies to electric vehicles (FuelTypeId 6): for them 0 is the only option shown,
+	// for any other fuel type 0 is hidden and the list works as usual.
+	// Default value: 0 for electric, 5 for any other fuel type (applied when the fuel type is changed by the user,
+	// and on load only if the capacity is empty or 0, so a saved capacity is never overwritten)
+	function updateTankCapacityOptions(applyDefault) {
+		const isElectric = $("#FuelTypeId").val() === "6";
+		const $tank = $("#TankCapacity");
+
+		$tank.find("option").each(function () {
+			const optionValue = $(this).val();
+			const hide = optionValue !== "" && (isElectric ? optionValue !== "0" : optionValue === "0");
+			$(this).prop("hidden", hide).prop("disabled", hide);
+		});
+
+		if (isElectric) {
+			$tank.val("0");
+		} else if (applyDefault === true || $tank.val() === "0" || $tank.val() === "" || $tank.val() === null) {
+			$tank.val("5");
+		}
+	}
+
+	$("#FuelTypeId").on("change", function () { updateTankCapacityOptions(true); });
 
 	function setTransportTypeDefaultValues(modeId) {
 		if (data.driverWithVehicle === 'False') {
@@ -379,7 +427,20 @@
 			}
 		});
 
+		// NIV, body serial and engine serial: always uppercase and at most 50 characters
+		$('#Niv, #BodySerialNumber, #EngineSerialNumber').on('input', function () {
+			const start = this.selectionStart;
+			const end = this.selectionEnd;
+			this.value = this.value.toUpperCase().slice(0, 50);
+			if (start !== null) this.setSelectionRange(start, end);
+		}).each(function () {
+			this.value = this.value.toUpperCase();
+			// A loaded N/D or N/A is not a valid value: show the box empty
+			if (/^\s*N\s*\/\s*[DA]\s*$/.test(this.value)) this.value = "";
+		});
+
 		setTransportTypeDefaultValues($("#ModeId").val());
+		updateTankCapacityOptions();
 
 		$('#Plate').on('input', function () {
 			const value = $(this).val();

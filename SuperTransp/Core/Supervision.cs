@@ -65,6 +65,9 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@TankCapacity", model.TankCapacity);
 						cmd.Parameters.AddWithValue("@BatteryId", model.BatteryId);
 						cmd.Parameters.AddWithValue("@NumberOfBatteries", model.NumberOfBatteries);
+						cmd.Parameters.AddWithValue("@BodySerialNumber", (model.BodySerialNumber ?? string.Empty).Trim().ToUpper());
+						cmd.Parameters.AddWithValue("@EngineSerialNumber", (model.EngineSerialNumber ?? string.Empty).Trim().ToUpper());
+						cmd.Parameters.AddWithValue("@Niv", (model.Niv ?? string.Empty).Trim().ToUpper());
 						cmd.Parameters.AddWithValue("@FailureTypeId", model.FailureTypeId);
 						cmd.Parameters.AddWithValue("@FingerprintTrouble", model.FingerprintTrouble);
 						cmd.Parameters.AddWithValue("@VehicleImageUrl", model.VehicleImageUrl);
@@ -422,6 +425,9 @@ namespace SuperTransp.Core
 								BatteryName = (string)dr["BatteryName"],
 								NumberOfBatteries = (int)dr["NumberOfBatteries"],
 								FailureTypeName = (string)dr["FailureTypeName"],
+								Niv = (string)dr["Niv"],
+								BodySerialNumber = (string)dr["BodySerialNumber"],
+								EngineSerialNumber = (string)dr["EngineSerialNumber"],
 								VehicleImageUrl = (string)dr["VehicleImageUrl"],
 								FingerprintTrouble = (bool)dr["FingerprintTrouble"],
 								Remarks = (string)dr["Remarks"],
@@ -506,6 +512,9 @@ namespace SuperTransp.Core
 								BatteryName = (string)dr["BatteryName"],
 								NumberOfBatteries = (int)dr["NumberOfBatteries"],
 								FailureTypeName = (string)dr["FailureTypeName"],
+								Niv = (string)dr["Niv"],
+								BodySerialNumber = (string)dr["BodySerialNumber"],
+								EngineSerialNumber = (string)dr["EngineSerialNumber"],
 								VehicleImageUrl = (string)dr["VehicleImageUrl"],
 								FingerprintTrouble = (bool)dr["FingerprintTrouble"],
 								Remarks = (string)dr["Remarks"],
@@ -711,6 +720,9 @@ namespace SuperTransp.Core
 							supervision.TankCapacity = (int)dr["TankCapacity"];
 							supervision.BatteryName = (string)dr["BatteryName"];
 							supervision.NumberOfBatteries = (int)dr["NumberOfBatteries"];
+							supervision.Niv = (string)dr["Niv"];
+							supervision.EngineSerialNumber = (string)dr["EngineSerialNumber"];
+							supervision.BodySerialNumber = (string)dr["BodySerialNumber"];
 							supervision.FailureTypeName = (string)dr["FailureTypeName"];
 							supervision.VehicleImageUrl = (string)dr["VehicleImageUrl"];
 							supervision.FingerprintTrouble = (bool)dr["FingerprintTrouble"];
@@ -789,6 +801,9 @@ namespace SuperTransp.Core
 							supervision.BatteryName = (string)dr["BatteryName"];
 							supervision.BatteryId = (int)dr["BatteryId"];
 							supervision.NumberOfBatteries = (int)dr["NumberOfBatteries"];
+							supervision.Niv = (string)dr["Niv"];
+							supervision.EngineSerialNumber = (string)dr["EngineSerialNumber"];
+							supervision.BodySerialNumber = (string)dr["BodySerialNumber"];
 							supervision.FailureTypeName = (string)dr["FailureTypeName"];
 							supervision.FailureTypeId = (int)dr["FailureTypeId"];
 							supervision.VehicleImageUrl = (string)dr["VehicleImageUrl"];
@@ -872,6 +887,9 @@ namespace SuperTransp.Core
 							supervision.BatteryName = (string)dr["BatteryName"];
 							supervision.BatteryId = (int)dr["BatteryId"];
 							supervision.NumberOfBatteries = (int)dr["NumberOfBatteries"];
+							supervision.Niv = (string)dr["Niv"];
+							supervision.EngineSerialNumber = (string)dr["EngineSerialNumber"];
+							supervision.BodySerialNumber = (string)dr["BodySerialNumber"];
 							supervision.FailureTypeName = (string)dr["FailureTypeName"];
 							supervision.FailureTypeId = (int)dr["FailureTypeId"];
 							supervision.VehicleImageUrl = (string)dr["VehicleImageUrl"];
@@ -948,6 +966,9 @@ namespace SuperTransp.Core
 							supervision.BatteryName = (string)dr["BatteryName"];
 							supervision.BatteryId = (int)dr["BatteryId"];
 							supervision.NumberOfBatteries = (int)dr["NumberOfBatteries"];
+							supervision.Niv = (string)dr["Niv"];
+							supervision.EngineSerialNumber = (string)dr["EngineSerialNumber"];
+							supervision.BodySerialNumber = (string)dr["BodySerialNumber"];
 							supervision.FailureTypeName = (string)dr["FailureTypeName"];
 							supervision.FailureTypeId = (int)dr["FailureTypeId"];
 							supervision.VehicleImageUrl = (string)dr["VehicleImageUrl"];
@@ -1035,6 +1056,9 @@ namespace SuperTransp.Core
 								BatteryName = (string)dr["BatteryName"],
 								NumberOfBatteries = (int)dr["NumberOfBatteries"],
 								FailureTypeName = (string)dr["FailureTypeName"],
+								Niv = (string)dr["Niv"],
+								BodySerialNumber = (string)dr["BodySerialNumber"],
+								EngineSerialNumber = (string)dr["EngineSerialNumber"],
 								VehicleImageUrl = (string)dr["VehicleImageUrl"],
 								FingerprintTrouble = (bool)dr["FingerprintTrouble"],
 								Remarks = (string)dr["Remarks"],
@@ -1068,7 +1092,7 @@ namespace SuperTransp.Core
 					}
 
 					List<SupervisionPictures> pictures = new();
-					SqlCommand cmd = new("SELECT * FROM SupervisionPicture WHERE PublicTransportGroupId = @PublicTransportGroupId AND DriverId = @DriverId", sqlConnection);
+					SqlCommand cmd = new("SELECT * FROM SupervisionPicture WHERE PublicTransportGroupId = @PublicTransportGroupId AND DriverId = @DriverId ORDER BY SupervisionPictureId", sqlConnection);
 					cmd.Parameters.AddWithValue("@PublicTransportGroupId", publicTransportGroupId);
 					cmd.Parameters.AddWithValue("@DriverId", driverPublicTransportGroupId);
 
@@ -1186,6 +1210,59 @@ namespace SuperTransp.Core
 			catch (Exception ex)
 			{
 				throw new Exception($"Error al obtener todas las líneas {ex.Message}", ex);
+			}
+		}
+
+		public List<PublicTransportGroupViewModel> RegisteredVehicleIdentifiers(string niv, string bodySerial, string engineSerial)
+		{
+			using (SqlConnection sqlConnection = GetConnection())
+			{
+				if (sqlConnection.State == ConnectionState.Closed)
+				{
+					sqlConnection.Open();
+				}
+
+				List<PublicTransportGroupViewModel> existing = new();
+
+				if (string.IsNullOrEmpty(niv) && string.IsNullOrEmpty(bodySerial) && string.IsNullOrEmpty(engineSerial))
+				{
+					return existing;
+				}
+
+				// An empty parameter means "that identifier is not checked"
+				SqlCommand cmd = new(@"SELECT DriverId, DriverIdentityDocument, DriverFullName, PartnerNumber, PublicTransportGroupRif, PTGCompleteName, StateName,
+						Plate, Niv, BodySerialNumber, EngineSerialNumber
+					FROM SuperTransp_PublicTransportGroupDriverDetail
+					WHERE SupervisionId > 0 AND DriverWithVehicle = 1
+						AND ((@Niv <> '' AND ModeId IN (1, 2, 5, 6) AND UPPER(LTRIM(RTRIM(Niv))) = @Niv)
+						  OR (@BodySerialNumber <> '' AND UPPER(LTRIM(RTRIM(BodySerialNumber))) = @BodySerialNumber)
+						  OR (@EngineSerialNumber <> '' AND UPPER(LTRIM(RTRIM(EngineSerialNumber))) = @EngineSerialNumber))", sqlConnection);
+				cmd.Parameters.AddWithValue("@Niv", niv ?? string.Empty);
+				cmd.Parameters.AddWithValue("@BodySerialNumber", bodySerial ?? string.Empty);
+				cmd.Parameters.AddWithValue("@EngineSerialNumber", engineSerial ?? string.Empty);
+
+				using (SqlDataReader dr = cmd.ExecuteReader())
+				{
+					while (dr.Read())
+					{
+						existing.Add(new PublicTransportGroupViewModel
+						{
+							DriverId = (int)dr["DriverId"],
+							DriverIdentityDocument = (int)dr["DriverIdentityDocument"],
+							DriverFullName = (string)dr["DriverFullName"],
+							PartnerNumber = (int)dr["PartnerNumber"],
+							PublicTransportGroupRif = (string)dr["PublicTransportGroupRif"],
+							PTGCompleteName = (string)dr["PTGCompleteName"],
+							StateName = (string)dr["StateName"],
+							Plate = (string)dr["Plate"],
+							Niv = (string)dr["Niv"],
+							BodySerialNumber = (string)dr["BodySerialNumber"],
+							EngineSerialNumber = (string)dr["EngineSerialNumber"],
+						});
+					}
+				}
+
+				return existing;
 			}
 		}
 

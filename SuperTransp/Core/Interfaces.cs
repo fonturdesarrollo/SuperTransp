@@ -129,6 +129,7 @@ namespace SuperTransp.Core
 			public List<PublicTransportGroupViewModel> GetAllDriverPublicTransportGroup(string ptgRif);
 			public List<PublicTransportGroupViewModel> GetSupervisionPlate(string plate, int stateId);
 			public List<PublicTransportGroupViewModel> RegisteredPlate(string plate);
+			public List<PublicTransportGroupViewModel> RegisteredVehicleIdentifiers(string niv, string bodySerial, string engineSerial);
 			public int AddOrEditSummary(SupervisionSummaryViewModel model);
 			public List<SupervisionSummaryViewModel> GetAllSupervisionSummary(int stateId = 0, int supervisionRoundId = 0);
 			public List<SupervisionSummaryViewModel> GetSupervisionSummaryByStateId(int stateId, int supervisionRoundId = 0);

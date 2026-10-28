@@ -225,6 +225,27 @@
 								</div>
 								<div class="col-6">
 									<br />
+									<strong>NIV:</strong>
+									@{
+										// The NIV only applies to vehicles of organizations with ModeId 1, 2, 5 or 6; otherwise the box is locked
+										var nivAllowed = new[] { 1, 2, 5, 6 }.Contains(Model.ModeId);
+										var nivAttributes = new Dictionary<string, object> { { "placeholder", nivAllowed ? "NIV" : "No aplica a esta modalidad" }, { "maxlength", "50" }, { "class", "custom-textbox" } };
+										if (!nivAllowed) { nivAttributes["readonly"] = "readonly"; nivAttributes["style"] = "background:#eeeeee;cursor:not-allowed;"; }
+									}
+									@Html.TextBoxFor(x => x.Niv, nivAttributes)
+								</div>
+								<div class="col-6">
+									<br />
+									<strong>Serial carrocería:</strong>
+									@Html.TextBoxFor(x => x.BodySerialNumber, new { placeholder = "Serial de carrocería", maxlength = "50", @class = "custom-textbox" })
+								</div>
+								<div class="col-6">
+									<br />
+									<strong>Serial motor:</strong>
+									@Html.TextBoxFor(x => x.EngineSerialNumber, new { placeholder = "Serial de motor", maxlength = "50", @class = "custom-textbox" })
+								</div>
+								<div class="col-6">
+									<br />
 									<strong>Problema huella:</strong>
 									@Html.DropDownListFor(t => t.FingerprintTrouble, (SelectList)ViewBag.FingerprintProblem, "-- Seleccione --", new { @class = "form-control" })
 								</div>
@@ -324,6 +345,7 @@
 			saveFilesUrl: '@Url.Action("SaveFiles", "Supervision")',
 			deleteAllPicturesUrl: '@Url.Action("DeleteAllSupervisionPictures", "Supervision")',
 			checkExistingPlateUrl: '@Url.Action("CheckExistingPlate", "Supervision")',
+			checkVehicleIdentifiersUrl: '@Url.Action("CheckExistingVehicleIdentifiers", "Supervision")',
 			getMakesUrl: '@Url.Action("GetMakes", "Supervision")',
 			getModelsUrl: '@Url.Action("GetModels", "Supervision")',
 			partnerNumber: '@Model.PartnerNumber',
@@ -339,6 +361,6 @@
 			pdfIconUrl: '@Url.Content("~/images/pdf-icon.png")'
 		};
 	</script>
-	<script src="~/js/supervision-edit.js"></script>
+	<script src="~/js/supervision-edit.js" asp-append-version="true"></script>
 </body>
 </html>

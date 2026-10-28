@@ -208,6 +208,11 @@ function isOkToSave() {
         message = "La flota habilitada no puede ser cero";
     }
 
+    if (!$("#AssemblyDate").val() && !firstInvalidField) {
+        firstInvalidField = "#AssemblyDate";
+        message = "Debe colocar la fecha de la asamblea";
+    }
+
     const gasStationCount = $('#gasStationTableBody tr').length;
     if (gasStationCount === 0 && !firstInvalidField) {
         firstInvalidField = "#GasStationId";

@@ -164,6 +164,11 @@
                                 <span asp-validation-for="RepresentativeEmail" class="text-danger"></span>
                             </div>
                             <div class="col-6">
+                                <strong>Fecha Asamblea:</strong>
+                                @Html.TextBoxFor(x => x.AssemblyDate, "{0:yyyy-MM-dd}", new { type = "date" })
+                                <span asp-validation-for="AssemblyDate" class="text-danger"></span>
+                            </div>
+                            <div class="col-6">
                                 <strong>Flota habilitada:</strong>
                                 @Html.TextBoxFor(x => x.Partners, new { placeholder = "Cantidad de Asociados", maxlength = "3" })
                                 <span asp-validation-for="Partners" class="text-danger"></span>

@@ -44,6 +44,7 @@ namespace SuperTransp.Core
 			string? beforeModeName = string.Empty;
 			string? beforeDesignationName = string.Empty;
 			string? beforeUnionName = string.Empty;
+			DateTime? beforeAssemblyDate = null;
 			PublicTransportGroupViewModel ptgValues = new PublicTransportGroupViewModel();
 			bool isEditing = false;
 
@@ -64,6 +65,7 @@ namespace SuperTransp.Core
 						beforeModeName = ptgValues.ModeName;
 						beforeDesignationName = ptgValues.DesignationName;
 						beforeUnionName = ptgValues.UnionName;
+						beforeAssemblyDate = ptgValues.AssemblyDate;
 					}
 				}		
 
@@ -92,6 +94,8 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@RepresentativeName", model.RepresentativeName.ToUpper().Trim());
 						cmd.Parameters.AddWithValue("@RepresentativePhone", model.RepresentativePhone);
 						cmd.Parameters.AddWithValue("@RepresentativeEmail", SuperTransp.Core.EmailDefaults.Normalize(model.RepresentativeEmail)); // TEMP-EMAIL
+						var assemblyDate = cmd.Parameters.Add("@AssemblyDate", SqlDbType.SmallDateTime);
+						assemblyDate.Value = model.AssemblyDate.HasValue ? model.AssemblyDate.Value : DBNull.Value;
 						cmd.Parameters.AddWithValue("@PublicTransportGroupIdModifiedDate", DateTime.Now);
 						cmd.Parameters.AddWithValue("@Partners", model.Partners);
 						cmd.Parameters.AddWithValue("@GasStationId", model.GasStationId);
@@ -134,6 +138,7 @@ namespace SuperTransp.Core
 								$" cantidad socios: {ptgValues.Partners} -" +
 								$" representante: {ptgValues.RepresentativeName} -" +
 								$" cedula representante: {ptgValues.RepresentativeIdentityDocument} -" +
+								$" fecha asamblea: {(ptgValues.AssemblyDate.HasValue ? ptgValues.AssemblyDate.Value.ToString("dd/MM/yyyy") : "N/D")} -" +
 								$" gremio: {ptgValues.UnionName}");
 						}
 						else
@@ -150,6 +155,7 @@ namespace SuperTransp.Core
 								$" cantidad socios: {beforePartners} -" +
 								$" representante: {beforeRepresentativeName} -" +
 								$" cedula representante: {beforeRepresentativeIdentityDocument} -" +
+								$" fecha asamblea: {(beforeAssemblyDate.HasValue ? beforeAssemblyDate.Value.ToString("dd/MM/yyyy") : "N/D")} -" +
 								$" gremio: {beforeUnionName}]" +
 								$" DESPUES [" +
 								$" RIF: {model.PublicTransportGroupRif} -" +
@@ -159,6 +165,7 @@ namespace SuperTransp.Core
 								$" cantidad socios: {model.Partners} -" +
 								$" representante: {model.RepresentativeName} -" +
 								$" cedula representante: {model.RepresentativeIdentityDocument} -" +
+								$" fecha asamblea: {(model.AssemblyDate.HasValue ? model.AssemblyDate.Value.ToString("dd/MM/yyyy") : "N/D")} -" +
 								$" gremio: {ptgValues.UnionName}]");
 						}
 					}
@@ -206,11 +213,13 @@ namespace SuperTransp.Core
 							publicTransportGroup.RepresentativeName = (string)dr["RepresentativeName"];
 							publicTransportGroup.RepresentativePhone = (string)dr["RepresentativePhone"];
 							publicTransportGroup.RepresentativeEmail = dr["RepresentativeEmail"] == DBNull.Value ? null : (string)dr["RepresentativeEmail"];
+							publicTransportGroup.AssemblyDate = dr["AssemblyDate"] == DBNull.Value ? null : (DateTime)dr["AssemblyDate"];
 							publicTransportGroup.StateName = (string)dr["StateName"];
 							publicTransportGroup.Partners = (int)dr["Partners"];
 							publicTransportGroup.PublicTransportGroupGUID = (string)dr["PublicTransportGroupGUID"];
 							publicTransportGroup.SupervisionSummaryId = (int)dr["SupervisionSummaryId"];
 							publicTransportGroup.DesignationName = (string)dr["DesignationName"];
+							publicTransportGroup.GasStationId = (int)dr["GasStationId"];
 							publicTransportGroup.GasStationId = (int)dr["GasStationId"];
 
 							if (dr["PublicTransportGroupIdModifiedDate"] != DBNull.Value)

@@ -171,6 +171,10 @@
 																data-vehicle-wheels="@ptg.Wheels"
 																data-vehicle-motor-oil-name="@ptg.MotorOilName"
 																data-vehicle-motor-oil-liters="@ptg.Liters"
+														data-vehicle-niv="@ptg.Niv"
+														data-vehicle-body-serial="@ptg.BodySerialNumber"
+														data-vehicle-engine-serial="@ptg.EngineSerialNumber"
+														data-vehicle-mode-id="@ptg.ModeId"
 																data-vehicle-fuel-type="@ptg.FuelTypeName"
 																data-vehicle-tank-capacity="@ptg.TankCapacity"
 																data-vehicle-battery-name="@ptg.BatteryName"
@@ -222,6 +226,9 @@
 						<p><strong># Neumáticos:</strong> <span id="modalVehicleWheels"></span></p>
 						<p><strong>Tipo de aceite:</strong> <span id="modalVehicleMotorOilname"></span></p>
 						<p><strong># Litros:</strong> <span id="modalVehicleMotorOilLiters"></span></p>
+						<p id="modalNivRow"><strong>NIV:</strong> <span id="modalVehicleNiv"></span></p>
+						<p><strong>Serial carrocería:</strong> <span id="modalVehicleBodySerial"></span></p>
+						<p><strong>Serial motor:</strong> <span id="modalVehicleEngineSerial"></span></p>
 						<p><strong>Tipo de combustible:</strong> <span id="modalVehicleFuelType"></span></p>
 						<p><strong># Capacidad:</strong> <span id="modalVehicleTankCapacity"></span>  litros</p>
 						<p><strong>Tipo de batería:</strong> <span id="modalVehicleBatteryName"></span></p>
@@ -305,6 +312,11 @@
 				$('#modalVehicleWheels').text($(this).data('vehicle-wheels'));
 				$('#modalVehicleMotorOilname').text($(this).data('vehicle-motor-oil-name'));
 				$('#modalVehicleMotorOilLiters').text($(this).data('vehicle-motor-oil-liters'));
+				$('#modalVehicleNiv').text($(this).data('vehicle-niv'));
+				$('#modalVehicleBodySerial').text($(this).data('vehicle-body-serial'));
+				$('#modalVehicleEngineSerial').text($(this).data('vehicle-engine-serial'));
+				// The NIV only applies to organizations with ModeId 1, 2, 5 or 6
+				$('#modalNivRow').toggle([1, 2, 5, 6].includes(Number($(this).data('vehicle-mode-id'))));
 				$('#modalVehicleFuelType').text($(this).data('vehicle-fuel-type'));
 				$('#modalVehicleTankCapacity').text($(this).data('vehicle-tank-capacity'));
 				$('#modalVehicleBatteryName').text($(this).data('vehicle-battery-name'));

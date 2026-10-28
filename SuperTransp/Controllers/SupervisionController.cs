@@ -338,12 +338,36 @@ namespace SuperTransp.Controllers
 						}
 						else
 						{
+							// The NIV only applies to organizations with ModeId 1, 2, 5 or 6: required there, ignored elsewhere
+							var nivApplies = new[] { 1, 2, 5, 6 }.Contains(model.ModeId);
+							// N/D and N/A (any case) are placeholders, not real values: they count as empty
+							bool IsMissing(string? value) => string.IsNullOrWhiteSpace(value) || System.Text.RegularExpressions.Regex.IsMatch(value, @"^\s*N\s*/\s*[DA]\s*$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+							if (!nivApplies)
+							{
+								model.Niv = string.Empty;
+							}
+
+							// Body serial and engine serial are mandatory for a partner with a vehicle (the NIV too when it applies)
+							if ((nivApplies && IsMissing(model.Niv)) || IsMissing(model.BodySerialNumber) || IsMissing(model.EngineSerialNumber))
+							{
+								return RedirectToAction("Error", "Home", new { errorMessage = nivApplies
+									? "Debe colocar el NIV, el serial de carrocería y el serial de motor del vehículo."
+									: "Debe colocar el serial de carrocería y el serial de motor del vehículo." });
+							}
+
+							// The same NIV / serials cannot belong to another vehicle (checked again here, not only in the browser)
+							var duplicatedIdentifier = FindDuplicatedVehicleIdentifier(model.DriverId, model.ModeId, model.Niv, model.BodySerialNumber, model.EngineSerialNumber);
+							if (duplicatedIdentifier != null)
+							{
+								return RedirectToAction("Error", "Home", new { errorMessage = duplicatedIdentifier });
+							}
+
 							model.Remarks = string.IsNullOrEmpty(model.Remarks) ? string.Empty : model.Remarks;
 							model.VehicleImageUrl = string.IsNullOrEmpty(model.VehicleImageUrl) ? string.Empty : model.VehicleImageUrl;
 							model.SupervisionStatus = true;
 							model.FailureTypeId = model.WorkingVehicle ? 1 : model.FailureTypeId;
 
-							var imageUrl = await SupervisionPictureUrl(model.StateName, model.PublicTransportGroupRif, model.DriverIdentityDocument, model.PartnerNumber, model.DriverPublicTransportGroupId, model.ModeId);
+							var imageUrl = await SupervisionPictureUrl(model.StateName, model.PublicTransportGroupRif, model.DriverIdentityDocument, model.PartnerNumber, model.DriverPublicTransportGroupId, model.ModeId, model.PublicTransportGroupId);
 
 							if (imageUrl != null && imageUrl.Any())
 							{
@@ -634,7 +658,7 @@ namespace SuperTransp.Controllers
 			return Json("ERROR");
 		}
 
-		private async Task<List<SupervisionPictures>> SupervisionPictureUrl(string stateName, string publicTransportGroupRif, int driverIdentityDocument, int partnerNumber, int driverId, int ptgMode)
+		private async Task<List<SupervisionPictures>> SupervisionPictureUrl(string stateName, string publicTransportGroupRif, int driverIdentityDocument, int partnerNumber, int driverId, int ptgMode, int publicTransportGroupId)
 		{
 			var ftpBaseUrl = _configuration["FtpSettings:BaseUrl"];
 			var baseImagesUrl = _configuration["FtpSettings:BaseImagesUrl"];
@@ -666,25 +690,27 @@ namespace SuperTransp.Controllers
 				var fileList = await _ftpService.ListFilesAsync(ftpSubFolderPath);
 				if (fileList.Count == 0) return images;
 
-				// Paso X: Eliminar archivos de la carpeta final
-				if (fileList.Any())
+				// Pictures required: 3 for moto taxi (mode 4), 5 for the other modes (taxi included)
+				int requiredPictures = ptgMode == 4 ? 3 : 5;
+				var currentFileList = await _ftpService.ListFilesAsync(ftpfinalFolderPath);
+
+				if (fileList.Count >= requiredPictures)
 				{
-					var currentFileList = await _ftpService.ListFilesAsync(ftpfinalFolderPath);
+					// A full set was uploaded: it replaces the current pictures
 					if (currentFileList.Count > 0)
 					{
 						var deleteTasksX = currentFileList.Select(fileName => _ftpService.DeleteFileAsync($"{ftpfinalFolderPath}/{fileName}"));
 						await Task.WhenAll(deleteTasksX);
 					}
-				}
 
-				// Paso 2.1: Filtrar archivos según ptgMode
-				if (ptgMode != 4 && fileList.Count > 4)
-				{
-					fileList = fileList.Take(4).ToList();
+					fileList = fileList.Take(requiredPictures).ToList();
 				}
-				else if (ptgMode == 4 && fileList.Count > 2)
+				else
 				{
-					fileList = fileList.Take(2).ToList();
+					// Fewer pictures than the full set: they are added to the current ones (which are kept),
+					// without going over the required number
+					int room = Math.Max(0, requiredPictures - currentFileList.Count);
+					fileList = fileList.Take(room).ToList();
 				}
 
 				// Paso 3: Transferir archivos a la carpeta final
@@ -695,8 +721,20 @@ namespace SuperTransp.Controllers
 				// Paso 4: Eliminar archivos de la carpeta temporal
 				await _ftpService.DeleteFilesInFolderAsync(ftpSubFolderPath);
 
-				// Paso 5: Registrar imágenes
-				foreach (var fileName in await _ftpService.ListFilesAsync(ftpfinalFolderPath))
+				// Paso 5: Registrar imágenes. Order: the pictures the vehicle already had (in their saved order) first,
+				// then the ones just added, so a new picture is always the last of the list
+				var finalFileNames = await _ftpService.ListFilesAsync(ftpfinalFolderPath);
+				var previousOrder = (_supervision.GetPicturesByPTGIdAndDriverPublicTransportGroupId(publicTransportGroupId, driverId) ?? new List<SupervisionPictures>())
+					.Select(p => Path.GetFileName(p.VehicleImageUrl ?? string.Empty))
+					.ToList();
+
+				var orderedFileNames = previousOrder.Where(finalFileNames.Contains)
+					.Concat(fileList.Where(finalFileNames.Contains))
+					.Concat(finalFileNames)
+					.Distinct()
+					.ToList();
+
+				foreach (var fileName in orderedFileNames)
 				{
 					var filePath = $"{ftpfinalFolderPath}/{fileName}".Replace(ftpBaseUrl, baseImagesUrl);
 					images.Add(new SupervisionPictures { VehicleImageUrl = filePath });
@@ -857,6 +895,56 @@ namespace SuperTransp.Controllers
 			TempData["SuccessMessage"] = "No existe vuelta de supervisión abierta";
 
 			return RedirectToAction("Index");
+		}
+
+		// N/D and N/A (any case) are placeholders, not real values: they are never compared
+		private static string NormalizeVehicleIdentifier(string? value)
+		{
+			var normalized = (value ?? string.Empty).Trim().ToUpperInvariant();
+
+			return System.Text.RegularExpressions.Regex.IsMatch(normalized, @"^N\s*/\s*[DA]$") ? string.Empty : normalized;
+		}
+
+		// Returns null when no other vehicle uses the same identifiers, otherwise the message with where that vehicle is.
+		// The NIV is only checked for organizations with ModeId 1, 2, 5 or 6; the serials are checked for every mode.
+		private string? FindDuplicatedVehicleIdentifier(int driverId, int modeId, string? niv, string? bodySerialNumber, string? engineSerialNumber)
+		{
+			var nivValue = new[] { 1, 2, 5, 6 }.Contains(modeId) ? NormalizeVehicleIdentifier(niv) : string.Empty;
+			var bodyValue = NormalizeVehicleIdentifier(bodySerialNumber);
+			var engineValue = NormalizeVehicleIdentifier(engineSerialNumber);
+
+			var others = _supervision.RegisteredVehicleIdentifiers(nivValue, bodyValue, engineValue)
+				.Where(x => x.DriverId != driverId)
+				.ToList();
+
+			if (!others.Any()) return null;
+
+			string Where(PublicTransportGroupViewModel v) =>
+				$"asignado al vehículo placa {v.Plate} del asociado {v.DriverFullName} organización {v.PTGCompleteName} estado {v.StateName?.ToUpper()}";
+
+			var messages = new List<string>();
+
+			var byNiv = nivValue != string.Empty ? others.FirstOrDefault(x => NormalizeVehicleIdentifier(x.Niv) == nivValue) : null;
+			if (byNiv != null) messages.Add($"El NIV {nivValue} ya está {Where(byNiv)}.");
+
+			var byBody = bodyValue != string.Empty ? others.FirstOrDefault(x => NormalizeVehicleIdentifier(x.BodySerialNumber) == bodyValue) : null;
+			if (byBody != null) messages.Add($"El serial de carrocería {bodyValue} ya está {Where(byBody)}.");
+
+			var byEngine = engineValue != string.Empty ? others.FirstOrDefault(x => NormalizeVehicleIdentifier(x.EngineSerialNumber) == engineValue) : null;
+			if (byEngine != null) messages.Add($"El serial de motor {engineValue} ya está {Where(byEngine)}.");
+
+			return messages.Any() ? string.Join("\n", messages) : null;
+		}
+
+		// paramValue1 = DriverId, paramValue2 = ModeId of the organization
+		public JsonResult CheckExistingVehicleIdentifiers(int paramValue1, int paramValue2, string? niv, string? bodySerial, string? engineSerial, bool withVehicle)
+		{
+			var result = CheckSessionAndPermission(3);
+			if (result != null) return Json("ERROR");
+
+			if (!withVehicle) return Json("OK");
+
+			return Json(FindDuplicatedVehicleIdentifier(paramValue1, paramValue2, niv, bodySerial, engineSerial) ?? "OK");
 		}
 
 		public JsonResult CheckExistingPlate(int paramValue1, string paramValue2)

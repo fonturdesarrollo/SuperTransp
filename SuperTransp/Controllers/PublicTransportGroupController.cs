@@ -147,6 +147,13 @@ namespace SuperTransp.Controllers
 						return RedirectToAction("Add");
 					}
 
+					if (!model.AssemblyDate.HasValue)
+					{
+						TempData["SuccessMessage"] = "Debe colocar la fecha de la asamblea";
+
+						return RedirectToAction("Add");
+					}
+
 					var emailError = ValidateRepresentativeEmailUnique(model.RepresentativeEmail, model.RepresentativeIdentityDocument); // TEMP-EMAIL-UNIQUE
 					if (emailError != null)
 					{
@@ -252,6 +259,13 @@ namespace SuperTransp.Controllers
 					TempData["SuccessMessage"] = "Debe seleccionar la entidad legal de la lista";
 
 					return RedirectToAction("Add");
+				}
+
+				if (!model.AssemblyDate.HasValue)
+				{
+					TempData["SuccessMessage"] = "Debe colocar la fecha de la asamblea";
+
+					return RedirectToAction("Edit", new { publicTransportGroupId = model.PublicTransportGroupId });
 				}
 
 				var emailError = ValidateRepresentativeEmailUnique(model.RepresentativeEmail, model.RepresentativeIdentityDocument); // TEMP-EMAIL-UNIQUE
