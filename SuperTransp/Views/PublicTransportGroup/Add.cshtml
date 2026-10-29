@@ -40,6 +40,9 @@
     <!-- jQuery UI CSS -->
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css" />
 
+    <!-- Leaflet CSS (route map) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
@@ -173,6 +176,7 @@
                                 @Html.TextBoxFor(x => x.Partners, new { placeholder = "Cantidad de Asociados", maxlength = "3" })
                                 <span asp-validation-for="Partners" class="text-danger"></span>
                             </div>
+                            @await Html.PartialAsync("_RouteMap", Model)
                             <div class="col-12">
                                 <strong>Estación:</strong>
                                 <div style="display:flex; gap:8px; align-items:center;">
@@ -216,6 +220,9 @@
     <script src="~/assets/js/main.js"></script>
     <script src="~/js/common.js" asp-append-version="true"></script>
     @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script src="~/js/route-map-viewer.js" asp-append-version="true"></script>
+    <script src="~/js/public-transport-group-route.js" asp-append-version="true"></script>
     <script src="~/js/public-transport-group-add.js" asp-append-version="true"></script>
     <script>
         const patterns = @Html.Raw(Json.Serialize(ViewBag.DesignationList));
@@ -229,6 +236,8 @@
         window.checkExistingUrl = '@Url.Action("CheckRifExist", "PublicTransportGroup")';
         window.getMunicipalityUrl = '@Url.Action("GetMunicipality", "PublicTransportGroup")';
         window.getUnionUrl = '@Url.Action("GetUnion", "PublicTransportGroup")';
+        window.searchPlacesUrl = '@Url.Action("SearchPlaces", "PublicTransportGroup")';
+        window.getRouteUrl = '@Url.Action("GetRoute", "PublicTransportGroup")';
     </script>
 </body>
 </html>

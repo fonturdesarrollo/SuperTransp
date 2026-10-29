@@ -106,6 +106,7 @@ $("body").on("click", "#saveRequest", function (event) {
                     value: id
                 }).appendTo(nativeForm);
             });
+            window.appendRouteInputs(nativeForm);
             nativeForm.submit();
         },
         cache: false
@@ -207,6 +208,12 @@ function isOkToSave() {
     if (!$("#AssemblyDate").val() && !firstInvalidField) {
         firstInvalidField = "#AssemblyDate";
         message = "Debe colocar la fecha de la asamblea";
+    }
+
+    const routeIssue = window.validateRouteFields();
+    if (routeIssue && !firstInvalidField) {
+        firstInvalidField = routeIssue.selector;
+        message = routeIssue.message;
     }
 
     const gasStationCount = $('#gasStationTableBody tr').length;

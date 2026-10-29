@@ -171,6 +171,8 @@ namespace SuperTransp.Controllers
 						ptgData = _publicTransportGroup.GetAll();
 					}
 
+					var idsWithRoute = _publicTransportGroup.GetPublicTransportGroupIdsWithRoute();
+
 					var list = ptgData.Select(ptg => new
 					{
 						nombre = ptg.PTGCompleteName,
@@ -182,13 +184,75 @@ namespace SuperTransp.Controllers
 						supervisados = ptg.TotalSupervisedDrivers,
 						estatus = ptg.Partners == ptg.TotalSupervisedDrivers ? "SUPERVISADA" : "PENDIENTE",
 						color = ptg.Partners == ptg.TotalSupervisedDrivers ? "green" : "red",
-						id = ptg.PublicTransportGroupId
+						id = ptg.PublicTransportGroupId,
+						tieneRuta = idsWithRoute.Contains(ptg.PublicTransportGroupId),
+						aplicaRuta = PublicTransportGroupViewModel.ModeHasRoute(ptg.ModeId)
 					});
 
 					return Json(new { data = list });
 				}
 
 				return RedirectToAction("Login", "Security");
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(new { error = ex.Message });
+			}
+		}
+
+		[HttpGet]
+		public IActionResult GetPublicTransportGroupRoute(int publicTransportGroupId)
+		{
+			try
+			{
+				if (string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+				{
+					return Unauthorized();
+				}
+
+				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+				int? stateId = HttpContext.Session.GetInt32("StateId");
+
+				if (securityGroupId is null ||
+					(securityGroupId != 1 && !_security.GroupHasAccessToModule(securityGroupId.Value, 4)) ||
+					(securityGroupId == 1 ? false : !_security.GroupHasAccessToModule(securityGroupId.Value, 20)))
+				{
+					return Unauthorized();
+				}
+
+				var ptg = _publicTransportGroup.GetPublicTransportGroupById(publicTransportGroupId);
+
+				// Same scope as the list: users without national access only see organizations of their state
+				bool hasNationalAccess = securityGroupId == 1 || _security.GroupHasAccessToModule(securityGroupId.Value, 6);
+
+				if (!hasNationalAccess && ptg.StateId != stateId)
+				{
+					return Unauthorized();
+				}
+
+				if (!PublicTransportGroupViewModel.ModeHasRoute(ptg.ModeId) || ptg.Routes.Count == 0)
+				{
+					return NotFound(new { error = "La organización no tiene una ruta cargada." });
+				}
+
+				return Json(new
+				{
+					title = ptg.PTGCompleteName,
+					routes = ptg.Routes.Select(route => new
+					{
+						startName = route.RouteStartName,
+						startLat = route.RouteStartLat,
+						startLng = route.RouteStartLng,
+						endName = route.RouteEndName,
+						endLat = route.RouteEndLat,
+						endLng = route.RouteEndLng,
+						midPoint1 = route.RouteMidPoint1,
+						midPoint2 = route.RouteMidPoint2,
+						geometry = route.RouteGeometry,
+						distanceMeters = route.RouteDistanceMeters,
+						durationSeconds = route.RouteDurationSeconds
+					})
+				});
 			}
 			catch (Exception ex)
 			{

@@ -97,5 +97,26 @@ namespace SuperTransp.Models
 		public DateTime? SupervisionLastRoundDate { get; set; }
 		public int GasStationId { get; set; }
 		public List<int> GasStationIds { get; set; } = new List<int>();
+		public List<PublicTransportGroupRouteViewModel> Routes { get; set; } = new List<PublicTransportGroupRouteViewModel>();
+		// Taxi (3) and moto taxi (4) units are not assigned a route
+		public static bool ModeHasRoute(int modeId) => modeId != 3 && modeId != 4;
+	}
+
+	public class PublicTransportGroupRouteViewModel
+	{
+		public string? RouteStartName { get; set; }
+		// Coordinates travel as invariant-culture text ("10.491016") so the server culture never changes the decimal separator
+		public string? RouteStartLat { get; set; }
+		public string? RouteStartLng { get; set; }
+		public string? RouteEndName { get; set; }
+		public string? RouteEndLat { get; set; }
+		public string? RouteEndLng { get; set; }
+		// Encoded polyline (precision 5) of the full path
+		public string? RouteGeometry { get; set; }
+		// Descriptive only: free text, they do not take part in the route calculation
+		public string? RouteMidPoint1 { get; set; }
+		public string? RouteMidPoint2 { get; set; }
+		public int RouteDistanceMeters { get; set; }
+		public int RouteDurationSeconds { get; set; }
 	}
 }

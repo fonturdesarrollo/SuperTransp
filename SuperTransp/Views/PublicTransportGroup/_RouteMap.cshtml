@@ -1,0 +1,146 @@
+@model SuperTransp.Models.PublicTransportGroupViewModel
+
+<style>
+    .route-field {
+        position: relative;
+    }
+
+    .route-suggestions {
+        display: none;
+        position: absolute;
+        left: 0;
+        right: 0;
+        z-index: 10000;
+        margin: 0;
+        padding: 0;
+        max-height: 240px;
+        overflow-y: auto;
+        list-style: none;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 0 0 6px 6px;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    }
+
+        .route-suggestions li {
+            margin: 0;
+            padding: 9px 12px;
+            cursor: pointer;
+            font-size: 0.9em;
+            line-height: 1.3;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+            .route-suggestions li:last-child {
+                border-bottom: none;
+            }
+
+            .route-suggestions li:hover,
+            .route-suggestions li.route-suggestion-empty:hover {
+                background: #f2f4f8;
+            }
+
+            .route-suggestions li.route-suggestion-empty {
+                cursor: default;
+                color: #888;
+            }
+
+    .route-field input {
+        padding-right: 36px;
+    }
+
+    .route-clear {
+        display: none;
+        position: absolute;
+        top: 50%;
+        right: 6px;
+        transform: translateY(-50%);
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        line-height: 26px;
+        font-size: 1.5em;
+        text-align: center;
+        cursor: pointer;
+        background: none;
+        border: none;
+        border-radius: 50%;
+        box-shadow: none;
+        color: #888;
+    }
+
+        .route-clear:hover {
+            background: #f2f4f8;
+            color: #c0392b;
+        }
+
+    #routeSummary {
+        margin-top: 10px;
+        font-weight: 600;
+        color: #4cbece;
+    }
+</style>
+
+<div class="col-12 route-section">
+    <strong>Rutas de la organización:</strong>
+    <input type="hidden" id="RouteStartName" />
+    <input type="hidden" id="RouteStartLat" />
+    <input type="hidden" id="RouteStartLng" />
+    <input type="hidden" id="RouteEndName" />
+    <input type="hidden" id="RouteEndLat" />
+    <input type="hidden" id="RouteEndLng" />
+</div>
+<div class="col-6 col-12-xsmall route-section">
+    <strong>Inicio de la ruta:</strong>
+    <div class="route-field">
+        <input type="text" id="routeStartInput" maxlength="250" autocomplete="off" placeholder="Escriba el lugar donde inicia la ruta" />
+        <button type="button" id="routeStartClear" class="route-clear" title="Borrar inicio" aria-label="Borrar inicio">&times;</button>
+        <ul id="routeStartSuggestions" class="route-suggestions"></ul>
+    </div>
+</div>
+<div class="col-6 col-12-xsmall route-section">
+    <strong>Última parada:</strong>
+    <div class="route-field">
+        <input type="text" id="routeEndInput" maxlength="250" autocomplete="off" placeholder="Escriba el lugar de la última parada de la ruta" />
+        <button type="button" id="routeEndClear" class="route-clear" title="Borrar última parada" aria-label="Borrar última parada">&times;</button>
+        <ul id="routeEndSuggestions" class="route-suggestions"></ul>
+    </div>
+</div>
+<div class="col-6 col-12-xsmall route-section">
+    <strong>Punto intermedio 1 (opcional):</strong>
+    <div class="route-field">
+        <input type="text" id="RouteMidPoint1" maxlength="250" autocomplete="off" placeholder="Descripción del primer punto intermedio" />
+        <button type="button" id="routeMidPoint1Clear" class="route-clear" title="Borrar punto intermedio 1" aria-label="Borrar punto intermedio 1">&times;</button>
+    </div>
+</div>
+<div class="col-6 col-12-xsmall route-section">
+    <strong>Punto intermedio 2 (opcional):</strong>
+    <div class="route-field">
+        <input type="text" id="RouteMidPoint2" maxlength="250" autocomplete="off" placeholder="Descripción del segundo punto intermedio" />
+        <button type="button" id="routeMidPoint2Clear" class="route-clear" title="Borrar punto intermedio 2" aria-label="Borrar punto intermedio 2">&times;</button>
+    </div>
+</div>
+<div class="col-12 route-section">
+    <button type="button" id="btnAddRoute" class="primary">Agregar ruta a la lista</button>
+    <div id="routeTableContainer" style="margin-top:10px; display:none;">
+        <p style="margin:0 0 8px; color:#c0392b; font-weight:600;">Para que la ruta quede guardada o eliminada debe presionar el botón Actualizar, de lo contrario no se guardará.</p>
+        <table id="routeTable" style="width:100%; border-collapse:collapse; background:#fff; border:1px solid #ddd;">
+            <thead>
+                <tr style="background:#f2f4f8;">
+                    <th style="padding:8px 12px; text-align:left; border-bottom:1px solid #ddd; font-weight:600;">Inicio de la ruta</th>
+                    <th style="padding:8px 12px; text-align:left; border-bottom:1px solid #ddd; font-weight:600;">Última parada</th>
+                    <th style="width:120px; padding:8px 12px; text-align:center; border-bottom:1px solid #ddd; font-weight:600;">Ver en mapa</th>
+                    <th style="width:50px; padding:8px; border-bottom:1px solid #ddd;"></th>
+                </tr>
+            </thead>
+            <tbody id="routeTableBody">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    window.initialRoutes = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Routes));
+</script>
+
+@await Html.PartialAsync("_RouteModal")

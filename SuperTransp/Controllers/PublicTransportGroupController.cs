@@ -1,6 +1,7 @@
 ﻿using Azure.Core;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using QRCoder;
 using SuperTransp.Core;
@@ -8,6 +9,8 @@ using SuperTransp.Models;
 using SuperTransp.Utils;
 using System;
 using System.Drawing;
+using System.Globalization;
+using System.Text.Json;
 using System.Net;
 using System.Reflection.Metadata;
 using System.Security;
@@ -27,10 +30,13 @@ namespace SuperTransp.Controllers
 		private IDriver _driver;
 		private IConfiguration _configuration;
 		private readonly ICommonData _commonData;
+		private readonly IHttpClientFactory _httpClientFactory;
+		private readonly IMemoryCache _memoryCache;
 		private readonly IOptionsSnapshot<MaintenanceSettings> _settings;
 
 		public PublicTransportGroupController(IPublicTransportGroup publicTransportGroup, ISecurity security, IGeography geography, IDesignation designation, 
-			IUnion union, IMode mode, IDriver driver, IConfiguration configuration, IOptionsSnapshot<MaintenanceSettings> settings, ICommonData commonData)
+			IUnion union, IMode mode, IDriver driver, IConfiguration configuration, IOptionsSnapshot<MaintenanceSettings> settings, ICommonData commonData,
+			IHttpClientFactory httpClientFactory, IMemoryCache memoryCache)
 		{
 			_publicTransportGroup = publicTransportGroup;
 			_security = security;
@@ -42,6 +48,8 @@ namespace SuperTransp.Controllers
 			_configuration = configuration;
 			_settings = settings;
 			_commonData = commonData;
+			_httpClientFactory = httpClientFactory;
+			_memoryCache = memoryCache;
 		}
 
 		public IActionResult Index()
@@ -162,6 +170,14 @@ namespace SuperTransp.Controllers
 						return RedirectToAction("Add");
 					}
 
+					var routeError = ValidateRoute(model);
+					if (routeError != null)
+					{
+						TempData["SuccessMessage"] = routeError;
+
+						return RedirectToAction("Add");
+					}
+
 					int publicTransportGroupId = _publicTransportGroup.AddOrEdit(model);
 
 					if (publicTransportGroupId > 0)
@@ -268,6 +284,14 @@ namespace SuperTransp.Controllers
 					return RedirectToAction("Edit", new { publicTransportGroupId = model.PublicTransportGroupId });
 				}
 
+				var routeError = ValidateRoute(model);
+				if (routeError != null)
+				{
+					TempData["SuccessMessage"] = routeError;
+
+					return RedirectToAction("Edit", new { publicTransportGroupId = model.PublicTransportGroupId });
+				}
+
 				var emailError = ValidateRepresentativeEmailUnique(model.RepresentativeEmail, model.RepresentativeIdentityDocument); // TEMP-EMAIL-UNIQUE
 				if (emailError != null)
 				{
@@ -363,6 +387,190 @@ namespace SuperTransp.Controllers
 			var union = _union.GetByStateId(stateId);
 
 				return Json(union);
+		}
+
+		// Venezuela bounding box (min lon, min lat, max lon, max lat) used to limit place search and route points
+		private const double VenezuelaMinLng = -73.4;
+		private const double VenezuelaMinLat = 0.6;
+		private const double VenezuelaMaxLng = -59.8;
+		private const double VenezuelaMaxLat = 12.3;
+
+		private record PlaceResult(string Label, double Lat, double Lng);
+
+		[HttpGet]
+		public async Task<IActionResult> SearchPlaces(string? q)
+		{
+			if (HttpContext.Session.GetInt32("SecurityGroupId") == null)
+				return Unauthorized();
+
+			q = (q ?? string.Empty).Trim();
+
+			if (q.Length < 3 || q.Length > 100)
+				return Json(new List<PlaceResult>());
+
+			var cacheKey = $"ptg-places:{q.ToLowerInvariant()}";
+
+			if (_memoryCache.TryGetValue(cacheKey, out List<PlaceResult>? cached) && cached != null)
+				return Json(cached);
+
+			try
+			{
+				var client = _httpClientFactory.CreateClient("geo");
+				var url = string.Create(CultureInfo.InvariantCulture,
+					$"https://photon.komoot.io/api/?q={Uri.EscapeDataString(q)}&limit=10&bbox={VenezuelaMinLng},{VenezuelaMinLat},{VenezuelaMaxLng},{VenezuelaMaxLat}");
+
+				using var response = await client.GetAsync(url);
+
+				if (!response.IsSuccessStatusCode)
+					return StatusCode(502, new { error = "El servicio de búsqueda de lugares no está disponible en este momento." });
+
+				using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+				var places = new List<PlaceResult>();
+
+				foreach (var feature in document.RootElement.GetProperty("features").EnumerateArray())
+				{
+					var properties = feature.GetProperty("properties");
+
+					if (!properties.TryGetProperty("countrycode", out var countryCode) || countryCode.GetString() != "VE")
+						continue;
+
+					string? Value(string name) => properties.TryGetProperty(name, out var value) ? value.GetString() : null;
+
+					var street = Value("street");
+					if (street != null && Value("housenumber") != null)
+						street = $"{street} {Value("housenumber")}";
+
+					var parts = new[] { Value("name"), street, Value("district"), Value("city"), Value("county"), Value("state") }
+						.Where(part => !string.IsNullOrWhiteSpace(part))
+						.Distinct()
+						.ToList();
+
+					if (parts.Count == 0)
+						continue;
+
+					var coordinates = feature.GetProperty("geometry").GetProperty("coordinates");
+					var label = string.Join(", ", parts);
+
+					if (places.Any(place => place.Label == label))
+						continue;
+
+					places.Add(new PlaceResult(label, coordinates[1].GetDouble(), coordinates[0].GetDouble()));
+
+					if (places.Count == 6)
+						break;
+				}
+
+				_memoryCache.Set(cacheKey, places, TimeSpan.FromHours(6));
+
+				return Json(places);
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(502, new { error = $"No se pudo consultar los lugares: {ex.Message}" });
+			}
+		}
+
+		[HttpGet]
+		public async Task<IActionResult> GetRoute(string? startLat, string? startLng, string? endLat, string? endLng)
+		{
+			if (HttpContext.Session.GetInt32("SecurityGroupId") == null)
+				return Unauthorized();
+
+			if (!TryParseVenezuelaPoint(startLat, startLng, out var startLatValue, out var startLngValue)
+				|| !TryParseVenezuelaPoint(endLat, endLng, out var endLatValue, out var endLngValue))
+			{
+				return BadRequest(new { error = "Las coordenadas del inicio o de la última parada no son válidas." });
+			}
+
+			var cacheKey = string.Create(CultureInfo.InvariantCulture, $"ptg-route:{startLatValue:F6},{startLngValue:F6};{endLatValue:F6},{endLngValue:F6}");
+
+			if (_memoryCache.TryGetValue(cacheKey, out object? cached) && cached != null)
+				return Json(cached);
+
+			try
+			{
+				var client = _httpClientFactory.CreateClient("geo");
+				var url = string.Create(CultureInfo.InvariantCulture,
+					$"https://router.project-osrm.org/route/v1/driving/{startLngValue:F6},{startLatValue:F6};{endLngValue:F6},{endLatValue:F6}?overview=full&geometries=polyline");
+
+				using var response = await client.GetAsync(url);
+
+				if (!response.IsSuccessStatusCode)
+					return StatusCode(502, new { error = "El servicio de rutas no está disponible en este momento." });
+
+				using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+				var root = document.RootElement;
+
+				if (root.GetProperty("code").GetString() != "Ok" || root.GetProperty("routes").GetArrayLength() == 0)
+					return NotFound(new { error = "No se encontró una ruta entre los dos puntos seleccionados." });
+
+				var route = root.GetProperty("routes")[0];
+				var result = new
+				{
+					geometry = route.GetProperty("geometry").GetString(),
+					distanceMeters = (int)Math.Round(route.GetProperty("distance").GetDouble()),
+					durationSeconds = (int)Math.Round(route.GetProperty("duration").GetDouble())
+				};
+
+				_memoryCache.Set(cacheKey, result, TimeSpan.FromHours(1));
+
+				return Json(result);
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(502, new { error = $"No se pudo calcular la ruta: {ex.Message}" });
+			}
+		}
+
+		private static bool TryParseVenezuelaPoint(string? lat, string? lng, out double latValue, out double lngValue)
+		{
+			latValue = 0;
+			lngValue = 0;
+
+			return double.TryParse(lat, NumberStyles.Float, CultureInfo.InvariantCulture, out latValue)
+				&& double.TryParse(lng, NumberStyles.Float, CultureInfo.InvariantCulture, out lngValue)
+				&& latValue >= VenezuelaMinLat && latValue <= VenezuelaMaxLat
+				&& lngValue >= VenezuelaMinLng && lngValue <= VenezuelaMaxLng;
+		}
+
+		// At least one route (start, end and full path) is mandatory: returns a message when something is missing
+		private static string? ValidateRoute(PublicTransportGroupViewModel model)
+		{
+			if (!PublicTransportGroupViewModel.ModeHasRoute(model.ModeId))
+			{
+				return null;
+			}
+
+			if (model.Routes.Count == 0)
+			{
+				return "Debe agregar al menos una ruta a la lista.";
+			}
+
+			for (int i = 0; i < model.Routes.Count; i++)
+			{
+				var route = model.Routes[i];
+				var prefix = $"Ruta {i + 1}: ";
+
+				if (string.IsNullOrWhiteSpace(route.RouteStartName) || string.IsNullOrWhiteSpace(route.RouteEndName)
+					|| !TryParseVenezuelaPoint(route.RouteStartLat, route.RouteStartLng, out _, out _)
+					|| !TryParseVenezuelaPoint(route.RouteEndLat, route.RouteEndLng, out _, out _))
+				{
+					return prefix + "debe seleccionar el inicio y la última parada de la lista de sugerencias.";
+				}
+
+				if ((route.RouteStartName?.Trim().Length ?? 0) > 250 || (route.RouteEndName?.Trim().Length ?? 0) > 250
+					|| (route.RouteMidPoint1?.Trim().Length ?? 0) > 250 || (route.RouteMidPoint2?.Trim().Length ?? 0) > 250)
+				{
+					return prefix + "los lugares no pueden exceder 250 caracteres.";
+				}
+
+				if (string.IsNullOrWhiteSpace(route.RouteGeometry) || route.RouteDistanceMeters <= 0)
+				{
+					return prefix + "no tiene el trazado calculado, agréguela de nuevo.";
+				}
+			}
+
+			return null;
 		}
 
 		// TEMP-EMAIL-UNIQUE: returns a message when the email is already used by another representative identity document

@@ -17,6 +17,7 @@
 	<link rel="stylesheet" href="~/datatable/css/bootstrap.css" />
 	<link rel="stylesheet" href="~/datatable/css/dataTables.bootstrap4.min.css" />
 	<link rel="stylesheet" href="~/datatable/css/responsive.bootstrap4.min.css" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 	@*************************************************************************************@
 	<style>
 		.logo-container {
@@ -28,6 +29,26 @@
 			.logo-container img {
 				display: block;
 			}
+
+		.btn-view-route {
+			background: none;
+			border: none;
+			box-shadow: none;
+			padding: 0 8px;
+			height: auto;
+			line-height: 1;
+			cursor: pointer;
+			color: #4cbece;
+		}
+
+			.btn-view-route:hover {
+				color: #667eea;
+			}
+
+		.no-route-icon {
+			color: #b0b5bd;
+			cursor: default;
+		}
 	</style>
 
 </head>
@@ -93,6 +114,7 @@
 								<th>Cargados</th>
 								<th>Supervisados</th>
 								<th>Estatus</th>
+								<th>Mapa de ruta</th>
 							</tr>
 						</thead>
 					</table>
@@ -100,6 +122,28 @@
 			</div>
 		</div>
 	</div>
+
+	<div id="routeListModal" class="route-modal" style="z-index: 19000;" role="dialog" aria-modal="true" aria-labelledby="routeListModalTitle">
+		<div class="route-modal-content" style="max-width: 760px;">
+			<div class="route-modal-header">
+				<h3 id="routeListModalTitle">Rutas de la organización</h3>
+				<button type="button" id="btnCloseRouteListModal" aria-label="Cerrar" style="padding:0 12px; height:36px; line-height:36px; font-size:1.6em; cursor:pointer; background:none; border:none; box-shadow:none; color:#666;">&times;</button>
+			</div>
+			<table style="width:100%; border-collapse:collapse; background:#fff; border:1px solid #ddd;">
+				<thead>
+					<tr style="background:#f2f4f8;">
+						<th style="padding:8px 12px; text-align:left; border-bottom:1px solid #ddd; font-weight:600;">Inicio de la ruta</th>
+						<th style="padding:8px 12px; text-align:left; border-bottom:1px solid #ddd; font-weight:600;">Última parada</th>
+						<th style="width:120px; padding:8px 12px; text-align:center; border-bottom:1px solid #ddd; font-weight:600;">Ver en mapa</th>
+					</tr>
+				</thead>
+				<tbody id="routeListTableBody">
+				</tbody>
+			</table>
+		</div>
+	</div>
+
+	@await Html.PartialAsync("~/Views/PublicTransportGroup/_RouteModal.cshtml")
 
 	<!-- Scripts -->
 	<script src="~/assets/js/jquery.min.js"></script>
@@ -119,11 +163,25 @@
 	}
 	@***********************************************************@
 
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+	<script src="~/js/route-map-viewer.js" asp-append-version="true"></script>
+
 	<script type="text/javascript">
 
 		$(document).ready(function () {
 			var checkExistingUrl = '@Url.Action("GetPublicTransportGroup", "Reports")';
 			var urlPtg = '@Url.Action("PublicTransportGroupDriverList", "Reports")';
+			var routeUrl = '@Url.Action("GetPublicTransportGroupRoute", "Reports")';
+
+			var mapIcon = '<svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">' +
+				'<path fill-rule="evenodd" d="M15.817.113A.5.5 0 0 1 16 .5v14a.5.5 0 0 1-.402.49l-5 1a.502.502 0 0 1-.196 0L5.5 15.01l-4.902.98A.5.5 0 0 1 0 15.5v-14a.5.5 0 0 1 .402-.49l5-1a.5.5 0 0 1 .196 0L10.5.99l4.902-.98a.5.5 0 0 1 .415.103zM10 1.91l-4-.8v12.98l4 .8V1.91zm1 12.98 4-.8V1.11l-4 .8v12.98zm-6-.8V1.11l-4 .8v12.98l4-.8z"/>' +
+				'</svg>';
+
+			// Same map with a slash: the organization has no route loaded
+			var noMapIcon = '<svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">' +
+				'<path fill-rule="evenodd" d="M15.817.113A.5.5 0 0 1 16 .5v14a.5.5 0 0 1-.402.49l-5 1a.502.502 0 0 1-.196 0L5.5 15.01l-4.902.98A.5.5 0 0 1 0 15.5v-14a.5.5 0 0 1 .402-.49l5-1a.5.5 0 0 1 .196 0L10.5.99l4.902-.98a.5.5 0 0 1 .415.103zM10 1.91l-4-.8v12.98l4 .8V1.91zm1 12.98 4-.8V1.11l-4 .8v12.98zm-6-.8V1.11l-4 .8v12.98l4-.8z"/>' +
+				'<line x1="1" y1="15" x2="15" y2="1" stroke="#c0392b" stroke-width="1.8" stroke-linecap="round"/>' +
+				'</svg>';
 			
 			$('#loadingSpinner').show();
 
@@ -152,7 +210,29 @@
 					{ data: 'cupos' },
 					{ data: 'cargados' },
 					{ data: 'supervisados' },
-					{ data: 'estatus' }
+					{ data: 'estatus' },
+					{
+						data: 'tieneRuta',
+						orderable: false,
+						searchable: false,
+						className: 'text-center',
+						render: function (data, type, row) {
+							if (type !== 'display') {
+								return data;
+							}
+
+							// Taxi and moto taxi units are not assigned a route: show N/A
+							if (!row.aplicaRuta) {
+								return 'N/A';
+							}
+
+							if (data) {
+								return '<button type="button" class="btn-view-route" data-id="' + row.id + '" title="Ver mapa de ruta" aria-label="Ver mapa de ruta">' + mapIcon + '</button>';
+							}
+
+							return '<span class="btn-view-route no-route-icon" title="Sin ruta cargada" aria-label="Sin ruta cargada">' + noMapIcon + '</span>';
+						}
+					}
 				],
 				stateSave: true,
 				language: {
@@ -170,6 +250,61 @@
 						sNext: "Siguiente",
 						sPrevious: "Anterior"
 					}
+				}
+			});
+
+			var currentRoutes = [];
+
+			function closeRouteListModal() {
+				$('#routeListModal').hide();
+			}
+
+			// First modal: list of routes of the organization (same table as the form, without the delete column)
+			$('#publicTransportGroupListDetail').on('click', 'button.btn-view-route', function () {
+				$.getJSON(routeUrl, { publicTransportGroupId: $(this).data('id') })
+					.done(function (data) {
+						currentRoutes = data.routes;
+
+						var $body = $('#routeListTableBody').empty();
+
+						currentRoutes.forEach(function (route, index) {
+							var $row = $('<tr>').attr('data-index', index);
+
+							$('<td style="padding:8px 12px; border-bottom:1px solid #eee;">').text(route.startName).appendTo($row);
+							$('<td style="padding:8px 12px; border-bottom:1px solid #eee;">').text(route.endName).appendTo($row);
+							$('<td style="padding:8px; text-align:center; border-bottom:1px solid #eee;">').append(
+								$('<button type="button" class="btn-view-route-map" title="Ver en mapa" aria-label="Ver en mapa" style="background:none; border:none; box-shadow:none; cursor:pointer; color:#667eea; padding:2px 6px; height:auto; line-height:1;">').html(mapIcon)
+							).appendTo($row);
+
+							$body.append($row);
+						});
+
+						$('#routeListModalTitle').text(data.title || 'Rutas de la organización');
+						$('#routeListModal').css('display', 'flex');
+					})
+					.fail(function (xhr) {
+						alert(xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : 'No se pudo cargar la ruta.');
+					});
+			});
+
+			// Second modal: map of the selected route
+			$('#routeListTableBody').on('click', '.btn-view-route-map', function () {
+				var index = $(this).closest('tr').data('index');
+
+				RouteMapViewer.show($.extend({ title: 'Ruta ' + (index + 1) }, currentRoutes[index]));
+			});
+
+			$('#btnCloseRouteListModal').on('click', closeRouteListModal);
+
+			$('#routeListModal').on('mousedown', function (event) {
+				if (event.target === this) {
+					closeRouteListModal();
+				}
+			});
+
+			$(document).on('keydown', function (event) {
+				if (event.key === 'Escape' && $('#routeListModal').is(':visible')) {
+					closeRouteListModal();
 				}
 			});
 		});
