@@ -26,6 +26,9 @@ namespace SuperTransp.Core
 			_universe = universe;
 		}
 
+		// Routes are hidden and ignored until AppSettings:EnablePublicTransportGroupRoutes is true
+		public bool RoutesEnabled => _configuration.GetValue<bool>("AppSettings:EnablePublicTransportGroupRoutes");
+
 		private SqlConnection GetConnection()
 		{
 			SqlConnection sqlConnection = new(_configuration.GetConnectionString("connectionString"));
@@ -105,7 +108,10 @@ namespace SuperTransp.Core
 
 						var ptgId = model.PublicTransportGroupId == 0 ? result : model.PublicTransportGroupId;
 
-						SaveRoutes(sqlConnection, ptgId, model);
+						if (RoutesEnabled)
+						{
+							SaveRoutes(sqlConnection, ptgId, model);
+						}
 
 						SqlCommand cmdDeleteGS = new("SuperTransp_GasStationPTGDelete", sqlConnection)
 						{
@@ -232,27 +238,30 @@ namespace SuperTransp.Core
 						}
 					}
 
-					SqlCommand cmdRoute = new("SELECT * FROM PublicTransportGroupRoute WHERE PublicTransportGroupId = @PublicTransportGroupId ORDER BY RouteNumber", sqlConnection);
-					cmdRoute.Parameters.AddWithValue("@PublicTransportGroupId", publicTransportGroupId);
-
-					using (SqlDataReader drRoute = cmdRoute.ExecuteReader())
+					if (RoutesEnabled)
 					{
-						while (drRoute.Read())
+						SqlCommand cmdRoute = new("SELECT * FROM PublicTransportGroupRoute WHERE PublicTransportGroupId = @PublicTransportGroupId ORDER BY RouteNumber", sqlConnection);
+						cmdRoute.Parameters.AddWithValue("@PublicTransportGroupId", publicTransportGroupId);
+
+						using (SqlDataReader drRoute = cmdRoute.ExecuteReader())
 						{
-							publicTransportGroup.Routes.Add(new PublicTransportGroupRouteViewModel
+							while (drRoute.Read())
 							{
-								RouteStartName = (string)drRoute["RouteStartName"],
-								RouteStartLat = ((decimal)drRoute["RouteStartLat"]).ToString(CultureInfo.InvariantCulture),
-								RouteStartLng = ((decimal)drRoute["RouteStartLng"]).ToString(CultureInfo.InvariantCulture),
-								RouteEndName = (string)drRoute["RouteEndName"],
-								RouteEndLat = ((decimal)drRoute["RouteEndLat"]).ToString(CultureInfo.InvariantCulture),
-								RouteEndLng = ((decimal)drRoute["RouteEndLng"]).ToString(CultureInfo.InvariantCulture),
-								RouteGeometry = (string)drRoute["RouteGeometry"],
-								RouteMidPoint1 = drRoute["RouteMidPoint1"] == DBNull.Value ? null : (string)drRoute["RouteMidPoint1"],
-								RouteMidPoint2 = drRoute["RouteMidPoint2"] == DBNull.Value ? null : (string)drRoute["RouteMidPoint2"],
-								RouteDistanceMeters = (int)drRoute["RouteDistanceMeters"],
-								RouteDurationSeconds = (int)drRoute["RouteDurationSeconds"]
-							});
+								publicTransportGroup.Routes.Add(new PublicTransportGroupRouteViewModel
+								{
+									RouteStartName = (string)drRoute["RouteStartName"],
+									RouteStartLat = ((decimal)drRoute["RouteStartLat"]).ToString(CultureInfo.InvariantCulture),
+									RouteStartLng = ((decimal)drRoute["RouteStartLng"]).ToString(CultureInfo.InvariantCulture),
+									RouteEndName = (string)drRoute["RouteEndName"],
+									RouteEndLat = ((decimal)drRoute["RouteEndLat"]).ToString(CultureInfo.InvariantCulture),
+									RouteEndLng = ((decimal)drRoute["RouteEndLng"]).ToString(CultureInfo.InvariantCulture),
+									RouteGeometry = (string)drRoute["RouteGeometry"],
+									RouteMidPoint1 = drRoute["RouteMidPoint1"] == DBNull.Value ? null : (string)drRoute["RouteMidPoint1"],
+									RouteMidPoint2 = drRoute["RouteMidPoint2"] == DBNull.Value ? null : (string)drRoute["RouteMidPoint2"],
+									RouteDistanceMeters = (int)drRoute["RouteDistanceMeters"],
+									RouteDurationSeconds = (int)drRoute["RouteDurationSeconds"]
+								});
+							}
 						}
 					}
 
@@ -267,6 +276,11 @@ namespace SuperTransp.Core
 
 		public HashSet<int> GetPublicTransportGroupIdsWithRoute()
 		{
+			if (!RoutesEnabled)
+			{
+				return new HashSet<int>();
+			}
+
 			try
 			{
 				using (SqlConnection sqlConnection = GetConnection())

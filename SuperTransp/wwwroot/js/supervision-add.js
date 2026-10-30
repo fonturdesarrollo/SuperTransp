@@ -317,15 +317,7 @@ function isOkToSave() {
             message = "Debe colocar el NIV del vehículo";
         }
 
-        if (isEmptySerial("#BodySerialNumber") && !firstInvalidField) {
-            firstInvalidField = "#BodySerialNumber";
-            message = "Debe colocar el serial de carrocería del vehículo";
-        }
-
-        if (isEmptySerial("#EngineSerialNumber") && !firstInvalidField) {
-            firstInvalidField = "#EngineSerialNumber";
-            message = "Debe colocar el serial de motor del vehículo";
-        }
+        // Body serial and engine serial are optional: the server saves N/D when they are empty
 
         if ($("#FingerprintTrouble").val() == "" && !firstInvalidField) {
             firstInvalidField = "#FingerprintTrouble";

@@ -534,9 +534,9 @@ namespace SuperTransp.Controllers
 		}
 
 		// At least one route (start, end and full path) is mandatory: returns a message when something is missing
-		private static string? ValidateRoute(PublicTransportGroupViewModel model)
+		private string? ValidateRoute(PublicTransportGroupViewModel model)
 		{
-			if (!PublicTransportGroupViewModel.ModeHasRoute(model.ModeId))
+			if (!_publicTransportGroup.RoutesEnabled || !PublicTransportGroupViewModel.ModeHasRoute(model.ModeId))
 			{
 				return null;
 			}

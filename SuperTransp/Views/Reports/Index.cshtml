@@ -511,22 +511,52 @@
             const link = document.getElementById("exportExcelSupervisionsLink");
             const spinner = document.getElementById("loading-spinner");
             const downloadFrame = document.getElementById("downloadFrame");
+            const DOWNLOAD_COOKIE = "fileDownloadToken";
+            const POLL_INTERVAL_MS = 500;
+            const MAX_WAIT_MS = 10 * 60 * 1000;
+
+            function readCookie(name) {
+                const match = document.cookie.split("; ").find(c => c.startsWith(name + "="));
+                return match ? match.substring(name.length + 1) : null;
+            }
 
             link.addEventListener("click", function (event) {
                 event.preventDefault();
 
-                const url = this.getAttribute("data-url");
                 const mensaje = "¿Desea exportar los registros? esto tomará algún tiempo.";
 
-                if (confirm(mensaje)) {
-                    spinner.classList.remove("hidden");
-
-                    downloadFrame.src = url;
-
-                    setTimeout(() => {
-                        spinner.classList.add("hidden");
-                    }, 30000);
+                if (!confirm(mensaje)) {
+                    return;
                 }
+
+                // The server answers with a cookie holding this token as soon as the file is ready to download
+                const token = Date.now().toString() + Math.random().toString(36).substring(2, 8);
+                const separator = this.getAttribute("data-url").includes("?") ? "&" : "?";
+                const url = this.getAttribute("data-url") + separator + "downloadToken=" + token;
+                const startedAt = Date.now();
+
+                spinner.classList.remove("hidden");
+
+                function finish() {
+                    clearInterval(timer);
+                    downloadFrame.removeEventListener("load", onFrameLoad);
+                    document.cookie = DOWNLOAD_COOKIE + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+                    spinner.classList.add("hidden");
+                }
+
+                // An answer that is not a file (error page) loads inside the frame: nothing will be downloaded
+                function onFrameLoad() {
+                    finish();
+                }
+
+                const timer = setInterval(function () {
+                    if (readCookie(DOWNLOAD_COOKIE) === token || Date.now() - startedAt > MAX_WAIT_MS) {
+                        finish();
+                    }
+                }, POLL_INTERVAL_MS);
+
+                downloadFrame.addEventListener("load", onFrameLoad);
+                downloadFrame.src = url;
             });
         });
 

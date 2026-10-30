@@ -84,6 +84,7 @@ namespace SuperTransp.Core
 			public int AddOrEdit(PublicTransportGroupViewModel model);
 			public PublicTransportGroupViewModel GetPublicTransportGroupById(int publicTransportGroupId);
 			public HashSet<int> GetPublicTransportGroupIdsWithRoute();
+			bool RoutesEnabled { get; }
 			public string? RegisteredRif(string publicTransportGroupRif);
 			public bool EmailUsedByOtherRepresentative(string representativeEmail, int representativeIdentityDocument); // TEMP-EMAIL-UNIQUE
 			public List<PublicTransportGroupViewModel> GetAll();

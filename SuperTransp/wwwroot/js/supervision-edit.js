@@ -283,8 +283,6 @@
 				["MotorOilId", "Debe seleccionar el tipo de aceite"],
 				["Liters", "Debe seleccionar los litros de aceite"],
 				["Niv", "Debe colocar el NIV del vehículo", () => ["1", "2", "5", "6"].includes(val("ModeId"))],
-				["BodySerialNumber", "Debe colocar el serial de carrocería del vehículo"],
-				["EngineSerialNumber", "Debe colocar el serial de motor del vehículo"],
 				["FingerprintTrouble", "Debe seleccionar si tiene o no problemas con la huella"],
 				["FailureTypeId", "Debe seleccionar si tiene o no alguna falla"]
 			];

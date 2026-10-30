@@ -846,7 +846,7 @@ namespace SuperTransp.Controllers
 		}
 
 		[HttpGet]
-		public async Task<IActionResult> ExportSupervisionDetail()
+		public async Task<IActionResult> ExportSupervisionDetail(string? downloadToken = null)
 		{
 			try 
 			{ 
@@ -870,6 +870,12 @@ namespace SuperTransp.Controllers
 				}
 
 				var content = await _excelExporter.GenerateExcelSupervisionDetailAsync(idParam);
+
+				// The page waits for this cookie to know that the file download started (it hides the spinner)
+				if (!string.IsNullOrEmpty(downloadToken) && System.Text.RegularExpressions.Regex.IsMatch(downloadToken, "^[A-Za-z0-9-]{1,64}$"))
+				{
+					Response.Cookies.Append("fileDownloadToken", downloadToken, new CookieOptions { Path = "/", HttpOnly = false });
+				}
 
 				return File(content,
 							"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

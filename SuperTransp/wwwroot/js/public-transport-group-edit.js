@@ -110,7 +110,9 @@ $("body").on("click", "#saveRequest", function (event) {
                     value: id
                 }).appendTo(nativeForm);
             });
-            window.appendRouteInputs(nativeForm);
+            if (window.appendRouteInputs) {
+                window.appendRouteInputs(nativeForm);
+            }
             nativeForm.submit();
         },
         cache: false
@@ -214,7 +216,7 @@ function isOkToSave() {
         message = "Debe colocar la fecha de la asamblea";
     }
 
-    const routeIssue = window.validateRouteFields();
+    const routeIssue = window.validateRouteFields ? window.validateRouteFields() : null;
     if (routeIssue && !firstInvalidField) {
         firstInvalidField = routeIssue.selector;
         message = routeIssue.message;

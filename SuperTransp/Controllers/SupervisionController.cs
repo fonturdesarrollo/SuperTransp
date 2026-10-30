@@ -347,13 +347,14 @@ namespace SuperTransp.Controllers
 								model.Niv = string.Empty;
 							}
 
-							// Body serial and engine serial are mandatory for a partner with a vehicle (the NIV too when it applies)
-							if ((nivApplies && IsMissing(model.Niv)) || IsMissing(model.BodySerialNumber) || IsMissing(model.EngineSerialNumber))
+							// The NIV is mandatory when it applies; body serial and engine serial are optional and saved as N/D when empty
+							if (nivApplies && IsMissing(model.Niv))
 							{
-								return RedirectToAction("Error", "Home", new { errorMessage = nivApplies
-									? "Debe colocar el NIV, el serial de carrocería y el serial de motor del vehículo."
-									: "Debe colocar el serial de carrocería y el serial de motor del vehículo." });
+								return RedirectToAction("Error", "Home", new { errorMessage = "Debe colocar el NIV del vehículo." });
 							}
+
+							model.BodySerialNumber = IsMissing(model.BodySerialNumber) ? "N/D" : model.BodySerialNumber!.Trim();
+							model.EngineSerialNumber = IsMissing(model.EngineSerialNumber) ? "N/D" : model.EngineSerialNumber!.Trim();
 
 							// The same NIV / serials cannot belong to another vehicle (checked again here, not only in the browser)
 							var duplicatedIdentifier = FindDuplicatedVehicleIdentifier(model.DriverId, model.ModeId, model.Niv, model.BodySerialNumber, model.EngineSerialNumber);
@@ -905,13 +906,17 @@ namespace SuperTransp.Controllers
 			return System.Text.RegularExpressions.Regex.IsMatch(normalized, @"^N\s*/\s*[DA]$") ? string.Empty : normalized;
 		}
 
+		// Temporarily disabled: when false, a body serial or engine serial already used by another vehicle is not reported and does not block saving.
+		// The code below stays in place; set it to true to check the serials again.
+		private const bool CheckDuplicatedSerials = false;
+
 		// Returns null when no other vehicle uses the same identifiers, otherwise the message with where that vehicle is.
 		// The NIV is only checked for organizations with ModeId 1, 2, 5 or 6; the serials are checked for every mode.
 		private string? FindDuplicatedVehicleIdentifier(int driverId, int modeId, string? niv, string? bodySerialNumber, string? engineSerialNumber)
 		{
 			var nivValue = new[] { 1, 2, 5, 6 }.Contains(modeId) ? NormalizeVehicleIdentifier(niv) : string.Empty;
-			var bodyValue = NormalizeVehicleIdentifier(bodySerialNumber);
-			var engineValue = NormalizeVehicleIdentifier(engineSerialNumber);
+			var bodyValue = CheckDuplicatedSerials ? NormalizeVehicleIdentifier(bodySerialNumber) : string.Empty;
+			var engineValue = CheckDuplicatedSerials ? NormalizeVehicleIdentifier(engineSerialNumber) : string.Empty;
 
 			var others = _supervision.RegisteredVehicleIdentifiers(nivValue, bodyValue, engineValue)
 				.Where(x => x.DriverId != driverId)

@@ -1,4 +1,5 @@
 ﻿@* @model List<SuperTransp.Models.PublicTransportGroupViewModel> *@
+@inject SuperTransp.Core.Interfaces.IPublicTransportGroup PublicTransportGroupService
 @{
 	Layout = "";
 }
@@ -213,6 +214,8 @@
 					{ data: 'estatus' },
 					{
 						data: 'tieneRuta',
+						// The route column stays hidden until AppSettings:EnablePublicTransportGroupRoutes is true
+						visible: @(PublicTransportGroupService.RoutesEnabled ? "true" : "false"),
 						orderable: false,
 						searchable: false,
 						className: 'text-center',
