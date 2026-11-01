@@ -874,7 +874,7 @@ namespace SuperTransp.Controllers
 				// The page waits for this cookie to know that the file download started (it hides the spinner)
 				if (!string.IsNullOrEmpty(downloadToken) && System.Text.RegularExpressions.Regex.IsMatch(downloadToken, "^[A-Za-z0-9-]{1,64}$"))
 				{
-					Response.Cookies.Append("fileDownloadToken", downloadToken, new CookieOptions { Path = "/", HttpOnly = false });
+					Response.Cookies.Append("fileDownloadToken", downloadToken, new CookieOptions { Path = "/", HttpOnly = false, Secure = true });
 				}
 
 				return File(content,
