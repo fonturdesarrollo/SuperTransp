@@ -1,0 +1,20 @@
+{
+  "dotnet.defaultSolution": "SuperTransp.sln",
+  "terminal.integrated.env.osx": {
+    "DOTNET_ROOT": "/Users/carlos/.dotnet",
+    "PATH": "/Users/carlos/.dotnet:/Users/carlos/.dotnet/tools:/Users/carlos/.local/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/carlos/.docker/bin:/Users/carlos/.lmstudio/bin"
+  },
+  "files.exclude": {
+    "**/bin": true,
+    "**/obj": true
+  },
+  "search.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "**/wwwroot/lib": true,
+    "**/wwwroot/uploads": true
+  },
+  "[csharp]": {
+    "editor.defaultFormatter": "ms-dotnettools.csharp"
+  }
+}

@@ -1,41 +1,84 @@
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "build",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/SuperTransp.sln",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary;ForceNoAlign"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "publish",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "publish",
-                "${workspaceFolder}/SuperTransp.sln",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary;ForceNoAlign"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "watch",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "watch",
-                "run",
-                "--project",
-                "${workspaceFolder}/SuperTransp.sln"
-            ],
-            "problemMatcher": "$msCompile"
+  "version": "2.0.0",
+  "osx": {
+    "options": {
+      "env": {
+        "DOTNET_ROOT": "${userHome}/.dotnet",
+        "PATH": "${userHome}/.dotnet:${env:PATH}"
+      }
+    }
+  },
+  "tasks": [
+    {
+      "label": "build",
+      "type": "process",
+      "command": "dotnet",
+      "osx": { "command": "${userHome}/.dotnet/dotnet" },
+      "args": [
+        "build",
+        "${workspaceFolder}/SuperTransp.sln",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary;ForceNoAlign"
+      ],
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "publish",
+      "type": "process",
+      "command": "dotnet",
+      "osx": { "command": "${userHome}/.dotnet/dotnet" },
+      "args": [
+        "publish",
+        "${workspaceFolder}/SuperTransp/SuperTransp.csproj",
+        "-c",
+        "Release",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary;ForceNoAlign"
+      ],
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "watch",
+      "type": "process",
+      "command": "dotnet",
+      "osx": { "command": "${userHome}/.dotnet/dotnet" },
+      "args": [
+        "watch",
+        "run",
+        "--project",
+        "${workspaceFolder}/SuperTransp/SuperTransp.csproj",
+        "--launch-profile",
+        "http"
+      ],
+      "isBackground": true,
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "sql: start (docker)",
+      "type": "shell",
+      "command": "docker start supertransp-sql 2>/dev/null || docker run -d --platform linux/amd64 --name supertransp-sql -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD=\"${input:saPassword}\" -p 1433:1433 -v supertransp-sql-data:/var/opt/mssql mcr.microsoft.com/mssql/server:2025-latest",
+      "windows": {
+        "command": "docker start supertransp-sql 2>$null; if ($LASTEXITCODE -ne 0) { docker run -d --platform linux/amd64 --name supertransp-sql -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD='${input:saPassword}' -p 1433:1433 -v supertransp-sql-data:/var/opt/mssql mcr.microsoft.com/mssql/server:2025-latest }",
+        "options": {
+          "shell": { "executable": "powershell.exe", "args": ["-NoProfile", "-Command"] }
         }
-    ]
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "sql: stop (docker)",
+      "type": "shell",
+      "command": "docker stop supertransp-sql",
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "saPassword",
+      "type": "promptString",
+      "description": "Clave para el usuario 'sa' (min. 8 caracteres, mayúsculas, minúsculas, números y símbolo)",
+      "password": true
+    }
+  ]
 }
