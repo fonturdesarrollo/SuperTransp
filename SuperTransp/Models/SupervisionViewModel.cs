@@ -53,6 +53,9 @@ namespace SuperTransp.Models
 		public string? FuelTypeName { get; set; }
 		public string? BatteryName { get; set; }
 		public string? FailureTypeName { get; set; }
+		public string? Niv { get; set; }
+		public string? BodySerialNumber { get; set; }
+		public string? EngineSerialNumber { get; set; }
 		public int StateId { get; set; }
 		public int DriverPublicTransportGroupId { get; set; }
 		public List<SupervisionPictures>? Pictures { get; set; }

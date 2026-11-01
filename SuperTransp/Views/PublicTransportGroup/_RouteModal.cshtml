@@ -1,0 +1,77 @@
+<style>
+    .route-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 20000;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        background: rgba(0, 0, 0, 0.55);
+    }
+
+    .route-modal-content {
+        width: 100%;
+        max-width: 960px;
+        padding: 16px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .route-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+    }
+
+        .route-modal-header h3 {
+            margin: 0;
+            color: #4cbece;
+        }
+
+    #btnCloseRouteModal {
+        padding: 0 12px;
+        height: 36px;
+        line-height: 36px;
+        font-size: 1.6em;
+        cursor: pointer;
+        background: none;
+        border: none;
+        box-shadow: none;
+        color: #666;
+    }
+
+    .route-modal-points {
+        margin-bottom: 6px;
+        line-height: 1.4;
+    }
+
+    #routeMap {
+        position: relative;
+        height: 70vh;
+        max-height: 560px;
+        margin-top: 10px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        z-index: 1;
+    }
+</style>
+
+<div id="routeModal" class="route-modal" role="dialog" aria-modal="true" aria-labelledby="routeModalTitle">
+    <div class="route-modal-content">
+        <div class="route-modal-header">
+            <h3 id="routeModalTitle">Ruta de la organización</h3>
+            <button type="button" id="btnCloseRouteModal" aria-label="Cerrar">&times;</button>
+        </div>
+        <div class="route-modal-points">
+            <div><strong>Inicio:</strong> <span id="routeModalStart"></span></div>
+            <div id="routeModalMid1Row" style="display:none;"><strong>Punto intermedio 1:</strong> <span id="routeModalMid1"></span></div>
+            <div id="routeModalMid2Row" style="display:none;"><strong>Punto intermedio 2:</strong> <span id="routeModalMid2"></span></div>
+            <div><strong>Última parada:</strong> <span id="routeModalEnd"></span></div>
+        </div>
+        <div id="routeModalSummary" style="font-weight:600;"></div>
+        <div id="routeMap"></div>
+    </div>
+</div>

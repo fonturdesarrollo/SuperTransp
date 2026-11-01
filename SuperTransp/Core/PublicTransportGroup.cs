@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Abstractions;
 using SuperTransp.Controllers;
 using SuperTransp.Models;
 using System.Data;
+using System.Globalization;
 using static SuperTransp.Core.Interfaces;
 
 namespace SuperTransp.Core
@@ -24,6 +25,9 @@ namespace SuperTransp.Core
 			_designation = designation;
 			_universe = universe;
 		}
+
+		// Routes are hidden and ignored until AppSettings:EnablePublicTransportGroupRoutes is true
+		public bool RoutesEnabled => _configuration.GetValue<bool>("AppSettings:EnablePublicTransportGroupRoutes");
 
 		private SqlConnection GetConnection()
 		{
@@ -44,6 +48,7 @@ namespace SuperTransp.Core
 			string? beforeModeName = string.Empty;
 			string? beforeDesignationName = string.Empty;
 			string? beforeUnionName = string.Empty;
+			DateTime? beforeAssemblyDate = null;
 			PublicTransportGroupViewModel ptgValues = new PublicTransportGroupViewModel();
 			bool isEditing = false;
 
@@ -64,6 +69,7 @@ namespace SuperTransp.Core
 						beforeModeName = ptgValues.ModeName;
 						beforeDesignationName = ptgValues.DesignationName;
 						beforeUnionName = ptgValues.UnionName;
+						beforeAssemblyDate = ptgValues.AssemblyDate;
 					}
 				}		
 
@@ -92,6 +98,8 @@ namespace SuperTransp.Core
 						cmd.Parameters.AddWithValue("@RepresentativeName", model.RepresentativeName.ToUpper().Trim());
 						cmd.Parameters.AddWithValue("@RepresentativePhone", model.RepresentativePhone);
 						cmd.Parameters.AddWithValue("@RepresentativeEmail", SuperTransp.Core.EmailDefaults.Normalize(model.RepresentativeEmail)); // TEMP-EMAIL
+						var assemblyDate = cmd.Parameters.Add("@AssemblyDate", SqlDbType.SmallDateTime);
+						assemblyDate.Value = model.AssemblyDate.HasValue ? model.AssemblyDate.Value : DBNull.Value;
 						cmd.Parameters.AddWithValue("@PublicTransportGroupIdModifiedDate", DateTime.Now);
 						cmd.Parameters.AddWithValue("@Partners", model.Partners);
 						cmd.Parameters.AddWithValue("@GasStationId", model.GasStationId);
@@ -99,6 +107,11 @@ namespace SuperTransp.Core
 						result = Convert.ToInt32(cmd.ExecuteScalar());
 
 						var ptgId = model.PublicTransportGroupId == 0 ? result : model.PublicTransportGroupId;
+
+						if (RoutesEnabled)
+						{
+							SaveRoutes(sqlConnection, ptgId, model);
+						}
 
 						SqlCommand cmdDeleteGS = new("SuperTransp_GasStationPTGDelete", sqlConnection)
 						{
@@ -134,6 +147,7 @@ namespace SuperTransp.Core
 								$" cantidad socios: {ptgValues.Partners} -" +
 								$" representante: {ptgValues.RepresentativeName} -" +
 								$" cedula representante: {ptgValues.RepresentativeIdentityDocument} -" +
+								$" fecha asamblea: {(ptgValues.AssemblyDate.HasValue ? ptgValues.AssemblyDate.Value.ToString("dd/MM/yyyy") : "N/D")} -" +
 								$" gremio: {ptgValues.UnionName}");
 						}
 						else
@@ -150,6 +164,7 @@ namespace SuperTransp.Core
 								$" cantidad socios: {beforePartners} -" +
 								$" representante: {beforeRepresentativeName} -" +
 								$" cedula representante: {beforeRepresentativeIdentityDocument} -" +
+								$" fecha asamblea: {(beforeAssemblyDate.HasValue ? beforeAssemblyDate.Value.ToString("dd/MM/yyyy") : "N/D")} -" +
 								$" gremio: {beforeUnionName}]" +
 								$" DESPUES [" +
 								$" RIF: {model.PublicTransportGroupRif} -" +
@@ -159,6 +174,7 @@ namespace SuperTransp.Core
 								$" cantidad socios: {model.Partners} -" +
 								$" representante: {model.RepresentativeName} -" +
 								$" cedula representante: {model.RepresentativeIdentityDocument} -" +
+								$" fecha asamblea: {(model.AssemblyDate.HasValue ? model.AssemblyDate.Value.ToString("dd/MM/yyyy") : "N/D")} -" +
 								$" gremio: {ptgValues.UnionName}]");
 						}
 					}
@@ -206,16 +222,45 @@ namespace SuperTransp.Core
 							publicTransportGroup.RepresentativeName = (string)dr["RepresentativeName"];
 							publicTransportGroup.RepresentativePhone = (string)dr["RepresentativePhone"];
 							publicTransportGroup.RepresentativeEmail = dr["RepresentativeEmail"] == DBNull.Value ? null : (string)dr["RepresentativeEmail"];
+							publicTransportGroup.AssemblyDate = dr["AssemblyDate"] == DBNull.Value ? null : (DateTime)dr["AssemblyDate"];
 							publicTransportGroup.StateName = (string)dr["StateName"];
 							publicTransportGroup.Partners = (int)dr["Partners"];
 							publicTransportGroup.PublicTransportGroupGUID = (string)dr["PublicTransportGroupGUID"];
 							publicTransportGroup.SupervisionSummaryId = (int)dr["SupervisionSummaryId"];
 							publicTransportGroup.DesignationName = (string)dr["DesignationName"];
 							publicTransportGroup.GasStationId = (int)dr["GasStationId"];
+							publicTransportGroup.GasStationId = (int)dr["GasStationId"];
 
 							if (dr["PublicTransportGroupIdModifiedDate"] != DBNull.Value)
 							{
 								publicTransportGroup.PublicTransportGroupIdModifiedDate = (DateTime)dr["PublicTransportGroupIdModifiedDate"];
+							}
+						}
+					}
+
+					if (RoutesEnabled)
+					{
+						SqlCommand cmdRoute = new("SELECT * FROM PublicTransportGroupRoute WHERE PublicTransportGroupId = @PublicTransportGroupId ORDER BY RouteNumber", sqlConnection);
+						cmdRoute.Parameters.AddWithValue("@PublicTransportGroupId", publicTransportGroupId);
+
+						using (SqlDataReader drRoute = cmdRoute.ExecuteReader())
+						{
+							while (drRoute.Read())
+							{
+								publicTransportGroup.Routes.Add(new PublicTransportGroupRouteViewModel
+								{
+									RouteStartName = (string)drRoute["RouteStartName"],
+									RouteStartLat = ((decimal)drRoute["RouteStartLat"]).ToString(CultureInfo.InvariantCulture),
+									RouteStartLng = ((decimal)drRoute["RouteStartLng"]).ToString(CultureInfo.InvariantCulture),
+									RouteEndName = (string)drRoute["RouteEndName"],
+									RouteEndLat = ((decimal)drRoute["RouteEndLat"]).ToString(CultureInfo.InvariantCulture),
+									RouteEndLng = ((decimal)drRoute["RouteEndLng"]).ToString(CultureInfo.InvariantCulture),
+									RouteGeometry = (string)drRoute["RouteGeometry"],
+									RouteMidPoint1 = drRoute["RouteMidPoint1"] == DBNull.Value ? null : (string)drRoute["RouteMidPoint1"],
+									RouteMidPoint2 = drRoute["RouteMidPoint2"] == DBNull.Value ? null : (string)drRoute["RouteMidPoint2"],
+									RouteDistanceMeters = (int)drRoute["RouteDistanceMeters"],
+									RouteDurationSeconds = (int)drRoute["RouteDurationSeconds"]
+								});
 							}
 						}
 					}
@@ -227,6 +272,86 @@ namespace SuperTransp.Core
 			{
 				throw new Exception($"Error al obtener la línea por ID {ex.Message}", ex);
 			}
+		}
+
+		public HashSet<int> GetPublicTransportGroupIdsWithRoute()
+		{
+			if (!RoutesEnabled)
+			{
+				return new HashSet<int>();
+			}
+
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					HashSet<int> ids = new();
+					SqlCommand cmd = new("SELECT DISTINCT PublicTransportGroupId FROM PublicTransportGroupRoute", sqlConnection);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							ids.Add((int)dr["PublicTransportGroupId"]);
+						}
+					}
+
+					return ids;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener las organizaciones con ruta {ex.Message}", ex);
+			}
+		}
+
+		// Replaces all the routes of the organization with the ones of the list (taxi and moto taxi have none)
+		private static void SaveRoutes(SqlConnection sqlConnection, int publicTransportGroupId, PublicTransportGroupViewModel model)
+		{
+			var routes = PublicTransportGroupViewModel.ModeHasRoute(model.ModeId)
+				? model.Routes.Where(r => !string.IsNullOrWhiteSpace(r.RouteGeometry)).ToList()
+				: new List<PublicTransportGroupRouteViewModel>();
+
+			using SqlTransaction transaction = sqlConnection.BeginTransaction();
+
+			SqlCommand cmdDeleteRoutes = new("SuperTransp_PublicTransportGroupRouteDelete", sqlConnection, transaction)
+			{
+				CommandType = System.Data.CommandType.StoredProcedure
+			};
+			cmdDeleteRoutes.Parameters.AddWithValue("@PublicTransportGroupId", publicTransportGroupId);
+			cmdDeleteRoutes.ExecuteNonQuery();
+
+			for (int i = 0; i < routes.Count; i++)
+			{
+				var route = routes[i];
+
+				SqlCommand cmdRoute = new("SuperTransp_PublicTransportGroupRouteAddOrEdit", sqlConnection, transaction)
+				{
+					CommandType = System.Data.CommandType.StoredProcedure
+				};
+
+				cmdRoute.Parameters.AddWithValue("@PublicTransportGroupId", publicTransportGroupId);
+				cmdRoute.Parameters.AddWithValue("@RouteNumber", i + 1);
+				cmdRoute.Parameters.AddWithValue("@RouteStartName", route.RouteStartName!.Trim());
+				cmdRoute.Parameters.AddWithValue("@RouteStartLat", decimal.Parse(route.RouteStartLat!, CultureInfo.InvariantCulture));
+				cmdRoute.Parameters.AddWithValue("@RouteStartLng", decimal.Parse(route.RouteStartLng!, CultureInfo.InvariantCulture));
+				cmdRoute.Parameters.AddWithValue("@RouteEndName", route.RouteEndName!.Trim());
+				cmdRoute.Parameters.AddWithValue("@RouteEndLat", decimal.Parse(route.RouteEndLat!, CultureInfo.InvariantCulture));
+				cmdRoute.Parameters.AddWithValue("@RouteEndLng", decimal.Parse(route.RouteEndLng!, CultureInfo.InvariantCulture));
+				cmdRoute.Parameters.AddWithValue("@RouteGeometry", route.RouteGeometry);
+				cmdRoute.Parameters.AddWithValue("@RouteDistanceMeters", route.RouteDistanceMeters);
+				cmdRoute.Parameters.AddWithValue("@RouteDurationSeconds", route.RouteDurationSeconds);
+				cmdRoute.Parameters.AddWithValue("@RouteMidPoint1", string.IsNullOrWhiteSpace(route.RouteMidPoint1) ? DBNull.Value : route.RouteMidPoint1.Trim());
+				cmdRoute.Parameters.AddWithValue("@RouteMidPoint2", string.IsNullOrWhiteSpace(route.RouteMidPoint2) ? DBNull.Value : route.RouteMidPoint2.Trim());
+				cmdRoute.ExecuteNonQuery();
+			}
+
+			transaction.Commit();
 		}
 
 		public List<PublicTransportGroupViewModel> GetAll()

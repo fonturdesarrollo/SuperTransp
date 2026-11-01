@@ -278,6 +278,9 @@ namespace SuperTransp.Core
 		{
 			List<CommonDataViewModel> capacity = new List<CommonDataViewModel>();
 
+			// 0 is only offered by the supervision screens for electric vehicles (FuelTypeId 6)
+			capacity.Add(new CommonDataViewModel { TankCapacityId = 0, TankCapacity = 0 });
+
 			for (int i = 5; i <= 250; i++)
 			{
 				capacity.Add(new CommonDataViewModel { TankCapacityId = i, TankCapacity = i });

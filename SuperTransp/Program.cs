@@ -62,6 +62,14 @@ builder.Services.Configure<MaintenanceSettings>(
 
 builder.Services.AddSingleton<QrCodeSigner>();
 
+// Place search (Photon) and route calculation (OSRM) for the organization route; both are free OpenStreetMap-based services
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient("geo", client =>
+{
+	client.Timeout = TimeSpan.FromSeconds(15);
+	client.DefaultRequestHeaders.UserAgent.ParseAdd("SuperTransp/1.0");
+});
+
 // BDV C2P integration (section "Bdv"): disabled until Bdv:Enabled is true and the API key is configured
 builder.Services.Configure<BdvC2POptions>(builder.Configuration.GetSection("Bdv"));
 builder.Services.AddHttpClient<BdvC2PService>((sp, client) =>

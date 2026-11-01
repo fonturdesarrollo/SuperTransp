@@ -9,6 +9,7 @@ const wrapper = document.getElementById('wrapper');
 const saveFilesUrl = wrapper.dataset.saveFilesUrl;
 const deletePicturesUrl = wrapper.dataset.deletePicturesUrl;
 const checkPlateUrl = wrapper.dataset.checkPlateUrl;
+const checkVehicleIdentifiersUrl = wrapper.dataset.checkVehicleIdentifiersUrl;
 const getMakesUrl = wrapper.dataset.getMakesUrl;
 const getModelsUrl = wrapper.dataset.getModelsUrl;
 const partnerNumber = wrapper.dataset.partnerNumber;
@@ -21,6 +22,9 @@ const isTotalAccess = wrapper.dataset.isTotalAccess === "true";
 const stateName = document.querySelector('[name="StateName"]').value;
 const driverIdentityDocument = document.querySelector('[name="DriverIdentityDocument"]').value;
 
+// Pictures required per vehicle: 3 for moto taxi (mode 4), 5 for the other modes (taxi included)
+const requiredPictures = document.querySelector('[name="ModeId"]').value === "4" ? 3 : 5;
+
 Dropzone.autoDiscover = false;
 const dropzone = new Dropzone("#myDropzone", {
     url: saveFilesUrl,
@@ -30,7 +34,7 @@ const dropzone = new Dropzone("#myDropzone", {
     acceptedFiles: ".jpg,.jpeg,.png,.gif,.webp",
     dictDefaultMessage: "Arrastra las imágenes aquí o haga clic para agregarlas.",
     addRemoveLinks: true,
-    maxFiles: 4,
+    maxFiles: requiredPictures,
     addRemoveLinks: false,
 
     headers: {
@@ -48,9 +52,9 @@ const dropzone = new Dropzone("#myDropzone", {
 
     init: function () {
         this.on("addedfile", function (file) {
-            if (this.files.length > 4) {
+            if (this.files.length > requiredPictures) {
                 this.removeFile(file);
-                alert("Solo se pueden subir hasta 4 imágenes.");
+                alert("Solo se pueden subir hasta " + requiredPictures + " imágenes.");
                 return;
             }
         });
@@ -59,7 +63,7 @@ const dropzone = new Dropzone("#myDropzone", {
 
         this.on("queuecomplete", function () {
             let uploadedFiles = this.getAcceptedFiles().filter(f => f.status === Dropzone.SUCCESS);
-            if (uploadedFiles.length > 0 && uploadedFiles.length <= 4) {
+            if (uploadedFiles.length > 0 && uploadedFiles.length <= requiredPictures) {
                 alert("Todas las imágenes han sido cargadas correctamente.");
             }
         });
@@ -178,7 +182,27 @@ $("form").on("submit", function (e) {
                 paramValue2: paramValue2
             },
             success: function (data) {
-                showMsg(data);
+                if (data != "OK") {
+                    showMsg(data);
+                    return;
+                }
+
+                // Plate is free: now check the NIV / serials against other vehicles
+                $.ajax({
+                    url: checkVehicleIdentifiersUrl,
+                    data: {
+                        paramValue1: paramValue1,
+                        paramValue2: $('#ModeId').val(),
+                        niv: $('#Niv').val(),
+                        bodySerial: $('#BodySerialNumber').val(),
+                        engineSerial: $('#EngineSerialNumber').val(),
+                        withVehicle: $("#DriverWithVehicle option:selected").text() == "Sí"
+                    },
+                    success: function (identifiersResult) {
+                        showMsg(identifiersResult);
+                    },
+                    cache: false
+                });
             },
             cache: false
         });
@@ -188,6 +212,63 @@ $("form").on("submit", function (e) {
 $(window).on("beforeunload", function () {
     $("#loadingOverlay").show();
 });
+
+// N/D and N/A (any case) are placeholders, not real values: they count as empty
+function isEmptySerial(selector) {
+    return /^\s*$|^\s*N\s*\/\s*[DA]\s*$/i.test($(selector).val() || "");
+}
+
+// Soft NIV (VIN) format check: letters and numbers only, no I, O or Q, at least 10 characters.
+// Returns a message when the value is clearly wrong, otherwise "". The usual length (17) is only a warning, see isUnusualNivLength.
+function nivFormatError(niv) {
+    const value = (niv || "").trim();
+
+    if (value === "" || /^N\s*\/\s*[DA]$/i.test(value)) {
+        return "";
+    }
+
+    if (!/^[A-Za-z0-9]+$/.test(value)) {
+        return "El NIV solo puede contener letras y números, sin espacios ni guiones.";
+    }
+
+    if (/[IOQ]/i.test(value)) {
+        return "El NIV no puede contener las letras I, O ni Q (se confunden con 1 y 0).";
+    }
+
+    if (value.length > 17) {
+        return "El NIV no puede tener más de 17 caracteres.";
+    }
+
+    if (value.length < 10) {
+        return "El NIV es demasiado corto, normalmente tiene 17 caracteres (mínimo 10).";
+    }
+
+    return "";
+}
+
+// Body and engine serials: letters and numbers only, at most 20 characters (empty and N/D are allowed)
+function serialFormatError(serial, label) {
+    const value = (serial || "").trim();
+
+    if (value === "" || /^N\s*\/\s*[DA]$/i.test(value)) {
+        return "";
+    }
+
+    if (!/^[A-Za-z0-9]+$/.test(value)) {
+        return "El serial de " + label + " solo puede contener letras y números, sin espacios ni caracteres especiales.";
+    }
+
+    if (value.length > 20) {
+        return "El serial de " + label + " no puede tener más de 20 caracteres.";
+    }
+
+    return "";
+}
+
+function isUnusualNivLength(niv) {
+    const value = (niv || "").trim();
+    return value !== "" && !/^N\s*\/\s*[DA]$/i.test(value) && value.length !== 17;
+}
 
 function isOkToSave() {
     let firstInvalidField = null;
@@ -282,6 +363,28 @@ function isOkToSave() {
             message = "Debe seleccionar los litros de aceite";
         }
 
+        // The NIV only applies to modes 1, 2, 5 and 6 (the box is locked for the others)
+        if (["1", "2", "5", "6"].includes($("#ModeId").val()) && isEmptySerial("#Niv") && !firstInvalidField) {
+            firstInvalidField = "#Niv";
+            message = "Debe colocar el NIV del vehículo";
+        }
+
+        if (["1", "2", "5", "6"].includes($("#ModeId").val()) && !firstInvalidField && nivFormatError($("#Niv").val())) {
+            firstInvalidField = "#Niv";
+            message = nivFormatError($("#Niv").val());
+        }
+
+        // Body serial and engine serial are optional: the server saves N/D when they are empty
+        if (!firstInvalidField && serialFormatError($("#BodySerialNumber").val(), "carrocería")) {
+            firstInvalidField = "#BodySerialNumber";
+            message = serialFormatError($("#BodySerialNumber").val(), "carrocería");
+        }
+
+        if (!firstInvalidField && serialFormatError($("#EngineSerialNumber").val(), "motor")) {
+            firstInvalidField = "#EngineSerialNumber";
+            message = serialFormatError($("#EngineSerialNumber").val(), "motor");
+        }
+
         if ($("#FingerprintTrouble").val() == "" && !firstInvalidField) {
             firstInvalidField = "#FingerprintTrouble";
             message = "Debe seleccionar si tiene o no problemas con la huella";
@@ -293,42 +396,32 @@ function isOkToSave() {
         }
 
         if (uploaded.length > 0) {
-            var modeId = $("#ModeId").val();
+            if (uploaded.length !== requiredPictures && !firstInvalidField) {
+                firstInvalidField = "#myDropzone";
+                var staticMessage = "El vehículo requiere de " + requiredPictures + " imágenes para poder ser agregado, está agregando ";
+                var quantityMessage = "";
 
-            if (modeId === "4") {
-                if ((uploaded.length < 2 || uploaded.length > 2) && !firstInvalidField) {
-                    firstInvalidField = "#myDropzone";
-                    var staticMessage = "El vehículo que está actualizando es una moto, debe agregar 2 imágenes para ese tipo de vehículo, está intentando agregar ";
-                    var quantityMessage = "";
-
-                    if (uploaded.length > 2) {
-                        quantityMessage = uploaded.length + ", presione el botón: Eliminar imágenes de la lista, y agregue solo 2";
-                    } else if (uploaded.length < 2) {
-                        quantityMessage = uploaded.length + ", haga clic en el recuadro: Cargar imágenes, y agregue otra.";
-                    }
-
-                    message = staticMessage + quantityMessage;
+                if (uploaded.length > requiredPictures) {
+                    quantityMessage = uploaded.length + ", presione el botón: Eliminar imágenes de la lista, y agregue solo " + requiredPictures + "." + " Recuerde agregar la foto del carnet o certificado de circulación.";
+                } else {
+                    quantityMessage = uploaded.length + ", haga clic en el recuadro: Cargar imágenes, y agregue la(s) restante(s)." + " Recuerde agregar la foto del carnet o certificado de circulación.";
                 }
-            } else {
-                if ((uploaded.length < 4 || uploaded.length > 4) && !firstInvalidField) {
-                    firstInvalidField = "#myDropzone";
-                    var staticMessage = "El vehículo que está actualizando requiere de 4 imágenes para poder ser actualizado, está agregando solo ";
-                    var quantityMessage = "";
 
-                    if (uploaded.length < 4) {
-                        quantityMessage = uploaded.length + ", haga clic en el recuadro: Cargar imágenes, y agregue la(s) restante(s).";
-                    }
-
-                    message = staticMessage + quantityMessage;
-                }
+                message = staticMessage + quantityMessage;
             }
-        } else {
+        } else if (!firstInvalidField) {
             firstInvalidField = "#myDropzone";
-            message = "Debe agregar imágenes del vehículo para poder actualizar";
+            message = "Debe agregar imágenes del vehículo para poder actualizar. Recuerde agregar la foto del carnet o certificado de circulación.";
         }
 
         if (firstInvalidField) {
             showAlert(message, firstInvalidField);
+            return false;
+        }
+
+        if (["1", "2", "5", "6"].includes($("#ModeId").val()) && isUnusualNivLength($("#Niv").val())
+            && !confirm("El NIV tiene " + $("#Niv").val().trim().length + " caracteres y lo habitual son 17. ¿Desea continuar de todos modos?")) {
+            $("#Niv").focus();
             return false;
         }
     }
@@ -359,6 +452,29 @@ function showMsg(hasCurrentJob) {
         $("form").unbind('submit').submit();
     }
 }
+
+// Tank capacity 0 only applies to electric vehicles (FuelTypeId 6): for them 0 is the only option shown,
+// for any other fuel type 0 is hidden and the list works as usual.
+// Default value: 0 for electric, 5 for any other fuel type (applied when the fuel type is changed by the user,
+// and on load only if the capacity is empty or 0, so a saved capacity is never overwritten)
+function updateTankCapacityOptions(applyDefault) {
+    const isElectric = $("#FuelTypeId").val() === "6";
+    const $tank = $("#TankCapacity");
+
+    $tank.find("option").each(function () {
+        const optionValue = $(this).val();
+        const hide = optionValue !== "" && (isElectric ? optionValue !== "0" : optionValue === "0");
+        $(this).prop("hidden", hide).prop("disabled", hide);
+    });
+
+    if (isElectric) {
+        $tank.val("0");
+    } else if (applyDefault === true || $tank.val() === "0" || $tank.val() === "" || $tank.val() === null) {
+        $tank.val("5");
+    }
+}
+
+$("#FuelTypeId").on("change", function () { updateTankCapacityOptions(true); });
 
 function setTransportTypeDefaultValues(modeId) {
     switch (modeId) {
@@ -401,7 +517,22 @@ $(document).ready(function () {
         $(this).val(sanitizedValue);
     });
 
+    // NIV, body serial and engine serial: always uppercase; NIV at most 17 characters, serials letters and numbers only and at most 20
+    $('#Niv, #BodySerialNumber, #EngineSerialNumber').on('input', function () {
+        const start = this.selectionStart;
+        const end = this.selectionEnd;
+        const isNiv = this.id === 'Niv';
+        const clean = isNiv ? this.value : this.value.replace(/[^A-Za-z0-9]/g, '');
+        this.value = clean.toUpperCase().slice(0, isNiv ? 17 : 20);
+        if (start !== null) this.setSelectionRange(start, end);
+    }).each(function () {
+        this.value = this.value.toUpperCase();
+        // A loaded N/D or N/A is not a valid value: show the box empty
+        if (/^\s*N\s*\/\s*[DA]\s*$/.test(this.value)) this.value = "";
+    });
+
     setTransportTypeDefaultValues($("#ModeId").val());
+    updateTankCapacityOptions();
 
     $('#DriverWithVehicle').change(function (event) {
         if ($(this).val() === "True") {

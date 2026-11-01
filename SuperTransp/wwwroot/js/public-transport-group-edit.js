@@ -110,6 +110,9 @@ $("body").on("click", "#saveRequest", function (event) {
                     value: id
                 }).appendTo(nativeForm);
             });
+            if (window.appendRouteInputs) {
+                window.appendRouteInputs(nativeForm);
+            }
             nativeForm.submit();
         },
         cache: false
@@ -206,6 +209,17 @@ function isOkToSave() {
     } else if (partners === "0" && !firstInvalidField) {
         firstInvalidField = "#Partners";
         message = "La flota habilitada no puede ser cero";
+    }
+
+    if (!$("#AssemblyDate").val() && !firstInvalidField) {
+        firstInvalidField = "#AssemblyDate";
+        message = "Debe colocar la fecha de la asamblea";
+    }
+
+    const routeIssue = window.validateRouteFields ? window.validateRouteFields() : null;
+    if (routeIssue && !firstInvalidField) {
+        firstInvalidField = routeIssue.selector;
+        message = routeIssue.message;
     }
 
     const gasStationCount = $('#gasStationTableBody tr').length;
