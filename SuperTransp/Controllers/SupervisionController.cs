@@ -353,6 +353,21 @@ namespace SuperTransp.Controllers
 								return RedirectToAction("Error", "Home", new { errorMessage = "Debe colocar el NIV del vehículo." });
 							}
 
+							// Soft format check (the usual 17 character length is only warned about in the browser)
+							var nivFormatError = nivApplies && !IsMissing(model.Niv) ? GetNivFormatError(model.Niv) : null;
+							if (nivFormatError != null)
+							{
+								return RedirectToAction("Error", "Home", new { errorMessage = nivFormatError });
+							}
+
+							// Serials are optional (N/D when empty) but, when given, they must be letters and numbers only (max 20)
+							var serialFormatError = (!IsMissing(model.BodySerialNumber) ? GetSerialFormatError(model.BodySerialNumber, "carrocería") : null)
+								?? (!IsMissing(model.EngineSerialNumber) ? GetSerialFormatError(model.EngineSerialNumber, "motor") : null);
+							if (serialFormatError != null)
+							{
+								return RedirectToAction("Error", "Home", new { errorMessage = serialFormatError });
+							}
+
 							model.BodySerialNumber = IsMissing(model.BodySerialNumber) ? "N/D" : model.BodySerialNumber!.Trim();
 							model.EngineSerialNumber = IsMissing(model.EngineSerialNumber) ? "N/D" : model.EngineSerialNumber!.Trim();
 
@@ -912,6 +927,52 @@ namespace SuperTransp.Controllers
 
 		// Returns null when no other vehicle uses the same identifiers, otherwise the message with where that vehicle is.
 		// The NIV is only checked for organizations with ModeId 1, 2, 5 or 6; the serials are checked for every mode.
+		// Soft NIV (VIN) format check: letters and numbers only, no I, O or Q, at least 10 characters. Returns a message or null
+		private static string? GetNivFormatError(string? niv)
+		{
+			var value = niv?.Trim() ?? string.Empty;
+
+			if (!System.Text.RegularExpressions.Regex.IsMatch(value, "^[A-Za-z0-9]+$"))
+			{
+				return "El NIV solo puede contener letras y números, sin espacios ni guiones.";
+			}
+
+			if (value.IndexOfAny(new[] { 'I', 'O', 'Q', 'i', 'o', 'q' }) >= 0)
+			{
+				return "El NIV no puede contener las letras I, O ni Q (se confunden con 1 y 0).";
+			}
+
+			if (value.Length > 17)
+			{
+				return "El NIV no puede tener más de 17 caracteres.";
+			}
+
+			if (value.Length < 10)
+			{
+				return "El NIV es demasiado corto, normalmente tiene 17 caracteres (mínimo 10).";
+			}
+
+			return null;
+		}
+
+		// Body and engine serials: letters and numbers only, at most 20 characters. Returns a message or null
+		private static string? GetSerialFormatError(string? serial, string label)
+		{
+			var value = serial?.Trim() ?? string.Empty;
+
+			if (!System.Text.RegularExpressions.Regex.IsMatch(value, "^[A-Za-z0-9]+$"))
+			{
+				return $"El serial de {label} solo puede contener letras y números, sin espacios ni caracteres especiales.";
+			}
+
+			if (value.Length > 20)
+			{
+				return $"El serial de {label} no puede tener más de 20 caracteres.";
+			}
+
+			return null;
+		}
+
 		private string? FindDuplicatedVehicleIdentifier(int driverId, int modeId, string? niv, string? bodySerialNumber, string? engineSerialNumber)
 		{
 			var nivValue = new[] { 1, 2, 5, 6 }.Contains(modeId) ? NormalizeVehicleIdentifier(niv) : string.Empty;

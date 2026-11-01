@@ -233,6 +233,18 @@
             return;
         }
 
+        if ($('#RouteMidPoint1').val().trim() === '') {
+            alert('Debe indicar el punto intermedio 1.');
+            $('#RouteMidPoint1').focus();
+            return;
+        }
+
+        if ($('#RouteMidPoint2').val().trim() === '') {
+            alert('Debe indicar el punto intermedio 2.');
+            $('#RouteMidPoint2').focus();
+            return;
+        }
+
         var draft = {
             startName: $('#RouteStartName').val(),
             startLat: $('#RouteStartLat').val(),
@@ -342,6 +354,19 @@
 
         if ($('#routeTableBody tr').length === 0) {
             return { message: 'Debe agregar al menos una ruta a la lista.', selector: '#routeStartInput' };
+        }
+
+        // Routes saved before the intermediate points became mandatory have them empty
+        var incomplete = $('#routeTableBody tr').filter(function () {
+            var route = $(this).data('route');
+            return !(route.midPoint1 || '').trim() || !(route.midPoint2 || '').trim();
+        }).first();
+
+        if (incomplete.length > 0) {
+            return {
+                message: 'La ruta ' + (incomplete.index() + 1) + ' no tiene los puntos intermedios 1 y 2. Elimínela con la papelera y agréguela de nuevo indicando ambos puntos.',
+                selector: '#routeStartInput'
+            };
         }
 
         return null;

@@ -245,6 +245,58 @@
 		$("#loadingOverlay").show();
 	});
 
+	// Soft NIV (VIN) format check: letters and numbers only, no I, O or Q, at least 10 characters.
+	// Returns a message when the value is clearly wrong, otherwise "". The usual length (17) is only a warning, see isUnusualNivLength.
+	function nivFormatError(niv) {
+	    const value = (niv || "").trim();
+
+	    if (value === "" || /^N\s*\/\s*[DA]$/i.test(value)) {
+	        return "";
+	    }
+
+	    if (!/^[A-Za-z0-9]+$/.test(value)) {
+	        return "El NIV solo puede contener letras y números, sin espacios ni guiones.";
+	    }
+
+	    if (/[IOQ]/i.test(value)) {
+	        return "El NIV no puede contener las letras I, O ni Q (se confunden con 1 y 0).";
+	    }
+
+	    if (value.length > 17) {
+	        return "El NIV no puede tener más de 17 caracteres.";
+	    }
+
+	    if (value.length < 10) {
+	        return "El NIV es demasiado corto, normalmente tiene 17 caracteres (mínimo 10).";
+	    }
+
+	    return "";
+	}
+
+	// Body and engine serials: letters and numbers only, at most 20 characters (empty and N/D are allowed)
+function serialFormatError(serial, label) {
+	    const value = (serial || "").trim();
+
+	    if (value === "" || /^N\s*\/\s*[DA]$/i.test(value)) {
+	        return "";
+	    }
+
+	    if (!/^[A-Za-z0-9]+$/.test(value)) {
+	        return "El serial de " + label + " solo puede contener letras y números, sin espacios ni caracteres especiales.";
+	    }
+
+	    if (value.length > 20) {
+	        return "El serial de " + label + " no puede tener más de 20 caracteres.";
+	    }
+
+	    return "";
+}
+
+function isUnusualNivLength(niv) {
+	    const value = (niv || "").trim();
+	    return value !== "" && !/^N\s*\/\s*[DA]$/i.test(value) && value.length !== 17;
+	}
+
 	function isOkToSave() {
 		let firstInvalidField = null;
 		let message = "";
@@ -291,6 +343,11 @@
 				validateField(isEmpty(id) && (!cond || cond()), id, msg);
 			});
 
+			const nivApplies = ["1", "2", "5", "6"].includes(val("ModeId"));
+			validateField(nivApplies && nivFormatError(val("Niv")) !== "", "Niv", nivFormatError(val("Niv")));
+			validateField(serialFormatError(val("BodySerialNumber"), "carrocería") !== "", "BodySerialNumber", serialFormatError(val("BodySerialNumber"), "carrocería"));
+			validateField(serialFormatError(val("EngineSerialNumber"), "motor") !== "", "EngineSerialNumber", serialFormatError(val("EngineSerialNumber"), "motor"));
+
 			const pictures = data.pictures || [];
 			const totalPics = pictures.length;
 			const modeId = val("ModeId");
@@ -324,6 +381,12 @@
 				el.focus();
 			}
 			alert(message);
+			return false;
+		}
+
+		if ($("#DriverWithVehicle option:selected").text() === "Sí" && ["1", "2", "5", "6"].includes(val("ModeId")) && isUnusualNivLength(val("Niv"))
+			&& !confirm("El NIV tiene " + val("Niv").trim().length + " caracteres y lo habitual son 17. ¿Desea continuar de todos modos?")) {
+			$("#Niv").focus();
 			return false;
 		}
 		return true;
@@ -425,11 +488,13 @@
 			}
 		});
 
-		// NIV, body serial and engine serial: always uppercase and at most 50 characters
+		// NIV, body serial and engine serial: always uppercase; NIV at most 17 characters, serials letters and numbers only and at most 20
 		$('#Niv, #BodySerialNumber, #EngineSerialNumber').on('input', function () {
 			const start = this.selectionStart;
 			const end = this.selectionEnd;
-			this.value = this.value.toUpperCase().slice(0, 50);
+			const isNiv = this.id === 'Niv';
+			const clean = isNiv ? this.value : this.value.replace(/[^A-Za-z0-9]/g, '');
+			this.value = clean.toUpperCase().slice(0, isNiv ? 17 : 20);
 			if (start !== null) this.setSelectionRange(start, end);
 		}).each(function () {
 			this.value = this.value.toUpperCase();

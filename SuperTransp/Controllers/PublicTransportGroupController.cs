@@ -564,6 +564,11 @@ namespace SuperTransp.Controllers
 					return prefix + "los lugares no pueden exceder 250 caracteres.";
 				}
 
+				if (string.IsNullOrWhiteSpace(route.RouteMidPoint1) || string.IsNullOrWhiteSpace(route.RouteMidPoint2))
+				{
+					return prefix + "debe indicar el punto intermedio 1 y el punto intermedio 2.";
+				}
+
 				if (string.IsNullOrWhiteSpace(route.RouteGeometry) || route.RouteDistanceMeters <= 0)
 				{
 					return prefix + "no tiene el trazado calculado, agréguela de nuevo.";
