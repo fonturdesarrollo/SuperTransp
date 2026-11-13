@@ -5,6 +5,8 @@
 		public int GasStationId { get; set; }
 		public int MunicipalityId { get; set; }
 		public int StateId { get; set; }
+		public int DistrictId { get; set; }
+		public string? DistrictName { get; set; }
 		public string? GasStationName { get; set; }
 		public string? GasStationAddress { get; set; }
 		public string? StateName { get; set; }

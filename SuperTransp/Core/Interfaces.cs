@@ -53,6 +53,7 @@ namespace SuperTransp.Core
 			public List<GeographyViewModel> GetStateById(int stateId);
 			public List<GeographyViewModel> GetAllMunicipalities();
 			public List<GeographyViewModel> GetMunicipalityByStateId(int stateId);
+			public List<GeographyViewModel> GetDistrictByMunicipalityId(int municipalityId);
 		}
 
 		public interface IDesignation

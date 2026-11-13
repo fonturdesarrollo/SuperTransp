@@ -245,7 +245,7 @@
 		$("#loadingOverlay").show();
 	});
 
-	// Soft NIV (VIN) format check: letters and numbers only, no I, O or Q, at least 10 characters.
+	// Soft NIV (VIN) format check: letters and numbers only, no I, O or Q, at least 4 characters.
 	// Returns a message when the value is clearly wrong, otherwise "". The usual length (17) is only a warning, see isUnusualNivLength.
 	function nivFormatError(niv) {
 	    const value = (niv || "").trim();
@@ -266,8 +266,8 @@
 	        return "El NIV no puede tener más de 17 caracteres.";
 	    }
 
-	    if (value.length < 10) {
-	        return "El NIV es demasiado corto, normalmente tiene 17 caracteres (mínimo 10).";
+	    if (value.length < 4) {
+	        return "El NIV es demasiado corto, normalmente tiene 17 caracteres (mínimo 4).";
 	    }
 
 	    return "";

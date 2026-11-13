@@ -547,6 +547,8 @@ namespace SuperTransp.Core
 								GasStationId = dr["GasStationId"] == DBNull.Value ? 0 : (int)dr["GasStationId"],
 								StateId = dr["StateId"] == DBNull.Value ? 0 : (int)dr["StateId"],
 								MunicipalityId = dr["MunicipalityId"] == DBNull.Value ? 0 : (int)dr["MunicipalityId"],
+								DistrictId = dr["DistrictId"] == DBNull.Value ? 0 : Convert.ToInt32(dr["DistrictId"]),
+								DistrictName = dr["DistrictName"] as string,
 								GasStationName = dr["GasStationName"] as string,
 								GasStationAddress = dr["GasStationAddress"] as string,
 								StateName = dr["StateName"] as string,
@@ -601,6 +603,8 @@ namespace SuperTransp.Core
 								TotalByMunicipality = dr["TotalByMunicipality"] == DBNull.Value ? 0    : (int)dr["TotalByMunicipality"],
 								TotalByPTG 			= dr["TotalByPTG"]		 == DBNull.Value ? 0    : (int)dr["TotalByPTG"],
 								TotalByGasStation   = dr["TotalByGasStation"]   == DBNull.Value ? 0    : (int)dr["TotalByGasStation"],
+								DistrictId = dr["DistrictId"] == DBNull.Value ? 0 : Convert.ToInt32(dr["DistrictId"]),
+								DistrictName = dr["DistrictName"] as string,
 							});
 						}
 					}
@@ -629,6 +633,7 @@ namespace SuperTransp.Core
 					cmd.CommandType = CommandType.StoredProcedure;
 					cmd.Parameters.AddWithValue("@GasStationId", model.GasStationId);
 					cmd.Parameters.AddWithValue("@MunicipalityId", model.MunicipalityId);
+					cmd.Parameters.AddWithValue("@DistrictId", model.DistrictId > 0 ? model.DistrictId : DBNull.Value);
 					cmd.Parameters.AddWithValue("@GasStationName", model.GasStationName ?? string.Empty);
 					cmd.Parameters.AddWithValue("@GasStationAddress", model.GasStationAddress ?? string.Empty);
 

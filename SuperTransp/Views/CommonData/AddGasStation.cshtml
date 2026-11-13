@@ -87,7 +87,7 @@
 						<h1 style="color:#4cbece">Agregar / Editar Estación de Servicio</h1>
 						<br />
 						<div class="row gtr-uniform">
-							<div class="col-6">
+							<div class="col-4 col-12-small">
 								<strong>Estado:</strong>
 								<select id="StateIdFilter" class="form-control">
 									<option value="">-- Seleccione el estado --</option>
@@ -97,9 +97,13 @@
 									}
 								</select>
 							</div>
-							<div class="col-6">
+							<div class="col-4 col-12-small">
 								<strong>Municipio:</strong>
 								@Html.DropDownListFor(m => m.MunicipalityId, new SelectList(Enumerable.Empty<SelectListItem>()), "-- Seleccione el municipio --", new { @class = "form-control" })
+							</div>
+							<div class="col-4 col-12-small">
+								<strong>Parroquia:</strong>
+								@Html.DropDownListFor(m => m.DistrictId, new SelectList(Enumerable.Empty<SelectListItem>()), "-- Seleccione la parroquia --", new { @class = "form-control" })
 							</div>
 							<div class="col-12">
 								<strong>Nombre:</strong>
@@ -128,6 +132,7 @@
 								<tr>
 									<th>Estado</th>
 									<th>Municipio</th>
+									<th>Parroquia</th>
 									<th>Nombre</th>
 									<th>Dirección</th>
 								</tr>
@@ -138,10 +143,12 @@
 									<tr>
 										<td>@station.StateName</td>
 										<td>@station.MunicipalityName</td>
+										<td>@(station.DistrictId > 0 ? station.DistrictName : "Sin asignar")</td>
 										<td class="station-link"
 											data-id="@station.GasStationId"
 											data-state="@station.StateId"
 											data-municipality="@station.MunicipalityId"
+											data-district="@station.DistrictId"
 											data-name="@station.GasStationName"
 											data-address="@station.GasStationAddress">
 											@station.GasStationName
@@ -174,9 +181,29 @@
 
 	<script type="text/javascript">
 
-		function loadMunicipalities(stateId, selectedMunicipalityId) {
+		function resetDistricts() {
+			$('#DistrictId').empty().append($('<option>').val('').text('-- Seleccione la parroquia --'));
+		}
+
+		function loadDistricts(municipalityId, selectedDistrictId) {
+			var $district = $('#DistrictId');
+			resetDistricts();
+			if (!municipalityId) return;
+
+			$.getJSON('@Url.Action("GetDistrictsByMunicipalityId", "CommonData")', { municipalityId: municipalityId }, function (data) {
+				$.each(data || [], function (i, d) {
+					$district.append($('<option>').val(d.districtId).text(d.districtName));
+				});
+				if (selectedDistrictId) {
+					$district.val(selectedDistrictId);
+				}
+			});
+		}
+
+		function loadMunicipalities(stateId, selectedMunicipalityId, selectedDistrictId) {
 			var $muni = $('#MunicipalityId');
 			$muni.empty().append('<option value="">-- Seleccione el municipio --</option>');
+			resetDistricts();
 			if (!stateId) return;
 
 			$.getJSON('@Url.Action("GetMunicipalitiesByStateId", "CommonData")', { stateId: stateId }, function (data) {
@@ -185,6 +212,7 @@
 				});
 				if (selectedMunicipalityId) {
 					$muni.val(selectedMunicipalityId);
+					loadDistricts(selectedMunicipalityId, selectedDistrictId);
 				}
 			});
 		}
@@ -246,12 +274,17 @@
 			});
 
 			$('#StateIdFilter').on('change', function () {
-				loadMunicipalities(parseInt($(this).val()) || 0, 0);
+				loadMunicipalities(parseInt($(this).val()) || 0, 0, 0);
+			});
+
+			$('#MunicipalityId').on('change', function () {
+				loadDistricts(parseInt($(this).val()) || 0, 0);
 			});
 
 			$('#gasStationsTable').on('click', '.station-link', function () {
 				var stateId = parseInt($(this).data('state'));
 				var municipalityId = parseInt($(this).data('municipality'));
+				var districtId = parseInt($(this).data('district')) || 0;
 				var name = $(this).data('name');
 				var address = $(this).data('address');
 				var id = parseInt($(this).data('id'));
@@ -261,7 +294,7 @@
 				$('#GasStationAddress').val(address);
 
 				$('#StateIdFilter').val(stateId);
-				loadMunicipalities(stateId, municipalityId);
+				loadMunicipalities(stateId, municipalityId, districtId);
 
 				$('html, body').animate({ scrollTop: 0 }, 'fast');
 			});
@@ -270,6 +303,8 @@
 				$('#GasStationId').val(0);
 				$('#StateIdFilter').val('');
 				$('#MunicipalityId').empty().append('<option value="">-- Seleccione el municipio --</option>');
+				resetDistricts();
+				$('#DistrictId').removeClass('is-invalid');
 				$('#GasStationName').val('');
 				$('#GasStationAddress').val('');
 				$('#GasStationName').removeClass('is-invalid');
@@ -303,6 +338,11 @@
 			if ($('#MunicipalityId').val() === '' && !firstInvalidField) {
 				firstInvalidField = '#MunicipalityId';
 				message = 'Debe seleccionar el municipio';
+			}
+
+			if ($('#DistrictId').val() === '' && !firstInvalidField) {
+				firstInvalidField = '#DistrictId';
+				message = 'Debe seleccionar la parroquia';
 			}
 
 			if ($('#GasStationName').val().trim() === '' && !firstInvalidField) {

@@ -43,6 +43,9 @@ namespace SuperTransp.Controllers
 			ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
 			ViewBag.SecurityGroupId = (int)HttpContext.Session.GetInt32("SecurityGroupId");
 
+			// Procedures:PaymentEnabled=false: the carrier is not charged, the wizard skips the payment step
+			ViewBag.PaymentEnabled = _configuration.GetValue<bool>("Procedures:PaymentEnabled");
+
 			if (_settings.Value.IsActive)
 			{
 				ViewBag.MaintenanceMessage = _settings.Value.Message;

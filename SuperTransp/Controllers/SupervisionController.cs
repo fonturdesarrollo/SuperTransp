@@ -927,7 +927,7 @@ namespace SuperTransp.Controllers
 
 		// Returns null when no other vehicle uses the same identifiers, otherwise the message with where that vehicle is.
 		// The NIV is only checked for organizations with ModeId 1, 2, 5 or 6; the serials are checked for every mode.
-		// Soft NIV (VIN) format check: letters and numbers only, no I, O or Q, at least 10 characters. Returns a message or null
+		// Soft NIV (VIN) format check: letters and numbers only, no I, O or Q, at least 4 characters. Returns a message or null
 		private static string? GetNivFormatError(string? niv)
 		{
 			var value = niv?.Trim() ?? string.Empty;
@@ -947,9 +947,9 @@ namespace SuperTransp.Controllers
 				return "El NIV no puede tener más de 17 caracteres.";
 			}
 
-			if (value.Length < 10)
+			if (value.Length < 4)
 			{
-				return "El NIV es demasiado corto, normalmente tiene 17 caracteres (mínimo 10).";
+				return "El NIV es demasiado corto, normalmente tiene 17 caracteres (mínimo 4).";
 			}
 
 			return null;

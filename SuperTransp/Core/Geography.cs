@@ -168,5 +168,37 @@ namespace SuperTransp.Core
 
 			return municipality;
 		}
+
+		public List<GeographyViewModel> GetDistrictByMunicipalityId(int municipalityId)
+		{
+			List<GeographyViewModel> districts = new();
+
+			using (SqlConnection sqlConnection = GetConnection())
+			{
+				if (sqlConnection.State == ConnectionState.Closed)
+				{
+					sqlConnection.Open();
+				}
+
+				using (SqlCommand cmd = new SqlCommand("SELECT DistrictId, MunicipalityId, DistrictName FROM Geography_GetDistrictByMunicipalityId WHERE MunicipalityId = @MunicipalityId", sqlConnection))
+				{
+					cmd.Parameters.AddWithValue("@MunicipalityId", municipalityId);
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							districts.Add(new GeographyViewModel
+							{
+								DistrictId = Convert.ToInt32(dr["DistrictId"]),
+								MunicipalityId = Convert.ToInt32(dr["MunicipalityId"]),
+								DistrictName = dr["DistrictName"]?.ToString()
+							});
+						}
+					}
+				}
+			}
+
+			return districts;
+		}
 	}
 }

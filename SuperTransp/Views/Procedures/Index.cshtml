@@ -793,9 +793,9 @@
 								<tr>
 									<th>Categoría</th>
 									<th>Concepto</th>
-									<th>Frecuencia</th>
-									<th>TARIFA $</th>
-									<th>Tarifa BCV</th>
+									<th class="wizard-payment-col">Frecuencia</th>
+									<th class="wizard-payment-col">TARIFA $</th>
+									<th class="wizard-payment-col">Tarifa BCV</th>
 									<th class="wizard-select-col">Seleccionar</th>
 								</tr>
 							</thead>
@@ -895,7 +895,7 @@
 							<h4>Trámite</h4>
 							<p id="summaryProcedure"></p>
 						</div>
-						<div class="wizard-summary-block">
+						<div class="wizard-summary-block" id="summaryReceiverBlock">
 							<h4>Banco Receptor</h4>
 							<p id="summaryReceivingBank"></p>
 						</div>
@@ -972,6 +972,19 @@
 			var paymentTypeSelect = document.getElementById('paymentTypeSelect');
 			var payerBankSelect = document.getElementById('payerBankSelect');
 			var payerTypeSelect = document.getElementById('payerTypeSelect');
+
+			// false = the carrier is not charged: the payment step (4) is skipped and the request is saved as Punto de venta
+			var paymentEnabled = @(ViewBag.PaymentEnabled == true ? "true" : "false");
+			if (!paymentEnabled) {
+				// Hide dot 4 with the line after it, and renumber the summary dot as 4
+				var stepDots = document.querySelectorAll('.wizard-step-dot');
+				var stepLines = document.querySelectorAll('.wizard-step-line');
+				stepDots[3].style.display = 'none';
+				stepLines[3].style.display = 'none';
+				stepDots[4].textContent = '4';
+				// Procedure table: no frequency, tariff or BCV tariff columns
+				document.querySelectorAll('.wizard-payment-col').forEach(function (th) { th.style.display = 'none'; });
+			}
 
 			var currentStep = 1;
 			var isValidatingPayment = false;
@@ -1289,7 +1302,7 @@
 				tbody.innerHTML = '';
 
 				if (!data || data.length === 0) {
-					tbody.innerHTML = '<tr><td colspan="6" class="wizard-empty">No hay trámites disponibles</td></tr>';
+					tbody.innerHTML = '<tr><td colspan="' + (paymentEnabled ? 6 : 3) + '" class="wizard-empty">No hay trámites disponibles</td></tr>';
 					return;
 				}
 
@@ -1307,9 +1320,11 @@
 					tr.innerHTML =
 						'<td>' + (p.procedureCategoryName || '') + '</td>' +
 						'<td>' + (p.procedureConcept || '') + '</td>' +
-						'<td>' + (p.procedureFrequencyName || '') + '</td>' +
-						'<td>$ ' + tariffText + '</td>' +
-						'<td>' + bcvText + '</td>' +
+						(paymentEnabled
+							? '<td>' + (p.procedureFrequencyName || '') + '</td>' +
+								'<td>$ ' + tariffText + '</td>' +
+								'<td>' + bcvText + '</td>'
+							: '') +
 						'<td class="wizard-select-col"><input type="radio" name="wizardProcedureSelect" value="' + p.procedureId + '" /></td>';
 
 					tbody.appendChild(tr);
@@ -1369,7 +1384,8 @@
 
 						currentBcvRate = Number(data.rate);
 						valueEl.textContent = currentBcvRate.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
-						el.style.display = 'block';
+						// Without payment the BCV rate text is not shown
+						el.style.display = paymentEnabled ? 'block' : 'none';
 
 						if (procedureTypes) renderProcedureStep(procedureTypes);
 						updateTariffHints();
@@ -1487,13 +1503,14 @@
 			}
 
 			// Registered Punto de Venta account (AccounTypeId 4): it is the account saved when the option is Punto de venta
-			function loadPosAccount() {
+			function loadPosAccount(onLoaded) {
 				var message = document.getElementById('posAccountMessage');
 
 				function apply(list) {
 					posAccount = (list && list[0]) || null;
 					message.textContent = (!posAccount && receiverMode === 'pos') ? 'No hay una cuenta de punto de venta registrada.' : '';
 					updateNextButtonState();
+					if (onLoaded) onLoaded();
 				}
 
 				if (bankAccountsCache[4]) {
@@ -1509,6 +1526,7 @@
 					})
 					.catch(function () {
 						message.textContent = 'Error al cargar la cuenta de punto de venta.';
+						if (onLoaded) onLoaded();
 					});
 			}
 
@@ -1721,11 +1739,16 @@
 							? proc.tariff.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 							: proc.tariff);
 					document.getElementById('summaryProcedure').textContent =
-						proc.procedureCategoryName + ' — ' + proc.procedureConcept + ' (' + proc.procedureFrequencyName + ') — Tarifa: ' + tariffText;
+						// Without payment the summary shows only the procedure (no frequency or tariff)
+						paymentEnabled
+							? proc.procedureCategoryName + ' — ' + proc.procedureConcept + ' (' + proc.procedureFrequencyName + ') — Tarifa: ' + tariffText
+							: proc.procedureCategoryName + ' — ' + proc.procedureConcept;
 				}
 
 				var isPos = receiverMode === 'pos';
 				document.getElementById('summaryPayerBlock').style.display = isPos ? 'none' : '';
+				// Without payment the receiving bank is not shown either
+				document.getElementById('summaryReceiverBlock').style.display = paymentEnabled ? '' : 'none';
 
 				if (isPos) {
 					// Punto de venta: receiving bank = the registered POS account; there is no paying bank section
@@ -1793,13 +1816,14 @@
 				var rows = [
 					['Asociado / Vehículo', text('summaryOrganization')],
 					['Trámite', receiptProc ? receiptProc.procedureConcept : text('summaryProcedure')],
-					['Banco receptor', receiptReceiverText]
 				];
+				// Without payment the receipt has no receiving bank
+				if (paymentEnabled) rows.push(['Banco receptor', receiptReceiverText]);
 
 				// Punto de venta receipts have no paying bank section
 				if (!receiptIsPos) rows.push(['Banco pagador', receiptPayerText]);
 
-				var receiptTitleText = receiptIsPos ? 'Recibo de pago' : 'Recibo de pago móvil';
+				var receiptTitleText = !paymentEnabled ? 'Recibo' : (receiptIsPos ? 'Recibo de pago' : 'Recibo de pago móvil');
 				document.getElementById('receiptHeaderTitle').textContent = receiptTitleText;
 
 				receiptContent.innerHTML = '';
@@ -1838,7 +1862,8 @@
 				totalValue.textContent = fmt(amountPaid || 0);
 				total.appendChild(totalLabel);
 				total.appendChild(totalValue);
-				receiptContent.appendChild(total);
+				// Without payment the receipt does not show the amount paid
+				if (paymentEnabled) receiptContent.appendChild(total);
 
 				receiptOverlay.classList.add('open');
 			}
@@ -1851,7 +1876,7 @@
 				var w = window.open('', '_blank', 'width=720,height=800');
 				if (!w) return;
 				// Build the print document with DOM nodes (no HTML literals inside the inline script)
-				w.document.title = receiptIsPos ? 'Recibo de pago' : 'Recibo de pago móvil';
+				w.document.title = !paymentEnabled ? 'Recibo' : (receiptIsPos ? 'Recibo de pago' : 'Recibo de pago móvil');
 				var printStyle = w.document.createElement('style');
 				printStyle.textContent = [
 					'body{font-family:Arial,sans-serif;color:#2c3e50;padding:32px;font-size:14px}',
@@ -1999,6 +2024,21 @@
 					showStep(3);
 					loadProcedureTypes();
 				} else if (currentStep === 3) {
+					if (!paymentEnabled) {
+						// No payment: Punto de venta account by default, straight to the summary
+						nextBtn.disabled = true;
+						setReceiverMode('pos');
+						loadPosAccount(function () {
+							if (!posAccount) {
+								alert('No hay una cuenta de punto de venta registrada.');
+								updateNextButtonState();
+								return;
+							}
+							buildSummary();
+							showStep(5);
+						});
+						return;
+					}
 					showStep(4);
 					applyProcedureReceiverAccount();
 					updateTariffHints();
@@ -2018,7 +2058,9 @@
 			});
 
 			prevBtn.addEventListener('click', function () {
-				if (currentStep > 1) {
+				if (currentStep === 5 && !paymentEnabled) {
+					showStep(3);
+				} else if (currentStep > 1) {
 					showStep(currentStep - 1);
 				}
 			});

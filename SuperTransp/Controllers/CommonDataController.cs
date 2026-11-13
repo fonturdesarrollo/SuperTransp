@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DocumentFormat.OpenXml.EMMA;
+using DocumentFormat.OpenXml.Wordprocessing;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using SuperTransp.Core;
 using SuperTransp.Models;
@@ -188,14 +190,26 @@ namespace SuperTransp.Controllers
 		{
 			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
 			{
-				if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 26))
+				if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 33))
 				{
 					return RedirectToAction("Login", "Security");
 				}
 
+				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+				int? stateId = HttpContext.Session.GetInt32("StateId");
+
+				if (securityGroupId != 1 && !_security.GroupHasAccessToModule((int)securityGroupId, 6))
+				{
+					ViewBag.GasStations = _commonData.GetGasStationsByStateId((int)stateId);
+					ViewBag.States = _geography.GetStateById((int)stateId);
+				}
+				else
+				{
+					ViewBag.GasStations = _commonData.GetGasStationsAll();
+					ViewBag.States = _geography.GetAllStates();
+				}
+
 				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
-				ViewBag.States = _geography.GetAllStates();
-				ViewBag.GasStations = _commonData.GetGasStationsAll();
 			}
 
 			return View(new GastStationViewModel { GasStationId = 0 });
@@ -210,6 +224,15 @@ namespace SuperTransp.Controllers
 			return Json(null);
 		}
 
+		public JsonResult GetDistrictsByMunicipalityId(int municipalityId)
+		{
+			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+			{
+				return Json(_geography.GetDistrictByMunicipalityId(municipalityId));
+			}
+			return Json(null);
+		}
+
 		[HttpPost]
 		public IActionResult AddGasStation(GastStationViewModel model)
 		{
@@ -217,7 +240,7 @@ namespace SuperTransp.Controllers
 			{
 				if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) && ModelState.IsValid)
 				{
-					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 26))
+					if (HttpContext.Session.GetInt32("SecurityGroupId") != 1 && !_security.GroupHasAccessToModule((int)HttpContext.Session.GetInt32("SecurityGroupId"), 33))
 					{
 						return RedirectToAction("Login", "Security");
 					}
