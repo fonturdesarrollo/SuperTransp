@@ -85,6 +85,7 @@ namespace SuperTransp.Core
 			public int AddOrEdit(PublicTransportGroupViewModel model);
 			public PublicTransportGroupViewModel GetPublicTransportGroupById(int publicTransportGroupId);
 			public HashSet<int> GetPublicTransportGroupIdsWithRoute();
+			public Dictionary<int, List<PublicTransportGroupRouteViewModel>> GetAllRoutesByPublicTransportGroupId();
 			bool RoutesEnabled { get; }
 			public string? RegisteredRif(string publicTransportGroupRif);
 			public bool EmailUsedByOtherRepresentative(string representativeEmail, int representativeIdentityDocument); // TEMP-EMAIL-UNIQUE
@@ -120,6 +121,15 @@ namespace SuperTransp.Core
 			public int AddOrEdit(SupervisionViewModel model);
 			public int AddSimple(SupervisionViewModel model);
 			public int AddOrEditRound(SupervisionRoundModel model);
+			public int AddFuelDistribution(int stateId, DateTime startDate, string remarks);
+			public bool IsFuelDistributionOpenByStateId(int stateId);
+			public bool CloseFuelDistribution(int stateId);
+			public FuelDistributionLoadViewModel? GetOpenFuelDistributionByStateId(int stateId);
+			public bool IsFuelDistributionDateClosedByStateId(int stateId, DateTime startDate);
+			public int AddFuelDistributionLoad(FuelDistributionLoadViewModel load);
+			public bool UpdateFuelDistributionLoad(FuelDistributionLoadViewModel load, int currentStateId);
+			public bool DeleteFuelDistributionLoad(int fuelDistributionId, int stateId);
+			public List<FuelDistributionLoadViewModel> GetFuelDistributionLoadsByStateId(int stateId);
 			public int CloseRound(SupervisionRoundModel model);
 			public SupervisionViewModel GetById(int supervisionId);
 			public SupervisionViewModel GetByPublicTransportGroupIdAndDriverPublicTransportGroupIdAndPartnerNumberStateId(int publicTransportGroupId, int driverId, int partnerNumber, int stateId);
@@ -176,6 +186,7 @@ namespace SuperTransp.Core
 			public List<CommonDataViewModel> GetSex();
 			public List<GastStationViewModel> GetGasStationsAll();
 			public List<GastStationViewModel> GetGasStationsByStateId(int stateId);
+			public List<GastStationViewModel> GetGasStationsByDistrictId(int districtId);
 			public List<GastStationViewModel> GetGasStationsByPTGId(int publicTransportGroupId);
 			public List<PublicTransportGroupViewModel> GetPTGsByGasStationId(int gasStationId);
 			public (int TotalStates, int TotalMunicipalities, int TotalStations, int TotalPTG) GetGasStationsGlobalStats();

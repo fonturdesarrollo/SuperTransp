@@ -422,7 +422,7 @@ namespace SuperTransp.Controllers
 				using var response = await client.GetAsync(url);
 
 				if (!response.IsSuccessStatusCode)
-					return StatusCode(502, new { error = "El servicio de búsqueda de lugares no está disponible en este momento." });
+					return StatusCode(502, new { error = $"El servicio de búsqueda de lugares no está disponible en este momento (respuesta HTTP {(int)response.StatusCode})." });
 
 				using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
 				var places = new List<PlaceResult>();
@@ -466,7 +466,7 @@ namespace SuperTransp.Controllers
 			}
 			catch (Exception ex)
 			{
-				return StatusCode(502, new { error = $"No se pudo consultar los lugares: {ex.Message}" });
+				return StatusCode(502, new { error = $"No se pudo consultar los lugares: {ex.GetBaseException().Message}" });
 			}
 		}
 
@@ -496,7 +496,7 @@ namespace SuperTransp.Controllers
 				using var response = await client.GetAsync(url);
 
 				if (!response.IsSuccessStatusCode)
-					return StatusCode(502, new { error = "El servicio de rutas no está disponible en este momento." });
+					return StatusCode(502, new { error = $"El servicio de rutas no está disponible en este momento (respuesta HTTP {(int)response.StatusCode})." });
 
 				using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
 				var root = document.RootElement;
@@ -518,7 +518,7 @@ namespace SuperTransp.Controllers
 			}
 			catch (Exception ex)
 			{
-				return StatusCode(502, new { error = $"No se pudo calcular la ruta: {ex.Message}" });
+				return StatusCode(502, new { error = $"No se pudo calcular la ruta: {ex.GetBaseException().Message}" });
 			}
 		}
 

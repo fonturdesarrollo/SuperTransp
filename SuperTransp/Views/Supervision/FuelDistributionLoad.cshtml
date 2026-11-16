@@ -1,0 +1,339 @@
+@using SuperTransp.Models
+@{
+	Layout = "";
+}
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Cargar Operativo de Combustible</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+	<link rel="stylesheet" href="~/assets/css/main.css" />
+	<noscript><link rel="stylesheet" href="~/assets/css/noscript.css" /></noscript>
+	<link rel="stylesheet" href="~/datatable/css/bootstrap.css" />
+	<link rel="stylesheet" href="~/datatable/css/dataTables.bootstrap4.min.css" />
+	<link rel="stylesheet" href="~/datatable/css/responsive.bootstrap4.min.css" />
+	<link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
+
+	<style>
+		.is-invalid {
+			border: 2px solid red;
+			background-color: #ffe6e6;
+		}
+
+		/* Only the records section breaks out of the centered column, so the table fits all its columns */
+		.wide-section {
+			position: relative;
+			left: 50%;
+			transform: translateX(-50%);
+			width: 94vw;
+		}
+
+		/* Uniform look for the form: labels above, every control full width and same height */
+		.fd-form strong {
+			display: block;
+			margin-bottom: 0.4rem;
+		}
+
+		.fd-form input[type=text],
+		.fd-form select {
+			display: block;
+			width: 100%;
+			height: 2.75rem;
+			box-sizing: border-box;
+			padding: 0 1rem;
+			border: solid 1px rgba(210, 215, 217, 0.75);
+			border-radius: 4px;
+			background-color: transparent;
+		}
+
+		.fd-form textarea {
+			display: block;
+			width: 100%;
+			box-sizing: border-box;
+			border: solid 1px rgba(210, 215, 217, 0.75);
+			border-radius: 4px;
+			padding: 0.75rem 1rem;
+		}
+
+		.fd-form input::placeholder,
+		.fd-form textarea::placeholder {
+			color: #9aa0a6;
+		}
+
+		/* Hide the up/down spinners of numeric inputs */
+		input[type=number]::-webkit-outer-spin-button,
+		input[type=number]::-webkit-inner-spin-button {
+			-webkit-appearance: none;
+			margin: 0;
+		}
+
+		input[type=number] {
+			-moz-appearance: textfield;
+			appearance: textfield;
+		}
+
+		.load-row {
+			cursor: pointer;
+		}
+
+		.load-row.selected-row > td {
+			background-color: #e3f6f9 !important;
+		}
+
+		.delete-load {
+			color: #c0392b;
+			border-bottom: none;
+		}
+
+			.delete-load:hover {
+				color: #e74c3c;
+			}
+
+		.custom-textarea {
+			height: 100px !important;
+			resize: none;
+		}
+
+		.logo-container {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+
+			.logo-container img {
+				display: block;
+			}
+	</style>
+</head>
+<body class="is-preload">
+	@using (Html.BeginForm("FuelDistributionLoad", "Supervision", FormMethod.Post, new { id = "fuelDistributionLoadForm" }))
+	{
+		@Html.AntiForgeryToken()
+		<!-- Wrapper -->
+		<div id="wrapper">
+
+			<!-- Header -->
+			<header id="header">
+				<div class="inner">
+					<!-- Logo -->
+					<div class="logo-container">
+						<img src="~/images/Logo.png" width="100px" height="100px" alt="Logo principal" />
+						<img src="~/images/super-transp-logo.png" width="150px" height="150px" alt="Logo SuperTransp" />
+					</div>
+					<div class="logo">
+						<span class="title">@ViewBag.EmployeeName</span>
+						<br />
+						@if (TempData["SuccessMessage"] != null)
+						{
+							<div id="successMessage" class="alert alert-success">
+								@TempData["SuccessMessage"]
+							</div>
+						}
+					</div>
+				</div>
+				<!-- Nav -->
+				<nav>
+					<ul>
+						<li><a href="#menu">Menu</a></li>
+					</ul>
+				</nav>
+			</header>
+
+			<!-- Menu -->
+			<nav id="menu">
+				<h2>Menu</h2>
+				<ul>
+					<li>@Html.ActionLink("Inicio", "Index", "Home")</li>
+					<li>@Html.ActionLink("Supervisión", "Index", "Supervision")</li>
+					<li>@Html.ActionLink("Salir", "Login", "Security")</li>
+				</ul>
+			</nav>
+
+			<!-- Main -->
+			<div id="main">
+				<div class="inner">
+					<!-- Form -->
+					<section>
+						<h1 style="color:#4cbece">Cargar Operativo de Combustible</h1>
+						<input type="hidden" id="FuelDistributionId" name="fuelDistributionId" value="0" />
+						<br />
+						<div class="row gtr-uniform fd-form">
+							<div class="col-4 col-12-small">
+								<strong>Estado:</strong>
+								@Html.DropDownList("stateId", (SelectList)ViewBag.States, "-- Seleccione el estado --", new { @class = "form-control", id = "StateId" })
+							</div>
+							<div class="col-4 col-12-small">
+								<strong>Municipio:</strong>
+								<select id="MunicipalityId" name="municipalityId" class="form-control">
+									<option value="">-- Seleccione el municipio --</option>
+								</select>
+							</div>
+							<div class="col-4 col-12-small">
+								<strong>Parroquia:</strong>
+								<select id="DistrictId" name="districtId" class="form-control">
+									<option value="">-- Seleccione la parroquia --</option>
+								</select>
+							</div>
+
+							<div class="col-6 col-12-small">
+								<strong>Estación de servicio:</strong>
+								<select id="GasStationId" name="gasStationId" class="form-control">
+									<option value="">-- Seleccione la estación de servicio --</option>
+								</select>
+							</div>
+							<div class="col-6 col-12-small">
+								<strong>Tipo de combustible:</strong>
+								@Html.DropDownList("fuelTypeId", (SelectList)ViewBag.FuelTypes, "-- Seleccione el tipo de combustible --", new { @class = "form-control", id = "FuelTypeId" })
+							</div>
+
+							<div class="col-6 col-12-small">
+								<strong>Cantidad de gandolas recibidas:</strong>
+								<input type="text" inputmode="numeric" autocomplete="off" id="TrucksReceived" name="trucksReceived" maxlength="2" />
+							</div>
+							<div class="col-6 col-12-small">
+								<strong>Observaciones gandola:</strong>
+								<input type="text" id="TrucksRemarks" name="trucksRemarks" maxlength="250" placeholder="Observaciones de las gandolas" />
+							</div>
+
+							<div class="col-12">
+								<h3 style="color:#4cbece; margin-bottom:0">Vehículos atendidos</h3>
+								<hr />
+							</div>
+
+							<div class="col-6 col-12-small">
+								<strong>Litros recibidos:</strong>
+								<input type="text" inputmode="numeric" autocomplete="off" id="LitersReceived" name="litersReceived" />
+							</div>
+
+							<div class="col-6 col-12-small">
+								<strong>Litros despachados:</strong>
+								<input type="text" inputmode="numeric" autocomplete="off" id="LitersDispatched" name="litersDispatched" />
+							</div>
+
+							<div class="col-3 col-6-small">
+								<strong>Urbanos atendidos:</strong>
+								<input type="text" inputmode="numeric" autocomplete="off" id="UrbanAttended" name="urbanAttended" />
+							</div>
+							<div class="col-3 col-6-small">
+								<strong>Suburbanos atendidos:</strong>
+								<input type="text" inputmode="numeric" autocomplete="off" id="SubUrbanAttended" name="subUrbanAttended" />
+							</div>
+							<div class="col-3 col-6-small">
+								<strong>Taxis atendidos:</strong>
+								<input type="text" inputmode="numeric" autocomplete="off" id="TaxiAttended" name="taxiAttended" />
+							</div>
+							<div class="col-3 col-6-small">
+								<strong>Moto taxis atendidos:</strong>
+								<input type="text" inputmode="numeric" autocomplete="off" id="MotoTaxiAttended" name="motoTaxiAttended" />
+							</div>
+
+							<div class="col-12">
+								<strong>Observaciones del día:</strong>
+								<textarea id="DayRemarks" name="dayRemarks" class="custom-textarea" maxlength="500" placeholder="Observaciones del día"></textarea>
+							</div>
+
+							<div class="col-12">
+								<ul class="actions">
+									<li>@Html.ActionLink("Volver", "Index", "Supervision", null, new { @class = "button" })</li>
+									<li><input type="button" value="Nuevo" id="clearForm" /></li>
+									<li><input type="button" value="Guardar" class="primary" id="saveRequest" /></li>
+								</ul>
+							</div>
+						</div>
+					</section>
+
+					<br />
+
+					<!-- Loaded records -->
+					<section class="wide-section">
+						<h2 style="color:#4cbece">Registros Cargados</h2>
+						<table id="fuelDistributionLoadsTable" class="table table-striped table-bordered" style="width:100%">
+							<thead>
+								<tr>
+									<th>Fecha</th>
+									<th>Municipio</th>
+									<th>Parroquia</th>
+									<th>Estación</th>
+									<th>Combustible</th>
+									<th>Gandolas</th>
+									<th>Obs. gandola</th>
+									<th>Litros recibidos</th>
+									<th>Litros despachados</th>
+									<th>Urbanos</th>
+									<th>Suburbanos</th>
+									<th>Taxis</th>
+									<th>Moto taxis</th>
+									<th>Obs. del día</th>
+									<th>Eliminar</th>
+								</tr>
+							</thead>
+							<tbody>
+								@foreach (var load in (IEnumerable<FuelDistributionLoadViewModel>)ViewBag.Loads)
+								{
+									<tr class="load-row"
+										data-id="@load.FuelDistributionId"
+										data-state="@load.StateId"
+										data-municipality="@load.MunicipalityId"
+										data-district="@load.DistrictId"
+										data-station="@load.GasStationId"
+										data-fuel="@load.FuelTypeId"
+										data-trucks="@load.TrucksReceived"
+										data-trucks-remarks="@load.TrucksRemarks"
+										data-liters="@load.LitersReceived"
+										data-liters-dispatched="@load.LitersDispatched"
+										data-urban="@load.UrbanAttended"
+										data-suburban="@load.SubUrbanAttended"
+										data-taxi="@load.TaxiAttended"
+										data-moto="@load.MotoTaxiAttended"
+										data-day-remarks="@load.DayRemarks">
+										<td data-order="@load.ProccessDate.ToString("yyyyMMddHHmm")">@load.ProccessDate.ToString("dd/MM/yyyy")</td>
+										<td>@load.MunicipalityName</td>
+										<td>@load.DistrictName</td>
+										<td>@load.GasStationName</td>
+										<td>@load.FuelTypeName</td>
+										<td>@load.TrucksReceived</td>
+										<td>@load.TrucksRemarks</td>
+										<td>@load.LitersReceived.ToString("N0")</td>
+										<td>@load.LitersDispatched.ToString("N0")</td>
+										<td>@load.UrbanAttended</td>
+										<td>@load.SubUrbanAttended</td>
+										<td>@load.TaxiAttended</td>
+										<td>@load.MotoTaxiAttended</td>
+										<td>@load.DayRemarks</td>
+										<td class="text-center">
+											<a href="#" class="delete-load" title="Eliminar registro" aria-label="Eliminar registro">
+												<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>
+											</a>
+										</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					</section>
+				</div>
+			</div>
+		</div>
+	}
+
+	<!-- Scripts -->
+	<script src="~/datatable/js/jquery-3.5.1.js"></script>
+	<script src="~/datatable/js/jquery.dataTables.min.js"></script>
+	<script src="~/datatable/js/dataTables.bootstrap4.js"></script>
+	<script src="~/datatable/js/dataTables.responsive.min.js"></script>
+	<script src="~/datatable/js/responsive.bootstrap4.min.js"></script>
+	<script src="~/assets/js/browser.min.js"></script>
+	<script src="~/assets/js/breakpoints.min.js"></script>
+	<script src="~/assets/js/util.js"></script>
+	<script src="~/assets/js/main.js"></script>
+	<script type="text/javascript">
+		var userStateId = @((int)ViewBag.UserStateId);
+		var municipalitiesUrl = '@Url.Action("GetMunicipalitiesByStateId", "CommonData")';
+		var districtsUrl = '@Url.Action("GetDistrictsByMunicipalityId", "CommonData")';
+		var gasStationsUrl = '@Url.Action("GetGasStationsByDistrictId", "CommonData")';
+		var deleteLoadUrl = '@Url.Action("FuelDistributionLoadDelete", "Supervision")';
+		var loadPageUrl = '@Url.Action("FuelDistributionLoad", "Supervision")';
+	</script>
+	<script src="~/js/supervision-fuel-distribution-load.js" asp-append-version="true"></script>
+</body>
+</html>

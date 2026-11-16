@@ -104,6 +104,13 @@
 							<span class="sr-only">Cargando...</span>
 						</div>
 					</div>
+					@using (Html.BeginForm("ExportPublicTransportGroupList", "Reports", FormMethod.Post, new { id = "exportExcelForm" }))
+					{
+						@Html.AntiForgeryToken()
+						<input type="hidden" name="ids" id="exportIds" value="" />
+						<button type="button" id="btnExportExcel" class="button small">Exportar a Excel</button>
+						<br /><br />
+					}
 					<table id="publicTransportGroupListDetail" class="table table-striped table-bordered dt-responsive dt-nowrap">
 						<thead>
 							<tr>
@@ -115,7 +122,7 @@
 								<th>Cargados</th>
 								<th>Supervisados</th>
 								<th>Estatus</th>
-								<th>Mapa de ruta</th>
+								<th>Ruta</th>
 							</tr>
 						</thead>
 					</table>
@@ -177,12 +184,6 @@
 			var mapIcon = '<svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">' +
 				'<path fill-rule="evenodd" d="M15.817.113A.5.5 0 0 1 16 .5v14a.5.5 0 0 1-.402.49l-5 1a.502.502 0 0 1-.196 0L5.5 15.01l-4.902.98A.5.5 0 0 1 0 15.5v-14a.5.5 0 0 1 .402-.49l5-1a.5.5 0 0 1 .196 0L10.5.99l4.902-.98a.5.5 0 0 1 .415.103zM10 1.91l-4-.8v12.98l4 .8V1.91zm1 12.98 4-.8V1.11l-4 .8v12.98zm-6-.8V1.11l-4 .8v12.98l4-.8z"/>' +
 				'</svg>';
-
-			// Same map with a slash: the organization has no route loaded
-			var noMapIcon = '<svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">' +
-				'<path fill-rule="evenodd" d="M15.817.113A.5.5 0 0 1 16 .5v14a.5.5 0 0 1-.402.49l-5 1a.502.502 0 0 1-.196 0L5.5 15.01l-4.902.98A.5.5 0 0 1 0 15.5v-14a.5.5 0 0 1 .402-.49l5-1a.5.5 0 0 1 .196 0L10.5.99l4.902-.98a.5.5 0 0 1 .415.103zM10 1.91l-4-.8v12.98l4 .8V1.91zm1 12.98 4-.8V1.11l-4 .8v12.98zm-6-.8V1.11l-4 .8v12.98l4-.8z"/>' +
-				'<line x1="1" y1="15" x2="15" y2="1" stroke="#c0392b" stroke-width="1.8" stroke-linecap="round"/>' +
-				'</svg>';
 			
 			$('#loadingSpinner').show();
 
@@ -216,12 +217,12 @@
 						data: 'tieneRuta',
 						// The route column stays hidden until AppSettings:EnablePublicTransportGroupRoutes is true
 						visible: @(PublicTransportGroupService.RoutesEnabled ? "true" : "false"),
-						orderable: false,
-						searchable: false,
 						className: 'text-center',
 						render: function (data, type, row) {
+							// Sorting and searching use the same text the user sees
 							if (type !== 'display') {
-								return data;
+								if (!row.aplicaRuta) return 'N/A';
+								return data ? 'Con ruta' : 'Sin ruta';
 							}
 
 							// Taxi and moto taxi units are not assigned a route: show N/A
@@ -230,14 +231,16 @@
 							}
 
 							if (data) {
-								return '<button type="button" class="btn-view-route" data-id="' + row.id + '" title="Ver mapa de ruta" aria-label="Ver mapa de ruta">' + mapIcon + '</button>';
+								return '<button type="button" class="btn-view-route" data-id="' + row.id + '" title="Ver mapa de ruta" aria-label="Ver mapa de ruta">Con ruta</button>';
 							}
 
-							return '<span class="btn-view-route no-route-icon" title="Sin ruta cargada" aria-label="Sin ruta cargada">' + noMapIcon + '</span>';
+							return '<span class="no-route-icon" title="Sin ruta cargada">Sin ruta</span>';
 						}
 					}
 				],
 				stateSave: true,
+				// Smart search splits "con ruta" into "con" and "ruta" and matches them anywhere in the row; match the whole phrase instead
+				search: { smart: false },
 				language: {
 					sProcessing: "Procesando...",
 					sLengthMenu: "Mostrar _MENU_ registros",
@@ -254,6 +257,16 @@
 						sPrevious: "Anterior"
 					}
 				}
+			});
+
+			// Exports the rows currently shown (after search/filter) to Excel, with the routes of each organization
+			$('#btnExportExcel').on('click', function () {
+				var ids = $('#publicTransportGroupListDetail').DataTable().rows({ search: 'applied' }).data().toArray().map(function (row) {
+					return row.id;
+				});
+
+				$('#exportIds').val(ids.join(','));
+				$('#exportExcelForm')[0].submit();
 			});
 
 			var currentRoutes = [];

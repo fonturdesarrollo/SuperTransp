@@ -79,6 +79,10 @@ namespace SuperTransp.Controllers
 				ViewBag.Years = new SelectList(_commonData.GetCurrentYears(), "YearId", "YearName");
 				ViewBag.ModulesInGroup = _security.GetModulesByGroupId(ViewBag.SecurityGroupId);
 				ViewBag.RoundActive = _supervision.IsActiveSupervisionRoundByStateId((int)stateId);
+				var openFuelDistribution = _supervision.GetOpenFuelDistributionByStateId((int)stateId);
+				ViewBag.FuelDistribution = openFuelDistribution != null;
+				ViewBag.FuelDistributionStartDate = openFuelDistribution?.FuelDistributionStartDate.ToString("dd/MM/yyyy") ?? "";
+				ViewBag.FuelDistributionRemarks = openFuelDistribution?.FuelDistributionRemarks ?? "";
 
 				var currentRound = _supervision.GetActiveSupervisionRoundByStateId((int)stateId);
 
@@ -157,6 +161,223 @@ namespace SuperTransp.Controllers
 			{
 				Response.StatusCode = 500;
 				return Json(new { data = new List<object>(), error = ex.Message });
+			}
+		}
+
+		[HttpPost]
+		public IActionResult AddFuelDistribution(DateTime fuelDistributionOpenDate, string fuelDistributionNotes)
+		{
+			try
+			{
+				var result = CheckSessionAndPermission(35);
+				if (result != null) return result;
+
+				int? stateId = HttpContext.Session.GetInt32("StateId");
+				if (!stateId.HasValue)
+				{
+					TempData["SuccessMessage"] = "No se pudo determinar el estado del usuario";
+					return RedirectToAction("Index");
+				}
+
+				if (fuelDistributionOpenDate == default)
+				{
+					TempData["SuccessMessage"] = "Debe indicar la fecha de apertura del operativo";
+					return RedirectToAction("Index");
+				}
+
+				string remarks = (fuelDistributionNotes ?? "").Trim();
+				if (remarks.Length > 250)
+				{
+					remarks = remarks.Substring(0, 250);
+				}
+
+				if (_supervision.IsFuelDistributionOpenByStateId(stateId.Value))
+				{
+					TempData["SuccessMessage"] = "Ya existe un operativo de combustible abierto para este estado";
+					return RedirectToAction("Index");
+				}
+
+				if (_supervision.IsFuelDistributionDateClosedByStateId(stateId.Value, fuelDistributionOpenDate))
+				{
+					TempData["SuccessMessage"] = $"Ya existe un operativo de combustible cerrado con fecha de apertura {fuelDistributionOpenDate:dd/MM/yyyy} para este estado; seleccione otra fecha";
+					return RedirectToAction("Index");
+				}
+
+				_supervision.AddFuelDistribution(stateId.Value, fuelDistributionOpenDate, remarks);
+
+				TempData["SuccessMessage"] = "Operativo de combustible abierto correctamente";
+
+				return RedirectToAction("Index");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message });
+			}
+		}
+
+		[HttpPost]
+		public IActionResult CloseFuelDistribution()
+		{
+			try
+			{
+				var result = CheckSessionAndPermission(36);
+				if (result != null) return result;
+
+				int? stateId = HttpContext.Session.GetInt32("StateId");
+
+				// Read the opening data before closing, to mention it in the message
+				var opening = stateId.HasValue ? _supervision.GetOpenFuelDistributionByStateId(stateId.Value) : null;
+
+				if (opening == null || !_supervision.CloseFuelDistribution(stateId!.Value))
+				{
+					TempData["SuccessMessage"] = "No existe un operativo de combustible abierto para este estado";
+					return RedirectToAction("Index");
+				}
+
+				string description = string.IsNullOrWhiteSpace(opening.FuelDistributionRemarks)
+					? ""
+					: $" - Descripción: {opening.FuelDistributionRemarks}";
+
+				TempData["SuccessMessage"] = $"Operativo de combustible cerrado correctamente (apertura: {opening.FuelDistributionStartDate:dd/MM/yyyy}{description})";
+
+				return RedirectToAction("Index");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message });
+			}
+		}
+
+		[HttpGet]
+		public IActionResult FuelDistributionLoad()
+		{
+			try
+			{
+				var result = CheckSessionAndPermission(37);
+				if (result != null) return result;
+
+				int securityGroupId = (int)HttpContext.Session.GetInt32("SecurityGroupId")!;
+				int? stateId = HttpContext.Session.GetInt32("StateId");
+
+				if (!stateId.HasValue)
+				{
+					return RedirectToAction("Index");
+				}
+
+				if (!_supervision.IsFuelDistributionOpenByStateId(stateId.Value))
+				{
+					TempData["SuccessMessage"] = "No existe un operativo de combustible abierto para este estado";
+					return RedirectToAction("Index");
+				}
+
+				// Same rule as Index: users with module 6 (or group 1) pick any state, the rest only their own
+				bool canPickAnyState = securityGroupId == 1 || _security.GroupHasAccessToModule(securityGroupId, 6);
+				var states = canPickAnyState ? _geography.GetAllStates() : _geography.GetStateById(stateId.Value);
+
+				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+				ViewBag.States = new SelectList(states, "StateId", "StateName", stateId.Value);
+				ViewBag.UserStateId = stateId.Value;
+				ViewBag.FuelTypes = new SelectList(_commonData.GetFuelTypes(), "FuelTypeId", "FuelTypeName");
+				ViewBag.Loads = _supervision.GetFuelDistributionLoadsByStateId(stateId.Value);
+
+				return View();
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message });
+			}
+		}
+
+		[HttpPost]
+		public IActionResult FuelDistributionLoad(FuelDistributionLoadViewModel load)
+		{
+			try
+			{
+				var result = CheckSessionAndPermission(37);
+				if (result != null) return result;
+
+				if (load.StateId <= 0 || load.GasStationId <= 0 || load.FuelTypeId <= 0)
+				{
+					TempData["SuccessMessage"] = "Debe seleccionar el estado, la estación de servicio y el tipo de combustible";
+					return RedirectToAction("FuelDistributionLoad");
+				}
+
+				if (load.TrucksReceived < 1 || load.TrucksReceived > 10)
+				{
+					TempData["SuccessMessage"] = "La cantidad de gandolas recibidas debe estar entre 1 y 10";
+					return RedirectToAction("FuelDistributionLoad");
+				}
+
+				if (load.LitersReceived < 0 || load.LitersDispatched < 0 || load.UrbanAttended < 0
+					|| load.SubUrbanAttended < 0 || load.TaxiAttended < 0 || load.MotoTaxiAttended < 0)
+				{
+					TempData["SuccessMessage"] = "Las cantidades no pueden ser negativas";
+					return RedirectToAction("FuelDistributionLoad");
+				}
+
+				if (load.UrbanAttended > 10000 || load.SubUrbanAttended > 10000 || load.TaxiAttended > 10000 || load.MotoTaxiAttended > 10000)
+				{
+					TempData["SuccessMessage"] = "Los vehículos urbanos, suburbanos, taxis y moto taxis atendidos no pueden ser mayores a 10.000";
+					return RedirectToAction("FuelDistributionLoad");
+				}
+
+				load.TrucksRemarks = (load.TrucksRemarks ?? "").Trim();
+				if (load.TrucksRemarks.Length > 250) load.TrucksRemarks = load.TrucksRemarks.Substring(0, 250);
+
+				load.DayRemarks = (load.DayRemarks ?? "").Trim();
+				if (load.DayRemarks.Length > 500) load.DayRemarks = load.DayRemarks.Substring(0, 500);
+
+				if (load.FuelDistributionId > 0)
+				{
+					int? currentStateId = HttpContext.Session.GetInt32("StateId");
+
+					if (!currentStateId.HasValue || !_supervision.UpdateFuelDistributionLoad(load, currentStateId.Value))
+					{
+						TempData["SuccessMessage"] = "No se pudo modificar el registro; verifique que el operativo siga abierto";
+						return RedirectToAction("FuelDistributionLoad");
+					}
+
+					TempData["SuccessMessage"] = "Registro del operativo modificado correctamente";
+					return RedirectToAction("FuelDistributionLoad");
+				}
+
+				if (_supervision.AddFuelDistributionLoad(load) == 0)
+				{
+					TempData["SuccessMessage"] = "No existe un operativo de combustible abierto para el estado seleccionado";
+					return RedirectToAction("FuelDistributionLoad");
+				}
+
+				TempData["SuccessMessage"] = "Registro del operativo cargado correctamente";
+
+				return RedirectToAction("FuelDistributionLoad");
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message });
+			}
+		}
+
+		[HttpPost]
+		public IActionResult FuelDistributionLoadDelete(int fuelDistributionId)
+		{
+			try
+			{
+				var result = CheckSessionAndPermission(37);
+				if (result != null) return Json(new { success = false, message = "Sesión expirada o sin permiso" });
+
+				int? stateId = HttpContext.Session.GetInt32("StateId");
+
+				if (!stateId.HasValue || !_supervision.DeleteFuelDistributionLoad(fuelDistributionId, stateId.Value))
+				{
+					return Json(new { success = false, message = "No se pudo eliminar el registro; verifique que el operativo siga abierto" });
+				}
+
+				TempData["SuccessMessage"] = "Registro del operativo eliminado correctamente";
+				return Json(new { success = true });
+			}
+			catch (Exception ex)
+			{
+				return Json(new { success = false, message = ex.Message });
 			}
 		}
 

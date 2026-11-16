@@ -274,6 +274,63 @@ namespace SuperTransp.Core
 			}
 		}
 
+		// All saved routes grouped by organization, without the path geometry (used by the Excel export)
+		public Dictionary<int, List<PublicTransportGroupRouteViewModel>> GetAllRoutesByPublicTransportGroupId()
+		{
+			var routes = new Dictionary<int, List<PublicTransportGroupRouteViewModel>>();
+
+			if (!RoutesEnabled)
+			{
+				return routes;
+			}
+
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SqlCommand cmd = new(
+						"SELECT PublicTransportGroupId, RouteStartName, RouteEndName, RouteMidPoint1, RouteMidPoint2, " +
+						"RouteDistanceMeters, RouteDurationSeconds " +
+						"FROM PublicTransportGroupRoute ORDER BY PublicTransportGroupId, RouteNumber", sqlConnection);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							int ptgId = (int)dr["PublicTransportGroupId"];
+
+							if (!routes.TryGetValue(ptgId, out var list))
+							{
+								list = new List<PublicTransportGroupRouteViewModel>();
+								routes[ptgId] = list;
+							}
+
+							list.Add(new PublicTransportGroupRouteViewModel
+							{
+								RouteStartName = dr["RouteStartName"].ToString(),
+								RouteEndName = dr["RouteEndName"].ToString(),
+								RouteMidPoint1 = dr["RouteMidPoint1"] == DBNull.Value ? null : dr["RouteMidPoint1"].ToString(),
+								RouteMidPoint2 = dr["RouteMidPoint2"] == DBNull.Value ? null : dr["RouteMidPoint2"].ToString(),
+								RouteDistanceMeters = Convert.ToInt32(dr["RouteDistanceMeters"]),
+								RouteDurationSeconds = Convert.ToInt32(dr["RouteDurationSeconds"])
+							});
+						}
+					}
+				}
+
+				return routes;
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener las rutas de las organizaciones {ex.Message}", ex);
+			}
+		}
+
 		public HashSet<int> GetPublicTransportGroupIdsWithRoute()
 		{
 			if (!RoutesEnabled)

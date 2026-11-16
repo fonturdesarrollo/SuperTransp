@@ -190,32 +190,70 @@
 									}
 								}
 							</div>
-							@{					
-								if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 24))
+						@{
+							if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 35) || modulesInGroup.Any(x => x.SecurityModuleId == 36) || modulesInGroup.Any(x => x.SecurityModuleId == 37))
+							{
+								if (ViewBag.FuelDistribution == false)
 								{
-									if (ViewBag.RoundActive == false)
-									{
-										<div class="col-6 col-12-medium">
-											<h3>Vueltas de supervisión</h3>
-											<ul>
-												<li><a href="#" id="openRoundModal">Abrir vuelta de supervisión</a></li>
-											</ul>
-										</div>
-									}
-									else
-									{
-										<div class="col-6 col-12-medium">
-											@if(ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 25))
+									<div class="col-6 col-12-medium">
+										<h3>Operativos</h3>
+										<ul>
+											@if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 35))
 											{
-												<h3>Vueltas de supervisión</h3>
-												<ul>
-													<li>@Html.ActionLink("Cerrar vuelta de supervisión", "CloseRound", "Supervision")</li>
-												</ul>
-											}
-										</div>
-									}
+												<li><a href="#" id="openFuelDistributionModal">Abrir operativo de combustible</a></li>
+											}									
+										</ul>
+									</div>
+								}
+								else
+								{
+									<div class="col-6 col-12-medium">
+										@if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 36) || modulesInGroup.Any(x => x.SecurityModuleId == 37))
+										{
+											<h3>Operativos</h3>
+											<ul>
+												@if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 36))
+												{
+													<li><a href="#" id="closeFuelDistributionLink" data-start-date="@ViewBag.FuelDistributionStartDate" data-remarks="@ViewBag.FuelDistributionRemarks">Cerrar operativo de combustible</a></li>
+												}
+												@if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 37))
+												{
+													<li>@Html.ActionLink("Cargar operativo de combustible", "FuelDistributionLoad", "Supervision")</li>
+												}
+											</ul>
+										}
+									</div>
 								}
 							}
+						}
+						@{
+							if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 24))
+							{
+								if (ViewBag.RoundActive == false)
+								{
+									<div class="col-6 col-12-medium">
+										<h3>Vueltas de supervisión</h3>
+										<ul>
+											<li><a href="#" id="openRoundModal">Abrir vuelta de supervisión</a></li>
+										</ul>
+									</div>
+								}
+								else
+								{
+									<div class="col-6 col-12-medium">
+										@if (ViewBag.SecurityGroupId == 1 || modulesInGroup.Any(x => x.SecurityModuleId == 25))
+										{
+											<h3>Vueltas de supervisión</h3>
+											<ul>
+												<li>@Html.ActionLink("Cerrar vuelta de supervisión", "CloseRound", "Supervision")</li>
+											</ul>
+										}
+									</div>
+								}
+							}
+						}
+
+
 						</div>
 					</section>
 				</div>
@@ -279,6 +317,39 @@
 		</div>
 	</div>
 
+	@using (Html.BeginForm("CloseFuelDistribution", "Supervision", FormMethod.Post, new { id = "closeFuelDistributionForm" }))
+	{
+		@Html.AntiForgeryToken()
+	}
+
+	<div id="modalFuelDistributionForm" class="modal">
+		<div class="modal-content">
+			<span class="close">&times;</span>
+			<h3>Indique los datos de apertura del operativo</h3>
+			@using (Html.BeginForm("AddFuelDistribution", "Supervision", FormMethod.Post))
+			{
+				@Html.AntiForgeryToken()
+				<section>
+					<div class="row">
+						<div class="col-12 col-12-medium">
+							<label for="fuelDistributionOpenDate">Fecha de apertura del operativo</label>
+							<input type="date" id="fuelDistributionOpenDate" name="fuelDistributionOpenDate" value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+							<br />
+						</div>
+						<div class="col-12 col-12-medium">
+							<label for="fuelDistributionNotes">Observaciones del operativo</label>
+							<textarea id="fuelDistributionNotes" name="fuelDistributionNotes" rows="2" maxlength="250" style="min-height:0; height:60px; resize:none;"></textarea>
+						</div>
+					</div>
+				</section>
+				<div style="overflow:hidden;">
+					<input type="submit" value="Abrir operativo" id="btnOpenFuelDistribution" class="btn-align-right" />
+					<input type="button" value="Cancelar" id="btnCancelFuelDistribution" class="btn-align-right" />
+				</div>
+			}
+		</div>
+	</div>
+
 	<!-- Scripts -->
 	<script src="~/assets/js/jquery.min.js"></script>
 	<script src="~/assets/js/browser.min.js"></script>
@@ -289,6 +360,6 @@
 		await Html.RenderPartialAsync("_ValidationScriptsPartial");
 	}
 	<!-- Integración del JS externo -->
-	<script src="~/js/supervision-index.js"></script>
+	<script src="~/js/supervision-index.js" asp-append-version="true"></script>
 </body>
 </html>

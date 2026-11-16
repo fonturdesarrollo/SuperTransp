@@ -169,9 +169,42 @@ $(document).ready(function () {
 		});
 	});
 
+	$("#openFuelDistributionModal").click(function (e) {
+		e.preventDefault();
+		$("#modalFuelDistributionForm").fadeIn(function () {
+			$("#fuelDistributionOpenDate").focus();
+		});
+	});
+
+	$("#btnOpenFuelDistribution").closest("form").on("submit", function (e) {
+		if (!confirm("¿Está seguro de que desea abrir el operativo de combustible?")) {
+			e.preventDefault();
+		}
+	});
+
+	$("#closeFuelDistributionLink").click(function (e) {
+		e.preventDefault();
+		var startDate = $(this).attr("data-start-date");
+		var remarks = $(this).attr("data-remarks");
+
+		var message = "¿Está seguro de que desea cerrar el operativo de combustible?\n\n" +
+			"Fecha de apertura: " + startDate + "\n" +
+			(remarks ? "Descripción: " + remarks + "\n" : "") +
+			"\nUna vez cerrado no podrá cargar ni modificar sus registros.";
+
+		if (confirm(message)) {
+			$("#closeFuelDistributionForm")[0].submit();
+		}
+	});
+
+	$("#btnCancelFuelDistribution").click(function () {
+		$("#modalFuelDistributionForm").fadeOut();
+	});
+
 	$(".close").click(function () {
 		$("#modalForm").fadeOut();
 		$("#modalRoundForm").fadeOut();
+		$("#modalFuelDistributionForm").fadeOut();
 	});
 
 	$(window).click(function (e) {
@@ -181,6 +214,10 @@ $(document).ready(function () {
 
 		if ($(e.target).is("#modalRoundForm")) {
 			$("#modalRoundForm").fadeOut();
+		}
+
+		if ($(e.target).is("#modalFuelDistributionForm")) {
+			$("#modalFuelDistributionForm").fadeOut();
 		}
 	});
 });

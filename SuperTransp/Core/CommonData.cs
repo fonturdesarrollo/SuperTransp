@@ -567,6 +567,43 @@ namespace SuperTransp.Core
 			}
 		}
 
+		public List<GastStationViewModel> GetGasStationsByDistrictId(int districtId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<GastStationViewModel> gas = new();
+					SqlCommand cmd = new("SELECT GasStationId, GasStationName FROM GasStation WHERE DistrictId = @DistrictId ORDER BY GasStationName", sqlConnection);
+					cmd.Parameters.AddWithValue("@DistrictId", districtId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							gas.Add(new GastStationViewModel
+							{
+								GasStationId = Convert.ToInt32(dr["GasStationId"]),
+								GasStationName = dr["GasStationName"].ToString(),
+								DistrictId = districtId
+							});
+						}
+					}
+
+					return gas;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener las estaciones de servicio de la parroquia {ex.Message}", ex);
+			}
+		}
+
 		public List<GastStationViewModel> GetGasStationsByStateId(int stateId)
 		{
 			try

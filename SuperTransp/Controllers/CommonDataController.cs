@@ -233,6 +233,16 @@ namespace SuperTransp.Controllers
 			return Json(null);
 		}
 
+		public JsonResult GetGasStationsByDistrictId(int districtId)
+		{
+			if (!string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+			{
+				return Json(_commonData.GetGasStationsByDistrictId(districtId)
+					.Select(g => new { gasStationId = g.GasStationId, gasStationName = g.GasStationName }));
+			}
+			return Json(null);
+		}
+
 		[HttpPost]
 		public IActionResult AddGasStation(GastStationViewModel model)
 		{

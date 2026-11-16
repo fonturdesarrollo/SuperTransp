@@ -1934,6 +1934,429 @@ namespace SuperTransp.Core
 			}
 		}
 
+		// Resolves readable names for the logbook; never throws so a lookup failure cannot break the main action.
+		private (string StateName, string GasStationName, string FuelTypeName) GetFuelDistributionLogDescription(int stateId, int gasStationId, int fuelTypeId)
+		{
+			string stateName = stateId.ToString();
+			string gasStationName = gasStationId.ToString();
+			string fuelTypeName = fuelTypeId.ToString();
+
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SqlCommand cmd = new(
+						"SELECT " +
+						"(SELECT StateName FROM State WHERE StateId = @StateId), " +
+						"(SELECT GasStationName FROM GasStation WHERE GasStationId = @GasStationId), " +
+						"(SELECT FuelTypeName FROM FuelType WHERE FuelTypeId = @FuelTypeId)", sqlConnection);
+
+					cmd.Parameters.AddWithValue("@StateId", stateId);
+					cmd.Parameters.AddWithValue("@GasStationId", gasStationId);
+					cmd.Parameters.AddWithValue("@FuelTypeId", fuelTypeId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						if (dr.Read())
+						{
+							if (!dr.IsDBNull(0)) stateName = dr.GetString(0);
+							if (!dr.IsDBNull(1)) gasStationName = dr.GetString(1);
+							if (!dr.IsDBNull(2)) fuelTypeName = dr.GetString(2);
+						}
+					}
+				}
+			}
+			catch
+			{
+				// Keep the numeric ids as fallback.
+			}
+
+			return (stateName, gasStationName, fuelTypeName);
+		}
+
+		private string BuildFuelDistributionLoadLog(string action, int fuelDistributionId, FuelDistributionLoadViewModel load)
+		{
+			var names = GetFuelDistributionLogDescription(load.StateId, load.GasStationId, load.FuelTypeId);
+
+			return $" {action}," +
+				$" código: {fuelDistributionId} -" +
+				$" estado: {names.StateName} -" +
+				$" estación: {names.GasStationName} -" +
+				$" combustible: {names.FuelTypeName} -" +
+				$" gandolas: {load.TrucksReceived} -" +
+				$" litros recibidos: {load.LitersReceived} -" +
+				$" litros despachados: {load.LitersDispatched} -" +
+				$" urbanos: {load.UrbanAttended} -" +
+				$" suburbanos: {load.SubUrbanAttended} -" +
+				$" taxis: {load.TaxiAttended} -" +
+				$" moto taxis: {load.MotoTaxiAttended}" +
+				(string.IsNullOrWhiteSpace(load.DayRemarks) ? "" : $" - observaciones del día: {load.DayRemarks}");
+		}
+
+		public int AddFuelDistribution(int stateId, DateTime startDate, string remarks)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SqlCommand cmd = new("SuperTransp_FuelDistributionAddOrEdit", sqlConnection)
+					{
+						CommandType = CommandType.StoredProcedure
+					};
+
+					cmd.Parameters.AddWithValue("@FuelDistributionId", 0);
+					cmd.Parameters.AddWithValue("@StateId", stateId);
+					cmd.Parameters.AddWithValue("@FuelDistributionStartDate", startDate);
+					cmd.Parameters.AddWithValue("@FuelDistributionRemarks", string.IsNullOrWhiteSpace(remarks) ? DBNull.Value : remarks);
+
+					int fuelDistributionId = Convert.ToInt32(cmd.ExecuteScalar());
+
+					_security.AddLogbook(0, false,
+						$" apertura operativo de combustible," +
+						$" código: {fuelDistributionId} -" +
+						$" estado: {GetFuelDistributionLogDescription(stateId, 0, 0).StateName} -" +
+						$" fecha de apertura: {startDate:dd/MM/yyyy} -" +
+						$" observaciones: {remarks}");
+
+					return fuelDistributionId;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al abrir el operativo de combustible {ex.Message}", ex);
+			}
+		}
+
+		public int AddFuelDistributionLoad(FuelDistributionLoadViewModel load)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SqlCommand cmd = new("SuperTransp_FuelDistributionLoadAdd", sqlConnection)
+					{
+						CommandType = CommandType.StoredProcedure
+					};
+
+					cmd.Parameters.AddWithValue("@StateId", load.StateId);
+					cmd.Parameters.AddWithValue("@GasStationId", load.GasStationId);
+					cmd.Parameters.AddWithValue("@FuelTypeId", load.FuelTypeId);
+					cmd.Parameters.AddWithValue("@TrucksReceived", load.TrucksReceived);
+					cmd.Parameters.AddWithValue("@TrucksRemarks", string.IsNullOrWhiteSpace(load.TrucksRemarks) ? DBNull.Value : load.TrucksRemarks);
+					cmd.Parameters.AddWithValue("@LitersReceived", load.LitersReceived);
+					cmd.Parameters.AddWithValue("@LitersDispatched", load.LitersDispatched);
+					cmd.Parameters.AddWithValue("@UrbanAttended", load.UrbanAttended);
+					cmd.Parameters.AddWithValue("@SubUrbanAttended", load.SubUrbanAttended);
+					cmd.Parameters.AddWithValue("@TaxiAttended", load.TaxiAttended);
+					cmd.Parameters.AddWithValue("@MotoTaxiAttended", load.MotoTaxiAttended);
+					cmd.Parameters.AddWithValue("@DayRemarks", string.IsNullOrWhiteSpace(load.DayRemarks) ? DBNull.Value : load.DayRemarks);
+
+					int fuelDistributionId = Convert.ToInt32(cmd.ExecuteScalar());
+
+					if (fuelDistributionId > 0)
+					{
+						_security.AddLogbook(0, false, BuildFuelDistributionLoadLog("carga operativo de combustible", fuelDistributionId, load));
+					}
+
+					return fuelDistributionId;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al cargar el operativo de combustible {ex.Message}", ex);
+			}
+		}
+
+		public bool UpdateFuelDistributionLoad(FuelDistributionLoadViewModel load, int currentStateId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SqlCommand cmd = new("SuperTransp_FuelDistributionLoadEdit", sqlConnection)
+					{
+						CommandType = CommandType.StoredProcedure
+					};
+
+					cmd.Parameters.AddWithValue("@FuelDistributionId", load.FuelDistributionId);
+					cmd.Parameters.AddWithValue("@CurrentStateId", currentStateId);
+					cmd.Parameters.AddWithValue("@StateId", load.StateId);
+					cmd.Parameters.AddWithValue("@GasStationId", load.GasStationId);
+					cmd.Parameters.AddWithValue("@FuelTypeId", load.FuelTypeId);
+					cmd.Parameters.AddWithValue("@TrucksReceived", load.TrucksReceived);
+					cmd.Parameters.AddWithValue("@TrucksRemarks", string.IsNullOrWhiteSpace(load.TrucksRemarks) ? DBNull.Value : load.TrucksRemarks);
+					cmd.Parameters.AddWithValue("@LitersReceived", load.LitersReceived);
+					cmd.Parameters.AddWithValue("@LitersDispatched", load.LitersDispatched);
+					cmd.Parameters.AddWithValue("@UrbanAttended", load.UrbanAttended);
+					cmd.Parameters.AddWithValue("@SubUrbanAttended", load.SubUrbanAttended);
+					cmd.Parameters.AddWithValue("@TaxiAttended", load.TaxiAttended);
+					cmd.Parameters.AddWithValue("@MotoTaxiAttended", load.MotoTaxiAttended);
+					cmd.Parameters.AddWithValue("@DayRemarks", string.IsNullOrWhiteSpace(load.DayRemarks) ? DBNull.Value : load.DayRemarks);
+
+					bool updated = Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+
+					if (updated)
+					{
+						_security.AddLogbook(load.FuelDistributionId, false, BuildFuelDistributionLoadLog("carga operativo de combustible", load.FuelDistributionId, load));
+					}
+
+					return updated;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al modificar el registro del operativo de combustible {ex.Message}", ex);
+			}
+		}
+
+		public bool DeleteFuelDistributionLoad(int fuelDistributionId, int stateId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SqlCommand cmd = new("SuperTransp_FuelDistributionLoadDelete", sqlConnection)
+					{
+						CommandType = CommandType.StoredProcedure
+					};
+
+					cmd.Parameters.AddWithValue("@FuelDistributionId", fuelDistributionId);
+					cmd.Parameters.AddWithValue("@StateId", stateId);
+
+					bool deleted = Convert.ToInt32(cmd.ExecuteScalar()) > 0;
+
+					if (deleted)
+					{
+						_security.AddLogbook(fuelDistributionId, true,
+							$" carga operativo de combustible, código: {fuelDistributionId} -" +
+							$" estado: {GetFuelDistributionLogDescription(stateId, 0, 0).StateName}");
+					}
+
+					return deleted;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al eliminar el registro del operativo de combustible {ex.Message}", ex);
+			}
+		}
+
+		public List<FuelDistributionLoadViewModel> GetFuelDistributionLoadsByStateId(int stateId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<FuelDistributionLoadViewModel> loads = new();
+					SqlCommand cmd = new(@"SELECT * FROM SuperTransp_FuelDistributionLoadDetail
+						WHERE StateId = @StateId AND FuelDistributionStatus = 'Abierto'
+						ORDER BY ProccessDate DESC, FuelDistributionId DESC", sqlConnection);
+					cmd.Parameters.AddWithValue("@StateId", stateId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							loads.Add(new FuelDistributionLoadViewModel
+							{
+								FuelDistributionId = Convert.ToInt32(dr["FuelDistributionId"]),
+								StateId = Convert.ToInt32(dr["StateId"]),
+								FuelDistributionStartDate = Convert.ToDateTime(dr["FuelDistributionStartDate"]),
+								ProccessDate = Convert.ToDateTime(dr["ProccessDate"]),
+								MunicipalityId = Convert.ToInt32(dr["MunicipalityId"]),
+								DistrictId = Convert.ToInt32(dr["DistrictId"]),
+								GasStationId = Convert.ToInt32(dr["GasStationId"]),
+								GasStationName = dr["GasStationName"].ToString(),
+								MunicipalityName = dr["MunicipalityName"].ToString(),
+								DistrictName = dr["DistrictName"].ToString(),
+								FuelTypeId = Convert.ToInt32(dr["FuelTypeId"]),
+								FuelTypeName = dr["FuelTypeName"].ToString(),
+								TrucksReceived = Convert.ToInt32(dr["TrucksReceived"]),
+								TrucksRemarks = dr["TrucksRemarks"].ToString(),
+								LitersReceived = Convert.ToInt32(dr["LitersReceived"]),
+								LitersDispatched = Convert.ToInt32(dr["LitersDispatched"]),
+								UrbanAttended = Convert.ToInt32(dr["UrbanAttended"]),
+								SubUrbanAttended = Convert.ToInt32(dr["SubUrbanAttended"]),
+								TaxiAttended = Convert.ToInt32(dr["TaxiAttended"]),
+								MotoTaxiAttended = Convert.ToInt32(dr["MotoTaxiAttended"]),
+								DayRemarks = dr["DayRemarks"].ToString()
+							});
+						}
+					}
+
+					return loads;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener los registros del operativo de combustible {ex.Message}", ex);
+			}
+		}
+
+		// Opening data (start date and remarks) of the open operativo of the state; null when there is none
+		public FuelDistributionLoadViewModel? GetOpenFuelDistributionByStateId(int stateId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SqlCommand cmd = new(@"SELECT TOP 1 FuelDistributionId, FuelDistributionStartDate, FuelDistributionRemarks
+						FROM FuelDistribution
+						WHERE StateId = @StateId AND FuelDistributionStatus = 'Abierto'
+						ORDER BY FuelDistributionId", sqlConnection);
+					cmd.Parameters.AddWithValue("@StateId", stateId);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						if (dr.Read())
+						{
+							return new FuelDistributionLoadViewModel
+							{
+								FuelDistributionId = Convert.ToInt32(dr["FuelDistributionId"]),
+								StateId = stateId,
+								FuelDistributionStartDate = Convert.ToDateTime(dr["FuelDistributionStartDate"]),
+								FuelDistributionRemarks = dr["FuelDistributionRemarks"] == DBNull.Value ? "" : dr["FuelDistributionRemarks"].ToString()
+							};
+						}
+					}
+
+					return null;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener el operativo de combustible abierto {ex.Message}", ex);
+			}
+		}
+
+		// True when the state already has a CLOSED operativo opened on that same day
+		public bool IsFuelDistributionDateClosedByStateId(int stateId, DateTime startDate)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SqlCommand cmd = new(@"SELECT 1 FROM FuelDistribution
+						WHERE StateId = @StateId
+							AND FuelDistributionStatus = 'Cerrado'
+							AND CAST(FuelDistributionStartDate AS DATE) = CAST(@StartDate AS DATE)", sqlConnection);
+					cmd.Parameters.AddWithValue("@StateId", stateId);
+					cmd.Parameters.AddWithValue("@StartDate", startDate);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						return dr.HasRows;
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al validar la fecha del operativo de combustible {ex.Message}", ex);
+			}
+		}
+
+		public bool CloseFuelDistribution(int stateId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SqlCommand cmd = new("SuperTransp_FuelDistributionClose", sqlConnection)
+					{
+						CommandType = CommandType.StoredProcedure
+					};
+
+					cmd.Parameters.AddWithValue("@StateId", stateId);
+
+					int closedRows = Convert.ToInt32(cmd.ExecuteScalar());
+
+					if (closedRows > 0)
+					{
+						_security.AddLogbook(stateId, false,
+							$" cierre operativo de combustible," +
+							$" estado: {GetFuelDistributionLogDescription(stateId, 0, 0).StateName} -" +
+							$" registros cerrados: {closedRows}");
+					}
+
+					return closedRows > 0;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al cerrar el operativo de combustible {ex.Message}", ex);
+			}
+		}
+
+		public bool IsFuelDistributionOpenByStateId(int stateId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					SqlCommand cmd = new("SELECT 1 FROM FuelDistribution WHERE StateId = @StateId AND FuelDistributionStatus = 'Abierto'", sqlConnection);
+					cmd.Parameters.AddWithValue("@StateId", stateId);
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						return dr.HasRows;
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al consultar el operativo de combustible abierto {ex.Message}", ex);
+			}
+		}
+
 		public bool IsActiveSupervisionRoundByStateId(int stateId)
 		{
 			try

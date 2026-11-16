@@ -200,6 +200,136 @@ namespace SuperTransp.Controllers
 			}
 		}
 
+		// Excel export of the organizations table (same scope as the list); one row per saved route.
+		// "ids" is the comma-separated list of organizations currently shown in the table (empty = all of them).
+		[HttpPost]
+		public IActionResult ExportPublicTransportGroupList(string? ids)
+		{
+			try
+			{
+				if (string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")))
+				{
+					return RedirectToAction("Login", "Security");
+				}
+
+				int? securityGroupId = HttpContext.Session.GetInt32("SecurityGroupId");
+				int? stateId = HttpContext.Session.GetInt32("StateId");
+
+				if (securityGroupId is null ||
+					(securityGroupId != 1 && !_security.GroupHasAccessToModule(securityGroupId.Value, 4)) ||
+					(securityGroupId == 1 ? false : !_security.GroupHasAccessToModule(securityGroupId.Value, 20)))
+				{
+					return RedirectToAction("Login", "Security");
+				}
+
+				List<PublicTransportGroupViewModel> ptgData =
+					(securityGroupId != 1 && !_security.GroupHasAccessToModule(securityGroupId.Value, 6))
+						? _publicTransportGroup.GetAllByStateId(stateId ?? 0)
+						: _publicTransportGroup.GetAll();
+
+				var selectedIds = (ids ?? string.Empty)
+					.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+					.Select(id => int.TryParse(id, out var value) ? value : 0)
+					.Where(id => id > 0)
+					.ToHashSet();
+
+				if (selectedIds.Count > 0)
+				{
+					ptgData = ptgData.Where(ptg => selectedIds.Contains(ptg.PublicTransportGroupId)).ToList();
+				}
+
+				bool routesEnabled = _publicTransportGroup.RoutesEnabled;
+				var routesByPtg = _publicTransportGroup.GetAllRoutesByPublicTransportGroupId();
+
+				using (var workbook = new XLWorkbook())
+				{
+					var worksheet = workbook.Worksheets.Add("Organizaciones");
+
+					var headers = new List<string> { "Nombre", "Estado", "Modalidad", "Rif", "Flota", "Cargados", "Supervisados", "Estatus" };
+
+					if (routesEnabled)
+					{
+						headers.AddRange(new[] { "Ruta", "N° de ruta", "Inicio de la ruta", "Parada intermedia 1", "Parada intermedia 2", "Última parada", "Distancia (km)", "Duración (min)" });
+					}
+
+					for (int i = 0; i < headers.Count; i++)
+					{
+						worksheet.Cell(1, i + 1).Value = headers[i];
+					}
+
+					var headerRange = worksheet.Range(1, 1, 1, headers.Count);
+					headerRange.Style.Font.Bold = true;
+					headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
+
+					int row = 2;
+
+					foreach (var ptg in ptgData)
+					{
+						var routes = routesByPtg.TryGetValue(ptg.PublicTransportGroupId, out var list) ? list : new List<PublicTransportGroupRouteViewModel>();
+						bool appliesRoute = PublicTransportGroupViewModel.ModeHasRoute(ptg.ModeId);
+						int rows = routesEnabled && appliesRoute && routes.Count > 0 ? routes.Count : 1;
+
+						for (int r = 0; r < rows; r++)
+						{
+							worksheet.Cell(row, 1).Value = ptg.PTGCompleteName;
+							worksheet.Cell(row, 2).Value = ptg.StateName;
+							worksheet.Cell(row, 3).Value = ptg.ModeName;
+							worksheet.Cell(row, 4).Value = ptg.PublicTransportGroupRif;
+							worksheet.Cell(row, 5).Value = ptg.Partners;
+							worksheet.Cell(row, 6).Value = ptg.TotalDrivers;
+							worksheet.Cell(row, 7).Value = ptg.TotalSupervisedDrivers;
+							worksheet.Cell(row, 8).Value = ptg.Partners == ptg.TotalSupervisedDrivers ? "SUPERVISADA" : "PENDIENTE";
+
+							if (routesEnabled)
+							{
+								if (!appliesRoute)
+								{
+									worksheet.Cell(row, 9).Value = "N/A";
+								}
+								else if (routes.Count == 0)
+								{
+									worksheet.Cell(row, 9).Value = "Sin ruta";
+								}
+								else
+								{
+									var route = routes[r];
+									worksheet.Cell(row, 9).Value = "Con ruta";
+									worksheet.Cell(row, 10).Value = r + 1;
+									worksheet.Cell(row, 11).Value = route.RouteStartName;
+									worksheet.Cell(row, 12).Value = route.RouteMidPoint1;
+									worksheet.Cell(row, 13).Value = route.RouteMidPoint2;
+									worksheet.Cell(row, 14).Value = route.RouteEndName;
+									worksheet.Cell(row, 15).Value = Math.Round(route.RouteDistanceMeters / 1000.0, 1);
+									worksheet.Cell(row, 16).Value = Math.Round(route.RouteDurationSeconds / 60.0);
+								}
+							}
+
+							row++;
+						}
+					}
+
+					worksheet.Columns().AdjustToContents();
+					worksheet.SheetView.FreezeRows(1);
+
+					// Filter dropdown on every column header
+					worksheet.Range(1, 1, row - 1, headers.Count).SetAutoFilter();
+
+					using (var stream = new MemoryStream())
+					{
+						workbook.SaveAs(stream);
+
+						return File(stream.ToArray(),
+							"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+							$"Organizaciones_{DateTime.Now:yyyyMMdd}.xlsx");
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message });
+			}
+		}
+
 		[HttpGet]
 		public IActionResult GetPublicTransportGroupRoute(int publicTransportGroupId)
 		{
