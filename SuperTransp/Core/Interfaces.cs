@@ -235,6 +235,7 @@ namespace SuperTransp.Core
 			public List<RepresentativeModel> MapToRepresentativeByIdentityDocument(int representativeIdentityDocument);
 			public List<DriverModel> MapToDriverByIdentityDocument(int driverIdentityDocument);
 			public List<DriverByPTGModel> MapToDriverPTGByIdentityDocument(int driverIdentityDocument);
+			public DashboardApiModel MapToDashboardModel();
 		}
 
 		public interface IProcedure

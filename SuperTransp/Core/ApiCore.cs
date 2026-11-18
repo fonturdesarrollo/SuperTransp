@@ -10,8 +10,10 @@ namespace SuperTransp.Core
 		private IPublicTransportGroup _publicTransportGroup;
 		private IDriver _driver;
 		private readonly ISecurity _security;
-		public ApiCore(ISupervision supervision, IPublicTransportGroup publicTransportGroup, ISecurity security, IDriver driver)
+		private readonly IReport _report;
+		public ApiCore(ISupervision supervision, IPublicTransportGroup publicTransportGroup, ISecurity security, IDriver driver, IReport report)
 		{
+			_report = report;
 			_supervision = supervision;
 			_publicTransportGroup = publicTransportGroup;
 			_driver = driver;
@@ -241,6 +243,41 @@ namespace SuperTransp.Core
 			}).ToList();
 
 			_security.AddLogbook(0, false, $"API GET Consulta de datos del socio por cedula: {driverIdentityDocument}");
+
+			return model;
+		}
+
+		// Same data source as Reports/Dashboard (all states), with the same totals shown in its cards
+		public DashboardApiModel MapToDashboardModel()
+		{
+			var states = _report.GetAllSupervisedDriversStatisticsInEstate() ?? new List<PublicTransportGroupViewModel>();
+
+			var model = new DashboardApiModel
+			{
+				GeneratedAt = DateTime.Now,
+				Totals = new DashboardTotalsApiModel
+				{
+					SupervisedDrivers = states.Sum(x => x.TotalSupervisedDrivers),
+					WorkingVehicles = states.Sum(x => x.TotalWorkingVehicles),
+					NotWorkingVehicles = states.Sum(x => x.TotalNotWorkingVehicles),
+					DriversWithoutVehicle = states.Sum(x => x.TotalWithoutVehicle),
+					AbsentDrivers = states.Sum(x => x.TotalDriverNotInPerson)
+				},
+				States = states.Select(x => new DashboardStateApiModel
+				{
+					StateId = x.StateId,
+					StateName = x.StateName,
+					SupervisedDrivers = x.TotalSupervisedDrivers,
+					WorkingVehicles = x.TotalWorkingVehicles,
+					NotWorkingVehicles = x.TotalNotWorkingVehicles,
+					DriversWithVehicle = x.TotalWithVehicle,
+					DriversWithoutVehicle = x.TotalWithoutVehicle,
+					PresentDrivers = x.TotalDriverInPerson,
+					AbsentDrivers = x.TotalDriverNotInPerson
+				}).ToList()
+			};
+
+			_security.AddLogbook(0, false, "API GET Consulta del dashboard de supervision por estado");
 
 			return model;
 		}
