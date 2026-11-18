@@ -315,6 +315,18 @@ namespace SuperTransp.Controllers
 					return RedirectToAction("FuelDistributionLoad");
 				}
 
+				if (load.LitersReceived < 1)
+				{
+					TempData["SuccessMessage"] = "Los litros recibidos deben ser mayores a cero";
+					return RedirectToAction("FuelDistributionLoad");
+				}
+
+				if (load.LitersDispatched > load.LitersReceived)
+				{
+					TempData["SuccessMessage"] = "Los litros despachados no pueden ser mayores a los litros recibidos";
+					return RedirectToAction("FuelDistributionLoad");
+				}
+
 				if (load.UrbanAttended > 10000 || load.SubUrbanAttended > 10000 || load.TaxiAttended > 10000 || load.MotoTaxiAttended > 10000)
 				{
 					TempData["SuccessMessage"] = "Los vehículos urbanos, suburbanos, taxis y moto taxis atendidos no pueden ser mayores a 10.000";

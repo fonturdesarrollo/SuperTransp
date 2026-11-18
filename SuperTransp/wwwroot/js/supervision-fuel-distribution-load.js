@@ -148,6 +148,20 @@ function isOkToSave() {
 		}
 	}
 
+	// Liters received must be at least 1, and dispatched liters cannot exceed the received ones
+	var litersReceived = parseInt(numericValue('#LitersReceived'));
+	var litersDispatched = parseInt(numericValue('#LitersDispatched'));
+
+	if (litersReceived < 1) {
+		showAlert('Los litros recibidos deben ser mayores a cero', '#LitersReceived');
+		return false;
+	}
+
+	if (litersDispatched > litersReceived) {
+		showAlert('Los litros despachados no pueden ser mayores a los litros recibidos', '#LitersDispatched');
+		return false;
+	}
+
 	return true;
 }
 

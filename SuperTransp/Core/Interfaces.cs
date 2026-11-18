@@ -130,6 +130,8 @@ namespace SuperTransp.Core
 			public bool UpdateFuelDistributionLoad(FuelDistributionLoadViewModel load, int currentStateId);
 			public bool DeleteFuelDistributionLoad(int fuelDistributionId, int stateId);
 			public List<FuelDistributionLoadViewModel> GetFuelDistributionLoadsByStateId(int stateId);
+			public List<FuelDistributionSummaryViewModel> GetLatestFuelDistributionByState(int? stateId);
+			public List<FuelDistributionLoadViewModel> GetFuelDistributionDetail(int stateId, DateTime startDate);
 			public int CloseRound(SupervisionRoundModel model);
 			public SupervisionViewModel GetById(int supervisionId);
 			public SupervisionViewModel GetByPublicTransportGroupIdAndDriverPublicTransportGroupIdAndPartnerNumberStateId(int publicTransportGroupId, int driverId, int partnerNumber, int stateId);

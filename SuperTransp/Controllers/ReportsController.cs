@@ -629,6 +629,103 @@ namespace SuperTransp.Controllers
 			}
 		}
 
+		// Module 38 (Estadisticas Operativo Combustible). Users without national access only see their own state.
+		private bool CanViewFuelDistributionStatistics(out int? onlyStateId)
+		{
+			onlyStateId = null;
+
+			int? groupId = HttpContext.Session.GetInt32("SecurityGroupId");
+
+			if (string.IsNullOrEmpty(HttpContext.Session.GetString("SecurityUserId")) || groupId is null)
+			{
+				return false;
+			}
+
+			if (groupId != 1 && (!_security.GroupHasAccessToModule(groupId.Value, 4) || !_security.GroupHasAccessToModule(groupId.Value, 38)))
+			{
+				return false;
+			}
+
+			if (groupId != 1 && !_security.GroupHasAccessToModule(groupId.Value, 6))
+			{
+				onlyStateId = HttpContext.Session.GetInt32("StateId") ?? 0;
+			}
+
+			return true;
+		}
+
+		public IActionResult DashboardFuelDistribution()
+		{
+			try
+			{
+				if (!CanViewFuelDistributionStatistics(out int? onlyStateId))
+				{
+					return RedirectToAction("Login", "Security");
+				}
+
+				ViewBag.EmployeeName = $"{(string)HttpContext.Session.GetString("FullName")} ({(string)HttpContext.Session.GetString("SecurityGroupName")})";
+
+				if (_settings.Value.IsActive)
+				{
+					ViewBag.MaintenanceMessage = _settings.Value.Message;
+				}
+
+				return View(_supervision.GetLatestFuelDistributionByState(onlyStateId));
+			}
+			catch (Exception ex)
+			{
+				return RedirectToAction("Error", "Home", new { errorMessage = ex.Message });
+			}
+		}
+
+		// Detail of an operativo (state + opening date, yyyy-MM-dd): every record loaded per gas station
+		[HttpGet]
+		public IActionResult GetFuelDistributionDetail(int stateId, string startDate)
+		{
+			try
+			{
+				if (!CanViewFuelDistributionStatistics(out int? onlyStateId))
+				{
+					return Unauthorized();
+				}
+
+				if (onlyStateId.HasValue && onlyStateId.Value != stateId)
+				{
+					return Unauthorized();
+				}
+
+				if (!DateTime.TryParseExact(startDate, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture,
+					System.Globalization.DateTimeStyles.None, out DateTime date))
+				{
+					return BadRequest(new { error = "La fecha del operativo no es válida" });
+				}
+
+				var details = _supervision.GetFuelDistributionDetail(stateId, date).Select(load => new
+				{
+					processDate = load.ProccessDate.ToString("dd/MM/yyyy"),
+					municipalityName = load.MunicipalityName,
+					districtName = load.DistrictName,
+					gasStationName = load.GasStationName,
+					fuelTypeName = load.FuelTypeName,
+					trucksReceived = load.TrucksReceived,
+					trucksRemarks = load.TrucksRemarks,
+					litersReceived = load.LitersReceived,
+					litersDispatched = load.LitersDispatched,
+					urbanAttended = load.UrbanAttended,
+					subUrbanAttended = load.SubUrbanAttended,
+					taxiAttended = load.TaxiAttended,
+					motoTaxiAttended = load.MotoTaxiAttended,
+					dayRemarks = load.DayRemarks
+				});
+
+				return Json(details);
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(new { error = ex.Message });
+			}
+		}
+
 		public IActionResult Dashboard()
 		{
 			try

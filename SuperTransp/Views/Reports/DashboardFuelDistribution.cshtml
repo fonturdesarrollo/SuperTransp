@@ -1,0 +1,589 @@
+@model List<SuperTransp.Models.FuelDistributionSummaryViewModel>
+@{
+    Layout = null;
+
+    int withOperativoCount = Model.Count(x => x.HasOperativo);
+    int openCount = Model.Count(x => x.IsOpen);
+    int closedCount = withOperativoCount - openCount;
+    int withoutOperativoCount = Model.Count - withOperativoCount;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <title>Estadísticas operativos de combustible</title>
+    <link rel="stylesheet" href="~/assets/css/main.css" />
+    <link rel="icon" type="image/x-icon" href="~/images/Logo.ico" />
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background-color: #f2f4f8;
+            margin: 0;
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            background: white;
+            padding: 5px;
+        }
+
+        .header-text h1 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .header-text p {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+        }
+
+        .back-button {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-left: 4px solid;
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+
+        .stat-card.total { border-color: #2196F3; }
+        .stat-card.open { border-color: #E53935; }
+        .stat-card.closed { border-color: #4CAF50; }
+        .stat-card.none { border-color: #9e9e9e; }
+
+        .stat-card h3 {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card .value {
+            margin: 10px 0 0 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .states-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 25px;
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .states-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        .states-table th,
+        .states-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+            border-right: 1px solid #e0e0e0;
+        }
+
+        .states-table th:last-child,
+        .states-table td:last-child {
+            border-right: none;
+        }
+
+        .states-table th {
+            background-color: #f8f9fa;
+            color: #2c3e50;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .states-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .states-table td {
+            color: #555;
+        }
+
+        .states-table td:first-child {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        /* Open operativo: the whole row is shown in red */
+        .states-table tr.open-row td {
+            color: #d32f2f;
+            font-weight: 600;
+        }
+
+        /* Closed operativo: the whole row is shown in green */
+        .states-table tr.closed-row td,
+        .states-table tr.closed-row td .detail-link {
+            color: #2e7d32;
+            font-weight: 600;
+        }
+
+        .states-table tr.closed-row td .detail-link:hover {
+            color: #1b5e20;
+        }
+
+        /* State that never created an operativo */
+        .states-table tr.no-operativo-row td:not(:first-child) {
+            color: #9e9e9e;
+            font-style: italic;
+        }
+
+        .detail-link {
+            color: #667eea;
+            font-weight: 600;
+            text-decoration: underline;
+            cursor: pointer;
+            border-bottom: none;
+        }
+
+        .detail-link:hover {
+            color: #764ba2;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 400px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border-radius: 10px;
+        }
+
+        .modal-content.wide {
+            width: 95%;
+            max-width: 1400px;
+            margin: 3% auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .detail-title {
+            margin: 0 0 4px 0;
+            color: #2c3e50;
+        }
+
+        .detail-subtitle {
+            margin: 0 0 15px 0;
+            color: #666;
+        }
+
+        .detail-wrapper {
+            overflow: auto;
+            max-height: 65vh;
+        }
+
+        .detail-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .detail-table th,
+        .detail-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #e0e0e0;
+            border-right: 1px solid #e0e0e0;
+            white-space: nowrap;
+            text-align: left;
+        }
+
+        .detail-table th {
+            background-color: #f8f9fa;
+            color: #2c3e50;
+            position: sticky;
+            top: 0;
+        }
+
+        .detail-table td.num {
+            text-align: right;
+        }
+
+        .detail-table tfoot td {
+            font-weight: 700;
+            background-color: #f1f3ff;
+            color: #667eea;
+        }
+
+        @@media screen and (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .header-text h1 {
+                font-size: 1.5rem;
+            }
+
+            .stat-card .value {
+                font-size: 2rem;
+            }
+
+            .stats-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .states-container {
+                padding: 15px;
+            }
+
+            .states-table th,
+            .states-table td {
+                padding: 8px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    @if (ViewBag.MaintenanceMessage != null)
+    {
+        <div id="modalMaintenanceMessage" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="$('#modalMaintenanceMessage').fadeOut();">&times;</span>
+                <h3>Aviso del sistema</h3>
+                <p>@ViewBag.MaintenanceMessage</p>
+                <div style="text-align:right;">
+                    <button onclick="$('#modalMaintenanceMessage').fadeOut();" class="back-button">Entendido</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="dashboard-header">
+        <div class="header-content">
+            <div class="header-left">
+                <img src="~/images/Logo.png" alt="Logo" class="logo-img" />
+                <div class="header-text">
+                    <h1>Estadísticas operativos de combustible</h1>
+                    <p>Usuario: @ViewBag.EmployeeName</p>
+                </div>
+            </div>
+            <a href="@Url.Action("Index", "Reports")" class="back-button">← Menú Reportes</a>
+        </div>
+    </div>
+
+    <div class="stats-cards">
+        <div class="stat-card total">
+            <h3>Estados con operativo</h3>
+            <div class="value">@withOperativoCount.ToString("N0", new System.Globalization.CultureInfo("de-DE"))</div>
+        </div>
+
+        <div class="stat-card open">
+            <h3>Operativos abiertos</h3>
+            <div class="value">@openCount.ToString("N0", new System.Globalization.CultureInfo("de-DE"))</div>
+        </div>
+
+        <div class="stat-card closed">
+            <h3>Operativos cerrados</h3>
+            <div class="value">@closedCount.ToString("N0", new System.Globalization.CultureInfo("de-DE"))</div>
+        </div>
+
+        <div class="stat-card none">
+            <h3>Sin operativo creado</h3>
+            <div class="value">@withoutOperativoCount.ToString("N0", new System.Globalization.CultureInfo("de-DE"))</div>
+        </div>
+    </div>
+
+    <div class="states-container" id="fuelDistributionContainer" data-detail-url="@Url.Action("GetFuelDistributionDetail", "Reports")">
+        <table class="states-table">
+            <thead>
+                <tr>
+                    <th>Estado</th>
+                    <th>Estatus</th>
+                    <th>Fecha del operativo</th>
+                    <th>Descripción</th>
+                    <th>Detalle operativo</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Count == 0)
+                {
+                    <tr>
+                        <td colspan="5" style="text-align:center; color:#888;">No hay estados para mostrar</td>
+                    </tr>
+                }
+                @foreach (var item in Model)
+                {
+                    <tr class="@(item.IsOpen ? "open-row" : (item.HasOperativo ? "closed-row" : "no-operativo-row"))">
+                        <td>@item.StateName</td>
+                        <td>@item.Status</td>
+                        <td>@(item.StartDate.HasValue ? item.StartDate.Value.ToString("dd/MM/yyyy") : "")</td>
+                        <td>@item.Remarks</td>
+                        <td>
+                            @if (item.HasOperativo && !item.IsOpen)
+                            {
+                                <a href="#" class="detail-link"
+                                   data-state-id="@item.StateId"
+                                   data-state-name="@item.StateName"
+                                   data-start-date="@item.StartDate!.Value.ToString("yyyy-MM-dd")"
+                                   data-start-date-text="@item.StartDate!.Value.ToString("dd/MM/yyyy")"
+                                   data-remarks="@item.Remarks">Ver detalle</a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div id="detailModal" class="modal">
+        <div class="modal-content wide">
+            <span class="close" id="closeDetailModal">&times;</span>
+            <h3 class="detail-title" id="detailTitle">Detalle del operativo</h3>
+            <p class="detail-subtitle" id="detailSubtitle"></p>
+            <div class="detail-wrapper">
+                <table class="detail-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Municipio</th>
+                            <th>Parroquia</th>
+                            <th>Estación de servicio</th>
+                            <th>Combustible</th>
+                            <th>Gandolas</th>
+                            <th>Obs. gandola</th>
+                            <th>Litros recibidos</th>
+                            <th>Litros despachados</th>
+                            <th>Urbanos</th>
+                            <th>Suburbanos</th>
+                            <th>Taxis</th>
+                            <th>Moto taxis</th>
+                            <th>Obs. del día</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detailBody"></tbody>
+                    <tfoot id="detailFoot"></tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/assets/js/jquery.min.js"></script>
+    <script>
+        var detailUrl = document.getElementById('fuelDistributionContainer').dataset.detailUrl;
+
+        function formatNumber(value) {
+            return (value || 0).toLocaleString('de-DE');
+        }
+
+        function addCell(row, text, isNumber) {
+            var td = document.createElement('td');
+            td.textContent = text;
+            if (isNumber) td.className = 'num';
+            row.appendChild(td);
+        }
+
+        function showMessageRow(text) {
+            var body = document.getElementById('detailBody');
+            body.innerHTML = '';
+            document.getElementById('detailFoot').innerHTML = '';
+
+            var tr = document.createElement('tr');
+            var td = document.createElement('td');
+            td.colSpan = 14;
+            td.style.textAlign = 'center';
+            td.style.color = '#888';
+            td.textContent = text;
+            tr.appendChild(td);
+            body.appendChild(tr);
+        }
+
+        function renderDetail(details) {
+            var body = document.getElementById('detailBody');
+            var foot = document.getElementById('detailFoot');
+            body.innerHTML = '';
+            foot.innerHTML = '';
+
+            if (!details || details.length === 0) {
+                showMessageRow('Este operativo no tiene registros cargados');
+                return;
+            }
+
+            var totals = { trucks: 0, received: 0, dispatched: 0, urban: 0, suburban: 0, taxi: 0, moto: 0 };
+
+            details.forEach(function (d) {
+                var tr = document.createElement('tr');
+                addCell(tr, d.processDate);
+                addCell(tr, d.municipalityName);
+                addCell(tr, d.districtName);
+                addCell(tr, d.gasStationName);
+                addCell(tr, d.fuelTypeName);
+                addCell(tr, formatNumber(d.trucksReceived), true);
+                addCell(tr, d.trucksRemarks);
+                addCell(tr, formatNumber(d.litersReceived), true);
+                addCell(tr, formatNumber(d.litersDispatched), true);
+                addCell(tr, formatNumber(d.urbanAttended), true);
+                addCell(tr, formatNumber(d.subUrbanAttended), true);
+                addCell(tr, formatNumber(d.taxiAttended), true);
+                addCell(tr, formatNumber(d.motoTaxiAttended), true);
+                addCell(tr, d.dayRemarks);
+                body.appendChild(tr);
+
+                totals.trucks += d.trucksReceived;
+                totals.received += d.litersReceived;
+                totals.dispatched += d.litersDispatched;
+                totals.urban += d.urbanAttended;
+                totals.suburban += d.subUrbanAttended;
+                totals.taxi += d.taxiAttended;
+                totals.moto += d.motoTaxiAttended;
+            });
+
+            var totalRow = document.createElement('tr');
+            var label = document.createElement('td');
+            label.colSpan = 5;
+            label.textContent = 'Totales';
+            totalRow.appendChild(label);
+            addCell(totalRow, formatNumber(totals.trucks), true);
+            addCell(totalRow, '');
+            addCell(totalRow, formatNumber(totals.received), true);
+            addCell(totalRow, formatNumber(totals.dispatched), true);
+            addCell(totalRow, formatNumber(totals.urban), true);
+            addCell(totalRow, formatNumber(totals.suburban), true);
+            addCell(totalRow, formatNumber(totals.taxi), true);
+            addCell(totalRow, formatNumber(totals.moto), true);
+            addCell(totalRow, '');
+            foot.appendChild(totalRow);
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').style.display = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.detail-link').forEach(function (link) {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+
+                    document.getElementById('detailTitle').textContent = 'Detalle del operativo - ' + link.dataset.stateName;
+
+                    var subtitle = 'Fecha del operativo: ' + link.dataset.startDateText;
+                    if (link.dataset.remarks) subtitle += ' - Descripción: ' + link.dataset.remarks;
+                    document.getElementById('detailSubtitle').textContent = subtitle;
+
+                    showMessageRow('Cargando...');
+                    document.getElementById('detailModal').style.display = 'block';
+
+                    $.getJSON(detailUrl, { stateId: link.dataset.stateId, startDate: link.dataset.startDate })
+                        .done(renderDetail)
+                        .fail(function () {
+                            showMessageRow('No se pudo cargar el detalle del operativo');
+                        });
+                });
+            });
+
+            document.getElementById('closeDetailModal').addEventListener('click', closeDetailModal);
+
+            window.addEventListener('click', function (e) {
+                if (e.target === document.getElementById('detailModal')) closeDetailModal();
+            });
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') closeDetailModal();
+            });
+
+            @if (ViewBag.MaintenanceMessage != null)
+            {
+                <text>
+                $("#modalMaintenanceMessage").fadeIn();
+                </text>
+            }
+        });
+    </script>
+</body>
+</html>

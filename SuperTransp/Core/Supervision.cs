@@ -2223,6 +2223,114 @@ namespace SuperTransp.Core
 			}
 		}
 
+		// Latest operativo of every state (except 25 and 26): the open one if any, otherwise the most recent closed one.
+		// States that never created an operativo are included with null status/date.
+		// stateId = null returns every state; otherwise only that state.
+		public List<FuelDistributionSummaryViewModel> GetLatestFuelDistributionByState(int? stateId)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<FuelDistributionSummaryViewModel> summaries = new();
+					SqlCommand cmd = new(@"SELECT s.StateId, s.StateName, last.FuelDistributionStatus,
+							last.FuelDistributionStartDate, last.FuelDistributionRemarks
+						FROM State s
+						OUTER APPLY (
+							SELECT TOP 1 fd.FuelDistributionStatus, fd.FuelDistributionStartDate, fd.FuelDistributionRemarks
+							FROM FuelDistribution fd
+							WHERE fd.StateId = s.StateId
+							ORDER BY CASE WHEN fd.FuelDistributionStatus = 'Abierto' THEN 0 ELSE 1 END,
+								fd.FuelDistributionStartDate DESC, fd.FuelDistributionId DESC
+						) last
+						WHERE s.StateId NOT IN (25, 26) AND (@StateId IS NULL OR s.StateId = @StateId)
+						ORDER BY s.StateName", sqlConnection);
+					cmd.Parameters.AddWithValue("@StateId", stateId.HasValue ? stateId.Value : DBNull.Value);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							summaries.Add(new FuelDistributionSummaryViewModel
+							{
+								StateId = Convert.ToInt32(dr["StateId"]),
+								StateName = dr["StateName"].ToString(),
+								Status = dr["FuelDistributionStatus"] == DBNull.Value ? "Sin operativo creado" : dr["FuelDistributionStatus"].ToString(),
+								StartDate = dr["FuelDistributionStartDate"] == DBNull.Value ? null : Convert.ToDateTime(dr["FuelDistributionStartDate"]),
+								Remarks = dr["FuelDistributionRemarks"] == DBNull.Value ? "" : dr["FuelDistributionRemarks"].ToString()
+							});
+						}
+					}
+
+					return summaries;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener los operativos de combustible por estado {ex.Message}", ex);
+			}
+		}
+
+		// Every loaded record of the operativo (state + opening date), open or closed, newest first
+		public List<FuelDistributionLoadViewModel> GetFuelDistributionDetail(int stateId, DateTime startDate)
+		{
+			try
+			{
+				using (SqlConnection sqlConnection = GetConnection())
+				{
+					if (sqlConnection.State == ConnectionState.Closed)
+					{
+						sqlConnection.Open();
+					}
+
+					List<FuelDistributionLoadViewModel> loads = new();
+					SqlCommand cmd = new(@"SELECT * FROM SuperTransp_FuelDistributionLoadDetail
+						WHERE StateId = @StateId AND CAST(FuelDistributionStartDate AS DATE) = CAST(@StartDate AS DATE)
+						ORDER BY GasStationName, ProccessDate DESC, FuelDistributionId DESC", sqlConnection);
+					cmd.Parameters.AddWithValue("@StateId", stateId);
+					cmd.Parameters.AddWithValue("@StartDate", startDate);
+
+					using (SqlDataReader dr = cmd.ExecuteReader())
+					{
+						while (dr.Read())
+						{
+							loads.Add(new FuelDistributionLoadViewModel
+							{
+								FuelDistributionId = Convert.ToInt32(dr["FuelDistributionId"]),
+								StateId = Convert.ToInt32(dr["StateId"]),
+								FuelDistributionStartDate = Convert.ToDateTime(dr["FuelDistributionStartDate"]),
+								ProccessDate = Convert.ToDateTime(dr["ProccessDate"]),
+								GasStationName = dr["GasStationName"].ToString(),
+								MunicipalityName = dr["MunicipalityName"].ToString(),
+								DistrictName = dr["DistrictName"].ToString(),
+								FuelTypeName = dr["FuelTypeName"].ToString(),
+								TrucksReceived = Convert.ToInt32(dr["TrucksReceived"]),
+								TrucksRemarks = dr["TrucksRemarks"].ToString(),
+								LitersReceived = Convert.ToInt32(dr["LitersReceived"]),
+								LitersDispatched = Convert.ToInt32(dr["LitersDispatched"]),
+								UrbanAttended = Convert.ToInt32(dr["UrbanAttended"]),
+								SubUrbanAttended = Convert.ToInt32(dr["SubUrbanAttended"]),
+								TaxiAttended = Convert.ToInt32(dr["TaxiAttended"]),
+								MotoTaxiAttended = Convert.ToInt32(dr["MotoTaxiAttended"]),
+								DayRemarks = dr["DayRemarks"].ToString()
+							});
+						}
+					}
+
+					return loads;
+				}
+			}
+			catch (Exception ex)
+			{
+				throw new Exception($"Error al obtener el detalle del operativo de combustible {ex.Message}", ex);
+			}
+		}
+
 		// Opening data (start date and remarks) of the open operativo of the state; null when there is none
 		public FuelDistributionLoadViewModel? GetOpenFuelDistributionByStateId(int stateId)
 		{
